@@ -73,9 +73,6 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4;
 
 
--- -----------------------------------
-
---
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS tct ;
 
@@ -191,6 +188,38 @@ CREATE TABLE IF NOT EXISTS config
     DEFAULT CHARACTER SET = utf8mb4;
 
 
+
+-- -----------------------------------------------------
+
+DROP TABLE IF EXISTS workflow;
+
+CREATE TABLE IF NOT EXISTS workflow (
+    dbid INT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    config JSON NOT NULL,
+
+    PRIMARY KEY workflow_pk (dbid),
+    UNIQUE INDEX workflow_uq (name ASC)
+)
+    ENGINE = InnoDB
+    DEFAULT CHARACTER SET = utf8mb4;
+
+-- -----------------------------------------------------
+
+DROP TABLE IF EXISTS task;
+
+CREATE TABLE IF NOT EXISTS task (
+    dbid INT NOT NULL AUTO_INCREMENT,
+    workflow INT NOT NULL,
+    id VARCHAR(200) NOT NULL,
+    state VARCHAR(100) NOT NULL,
+
+    PRIMARY KEY task_pk (dbid),
+
+    UNIQUE INDEX task_uq (workflow, id)
+)
+    ENGINE = InnoDB
+    DEFAULT CHARACTER SET = utf8mb4;
 
 -- -----------------------------------------------------
 

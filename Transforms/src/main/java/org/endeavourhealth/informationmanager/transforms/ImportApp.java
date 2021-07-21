@@ -119,7 +119,10 @@ public class ImportApp {
         }
         if (bulk)
             BulkFilerJDBC.createIndexes();
+
         ClosureGenerator.generateClosure(args[0]);
+        SearchTermGenerator.generateSearchTerms(args[0]);
+
         System.out.println("Finished - " + (new Date().toString()));
     }
 }
