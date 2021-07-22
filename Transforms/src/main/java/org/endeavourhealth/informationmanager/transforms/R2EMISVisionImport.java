@@ -30,6 +30,7 @@ public class R2EMISVisionImport implements TTImport {
     private Connection conn;
     private final TTManager manager= new TTManager();
     private TTDocument document;
+
     private final Map<String,TTEntity> entityMap = new HashMap<>();
 
 
@@ -52,6 +53,7 @@ public class R2EMISVisionImport implements TTImport {
         System.out.println("Retrieving filed snomed codes");
         snomedCodes= ImportUtils.importSnomedCodes(conn);
         document = manager.createDocument(IM.GRAPH_EMIS.getIri());
+
 
         System.out.println("importing emis code file");
         addEMISUnlinked();
