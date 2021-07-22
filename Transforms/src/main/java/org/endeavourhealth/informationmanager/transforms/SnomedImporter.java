@@ -265,10 +265,6 @@ public class SnomedImporter implements TTImport {
       }
       System.out.println("Imported " + i + " descriptions");
    }
-
-
-
-
    private void importStatedFiles(String path) throws IOException {
       int i = 0;
       OWLToTT owlConverter= new OWLToTT();
@@ -418,7 +414,6 @@ public class SnomedImporter implements TTImport {
       }
    }
 
-
    private void importRelationshipFiles(String path) throws IOException {
       int i = 0;
       counter=0;
@@ -478,9 +473,13 @@ public class SnomedImporter implements TTImport {
          }
       } else {
          TTNode roleGroup = getRoleGroup(c, group);
-         roleGroup.set(OWL.ONPROPERTY,TTIriRef.iri(SN+relationship));
-         roleGroup.set(RDF.TYPE,OWL.RESTRICTION);
-         roleGroup.set(OWL.SOMEVALUESFROM,TTIriRef.iri(SN+target));
+         TTNode role = new TTNode();
+         if (roleGroup.get(IM.ROLE)==null)
+            roleGroup.set(IM.ROLE,new TTArray());
+         roleGroup.get(IM.ROLE).asArray().add(role);
+         role.set(OWL.ONPROPERTY,TTIriRef.iri(SN+relationship));
+         role.set(RDF.TYPE,OWL.RESTRICTION);
+         role.set(OWL.SOMEVALUESFROM,TTIriRef.iri(SN+target));
       }
    }
 
