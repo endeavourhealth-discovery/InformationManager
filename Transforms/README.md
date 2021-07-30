@@ -25,7 +25,7 @@ Place the unified pathology list folders as sub folders without chanfge of name
 
 N.B. The opcs 4 and ICD10 complex maps are part of the relevant RF2 Snomed release.
 
-## Imports requiring table look ups Initial Popul
+## Imports requiring table look ups
 Obtain and restore (e.g. via table SQL) from the Vision look up and TPP look up tables which represent their (partial) supplier maps
 between Read 2 or CTV3 and Snomed
 
@@ -58,8 +58,3 @@ b) SnomedImporter
 c) R2EMISVisionImporter
 
 d) CTV3TPPImporter,OPCSImporter, ICD1OImporter,Discovery maps,The UTL value set- may be run in any order after that
-
-# Transitive closure (independent of the aboce)
-
-Run the `ClosureBuilder` application with parameters `<MySQL uploads Folder>` to generate the transitive closure file for the "Is a" relationship.
-
