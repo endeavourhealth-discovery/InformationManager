@@ -37,7 +37,6 @@
     <module>DocumentImport</module>
     <module>DiscoveryConverter</module>
     <module>V1-V2Migration</module>
-    <module>EntityEditor</module>
     <module>Feeds</module>
   </modules>
 

@@ -370,24 +370,28 @@ public class ReasonerPlus {
                if (superOb != null) {
                   TTArray parents = new TTArray();
                   c.set(IM.IS_A, parents);
-                  superOb.forEach(sob -> parents.add(TTIriRef
-                      .iri(sob.getRepresentativeElement()
-                          .asOWLObjectProperty()
-                          .getIRI()
-                          .toString())));
-               }
+                  superOb.forEach(sob -> {
+                     if (!sob.getRepresentativeElement().isAnonymous())
+                        parents.add(TTIriRef
+                       .iri(sob.getRepresentativeElement()
+                         .asOWLObjectProperty()
+                         .getIRI()
+                         .toString()));});
+                  }
             } else if (c.isType(OWL.DATAPROPERTY)) {
                OWLDataProperty dpe = dataFactory.getOWLDataProperty(IRI.create(c.getIri()));
                NodeSet<OWLDataProperty> superP = owlReasoner.getSuperDataProperties(dpe, true);
                if (superP != null) {
                   TTArray parents = new TTArray();
                   c.set(IM.IS_A, parents);
-                  superP.forEach(sob -> parents.add(TTIriRef
-                      .iri(sob
-                          .getRepresentativeElement().asOWLDataProperty()
-                          .getIRI()
-                          .toString())));
-               }
+                  superP.forEach(sob -> {
+                     if (!sob.getRepresentativeElement().isAnonymous())
+                        parents.add(TTIriRef
+                       .iri(sob
+                         .getRepresentativeElement().asOWLDataProperty()
+                         .getIRI()
+                         .toString()));});
+                  };
             } else {
                   OWLClassExpression owlClass = dataFactory.getOWLClass(IRI.create(c.getIri()));
                   NodeSet<OWLClass> superClasses = owlReasoner.getSuperClasses(owlClass, true);

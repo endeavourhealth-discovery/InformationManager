@@ -18,6 +18,7 @@
         </Menu>
         <Menu mnemonicParsing="false" text="IM Database">
             <MenuItem mnemonicParsing="false" onAction="#fileIM6" text="File ontology document"/>
+            <MenuItem mnemonicParsing="false" onAction="#termSearchGenerator" text="generate search index"/>
         </Menu>
         <Menu mnemonicParsing="false" text="Reasoner">
             <MenuItem mnemonicParsing="false" onAction="#classifyDiscovery" text="Classify Discovery file"/>

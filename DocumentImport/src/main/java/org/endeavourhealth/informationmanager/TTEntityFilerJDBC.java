@@ -14,6 +14,7 @@ public class TTEntityFilerJDBC {
    public Map<String, Integer> entityMap;
    private Integer graph;
    private boolean bulk;
+   private Set<String> termCodes;
 
    private final Connection conn;
 
@@ -24,11 +25,10 @@ public class TTEntityFilerJDBC {
    private final PreparedStatement insertEntity;
    private final PreparedStatement updateEntity;
    private final PreparedStatement insertTriple;
-   private final PreparedStatement insertTerm;
+   private final PreparedStatement insertTermEntity;
    private final PreparedStatement getTermDbIdFromTerm;
-   private final PreparedStatement getTermDbIdFromCode;
-   private final PreparedStatement updateTermCode;
-   private final PreparedStatement deleteTermCodes;
+   private final PreparedStatement updateTermEntity;
+   private final PreparedStatement deleteTermEntity;
 
 
    /**
@@ -77,14 +77,12 @@ public class TTEntityFilerJDBC {
           " VALUES(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
 
 
-      insertTerm = conn.prepareStatement("INSERT INTO term_code SET entity=?, term=?,code=?,scheme=?,entity_term_code=?,graph=?");
+      insertTermEntity = conn.prepareStatement("INSERT INTO term_code SET entity=?, term=?, code=?,graph=?");
       getTermDbIdFromTerm = conn.prepareStatement("SELECT dbid from term_code\n" +
-          "WHERE term =? and scheme=? and entity=?");
-      getTermDbIdFromCode = conn.prepareStatement("SELECT dbid from term_code\n" +
-        "WHERE code =? and scheme=? and entity=? and graph=?");
-      updateTermCode= conn.prepareStatement("UPDATE term_code SET entity=?, term=?," +
-          "code=?,scheme=?,entity_term_code=?,graph=? where dbid=?");
-      deleteTermCodes=conn.prepareStatement("DELETE from term_code where entity=? and graph=?");
+          "WHERE term =? and entity=?");
+      updateTermEntity= conn.prepareStatement("UPDATE term_code SET entity=?, term=?,code=?," +
+          "graph=? where dbid=?");
+      deleteTermEntity=conn.prepareStatement("DELETE from term_code where entity=? and graph=?");
 
 
 
@@ -102,7 +100,7 @@ public class TTEntityFilerJDBC {
     */
    private void updatePredicates(TTEntity entity,Integer entityId) throws SQLException, DataFormatException {
       if (entity.get(IM.HAS_TERM_CODE)!=null) {
-         deleteTermCodes(entity, entityId);
+         deleteTermEntities(entity, entityId);
       }
       Map<TTIriRef,TTValue> predicates= entity.getPredicateMap();
 
@@ -179,6 +177,9 @@ public class TTEntityFilerJDBC {
    public void fileEntity(TTEntity entity, TTIriRef graph) throws SQLException, DataFormatException {
       this.graph = getOrSetEntityId(graph);
       Integer entityId= fileEntityTable(entity);
+      if (entity.get(RDFS.LABEL)!=null)
+         if (entity.get(IM.STATUS)==null)
+            entity.set(IM.STATUS,IM.ACTIVE);
       if (entity.getCrud() != null) {
          if (entity.getCrud().equals(IM.UPDATE))
             updatePredicates(entity,entityId);
@@ -192,14 +193,16 @@ public class TTEntityFilerJDBC {
    }
 
    private Integer fileEntityTable(TTEntity entity) throws SQLException, DataFormatException {
-      String iri = entity.getIri();
+      String iri = expand(entity.getIri());
       Integer entityId = getEntityId(iri);
       String label = entity.getName();
       String comment = entity.getDescription();
       String code = entity.getCode();
-      String scheme = null;
-      if (entity.getScheme() != null)
-         scheme = entity.getScheme().getIri();
+      String scheme;
+      if (entity.getScheme()!=null)
+         scheme= entity.getScheme().getIri();
+      else
+         scheme = iri.substring(0,iri.indexOf("#")+1);
       String status = IM.ACTIVE.getIri();
       if (entity.getStatus() != null)
          status = entity.getStatus().getIri();
@@ -219,24 +222,38 @@ public class TTEntityFilerJDBC {
          deleteEntityTypes(entityId);
          deleteTriples(entityId);
          fileNode(entityId, null,entity);
-         deleteTermCodes(entity,entityId);
-         fileEntityTerm(entity, entityId);
+         deleteTermEntities(entity,entityId);
          fileTermCodes(entity,entityId);
          fileEntityTypes(entity,entityId);
    }
 
-   private void deleteTermCodes(TTEntity entity, Integer entityId) throws SQLException {
+   private void deleteTermEntities(TTEntity entity, Integer entityId) throws SQLException {
       if (bulk)
          return;
-      DALHelper.setInt(deleteTermCodes,1,entityId);
-      DALHelper.setInt(deleteTermCodes,2,graph);
-      deleteTermCodes.executeUpdate();
+      DALHelper.setInt(deleteTermEntity,1,entityId);
+      DALHelper.setInt(deleteTermEntity,2,graph);
+      deleteTermEntity.executeUpdate();
    }
 
    private void fileTermCodes(TTEntity entity, Integer entityId) throws SQLException {
+      boolean nameFiled=false;
       if (entity.get(IM.HAS_TERM_CODE)!=null)
-         for (TTValue termCode:entity.get(IM.HAS_TERM_CODE).asArray().getElements())
-            fileTermCode(termCode.asNode(),entityId);
+         for (TTValue termCode:entity.get(IM.HAS_TERM_CODE).asArray().getElements()) {
+            fileTermCode(termCode.asNode(), entityId);
+            if (entity.get(RDFS.LABEL)!=null)
+               if (termCode.asNode().get(RDFS.LABEL).asLiteral().getValue().equals(entity.getName()))
+                  nameFiled= true;
+         }
+      if (!nameFiled){
+         if (entity.get(RDFS.LABEL)!=null){
+            String term = entity.get(RDFS.LABEL).asLiteral().getValue();
+            TTNode termCode= new TTNode();
+            termCode.set(RDFS.LABEL,TTLiteral.literal(term));
+            if (entity.get(IM.CODE)!=null)
+               termCode.set(IM.CODE,entity.get(IM.CODE));
+            fileTermCode(termCode,entityId);
+         }
+      }
    }
 
    private void deleteEntityTypes(Integer entityId) throws SQLException {
@@ -303,7 +320,7 @@ public class TTEntityFilerJDBC {
       Set<Map.Entry<TTIriRef, TTValue>> entries = node.getPredicateMap().entrySet();
       for (Map.Entry<TTIriRef, TTValue> entry : entries) {
          //Term codes are denormalised into term code table
-         if (!entry.getKey().equals(IM.HAS_TERM_CODE)) {
+         if (!entry.getKey().equals(IM.HAS_TERM_CODE)&(!entry.getKey().equals(IM.HAS_SCHEME))) {
             TTValue object = entry.getValue();
             if (object.isIriRef()) {
                fileTriple(entityId, parent, entry.getKey(), object.asIriRef(), null,1);
@@ -368,6 +385,10 @@ public class TTEntityFilerJDBC {
       if (iri==null)
          return null;
       String stringIri= expand(iri.getIri());
+      String scheme=null;
+      int lnpos= stringIri.indexOf("#");
+      if (lnpos>0)
+       scheme= stringIri.substring(0,stringIri.indexOf("#"));
       Integer id = entityMap.get(stringIri);
       if (id == null) {
          DALHelper.setString(getEntityDbId, 1, stringIri);
@@ -377,7 +398,7 @@ public class TTEntityFilerJDBC {
                return rs.getInt("dbid");
             } else {
                id= upsertEntity(null,stringIri,
-                   null,null,null,null,IM.DRAFT.getIri());
+                   null,null,null,scheme,IM.DRAFT.getIri());
                entityMap.put(stringIri,id);
                return id;
             }
@@ -393,6 +414,9 @@ public class TTEntityFilerJDBC {
          if (id == null) {
             // Insert
             int i=0;
+            if (name!=null)
+               if (name.length()>200)
+                  name=name.substring(0,199);
             DALHelper.setString(insertEntity, ++i, iri);
             DALHelper.setString(insertEntity, ++i, name);
             DALHelper.setString(insertEntity, ++i, description);
@@ -409,6 +433,9 @@ public class TTEntityFilerJDBC {
          } else {
             //update
             int i = 0;
+            if (name!=null)
+               if (name.length()>200)
+                  name=name.substring(0,199);
             DALHelper.setString(updateEntity, ++i, iri);
             DALHelper.setString(updateEntity, ++i, name);
             DALHelper.setString(updateEntity, ++i, description);
@@ -434,95 +461,54 @@ public class TTEntityFilerJDBC {
    }
 
 
-   private void fileEntityTerm(TTEntity entity, Integer entityId) throws SQLException{
-      if (entity.get(RDFS.LABEL)!=null){
-         TTNode termCode= new TTNode();
-         termCode.set(RDFS.LABEL,TTLiteral.literal(entity.getName()));
-         if (entity.get(IM.CODE)!=null) {
-            termCode.set(IM.CODE, TTLiteral.literal(entity.getCode()));
-         }
-         if (entity.get(IM.HAS_SCHEME)!=null)
-            termCode.set(IM.HAS_SCHEME,entity.getScheme());
-         fileTermCode(termCode,entityId);
-
-      }
-   }
 
    private void fileTermCode(TTNode termCode,Integer entityId) throws SQLException {
 
-      String term=null;
-      if (termCode.get(RDFS.LABEL)!=null) {
-         term = termCode.get(RDFS.LABEL).asLiteral().getValue();
-         if (term.length() > 100)
-            term = term.substring(0, 100);
-      }
+      int i = 0;
+      Integer dbid=null;
+      String term= termCode.get(RDFS.LABEL).asLiteral().getValue();
       String code=null;
       if (termCode.get(IM.CODE)!=null)
          code= termCode.get(IM.CODE).asLiteral().getValue();
-      Integer schemeId=null;
-      if (termCode.get(IM.HAS_SCHEME)!=null) {
-         TTIriRef scheme = termCode.getAsIriRef(IM.HAS_SCHEME);
-         schemeId = getOrSetEntityId(scheme);
-      }
-      String entityCode=null;
-      if (termCode.get(IM.MATCHED_TERM_CODE)!=null)
-         entityCode= termCode.get(IM.MATCHED_TERM_CODE).asLiteral().getValue();
-
-      int i = 0;
-      Integer dbid=null;
       if (!bulk) {
-         if (code != null) {
-            DALHelper.setString(getTermDbIdFromCode, ++i, code);
-            DALHelper.setInt(getTermDbIdFromCode, ++i, schemeId);
-            DALHelper.setInt(getTermDbIdFromCode, ++i, entityId);
-            DALHelper.setInt(getTermDbIdFromCode, ++i, graph);
-            ResultSet rs = getTermDbIdFromCode.executeQuery();
-            if (rs.next())
-               dbid = rs.getInt("dbid");
-         } else {
             DALHelper.setString(getTermDbIdFromTerm, ++i, term);
-            DALHelper.setInt(getTermDbIdFromTerm, ++i, schemeId);
             DALHelper.setInt(getTermDbIdFromTerm, ++i, entityId);
             ResultSet rs = getTermDbIdFromTerm.executeQuery();
             if (rs.next())
                dbid = rs.getInt("dbid");
 
          }
-      }
       if (dbid!=null){
-         updateTermCode(entityId,term,code,schemeId,entityCode,dbid);
+         updateTermEntity(entityId,term,code,dbid);
       } else {
-         insertTermCode(entityId,term,code,schemeId,entityCode);
+         insertTermEntity(entityId,term,code);
       }
 
    }
 
-   private void insertTermCode(Integer entityId, String term, String code,
-                               Integer schemeId, String entityCode) throws SQLException {
+   private void insertTermEntity(Integer entityId, String term,String code) throws SQLException {
       int i = 0;
-      DALHelper.setInt(insertTerm, ++i, entityId);
-      DALHelper.setString(insertTerm, ++i, term);
-      DALHelper.setString(insertTerm, ++i, code);
-      DALHelper.setInt(insertTerm, ++i, schemeId);
-      DALHelper.setString(insertTerm, ++i, entityCode);
-      DALHelper.setInt(insertTerm, ++i, graph);
-      if (insertTerm.executeUpdate() == 0)
-         throw new SQLException("Failed to save term code for  ["
-           + term + " "
-           + code + "]");
+      if (term.length()>250)
+         term=term.substring(0,250);
+      DALHelper.setInt(insertTermEntity, ++i, entityId);
+      DALHelper.setString(insertTermEntity, ++i, term);
+      DALHelper.setString(insertTermEntity, ++i, code);
+      DALHelper.setInt(insertTermEntity, ++i, graph);
+      if (insertTermEntity.executeUpdate() == 0)
+         throw new SQLException("Failed to save term entity for  ["
+           + term + " ]");
    }
 
-   private void updateTermCode(Integer entityId, String term, String code,
-                               Integer schemeId, String entityCode, Integer dbid) throws SQLException {
+   private void updateTermEntity(Integer entityId, String term, String code,Integer dbid) throws SQLException {
       int i=0;
-      DALHelper.setInt(updateTermCode,++i,entityId);
-      DALHelper.setString(updateTermCode, ++i, term);
-      DALHelper.setString(updateTermCode, ++i, code);
-      DALHelper.setInt(updateTermCode, ++i, schemeId);
-      DALHelper.setString(updateTermCode, ++i, entityCode);
-      DALHelper.setInt(updateTermCode, ++i, dbid);
-      DALHelper.setInt(updateTermCode, ++i, graph);
-      updateTermCode.executeUpdate();
+      if (term.length()>250)
+         term=term.substring(0,250);
+      DALHelper.setInt(updateTermEntity,++i,entityId);
+      DALHelper.setString(updateTermEntity, ++i, term);
+      DALHelper.setString(updateTermEntity, ++i, code);
+      DALHelper.setInt(updateTermEntity, ++i, graph);
+      DALHelper.setInt(updateTermEntity, ++i, dbid);
+      updateTermEntity.executeUpdate();
 
    }
 

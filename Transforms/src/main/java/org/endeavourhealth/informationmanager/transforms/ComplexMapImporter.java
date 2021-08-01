@@ -16,31 +16,39 @@ import java.util.zip.DataFormatException;
  *
  */
 public class ComplexMapImporter {
-    private static final String OPCS4_REFERENCE_SET = "1126441000000105";
-    private static final String ICD10_REFERENCE_SET = "999002271000000101";
+   private static final String OPCS4_REFERENCE_SET = "1126441000000105";
+   private static final String ICD10_REFERENCE_SET = "999002271000000101";
 
-   private Map<String,List<ComplexMap>> snomedMap= new HashMap<>();
+   private Map<String, List<ComplexMap>> snomedMap = new HashMap<>();
    private TTDocument document;
    private String refset;
    private Set<String> sourceCodes;
-   private TTManager manager= new TTManager();
+   private String namespace;
+   private TTManager manager = new TTManager();
 
    /**
     * Imports a file containing the RF2 format extended complex backward maps between snomed and ICD10 or OPC4 4
-    * @param file file including path
-    * @param document the TTDocument already created with the graph name in place
-    * @param refset the snomed reference set  id or the backward map set
+    *
+    * @param file        file including path
+    * @param document    the TTDocument already created with the graph name in place
+    * @param refset      the snomed reference set  id or the backward map set
     * @param sourceCodes a set of codes used to validate the map source entities.
-    * A map will not be generated for any entity not in this set. Referential integrity for map source
+    *                    A map will not be generated for any entity not in this set. Referential integrity for map source
     * @return the document populated with the complex maps
-    * @throws IOException in the event of a file import problem
-    * @throws  DataFormatException if the file content is invalid
+    * @throws IOException         in the event of a file import problem
+    * @throws DataFormatException if the file content is invalid
     */
-   public TTDocument importMap(File file, TTDocument document, String refset,Set<String> sourceCodes) throws IOException, DataFormatException {
-      this.document= document;
-      this.refset= refset;
-      this.sourceCodes= sourceCodes;
+   public TTDocument importMap(File file, TTDocument document, String refset, Set<String> sourceCodes) throws IOException, DataFormatException {
+      this.document = document;
+      this.refset = refset;
+      this.sourceCodes = sourceCodes;
       document.setCrud(IM.UPDATE);
+      if (refset.equals(OPCS4_REFERENCE_SET))
+         namespace=OPCS4.NAMESPACE;
+      else if (refset.equals(ICD10_REFERENCE_SET))
+         namespace=ICD10.NAMESPACE;
+      else
+         throw new DataFormatException(refset+" reference set is not supported yet");
 
       //imports file and creates snomed to target collection
       importFile(file);
@@ -51,9 +59,9 @@ public class ComplexMapImporter {
    }
 
    private void createEntityMaps() throws DataFormatException {
-      Set<Map.Entry<String, List<ComplexMap>>> entries= snomedMap.entrySet();
-      for (Map.Entry<String, List<ComplexMap>> entry:entries){
-         String snomed= entry.getKey();
+      Set<Map.Entry<String, List<ComplexMap>>> entries = snomedMap.entrySet();
+      for (Map.Entry<String, List<ComplexMap>> entry : entries) {
+         String snomed = entry.getKey();
          if (sourceCodes.contains(snomed)) {
             List<ComplexMap> mapList = entry.getValue();
             setMapsForEntity(snomed, mapList);
@@ -65,70 +73,31 @@ public class ComplexMapImporter {
    private void setMapsForEntity(String snomed, List<ComplexMap> mapList) throws DataFormatException {
       TTEntity entity = new TTEntity().setIri((SNOMED.NAMESPACE + snomed));  // snomed entity reference
       document.addEntity(entity);
-      entity.set(IM.HAS_MAP,new TTArray());
-      if (mapList.size() == 1) {
-         TTNode mapNode= new TTNode();
-         entity.get(IM.HAS_MAP).asArray().add(mapNode);
-         setMapNode(mapList.get(0),mapNode);
-      } else {
-         for (ComplexMap map : mapList) {
-            TTNode mapNode = new TTNode();
-            entity.get(IM.HAS_MAP).asArray().add(mapNode);
-            setMapNode(map, mapNode);
-         }
-      }
-
-   }
-
-   private void setMapNode(ComplexMap map,TTNode oneMapNode) throws DataFormatException {
-      if (map.getMapGroups().size() == 1) {
-         setMapGroupNode(map.getMapGroups().get(0), oneMapNode,IM.SOME_OF);
-      } else {
-         oneMapNode.set(IM.COMBINATION_OF, new TTArray());
-         for (ComplexMapGroup mapGroup : map.getMapGroups()) {
-            TTNode groupNode = new TTNode();
-            oneMapNode.get(IM.COMBINATION_OF).asArray().add(groupNode);
-            setMapGroupNode(mapGroup, groupNode,IM.ONE_OF);
+      for (ComplexMap sourceMap : mapList) {
+         TTNode targetMap = TTManager.addComplexMap(entity);
+         if (sourceMap.getMapGroups().size() == 1) {
+            addToGroup(targetMap, sourceMap.getMapGroups().get(0),IM.SOME_OF);
+         } else {
+            for (ComplexMapGroup mapGroup : sourceMap.getMapGroups()) {
+               TTNode targetGroup = new TTNode();
+               targetMap.addObject(IM.COMBINATION_OF, targetGroup);
+               addToGroup(targetGroup, mapGroup,IM.ONE_OF);
+            }
          }
       }
    }
-   private void setMapGroupNode(ComplexMapGroup mapGroup, TTNode groupNode,TTIriRef oneOrSome) throws DataFormatException {
-      if (mapGroup.getTargetMaps().size() == 1) {
-         groupNode.set(oneOrSome,new TTArray());
-          TTNode match= new TTNode();
-         groupNode.get(oneOrSome).asArray().add(match);
-         setTargetNode(mapGroup.getTargetMaps().get(0),match);
-      } else {
-         groupNode.set(oneOrSome,new TTArray());
-         for (ComplexMapTarget mapTarget:mapGroup.getTargetMaps()) {
-            TTNode match = new TTNode();
-            groupNode.get(oneOrSome).asArray().add(match);
-            setTargetNode(mapTarget,match);
-         }
 
+
+   private void addToGroup(TTNode targetMap, ComplexMapGroup sourceGroup,TTIriRef someOrOne) {
+      for (ComplexMapTarget sourceTarget : sourceGroup.getTargetMaps()) {
+         TTManager.addMapTarget(targetMap, namespace+ sourceTarget.getTarget(),
+           someOrOne, sourceTarget.getPriority(), sourceTarget.getAdvice(),
+           IM.NATIONALLY_ASSURED);
       }
    }
 
 
-   private void setTargetNode(ComplexMapTarget mapTarget, TTNode match) throws DataFormatException {
-      match.set(IM.MATCHED_TO, getTargetIri(mapTarget.target));
-      if (mapTarget.getAdvice()!=null)
-         match.set(IM.MAP_ADVICE,TTLiteral.literal(mapTarget.getAdvice()));
-      if (mapTarget.getPriority()!=null)
-         match.set(IM.MAP_PRIORITY,TTLiteral.literal((mapTarget.getPriority())));
-      match.set(IM.ASSURANCE_LEVEL, IM.NATIONALLY_ASSURED);
-   }
 
-
-
-   private TTValue getTargetIri(String target) throws DataFormatException {
-      if (refset.equals(OPCS4_REFERENCE_SET))
-         return TTIriRef.iri(OPCS4.NAMESPACE + target);
-      else if (refset.equals(ICD10_REFERENCE_SET))
-         return TTIriRef.iri(ICD10.NAMESPACE + target);
-      else
-         throw new DataFormatException("unsupported map reference set");
-   }
 
    private void importFile(File file) throws IOException {
       try(BufferedReader reader = new BufferedReader(new FileReader(file))){

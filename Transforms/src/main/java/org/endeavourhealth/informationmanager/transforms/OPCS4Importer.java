@@ -4,6 +4,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTArray;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
@@ -43,7 +44,7 @@ public class OPCS4Importer  implements TTImport {
         importEntities(inFolder,document);
         TTDocumentFiler filer= new TTDocumentFilerJDBC();
         filer.fileDocument(document,bulkImport,entityMap);
-        document= manager.createDocument(IM.GRAPH_MAP_SNOMED_OPCS.getIri());
+        document= manager.createDocument(IM.MAP_SNOMED_OPCS.getIri());
 
         document.setCrud(IM.UPDATE);
         importMaps(inFolder);
@@ -70,11 +71,11 @@ public class OPCS4Importer  implements TTImport {
                 String term= fields[1];
                 TTEntity c= new TTEntity();
                 c.setIri("opcs4:"+chapter)
-                    .setName(term)
+                    .setName(term+" (chapter "+chapter+")")
                     .setCode(chapter)
-                    .setScheme(IM.CODE_SCHEME_OPCS4)
+                  .addType(OWL.CLASS)
                     .set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.NAMESPACE+"OPCS49Classification")));
-                TTManager.addTermCode(c,term,chapter,IM.CODE_SCHEME_OPCS4,null);
+                TTManager.addTermCode(c,term,chapter);
                 document.addEntity(c);
                 line= reader.readLine();
             }
@@ -98,17 +99,15 @@ public class OPCS4Importer  implements TTImport {
                 TTEntity c = new TTEntity()
                         .setCode(fields[0])
                         .setIri("opcs4:" + (fields[0].replace(".","")))
-                        .setScheme(IM.CODE_SCHEME_OPCS4)
-                        .addType(IM.LEGACY)
+                        .addType(OWL.CLASS)
                     .set(IM.IS_CHILD_OF,new TTArray().add(iri("opcs4:"+fields[0].substring(0,1))));
                     if(fields[1].length()>250){
-                        c.setName(fields[1].substring(0,150)+"...("+ fields[0]+")");
+                        c.setName(fields[1].substring(0,150));
                     }else {
-                        c.setName(fields[1]+" ("+fields[0]+")");
+                        c.setName(fields[1]);
                     }
 
                     entityMap.put(fields[0].replace(".",""), c);
-                    TTManager.addTermCode(c,c.getName(),fields[0],IM.CODE_SCHEME_OPCS4,null);
                     document.addEntity(c);
                     line = reader.readLine();
             }

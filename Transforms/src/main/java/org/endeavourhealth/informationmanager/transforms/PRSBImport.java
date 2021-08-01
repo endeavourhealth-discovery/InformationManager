@@ -120,7 +120,6 @@ public class PRSBImport implements TTImport {
 		Arrays.stream(types).forEach( type-> entity.addType(type));
 		String prsbId= c.get("iddisplay").toString();
 		entity.setCode(prsbId);
-		entity.setScheme(IM.CODE_SCHEME_PRSB);
 		String name= getObjectArrayliteral(c,"name","#text");
 		String iri= (PRSB.NAMESPACE + prsbId);
 

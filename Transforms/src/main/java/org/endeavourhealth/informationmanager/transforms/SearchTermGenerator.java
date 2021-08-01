@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 
 import static org.endeavourhealth.informationmanager.transforms.ImportUtils.getConnection;
 
@@ -40,18 +41,20 @@ public class SearchTermGenerator {
                 stmt.executeUpdate();
             }
 
+
             try (PreparedStatement stmt = conn.prepareStatement("SET GLOBAL local_infile=1")) {
                 stmt.executeUpdate();
             }
 
             conn.setAutoCommit(false);
 
-            try (PreparedStatement stmt = conn.prepareStatement("LOAD DATA LOCAL INFILE ?"
-                + " INTO TABLE entity_search"
+            try (PreparedStatement stmt = conn.prepareStatement("LOAD DATA INFILE ?"
+                + " IGNORE INTO TABLE entity_search"
                 + " FIELDS TERMINATED BY '\t'"
                 + " LINES TERMINATED BY '\r\n'"
                 + " (entity_dbid, term)")) {
                 stmt.setString(1, filename);
+
                 stmt.executeUpdate();
                 conn.commit();
             }

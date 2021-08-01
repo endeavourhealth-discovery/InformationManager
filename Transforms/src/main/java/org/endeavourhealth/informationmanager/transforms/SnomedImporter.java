@@ -146,7 +146,6 @@ public class SnomedImporter implements TTImport {
                    c.addType(OWL.CLASS);
                    c.setStatus(IM.INACTIVE);
                    c.setCode(old);
-                   c.setScheme(IM.CODE_SCHEME_SNOMED);
                   }
                   addRelationship(c,0,REPLACED_BY,replacedBy);
 
@@ -189,7 +188,6 @@ public class SnomedImporter implements TTImport {
                            c.addType(IM.CONCEPT_SET);
                         else
                            c.addType(OWL.CLASS);
-                        c.setScheme(IM.CODE_SCHEME_SNOMED);
                         c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
                         if (fields[0].equals("138875005")) { // snomed root
                            c.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "DiscoveryOntology")));
@@ -254,7 +252,7 @@ public class SnomedImporter implements TTImport {
                               c.setName(fields[7]);
                            }
                         }
-                        TTManager.addTermCode(c, fields[7], fields[0], IM.CODE_SCHEME_SNOMED, fields[0]);
+                        TTManager.addTermCode(c, fields[7],fields[0]);
                      }
                   }
                   i++;
@@ -304,8 +302,6 @@ public class SnomedImporter implements TTImport {
 
       System.out.println("Imported " + i + " OWL Axioms");
    }
-
-
 
    private void importMRCMDomainFiles(String path) throws IOException {
       int i = 0;

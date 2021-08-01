@@ -1,6 +1,6 @@
 package org.endeavourhealth.informationmanager.common.transform;
 
-import org.endeavourhealth.informationmanager.transforms.R2EMISVisionImport;
+import org.endeavourhealth.informationmanager.transforms.EMISImport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -8,10 +8,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EMISReadMainImportTest {
 
-    private R2EMISVisionImport transform;
+    private EMISImport transform;
 
     @BeforeEach
-    void setup(){transform = new R2EMISVisionImport();}
+    void setup(){transform = new EMISImport();}
 
     @Test
     void getEmisCode_11() {

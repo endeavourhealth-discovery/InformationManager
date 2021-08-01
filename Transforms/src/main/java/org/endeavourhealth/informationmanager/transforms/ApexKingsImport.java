@@ -1,10 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.vocabulary.APK;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
@@ -25,13 +22,13 @@ public class ApexKingsImport implements TTImport {
 
 
 	private static final String[] kingsPath = {".*\\\\Kings\\\\KingsPathMap.txt"};
-	private TTDocument forwardMapDocument;
 	private TTDocument backMapDocument;
+	private TTDocument document;
 	private TTDocument valueSetDocument;
-	private final Map<String, List<Snomed>> r2ToSnomed = new HashMap<>();
-	private final Map<TTEntity, List<Snomed>> apexToSnomed = new HashMap();
+	private final Map<String, List<String>> readToSnomed = new HashMap<>();
+	private final Map<String, List<String>> snomedToRead = new HashMap<>();
+	private final Map<String, List<String>> snomedToApex = new HashMap();
 	private final Map<String, String> apexToRead = new HashMap<>();
-	private final Map<String, List<TTEntity>> snomedToApex = new HashMap<>();
 	private static final TTIriRef utl= TTIriRef.iri(IM.NAMESPACE+"VSET_UnifiedTestList");
 	private static final Set<String> utlSet= new HashSet<>();
 	private static final Set<String> utlMembers= new HashSet<>();
@@ -39,11 +36,6 @@ public class ApexKingsImport implements TTImport {
 
 
 
-	private static class Snomed {
-		private String entityId;
-		private String descId;
-		private String name;
-	}
 
 
 
@@ -51,22 +43,20 @@ public class ApexKingsImport implements TTImport {
 	public TTImport importData(String inFolder,boolean bulkImport,Map<String,Integer> entityMap) throws Exception {
 		conn = ImportUtils.getConnection();
 		TTManager manager = new TTManager();
+		document= manager.createDocument(IM.GRAPH_KINGS_APEX.getIri());
 		TTManager backManager = new TTManager();
 		TTManager vsetManager = new TTManager();
-		forwardMapDocument = manager.createDocument(IM.GRAPH_APEX_KINGS.getIri());
-		backMapDocument = backManager.createDocument(IM.GRAPH_APEX_KINGS.getIri());
+		backMapDocument = backManager.createDocument(IM.MAP_SNOMED_APEX_KINGS.getIri());
 		backMapDocument.setCrud(IM.UPDATE);
-		valueSetDocument= vsetManager.createDocument(IM.GRAPH_DISCOVERY.getIri());
+		valueSetDocument= vsetManager.createDocument(IM.NAMESPACE);
 		valueSetDocument.setCrud(IM.ADD);
 		importR2Matches();
 		importApexKings(inFolder);
-		createManyToManyMaps();
 		createBackMaps();
-		createForwardMaps();
 		addToUtlSet();
-		TTDocumentFiler filer = new TTDocumentFilerJDBC();
-		filer.fileDocument(forwardMapDocument,bulkImport,entityMap);
-		filer = new TTDocumentFilerJDBC();
+		TTDocumentFiler  filer= new TTDocumentFilerJDBC();
+		filer.fileDocument(document,bulkImport,entityMap);
+		filer= new TTDocumentFilerJDBC();
 		filer.fileDocument(backMapDocument,bulkImport,entityMap);
 		if (valueSetDocument.getEntities()!=null) {
 			filer = new TTDocumentFilerJDBC();
@@ -98,88 +88,40 @@ public class ApexKingsImport implements TTImport {
 	}
 
 
-	private void createForwardMaps() {
-		for (Map.Entry<TTEntity, List<Snomed>> entry : apexToSnomed.entrySet()) {
-			TTEntity apexEntity = entry.getKey();
-			forwardMapDocument.addEntity(apexEntity);
-			List<Snomed> maps = entry.getValue();
-			Snomed snomed = getPreferred(maps);
-			TTNode target = new TTNode();
-			target.set(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + snomed.entityId));
-			target.set(IM.HAS_TERM_CODE, TTLiteral.literal(snomed.descId));
-			apexEntity.set(IM.HAS_MAP, new TTArray());
-			apexEntity.get(IM.HAS_MAP).asArray().add(target);
-			utlMembers.add(SNOMED.NAMESPACE+snomed.entityId);
-		}
-	}
-
-	private Snomed getPreferred(List<Snomed> maps) {
-		if (maps.size() == 1)
-			return maps.get(0);
-		for (Snomed snomed : maps)
-			if (snomed.name.contains("observable"))
-				return snomed;
-
-		return maps.get(0);
-	}
-
-	private void createManyToManyMaps() {
-		for (TTEntity apexEntity : forwardMapDocument.getEntities()) {
-			String apexCode = apexEntity.getCode();
-			String read = apexToRead.get(apexCode);
-			List<Snomed> maps = r2ToSnomed.get(read);
-			if (maps != null) {
-				for (Snomed snomed : maps) {
-					List<TTEntity> apexList = snomedToApex.computeIfAbsent(snomed.entityId, k -> new ArrayList<>());
-					apexList.add(apexEntity);
-					List<Snomed> snomedList = apexToSnomed.computeIfAbsent(apexEntity, k -> new ArrayList<>());
-					snomedList.add(snomed);
-				}
-			}
-		}
-	}
 
 	private void createBackMaps() {
-		for (Map.Entry<String, List<TTEntity>> entry : snomedToApex.entrySet()) {
-			String entityId = entry.getKey();
+		for (Map.Entry<String,List<String>> entry : snomedToApex.entrySet()) {
+			String snomed = entry.getKey();
 			TTEntity snomedEntity = new TTEntity()
-				.setIri(SNOMED.NAMESPACE + entityId);
+				.setIri(SNOMED.NAMESPACE + snomed);
 			backMapDocument.addEntity(snomedEntity);
-			List<TTEntity> apexList = entry.getValue();
-			for (TTEntity apex : apexList) {
-				if (snomedEntity.get(IM.HAS_MAP) == null) {
-					TTNode map = new TTNode();
-					map.set(IM.SOME_OF,new TTArray());
-					snomedEntity.set(IM.HAS_MAP, new TTArray());
-					snomedEntity.get(IM.HAS_MAP).asArray().add(map);
-				}
-				TTNode map= snomedEntity.get(IM.HAS_MAP).asArray().getElements().get(0).asNode();
-				map.addObject(IM.SOME_OF,TTIriRef.iri(apex.getIri()));
+			List<String> apexList = entry.getValue();
+			for (String apex : apexList) {
+				TTManager.addSimpleMap(snomedEntity,APK.NAMESPACE+apex);
 			}
 		}
 	}
 
 
 	private void importR2Matches() throws SQLException, ClassNotFoundException {
-		System.out.println("Retrieving read 2 snomed map");
+		System.out.println("Retrieving read vision 2 snomed map");
 
-		PreparedStatement getR2Matches= conn.prepareStatement("select tc.code as code,c.code as entityId,"+
-				"synonym.code as termCode,synonym.term as synonym,c.name as entityName\n" +
-			"from term_code tc\n" +
-			"join entity s on tc.scheme=s.dbid\n" +
-			"join entity c on tc.entity=c.dbid\n" +
-			"left join entity cscheme on c.scheme= cscheme.iri\n" +
-			"left join term_code synonym on tc.entity_term_code= synonym.code and synonym.scheme=cscheme.dbid\n" +
-			"where s.iri='"+ IM.CODE_SCHEME_READ.getIri()+"'");
+		PreparedStatement getR2Matches= conn.prepareStatement("select vis.code as code,snomed.code as snomed \n"+
+				"from entity snomed \n" +
+			"join tpl maps on maps.subject= snomed.dbid\n" +
+			"join entity p on maps.predicate=p.dbid\n" +
+			"join entity vis on maps.subject=vis.dbid\n" +
+			"where snomed.iri like '"+ SNOMED.NAMESPACE+"%'\n"+
+			"and p.iri='"+IM.MATCHED_TO+"'\n" +
+			"and vis.iri like 'http://endhealth.info/VISION#'");
 		ResultSet rs= getR2Matches.executeQuery();
 		while (rs.next()){
-			Snomed snomed= new Snomed();
+			String snomed= rs.getString("snomed");
 			String read= rs.getString("code");
-			snomed.entityId= rs.getString("entityId");
-			snomed.descId= rs.getString("termCode");
-			snomed.name= rs.getString("entityName");
-			List<Snomed> maps = r2ToSnomed.computeIfAbsent(read, k -> new ArrayList<>());
+			List<String> maps = readToSnomed.computeIfAbsent(read, k -> new ArrayList<>());
 			maps.add(snomed);
+			maps= snomedToRead.computeIfAbsent(snomed, k -> new ArrayList<>());
+			maps.add(read);
 
 		}
 	}
@@ -199,13 +141,19 @@ public class ApexKingsImport implements TTImport {
 				String iri = APK.NAMESPACE+ fields[1]+ "-"+(fields[2].replace(" ",""));
 				TTEntity entity= new TTEntity()
 					.setIri(iri)
-					.addType(IM.LEGACY)
+					.addType(OWL.CLASS)
 					.setName(fields[2])
 					.setDescription("Local apex Kings trust pathology system entity ")
-					.setCode(code)
-					.setScheme(IM.CODE_SCHEME_APEX_KINGS);
-				forwardMapDocument.addEntity(entity);
+					.setCode(code);
+				document.addEntity(entity);
 				apexToRead.put(code,readCode);
+				if (readToSnomed.get(readCode)!=null){
+					for (String snomed:readToSnomed.get(readCode)){
+						List<String> maps = snomedToApex.computeIfAbsent(snomed, k -> new ArrayList<>());
+						maps.add(snomed);
+
+					}
+				}
 				count++;
 				if (count % 500 == 0) {
 					System.out.println("Processed " + count + " records");

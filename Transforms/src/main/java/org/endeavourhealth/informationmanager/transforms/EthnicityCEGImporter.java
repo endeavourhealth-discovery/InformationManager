@@ -54,7 +54,7 @@ public class EthnicityCEGImporter implements TTImport {
 
 	@Override
 	public TTImport importData(String inFolder,boolean bulkImport,Map<String,Integer> entityMap ) throws Exception {
-		document = manager.createDocument(IM.GRAPH_CEG.getIri());
+		document = manager.createDocument(IM.GRAPH_CEG16.getIri());
 		document.setCrud(IM.UPDATE);
 		retrieveEthnicity(inFolder);
 		spellCorrections();
@@ -148,9 +148,6 @@ public class EthnicityCEGImporter implements TTImport {
 		Path file = ImportUtils.findFileForId(folder, lookups[0]);
 		System.out.println("Importing Categories");
 		setConceptSets();
-		Map<String,TTEntity> cegIRIMap = new HashMap<>();
-		Map<String,TTEntity> nhsIRIMap= new HashMap<>();
-
 
 		try( BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))){
 			reader.readLine();
@@ -178,6 +175,7 @@ public class EthnicityCEGImporter implements TTImport {
 						.setIri(IM.NAMESPACE+"VSET_EthnicCategoryCEG16_"+cat16)
 						.addType(IM.CONCEPT_SET)
 						.setName(catTerm)
+						.setCode(cat16)
 						.setDescription("QMUL CEG 16+ Ethnic category "+cat16);
 					document.addEntity(cegSubset);
 					cegSet.addObject(IM.HAS_SUBSET,TTIriRef.iri(cegSubset.getIri()));
@@ -185,7 +183,7 @@ public class EthnicityCEGImporter implements TTImport {
 				}
 				cegSubset.addObject(IM.HAS_MEMBER,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 				if (cegSubset.get(IM.HAS_TERM_CODE)==null)
-					TTManager.addTermCode(cegSubset,catTerm,cat16,IM.CODE_SCHEME_CEG_ETHNIC_16,null);
+					TTManager.addTermCode(cegSubset,catTerm,null);
 				if (!snoNhs.equals("unclassified")){
 					TTEntity nhsSubset= nhsCatmap.get(snoNhs);
 					if (nhsSubset==null) {
@@ -198,7 +196,7 @@ public class EthnicityCEGImporter implements TTImport {
 						nhsCatmap.put(snoNhs, nhsSubset);
 					}
 					if (nhsSubset.get(IM.HAS_TERM_CODE)==null)
-						TTManager.addTermCode(nhsSubset,nhsTerm,nhs16,IM.CODE_SCHEME_NHSDD_ETHNIC_2001,null);
+						TTManager.addTermCode(nhsSubset,nhsTerm,null);
 					nhsSubset.addObject(IM.HAS_MEMBER,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 				}
 

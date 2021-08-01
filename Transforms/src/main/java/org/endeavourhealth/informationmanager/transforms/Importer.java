@@ -23,6 +23,7 @@ public class Importer implements TTImportByType {
    @Override
    public TTImportByType importByType(TTIriRef importType, String inFolder,
                                       boolean bulkImport, Map<String,Integer> entityMap) throws Exception {
+      System.out.println("Importing "+ importType.getIri());
       try (TTImport importer= getImporter(importType)){
          importer.validateFiles(inFolder);
          importer.validateLookUps(ImportUtils.getConnection());
@@ -49,28 +50,26 @@ public class Importer implements TTImportByType {
       else if (IM.GRAPH_SNOMED.equals(importType))
          return new SnomedImporter();
       else if (IM.GRAPH_EMIS.equals(importType))
-         return new R2EMISVisionImport();
-      else if (IM.GRAPH_CTV3.equals(importType))
-         return new CTV3TPPImporter();
+         return new EMISImport();
+      else if (IM.GRAPH_TPP.equals(importType))
+         return new TPPImporter();
       else if (IM.GRAPH_OPCS4.equals(importType))
          return new OPCS4Importer();
       else if (IM.GRAPH_ICD10.equals(importType))
              return new ICD10Importer();
-      else if (IM.GRAPH_MAPS_DISCOVERY.equals(importType))
+      else if (IM.MAP_DISCOVERY.equals(importType))
          return new DiscoveryMapsImporter();
-      else if (IM.GRAPH_VALUESETS.equals(importType))
-         return new ImportValueSet();
-      else if (IM.GRAPH_READ2.equals(importType))
-         return new R2NHSImport();
+      else if (IM.GRAPH_VISION.equals(importType))
+         return new VisionImport();
       else if (IM.GRAPH_REPORTS.equals(importType))
           return new DiscoveryReportsImporter();
       else if (IM.GRAPH_PRSB.equals(importType))
           return new PRSBImport();
-      else if (IM.GRAPH_APEX_KINGS.equals(importType))
+      else if (IM.GRAPH_KINGS_APEX.equals(importType))
          return new ApexKingsImport();
-      else if (IM.GRAPH_WINPATH_KINGS.equals(importType))
+      else if (IM.GRAPH_KINGS_WINPATH.equals(importType))
          return new WinPathKingsImport();
-      else if (IM.GRAPH_CEG.equals(importType))
+      else if (IM.GRAPH_CEG16.equals(importType))
          return new EthnicityCEGImporter();
       else
          throw new Exception("Unrecognised import type");

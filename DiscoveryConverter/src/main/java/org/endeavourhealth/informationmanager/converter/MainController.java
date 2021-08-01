@@ -23,6 +23,7 @@ import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.common.transform.*;
 import org.endeavourhealth.informationmanager.common.transform.exceptions.FileFormatException;
+import org.endeavourhealth.informationmanager.transforms.SearchTermGenerator;
 import org.semanticweb.owlapi.model.*;
 
 
@@ -582,4 +583,8 @@ public class MainController {
 
 
     }
+
+	public void termSearchGenerator(ActionEvent actionEvent) throws Exception {
+      SearchTermGenerator.generateSearchTerms("c://CodeMaps");
+	}
 }

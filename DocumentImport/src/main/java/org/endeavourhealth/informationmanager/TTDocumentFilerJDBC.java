@@ -28,6 +28,7 @@ public class TTDocumentFilerJDBC implements TTDocumentFiler {
    private final PreparedStatement getNamespace;
    private final PreparedStatement getNsFromPrefix;
    private final PreparedStatement insertNamespace;
+   private final PreparedStatement updateNamespace;
 
 
 
@@ -38,6 +39,7 @@ public class TTDocumentFilerJDBC implements TTDocumentFiler {
       getNamespace = conn.prepareStatement("SELECT * FROM namespace WHERE iri = ?");
       getNsFromPrefix = conn.prepareStatement("SELECT * FROM namespace WHERE prefix = ?");
       insertNamespace = conn.prepareStatement("INSERT INTO namespace (iri, prefix,name) VALUES (?, ?,?)", Statement.RETURN_GENERATED_KEYS);
+      updateNamespace = conn.prepareStatement("UPDATE namespace SET name=? WHERE dbid=?");
 
 
 
@@ -106,7 +108,7 @@ public class TTDocumentFilerJDBC implements TTDocumentFiler {
 
          // Ensure all namespaces exist (auto-create)
          //Different prefixes for filing are not allowed in this version
-         fileNamespaces(document.getPrefixes());
+         fileNamespaces(document.getContext().getNameSpaces());
 
          //Sets the graph namesepace id for use in statements so they are owned by the namespace graph
          setGraph(document.getGraph());
@@ -176,9 +178,15 @@ public class TTDocumentFilerJDBC implements TTDocumentFiler {
       DALHelper.setString(getNamespace, 1, ns.getIri());
       try (ResultSet rs = getNamespace.executeQuery()) {
          if (rs.next()) {
+            Integer dbid=rs.getInt("dbid");
             if (!ns.getPrefix().equals(rs.getString("prefix"))) {
                throw new SQLException("prefix in database -> " + ns.getPrefix() + " does not match the iri " + ns.getIri());
             } else {
+               if (ns.getName()!=null){
+                  DALHelper.setString(updateNamespace,1,ns.getName());
+                  DALHelper.setInt(updateNamespace,2,dbid);
+                  updateNamespace.executeUpdate();
+               }
                prefixMap.put(ns.getPrefix(),ns.getIri());
                namespaceMap.put(ns.getPrefix(), rs.getInt("dbid"));
                namespaceMap.put(ns.getIri(), rs.getInt("dbid"));
@@ -194,7 +202,7 @@ public class TTDocumentFilerJDBC implements TTDocumentFiler {
             } else {
                DALHelper.setString(insertNamespace, 1, ns.getIri());
                DALHelper.setString(insertNamespace, 2, ns.getPrefix());
-               DALHelper.setString(insertNamespace, 3, null);
+               DALHelper.setString(insertNamespace, 3, ns.getName());
                insertNamespace.executeUpdate();
                Integer dbid = DALHelper.getGeneratedKey(insertNamespace);
                prefixMap.put(ns.getPrefix(), ns.getIri());

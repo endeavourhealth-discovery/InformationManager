@@ -6,6 +6,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.ICD10;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
@@ -55,7 +56,7 @@ public class ICD10Importer implements TTImport {
         createHierarchy();
         TTDocumentFiler filer= new TTDocumentFilerJDBC();
         filer.fileDocument(document,bulkImport,entityMap);
-        document= manager.createDocument(IM.GRAPH_MAP_SNOMED_ICD10.getIri());
+        document= manager.createDocument(IM.MAP_SNOMED_ICD10.getIri());
         document.setCrud(IM.ADD);
         importMaps(inFolder);
         filer= new TTDocumentFilerJDBC();
@@ -94,7 +95,7 @@ public class ICD10Importer implements TTImport {
         TTEntity icd10= new TTEntity()
           .setIri(icd10Codes.getIri())
           .setName("ICD10 5th edition classification codes")
-          .addType(IM.LEGACY)
+          .addType(OWL.CLASS)
           .setDescription("ICD1O classification used in backward maps from Snomed");
         icd10.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
         document.addEntity(icd10);
@@ -125,13 +126,12 @@ public class ICD10Importer implements TTImport {
                 String[] fields = line.split("\t");
                 String iri= ICD10.NAMESPACE+fields[1];
                 String code= fields[1];
-                String label = "Chapter " + fields[0]+ ": "+ fields[2]+ " ("+ fields[1]+")";
+                String label = "Chapter " + fields[0]+ ": "+ fields[2];
                 TTEntity c = new TTEntity()
                   .setCode(code)
                   .setName(label)
                   .setIri(iri)
-                  .setScheme(IM.CODE_SCHEME_ICD10)
-                  .addType(IM.LEGACY);
+                  .addType(OWL.CLASS);
                 c.addObject(IM.IS_CHILD_OF,icd10Codes);
                 startChapterMap.put(code.substring(0,code.indexOf("-")),c);
                 startChapterList.add(code.substring(0,code.indexOf("-")));
@@ -159,14 +159,13 @@ public class ICD10Importer implements TTImport {
                 String[] fields = line.split("\t");
                 TTEntity c = new TTEntity()
                   .setCode(fields[0])
-                  .setIri("icd10:" + fields[1])
-                  .setScheme(IM.CODE_SCHEME_ICD10)
-                  .addType(IM.LEGACY);
+                  .setIri(ICD10.NAMESPACE + fields[1])
+                  .addType(OWL.CLASS);
                 if(fields[4].length()>250){
-                    c.setName(fields[4].substring(0,200)+"... ("+fields[0]+")");
+                    c.setName(fields[4].substring(0,200));
                     c.setDescription(fields[4]);
                 }else {
-                    c.setName(fields[4]+" ("+fields[0]+")");
+                    c.setName(fields[4]);
                 }
 
 

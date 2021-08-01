@@ -35,29 +35,27 @@ public class ImportApp {
                 TTImportByType importer = new Importer().validateByType(IM.GRAPH_DISCOVERY, folder);
                 importer.validateByType(IM.GRAPH_SNOMED, folder)
                     .validateByType(IM.GRAPH_EMIS, folder)
-                    .validateByType(IM.GRAPH_CTV3, folder)
+                    .validateByType(IM.GRAPH_TPP, folder)
                     .validateByType(IM.GRAPH_OPCS4, folder)
                     .validateByType(IM.GRAPH_ICD10, folder)
-                    .validateByType(IM.GRAPH_VALUESETS, folder)
-                  .validateByType(IM.GRAPH_APEX_KINGS,folder)
-                  .validateByType(IM.GRAPH_WINPATH_KINGS,folder)
-                .validateByType(IM.GRAPH_MAPS_DISCOVERY,folder)
+                  .validateByType(IM.GRAPH_VISION,folder)
+                  .validateByType(IM.GRAPH_KINGS_APEX,folder)
+                  .validateByType(IM.GRAPH_KINGS_WINPATH,folder)
+                .validateByType(IM.MAP_DISCOVERY,folder)
                 .validateByType(IM.GRAPH_REPORTS,folder)
-                .validateByType(IM.GRAPH_CEG,folder);
+                .validateByType(IM.GRAPH_CEG16,folder);
                 importer.importByType(IM.GRAPH_DISCOVERY,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_SNOMED,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_EMIS,folder,bulk,entityMap);
-                importer.importByType(IM.GRAPH_CTV3,folder,bulk,entityMap);
+                importer.importByType(IM.GRAPH_TPP,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_OPCS4,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_ICD10,folder,bulk,entityMap);
-                importer.importByType(IM.GRAPH_MAPS_DISCOVERY,folder,bulk,entityMap);
-                importer.importByType(IM.GRAPH_VALUESETS,folder,bulk,entityMap);
-                importer.validateByType(IM.GRAPH_READ2,folder);
-                importer.importByType(IM.GRAPH_READ2,folder,bulk,entityMap);
-                importer.importByType(IM.GRAPH_APEX_KINGS,folder,bulk,entityMap);
-                importer.importByType(IM.GRAPH_WINPATH_KINGS,folder,bulk,entityMap);
+                importer.importByType(IM.MAP_DISCOVERY,folder,bulk,entityMap);
+                importer.importByType(IM.GRAPH_VISION,folder,bulk,entityMap);
+                importer.importByType(IM.GRAPH_KINGS_APEX,folder,bulk,entityMap);
+                importer.importByType(IM.GRAPH_KINGS_WINPATH,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_REPORTS, folder,bulk,entityMap);
-                importer.importByType(IM.GRAPH_CEG,folder,bulk,entityMap);
+                importer.importByType(IM.GRAPH_CEG16,folder,bulk,entityMap);
                 break;
             case "prsb":
                 importer = new Importer().validateByType(IM.GRAPH_PRSB,folder);
@@ -78,8 +76,8 @@ public class ImportApp {
                 break;
             case "tpp":
             case "ctv3":
-                importer = new Importer().validateByType(IM.GRAPH_CTV3, folder);
-                importer.importByType(IM.GRAPH_CTV3, folder,bulk,entityMap);
+                importer = new Importer().validateByType(IM.GRAPH_TPP, folder);
+                importer.importByType(IM.GRAPH_TPP, folder,bulk,entityMap);
                 break;
             case "opcs4":
                 importer = new Importer().validateByType(IM.GRAPH_OPCS4, folder);
@@ -90,28 +88,29 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_ICD10, folder,bulk,entityMap);
                 break;
             case "discoverymaps":
-                importer = new Importer().validateByType(IM.GRAPH_MAPS_DISCOVERY, folder);
-                importer.importByType(IM.GRAPH_MAPS_DISCOVERY, folder,bulk,entityMap);
+                importer = new Importer().validateByType(IM.MAP_DISCOVERY, folder);
+                importer.importByType(IM.MAP_DISCOVERY, folder,bulk,entityMap);
                 break;
-            case "read2":
-                importer = new Importer().validateByType(IM.GRAPH_READ2, folder);
-                importer.importByType(IM.GRAPH_READ2, folder,bulk,entityMap);
+            case "read2" :
+            case "vision":
+                importer = new Importer().validateByType(IM.GRAPH_VISION, folder);
+                importer.importByType(IM.GRAPH_VISION, folder,bulk,entityMap);
                 break;
             case "kingsapex":
-                importer = new Importer().validateByType(IM.GRAPH_APEX_KINGS,folder);
-                importer.importByType(IM.GRAPH_APEX_KINGS,folder,bulk,entityMap);
+                importer = new Importer().validateByType(IM.GRAPH_KINGS_APEX,folder);
+                importer.importByType(IM.GRAPH_KINGS_APEX,folder,bulk,entityMap);
                 break;
             case "kingswinpath":
-                importer = new Importer().validateByType(IM.GRAPH_WINPATH_KINGS,folder);
-                importer.importByType(IM.GRAPH_WINPATH_KINGS,folder,bulk,entityMap);
+                importer = new Importer().validateByType(IM.GRAPH_KINGS_WINPATH,folder);
+                importer.importByType(IM.GRAPH_KINGS_WINPATH,folder,bulk,entityMap);
                 break;
             case "reports":
                 importer = new Importer().validateByType(IM.GRAPH_REPORTS, folder);
                 importer.importByType(IM.GRAPH_REPORTS, folder,bulk,entityMap);
                 break;
             case "cegethnicity":
-                importer= new Importer().validateByType(IM.GRAPH_CEG,folder);
-                importer.importByType(IM.GRAPH_CEG,folder,bulk,entityMap);
+                importer= new Importer().validateByType(IM.GRAPH_CEG16,folder);
+                importer.importByType(IM.GRAPH_CEG16,folder,bulk,entityMap);
                 break;
             default:
                 throw new Exception("Unknown import type");

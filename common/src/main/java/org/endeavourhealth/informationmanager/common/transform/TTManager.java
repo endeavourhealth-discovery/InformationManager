@@ -77,23 +77,28 @@ public class TTManager {
 
    public TTContext createDefaultContext() {
       context = new TTContext();
-      context.add(IM.NAMESPACE, "im");
-      context.add(SNOMED.NAMESPACE, "sn");
-      context.add(OWL.NAMESPACE, "owl");
-      context.add(RDF.NAMESPACE, "rdf");
-      context.add(RDFS.NAMESPACE, "rdfs");
-      context.add(XSD.NAMESPACE, "xsd");
-      context.add("http://endhealth.info/READ2#", "r2");
-      context.add("http://endhealth.info/CTV3#", "ctv3");
-      context.add("http://endhealth.info/ICD10#", "icd10");
-      context.add("http://endhealth.info/OPCS4#", "opcs4");
-      context.add("http://endhealth.info/EMIS#", "emis");
-      context.add("http://endhealth.info/TPP#", "tpp");
-      context.add("http://endhealth.info/Barts_Cerner#", "bc");
-      context.add(SHACL.NAMESPACE, "sh");
-      context.add("http://www.w3.org/ns/prov#", "prov");
-      context.add("https://directory.spineservices.nhs.uk/STU3/CodeSystem/ODSAPI-OrganizationRole-1#", "orole");
-      context.add("http://endhealth.info/VISION#", "vis");
+      context.add(IM.NAMESPACE, "im","Discovery namespace");
+      context.add(SNOMED.NAMESPACE, "sn","Snomed-CT namespace");
+      context.add(OWL.NAMESPACE, "owl","OWL2 namespace");
+      context.add(RDF.NAMESPACE, "rdf","RDF namespace");
+      context.add(RDFS.NAMESPACE, "rdfs","RDFS namespace");
+      context.add(XSD.NAMESPACE, "xsd","xsd namespace");
+      context.add("http://endhealth.info/icd10#", "icd10","ICD10 namespace");
+      context.add("http://endhealth.info/opcs4#", "opcs4","OPCS4 namespace");
+      context.add("http://endhealth.info/emis#", "emis","EMIS (inc. Read2 like) namespace");
+      context.add("http://endhealth.info/tpp#", "tpp","TPP (inc.CTV3) namespace");
+      context.add("http://endhealth.info/bc#", "bc","Barts Cerner namespace");
+      context.add(SHACL.NAMESPACE, "sh","SHACL namespace");
+      context.add("http://www.w3.org/ns/prov#", "prov","PROV namespace");
+      context.add("http://endhealth.info/reports#","reports","IM internal reports");
+      context.add("https://directory.spineservices.nhs.uk/STU3/CodeSystem/ODSAPI-OrganizationRole-1#", "orole","OPS roles namespace");
+      context.add("http://endhealth.info/ods#","ods","ODS code scheme");
+      context.add("http://endhealth.info/prsb#","prsb","PRSB namespace");
+      context.add("http://endhealth.info/kchwinpath#","kchwinpath","KCH Winpath codes");
+      context.add("http://endhealth.info/kchapex#","kchapex","KCH Apex codes");
+      context.add("http://endhealth.info/ceg16#","ceg13","CEG ethnicity 16+ category");
+      context.add("http://endhealth.info/nhsethnic2001#","nhse2001","NHS Ethnicitity categories 2001 census");
+      context.add("http://endhealth.info/vision#", "vis","Vision (incl. Read2) namespace");
       return context;
    }
 
@@ -384,14 +389,6 @@ public class TTManager {
       return entity;
    }
 
-   public static void addMatch(TTEntity c, TTIriRef target) {
-      TTValue maps = c.get(IM.MATCHED_TO);
-      if (maps == null) {
-         maps = new TTArray();
-         c.set(IM.MATCHED_TO, maps);
-      }
-      maps.asArray().add(target);
-   }
 
    public boolean isValidIri(String iri) {
       if (context == null)
@@ -451,51 +448,47 @@ public class TTManager {
 
    }
 
-   public static void addSimpleMap(TTEntity c, TTIriRef assuranceLevel,String target, String targetTermCode,
-                             TTIriRef matchType, Integer priority, String advice) {
-      if (matchType==null)
-         matchType= IM.MATCHED_TO;
-      TTValue maps= c.get(IM.HAS_MAP);
-      if (maps==null) {
-         maps = new TTArray();
-         c.set(IM.HAS_MAP, maps);
-      }
+
+   public static void addSimpleMap(TTEntity c,String target) {
+      c.addObject(IM.MATCHED_TO,iri(target));
+   }
+   public static TTNode addComplexMap(TTEntity c){
       TTNode map= new TTNode();
-      maps.asArray().add(map);
-      map.set(iri(IM.NAMESPACE+"assuranceLevel"),assuranceLevel);
-      TTNode mapNode= new TTNode();
-      map.set(matchType,mapNode);
-      mapNode.set(IM.MATCHED_TO,iri(target));
-      if (targetTermCode!=null)
-         if (!targetTermCode.equals(""))
-            map.set(IM.MATCHED_TERM_CODE,literal(targetTermCode));
-      if (advice!=null)
-         mapNode.set(TTIriRef.iri(IM.NAMESPACE+ "mapAdvice"),TTLiteral.literal(advice));
-      if (priority!=null)
-         mapNode.set(TTIriRef.iri(IM.NAMESPACE+"mapPriority"),TTLiteral.literal(priority));
+      c.addObject(IM.HAS_MAP,map);
+      return map;
    }
 
+   public static void addMapTarget(TTNode mapGroup, String target, TTIriRef someOrOne,
+                                   Integer priority,String advice,
+                                   TTIriRef assurance) {
+      TTNode mapNode= new TTNode();
+      mapGroup.addObject(someOrOne,mapNode);
+     if (priority!=null)
+         mapNode.set(IM.MAP_PRIORITY,TTLiteral.literal(priority));
+     if (advice!=null)
+        mapNode.set(IM.MAP_ADVICE,TTLiteral.literal(advice));
+     if (assurance!=null)
+        mapNode.set(IM.ASSURANCE_LEVEL,assurance);
+     mapNode.set(IM.MAPPED_TO,iri(target));
+
+   }
+
+
+
+
    public static TTEntity createTermCode(TTIriRef iri,TTIriRef crud,
-                                              String term,
-                                              String code,
-                                              TTIriRef scheme,
-                                              String entityCode){
+                                              String term,String code){
       TTEntity result= createInstance(iri,crud);
-      addTermCode(result,term,code,scheme,entityCode);
+      addTermCode(result,term,code);
       return result;
    }
 
    public static TTEntity addTermCode(TTEntity entity,
-                                       String term,
-                                       String code,
-                                       TTIriRef scheme,
-                                       String entityCode){
+                                       String term,String code){
       TTNode termCode= new TTNode();
-      termCode.set(IM.CODE,TTLiteral.literal(code));
       termCode.set(RDFS.LABEL,TTLiteral.literal(term));
-      termCode.set(IM.HAS_SCHEME,scheme);
-      if (entityCode!=null)
-         termCode.set(IM.MATCHED_TERM_CODE,TTLiteral.literal(entityCode));
+      if (code!=null)
+         termCode.set(IM.CODE,TTLiteral.literal(code));
       entity.addObject(IM.HAS_TERM_CODE,termCode);
       return entity;
    }

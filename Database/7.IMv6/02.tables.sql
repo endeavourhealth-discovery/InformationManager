@@ -43,7 +43,6 @@ CREATE TABLE IF NOT EXISTS entity_type (
   entity INT NOT NULL,
   type VARCHAR(140) NOT NULL,
   graph INT NOT NULL,
-  updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (dbid),
   INDEX ct_c_t (entity ASC, type ASC),
   INDEX ct_t_c (type ASC, entity ASC)
@@ -63,12 +62,10 @@ CREATE TABLE IF NOT EXISTS entity (
   code VARCHAR(50) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_bin' NULL DEFAULT NULL,
   scheme VARCHAR(140) NULL DEFAULT NULL,
   status VARCHAR(140) NOT NULL DEFAULT 'http://endhealth.info/im#Draft',
-  updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (dbid),
   UNIQUE INDEX entity_iri_uq (iri ASC) ,
   UNIQUE INDEX entity_scheme_code_uq (scheme ASC, code ASC) ,
-  INDEX entity_updated_idx (updated ASC) ,
-  index entity_name_idx (name ASC) )
+  index entity_name_idx (name(80) ASC) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4;
 
@@ -94,15 +91,12 @@ DROP TABLE IF EXISTS term_code ;
 CREATE TABLE IF NOT EXISTS term_code (
   dbid INT NOT NULL AUTO_INCREMENT,
   entity INT NOT NULL,
-  term VARCHAR(250) NULL DEFAULT NULL,
-  code VARCHAR (250) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_bin' NULL COMMENT 'code or null',
-  scheme INT NULL,
-  entity_term_code VARCHAR(250) NULL COMMENT 'might be a termid of the entity, which may be the same code as the code',
+  term VARCHAR(256) NULL DEFAULT NULL,
+  code VARCHAR(50) NULL DEFAULT NULL,
   graph INT not null,
-  updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (dbid),
-  INDEX ct_tcs_idx (term,entity,graph ASC) ,
-  INDEX ct_cs_idx(code,scheme,entity),
+  INDEX ct_tcs_idx (term(50),entity,graph ASC) ,
+  INDEX ct_code_idx(code ASC),
   INDEX ct_eg_idx(entity,graph)
   )
 ENGINE = InnoDB
