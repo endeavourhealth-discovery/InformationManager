@@ -45,43 +45,50 @@ INSERT INTO config (name, config) VALUES ('definition', '[
           {
             "label": "Is a",
             "predicate": "http://endhealth.info/im#isA",
-            "type": "ListboxWithLabel",
+            "type": "ArrayObjectNameListboxWithLabel",
             "size": "50%",
             "order": 6
           },
           {
             "label": "Has sub types",
             "predicate": "subtypes",
-            "type": "ListboxWithLabel",
+            "type": "ArrayObjectNameListboxWithLabel",
             "size": "50%",
             "order": 7
+          },
+          {
+            "label": "Is child of",
+            "predicate": "http://endhealth.info/im#isChildOf",
+            "type": "ArrayObjectNameListboxWithLabel",
+            "size": "50%",
+            "order": 8
           },
           {
             "label": "Divider",
             "predicate": "None",
             "type": "Divider",
             "size": "100%",
-            "order": 8
+            "order": 9
           },
           {
             "label": "Semantic properties",
             "predicate": "semanticProperties",
             "type": "SemanticProperties",
             "size": "100%",
-            "order": 9
+            "order": 10
           },
           {
             "label": "Divider",
             "predicate": "None",
             "type": "Divider",
             "size": "100%",
-            "order": 10
+            "order": 11
           },
           {
             "label": "Data model properties",
             "predicate": "dataModelProperties",
             "type": "DataModelProperties",
             "size": "100%",
-            "order": 11
+            "order": 12
           }
         ]');
