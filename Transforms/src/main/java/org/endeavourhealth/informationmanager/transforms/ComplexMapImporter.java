@@ -84,7 +84,7 @@ public class ComplexMapImporter {
             }
          } else{
             TTArray targetGroups = new TTArray();
-            ttComplexMap.addObject(IM.COMBINATION_OF_ONE_FROM,targetGroups);
+            ttComplexMap.addObject(IM.COMBINATION_OF,targetGroups);
             for (ComplexMapGroup targetGroup : sourceMap.getMapGroups()) {
                TTNode ttTargetGroup= new TTNode();
                targetGroups.add(ttTargetGroup);

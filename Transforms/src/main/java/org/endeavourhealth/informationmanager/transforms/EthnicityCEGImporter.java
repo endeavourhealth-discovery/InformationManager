@@ -2,7 +2,6 @@ package org.endeavourhealth.informationmanager.transforms;
 
 import com.opencsv.CSVReader;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.vocabulary.APK;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.ClosureGenerator;
