@@ -79,9 +79,6 @@ public class VisionImport implements TTImport {
 			String[] fields;
 			while ((fields = reader.readNext()) != null) {
 				count++;
-				if(count%50000 == 0){
-					System.out.println("Processed " + count +" terms");
-				}
 				if("C".equals(fields[1])) {
 					String termid= fields[0];
 					String term= fields[3];

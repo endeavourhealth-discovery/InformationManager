@@ -51,7 +51,6 @@ public class CoreImporter implements TTImport {
    @Override
    public TTImport importData(String inFolder, boolean bulkImport, Map<String,Integer> entityMap) throws Exception {
       importNamespaces(bulkImport,entityMap);
-
      System.out.println("Importing Core entities");
       for (String coreFile : coreEntities) {
         TTManager manager = new TTManager();

@@ -458,20 +458,7 @@ public class TTManager {
       return map;
    }
 
-   public static void addMapTarget(TTNode mapGroup, String target, TTIriRef someOrOne,
-                                   Integer priority,String advice,
-                                   TTIriRef assurance) {
-      TTNode mapNode= new TTNode();
-      mapGroup.addObject(someOrOne,mapNode);
-     if (priority!=null)
-         mapNode.set(IM.MAP_PRIORITY,TTLiteral.literal(priority));
-     if (advice!=null)
-        mapNode.set(IM.MAP_ADVICE,TTLiteral.literal(advice));
-     if (assurance!=null)
-        mapNode.set(IM.ASSURANCE_LEVEL,assurance);
-     mapNode.set(IM.MAPPED_TO,iri(target));
 
-   }
 
 
 
@@ -482,6 +469,8 @@ public class TTManager {
       addTermCode(result,term,code);
       return result;
    }
+
+
 
    public static TTEntity addTermCode(TTEntity entity,
                                        String term,String code){

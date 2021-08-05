@@ -47,6 +47,8 @@ public class Importer implements TTImportByType {
    private TTImport getImporter(TTIriRef importType) throws Exception {
       if (IM.GRAPH_DISCOVERY.equals(importType))
          return new CoreImporter();
+      else  if (IM.GRAPH_BARTS_CERNER.equals(importType))
+         return new BartsCernerImport();
       else if (IM.GRAPH_SNOMED.equals(importType))
          return new SnomedImporter();
       else if (IM.GRAPH_EMIS.equals(importType))

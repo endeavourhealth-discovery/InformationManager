@@ -1,15 +1,15 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.vocabulary.ICD10;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.OPCS4;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.*;
 import java.util.*;
 import java.util.zip.DataFormatException;
+
+import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 /**
  * Imports the RF2 format extended complex backward mapping from snomed to ICD10 or OPCS 4
@@ -44,9 +44,9 @@ public class ComplexMapImporter {
       this.sourceCodes = sourceCodes;
       document.setCrud(IM.UPDATE);
       if (refset.equals(OPCS4_REFERENCE_SET))
-         namespace=OPCS4.NAMESPACE;
+         namespace=IM.CODE_SCHEME_OPCS4.getIri();
       else if (refset.equals(ICD10_REFERENCE_SET))
-         namespace=ICD10.NAMESPACE;
+         namespace=IM.CODE_SCHEME_ICD10.getIri();
       else
          throw new DataFormatException(refset+" reference set is not supported yet");
 
@@ -54,11 +54,11 @@ public class ComplexMapImporter {
       importFile(file);
 
       //takes the snomed maps creates reference entities and the 3 types of maps
-      createEntityMaps();
+      createEntityMaps(namespace);
       return document;
    }
 
-   private void createEntityMaps() throws DataFormatException {
+   private void createEntityMaps(String namespace) throws DataFormatException {
       Set<Map.Entry<String, List<ComplexMap>>> entries = snomedMap.entrySet();
       for (Map.Entry<String, List<ComplexMap>> entry : entries) {
          String snomed = entry.getKey();
@@ -74,27 +74,40 @@ public class ComplexMapImporter {
       TTEntity entity = new TTEntity().setIri((SNOMED.NAMESPACE + snomed));  // snomed entity reference
       document.addEntity(entity);
       for (ComplexMap sourceMap : mapList) {
-         TTNode targetMap = TTManager.addComplexMap(entity);
+         TTNode ttComplexMap = TTManager.addComplexMap(entity);
          if (sourceMap.getMapGroups().size() == 1) {
-            addToGroup(targetMap, sourceMap.getMapGroups().get(0),IM.SOME_OF);
-         } else {
-            for (ComplexMapGroup mapGroup : sourceMap.getMapGroups()) {
-               TTNode targetGroup = new TTNode();
-               targetMap.addObject(IM.COMBINATION_OF, targetGroup);
-               addToGroup(targetGroup, mapGroup,IM.ONE_OF);
+            ComplexMapGroup targetGroup= sourceMap.getMapGroups().get(0);
+            TTArray ttTargetGroup = new TTArray();
+            ttComplexMap.addObject(IM.SOME_OF, ttTargetGroup);
+            for (ComplexMapTarget sourceTarget:targetGroup.getTargetMaps()) {
+               addMapTarget(ttTargetGroup, sourceTarget);
+            }
+         } else{
+            TTArray targetGroups = new TTArray();
+            ttComplexMap.addObject(IM.COMBINATION_OF_ONE_FROM,targetGroups);
+            for (ComplexMapGroup targetGroup : sourceMap.getMapGroups()) {
+               TTNode ttTargetGroup= new TTNode();
+               targetGroups.add(ttTargetGroup);
+               TTArray ttTargetChoice= new TTArray();
+               ttTargetGroup.set(IM.ONE_OF,ttTargetChoice);
+               for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
+                     addMapTarget(ttTargetChoice, sourceTarget);
+                  }
+               }
             }
          }
-      }
+   }
+   public void addMapTarget(TTArray targetGroup,ComplexMapTarget sourceTarget){
+      TTNode mapNode= new TTNode();
+      targetGroup.add(mapNode);
+      mapNode.set(IM.MAPPED_TO,TTIriRef.iri( namespace +sourceTarget.getTarget()));
+      if (sourceTarget.getAdvice()!=null)
+         mapNode.set(IM.MAP_ADVICE,TTLiteral.literal(sourceTarget.getAdvice()));
+      if (sourceTarget.getPriority()!=null)
+         mapNode.set(IM.MAP_PRIORITY,TTLiteral.literal(sourceTarget.getPriority()));
+      mapNode.set(IM.ASSURANCE_LEVEL,IM.NATIONALLY_ASSURED);
    }
 
-
-   private void addToGroup(TTNode targetMap, ComplexMapGroup sourceGroup,TTIriRef someOrOne) {
-      for (ComplexMapTarget sourceTarget : sourceGroup.getTargetMaps()) {
-         TTManager.addMapTarget(targetMap, namespace+ sourceTarget.getTarget(),
-           someOrOne, sourceTarget.getPriority(), sourceTarget.getAdvice(),
-           IM.NATIONALLY_ASSURED);
-      }
-   }
 
 
 
