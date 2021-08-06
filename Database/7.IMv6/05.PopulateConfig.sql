@@ -92,3 +92,23 @@ INSERT INTO config (name, config) VALUES ('definition', '[
             "order": 12
           }
         ]');
+DELETE FROM config WHERE name = 'filterDefaults';
+INSERT INTO config (name, config) VALUES ('filterDefaults', '{
+	"schemeOptions": [
+		"Discovery namespace",
+		"Snomed-CT namespace"
+	],
+    "statusOptions": [
+		"Active",
+		"Draft"
+	],
+    "typeOptions": [
+		"Class",
+        "Folder",
+        "Node shape",
+        "ObjectProperty",
+        "Query template",
+        "Record type",
+        "Value set"
+    ]
+}');
