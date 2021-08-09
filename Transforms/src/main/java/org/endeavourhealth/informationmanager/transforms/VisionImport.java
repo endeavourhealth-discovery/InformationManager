@@ -28,6 +28,8 @@ public class VisionImport implements TTImport {
 	private static final String[] r2Maps = {".*\\\\SNOMED\\\\Mapping Tables\\\\Updated\\\\Clinically Assured\\\\rcsctmap2_uk_.*\\.txt"};
 	private static final String[] altMaps = {".*\\\\SNOMED\\\\Mapping Tables\\\\Updated\\\\Clinically Assured"+
 		"\\\\codesWithValues_AlternateMaps_READ2_.*\\.txt"};
+	private static final String[] visionRead2Code = {".*\\\\TPP_Vision_Maps\\\\vision_read2_code.csv"};
+	private static final String[] visionRead2toSnomed = {".*\\\\TPP_Vision_Maps\\\\vision_read2_to_snomed_map.csv"};
 
 	private final Map<String,TTEntity> codeToConcept= new HashMap<>();
 	private Set<String> snomedCodes;
@@ -57,9 +59,9 @@ public class VisionImport implements TTImport {
 		mapDocument= manager.createDocument(IM.MAP_SNOMED_VISION.getIri());
 		importR2Desc(inFolder);
 		importR2Terms(inFolder);
-		importVisionCodes();
+		importVisionCodes(inFolder);
 		createHierarchy();
-		addVisionMaps();
+		addVisionMaps(inFolder);
 		TTDocumentFiler filer = new TTDocumentFilerJDBC();
 		filer.fileDocument(document,bulkImport,entityMap);
 		filer = new TTDocumentFilerJDBC();
@@ -159,46 +161,55 @@ public class VisionImport implements TTImport {
 	}
 
 
-	private void importVisionCodes() throws SQLException {
-		PreparedStatement getTerms= conn.prepareStatement("SELECT * from vision_read2_code");
+	private void importVisionCodes(String folder) throws IOException {
+		Path file = ImportUtils.findFileForId(folder, visionRead2Code[0]);
 		System.out.println("Retrieving terms from vision read+lookup2");
-		ResultSet rs= getTerms.executeQuery();
-		int count=0;
-		while (rs.next()){
-			count++;
-			if(count%10000 == 0){
-				System.out.println("Processed " + count +" terms");
-			}
-			String code= rs.getString("read_code");
-			String term= rs.getString("read_term");
-			if (codeToConcept.get(code)==null) {
-				TTEntity c = new TTEntity();
+		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+			reader.readLine();
+			String line = reader.readLine();
+			int count=0;
+			while (line != null && !line.isEmpty()) {
+				String[] fields = line.split(",");
+				count++;
+				if(count%10000 == 0){
+					System.out.println("Processed " + count +" terms");
+				}
+				String code= fields[0];
+				String term= fields[1];
+				if (codeToConcept.get(code)==null) {
+					TTEntity c = new TTEntity();
 					c.setIri("vis:" + code);
 					c.setName(term);
 					c.setCode(code);
 					document.addEntity(c);
-					codeToConcept.put(code,c);
+					codeToConcept.put(code, c);
+				}
+				line = reader.readLine();
 			}
+			System.out.println("Process ended with " + count + " additional Vision read like codes created");
 		}
-		System.out.println("Process ended with " + count +" additional Vision read like codes created");
 	}
 
 
-	private void addVisionMaps() throws SQLException {
-		Map<String,TTEntity> backMaps= new HashMap<>();
-		PreparedStatement getMaps = conn.prepareStatement("SELECT * from vision_read2_to_snomed_map");
+	private void addVisionMaps(String folder) throws IOException {
+		Path file = ImportUtils.findFileForId(folder, visionRead2toSnomed[0]);
 		System.out.println("Retrieving Vision snomed maps");
-		ResultSet rs = getMaps.executeQuery();
-		while (rs.next()) {
-			String code = rs.getString("read_code");
-			String snomed = rs.getString("snomed_concept_id");
-			if (isSnomed(snomed)) {
-				TTEntity snomedConcept= new TTEntity().setIri("sn:"+snomed);
-				snomedConcept.setCrud(IM.ADD);
-				mapDocument.addEntity(snomedConcept);
-				if (codeToConcept.get(code)!=null) {
-					TTManager.addSimpleMap(snomedConcept,"http://endhealth.info/VISION#"+code);
+		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+			reader.readLine();
+			String line = reader.readLine();
+			while (line != null && !line.isEmpty()) {
+				String[] fields = line.split(",");
+				String code= fields[0];
+				String snomed= fields[1];
+				if (isSnomed(snomed)) {
+					TTEntity snomedConcept= new TTEntity().setIri("sn:"+snomed);
+					snomedConcept.setCrud(IM.ADD);
+					mapDocument.addEntity(snomedConcept);
+					if (codeToConcept.get(code)!=null) {
+						TTManager.addSimpleMap(snomedConcept,"http://endhealth.info/VISION#"+code);
+					}
 				}
+				line = reader.readLine();
 			}
 		}
 	}

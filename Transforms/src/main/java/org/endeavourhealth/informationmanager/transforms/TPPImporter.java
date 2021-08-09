@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import com.opencsv.CSVReader;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.OWL;
@@ -11,6 +12,7 @@ import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -33,10 +35,13 @@ public class TPPImporter implements TTImport{
     private static final String[] descriptions = {".*\\\\TPP\\\\Descrip.v3"};
     private static final String[] terms = {".*\\\\TPP\\\\Terms.v3"};
     private static final String[] hierarchies = {".*\\\\TPP\\\\V3hier.v3"};
+    private static final String[] tppCtv3Lookup = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_lookup_2.csv"};
+    private static final String[] tppCtv3ToSnomed = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_to_snomed.csv"};
     private final Map<String, TTEntity> entityMap = new HashMap<>();
     private final TTManager manager= new TTManager();
     private Set<String> snomedCodes;
     private final Map<String,String> emisToSnomed = new HashMap<>();
+    private final Map<String,String> tppCtv3ToToSnomed = new HashMap<>();
     private TTDocument document;
     private TTDocument mapDocument;
     private Connection conn;
@@ -67,7 +72,8 @@ public class TPPImporter implements TTImport{
         importCV3Hierarchy(inFolder);
 
         //Imports the tpp terms from the tpp look up table
-        importTPPMaps();
+        importTppCtv3ToSnomed(inFolder);
+        importTPPMaps(inFolder);
 
 
         TTDocumentFiler filer = new TTDocumentFilerJDBC();
@@ -221,58 +227,128 @@ public class TPPImporter implements TTImport{
     }
 
 
+    private void importTppCtv3ToSnomed(String folder) throws IOException {
+        Path file = ImportUtils.findFileForId(folder, tppCtv3ToSnomed[0]);
+        System.out.println("Importing TPP Ctv3 to Snomed");
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            reader.readLine();
+            String line = reader.readLine();
+            int count = 0;
+            while (line != null && !line.isEmpty()) {
+                String[] fields = line.split(",");
+                count++;
+                if (count % 10000 == 0) {
+                    System.out.println("Processed " + count);
+                }
+                String code = fields[0];
+                String snomed = fields[1];
+                tppCtv3ToToSnomed.put(code,snomed);
+                line = reader.readLine();
+            }
+            System.out.println("Process ended with " + count);
+        }
+    }
 
 
     //Imports the used TPP codes provided by TPP.
-    private void importTPPMaps() throws SQLException {
-        PreparedStatement getTerms= conn.prepareStatement("SELECT lk.ctv3_code as code"+
-            ",lk.ctv3_term as term, sn.snomed_concept_id as snomed \n"+
-            "from tpp_ctv3_lookup_2 lk \n"+
-        "left join tpp_ctv3_to_snomed sn on lk.ctv3_code = sn.ctv3_code");
+    private void importTPPMaps(String folder) throws SQLException, IOException {
+        Path file = ImportUtils.findFileForId(folder, tppCtv3Lookup[0]);
         System.out.println("Retrieving terms from tpp_TPP+lookup2");
-        ResultSet rs= getTerms.executeQuery();
-        int count=0;
-        while (rs.next()){
-            count++;
-            if(count%10000 == 0){
-                System.out.println("Processed " + count +" terms");
-            }
-            String code= rs.getString("code");
-            String term= rs.getString("term");
-            term=term.replace("\t","");
-            String snomed=rs.getString("snomed");
-            TTEntity TPP= codeToEntity.get(code);
-            if (TPP==null){
-                TPP = new TTEntity()
-                  .setIri("tpp:" + code)
-                  .setName(term)
-                  .setCode(code)
-                  .addType(OWL.CLASS);
-                entityMap.put(code, TPP);
-                TPP.setCrud(IM.REPLACE);
-                TPP.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.NAMESPACE + "TPPUnlinkedCodes")));
-                document.addEntity(TPP);
-            }
-            if (snomed!=null){
-                if (isSnomed(snomed)) {
-                    TTEntity snomedEntity= new TTEntity();
-                    snomedEntity.setIri(SNOMED.NAMESPACE+ snomed);
-                    mapDocument.addEntity(snomedEntity);
-                    TTManager.addSimpleMap(snomedEntity,TPP.getIri());
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            reader.readLine();
+            String line = reader.readLine();
+            int count = 0;
+            while (line != null && !line.isEmpty()) {
+                String[] fields = line.split(",");
+                count++;
+                if (count % 10000 == 0) {
+                    System.out.println("Processed " + count +" terms");
                 }
-            } else {
-                if (!code.startsWith(".")) {
-                    snomed = emisToSnomed.get(code.replace(".", ""));
-                    if (snomed != null) {
-                        TTEntity snomedEntity = new TTEntity();
-                        snomedEntity.setIri(SNOMED.NAMESPACE + snomed);
+                String code = fields[0];
+                String term= fields[1];
+                term=term.replace("\t","");
+                String snomed=tppCtv3ToToSnomed.get(fields[0]);
+                TTEntity TPP= codeToEntity.get(code);
+                if (TPP==null){
+                    TPP = new TTEntity()
+                            .setIri("tpp:" + code)
+                            .setName(term)
+                            .setCode(code)
+                            .addType(OWL.CLASS);
+                    entityMap.put(code, TPP);
+                    TPP.setCrud(IM.REPLACE);
+                    TPP.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.NAMESPACE + "TPPUnlinkedCodes")));
+                    document.addEntity(TPP);
+                }
+                if (snomed!=null){
+                    if (isSnomed(snomed)) {
+                        TTEntity snomedEntity= new TTEntity();
+                        snomedEntity.setIri(SNOMED.NAMESPACE+ snomed);
                         mapDocument.addEntity(snomedEntity);
-                        TTManager.addSimpleMap(snomedEntity, TPP.getIri());
+                        TTManager.addSimpleMap(snomedEntity,TPP.getIri());
+                    }
+                } else {
+                    if (!code.startsWith(".")) {
+                        snomed = emisToSnomed.get(code.replace(".", ""));
+                        if (snomed != null) {
+                            TTEntity snomedEntity = new TTEntity();
+                            snomedEntity.setIri(SNOMED.NAMESPACE + snomed);
+                            mapDocument.addEntity(snomedEntity);
+                            TTManager.addSimpleMap(snomedEntity, TPP.getIri());
+                        }
                     }
                 }
             }
+            System.out.println("Process ended with " + count +" entities created");
         }
-        System.out.println("Process ended with " + count +" entities created");
+//        PreparedStatement getTerms= conn.prepareStatement("SELECT lk.ctv3_code as code"+
+//            ",lk.ctv3_term as term, sn.snomed_concept_id as snomed \n"+
+//            "from tpp_ctv3_lookup_2 lk \n"+
+//        "left join tpp_ctv3_to_snomed sn on lk.ctv3_code = sn.ctv3_code");
+//        System.out.println("Retrieving terms from tpp_TPP+lookup2");
+//        ResultSet rs= getTerms.executeQuery();
+//        int count=0;
+//        while (rs.next()){
+//            count++;
+//            if(count%10000 == 0){
+//                System.out.println("Processed " + count +" terms");
+//            }
+//            String code= rs.getString("code");
+//            String term= rs.getString("term");
+//            term=term.replace("\t","");
+//            String snomed=rs.getString("snomed");
+//            TTEntity TPP= codeToEntity.get(code);
+//            if (TPP==null){
+//                TPP = new TTEntity()
+//                  .setIri("tpp:" + code)
+//                  .setName(term)
+//                  .setCode(code)
+//                  .addType(OWL.CLASS);
+//                entityMap.put(code, TPP);
+//                TPP.setCrud(IM.REPLACE);
+//                TPP.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.NAMESPACE + "TPPUnlinkedCodes")));
+//                document.addEntity(TPP);
+//            }
+//            if (snomed!=null){
+//                if (isSnomed(snomed)) {
+//                    TTEntity snomedEntity= new TTEntity();
+//                    snomedEntity.setIri(SNOMED.NAMESPACE+ snomed);
+//                    mapDocument.addEntity(snomedEntity);
+//                    TTManager.addSimpleMap(snomedEntity,TPP.getIri());
+//                }
+//            } else {
+//                if (!code.startsWith(".")) {
+//                    snomed = emisToSnomed.get(code.replace(".", ""));
+//                    if (snomed != null) {
+//                        TTEntity snomedEntity = new TTEntity();
+//                        snomedEntity.setIri(SNOMED.NAMESPACE + snomed);
+//                        mapDocument.addEntity(snomedEntity);
+//                        TTManager.addSimpleMap(snomedEntity, TPP.getIri());
+//                    }
+//                }
+//            }
+//        }
+//        System.out.println("Process ended with " + count +" entities created");
     }
 
     public TPPImporter validateTPPTables(Connection conn) throws SQLException {
