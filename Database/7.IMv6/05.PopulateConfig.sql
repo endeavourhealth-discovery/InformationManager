@@ -1,3 +1,4 @@
+use im6;
 DELETE FROM config WHERE name = 'definition';
 INSERT INTO config (name, config) VALUES ('definition', '[
           {
