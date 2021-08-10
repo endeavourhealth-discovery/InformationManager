@@ -87,7 +87,7 @@ public class PRSBImport implements TTImport {
 	}
 
 	private void parsePRSBModel(JSONObject dataModel) throws DataFormatException {
-		TTEntity dm= newEntity(dataModel,IM.DATA_MODEL);
+		TTEntity dm= newEntity(dataModel,SHACL.NODESHAPE);
 		dm.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"DiscoveryOntology"));
 		JSONArray recordTypes= (JSONArray) dataModel.entrySet();
 		dataModel.entrySet().forEach(c ->{
@@ -135,7 +135,7 @@ public class PRSBImport implements TTImport {
 		String background= getObjectArrayliteral(c,"context","#text");
 		if (background!=null)
 			entity.set(TTIriRef.iri(IM.NAMESPACE+"backgroundContext"),TTLiteral.literal(background));
-		if (entity.isType(IM.DATA_MODEL))
+		if (entity.isType(SHACL.NODESHAPE))
 			return entity;
 		return entity;
 
