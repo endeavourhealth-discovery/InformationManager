@@ -74,7 +74,8 @@ public class ComplexMapImporter {
       TTEntity entity = new TTEntity().setIri((SNOMED.NAMESPACE + snomed));  // snomed entity reference
       document.addEntity(entity);
       for (ComplexMap sourceMap : mapList) {
-         TTNode ttComplexMap = TTManager.addComplexMap(entity);
+         TTNode ttComplexMap= new TTNode();
+         entity.addObject(IM.HAS_MAP,ttComplexMap);
          if (sourceMap.getMapGroups().size() == 1) {
             ComplexMapGroup targetGroup= sourceMap.getMapGroups().get(0);
             TTArray ttTargetGroup = new TTArray();
@@ -84,7 +85,7 @@ public class ComplexMapImporter {
             }
          } else{
             TTArray targetGroups = new TTArray();
-            ttComplexMap.addObject(IM.COMBINATION_OF,targetGroups);
+            ttComplexMap.set(IM.COMBINATION_OF,targetGroups);
             for (ComplexMapGroup targetGroup : sourceMap.getMapGroups()) {
                TTNode ttTargetGroup= new TTNode();
                targetGroups.add(ttTargetGroup);
