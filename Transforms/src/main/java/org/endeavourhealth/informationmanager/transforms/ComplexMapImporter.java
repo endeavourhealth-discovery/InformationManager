@@ -78,7 +78,7 @@ public class ComplexMapImporter {
          if (sourceMap.getMapGroups().size() == 1) {
             ComplexMapGroup targetGroup= sourceMap.getMapGroups().get(0);
             TTArray ttTargetGroup = new TTArray();
-            ttComplexMap.addObject(IM.SOME_OF, ttTargetGroup);
+            ttComplexMap.set(IM.SOME_OF, ttTargetGroup);
             for (ComplexMapTarget sourceTarget:targetGroup.getTargetMaps()) {
                addMapTarget(ttTargetGroup, sourceTarget);
             }
