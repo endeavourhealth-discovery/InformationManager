@@ -70,7 +70,7 @@ public class OPCS4Importer  implements TTImport {
                 String chapter= fields[0];
                 String term= fields[1];
                 TTEntity c= new TTEntity();
-                c.setIri("opcs4:"+chapter)
+                c.setIri(IM.CODE_SCHEME_OPCS4.getIri()+chapter)
                     .setName(term+" (chapter "+chapter+")")
                     .setCode(chapter)
                   .addType(OWL.CLASS)
@@ -98,9 +98,9 @@ public class OPCS4Importer  implements TTImport {
                 String[] fields = line.split("\t");
                 TTEntity c = new TTEntity()
                         .setCode(fields[0])
-                        .setIri("opcs4:" + (fields[0].replace(".","")))
+                        .setIri(IM.CODE_SCHEME_OPCS4.getIri() + (fields[0].replace(".","")))
                         .addType(OWL.CLASS)
-                    .set(IM.IS_CHILD_OF,new TTArray().add(iri("opcs4:"+fields[0].substring(0,1))));
+                    .set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.CODE_SCHEME_OPCS4.getIri()+fields[0].substring(0,1))));
                     if(fields[1].length()>250){
                         c.setName(fields[1].substring(0,150));
                     }else {

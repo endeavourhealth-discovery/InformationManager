@@ -33,7 +33,7 @@ public class ICD10Importer implements TTImport {
     private static final String[] chapters = {".*\\\\icd_df_10.5.0_20151102000001\\\\ICD10_Edition5_.*\\\\Content\\\\ICD10-Chapters.txt"};
 
 
-    private final TTIriRef icd10Codes= TTIriRef.iri(IM.CODE_SCHEME_ICD10+"ICD10Codes");
+    private final TTIriRef icd10Codes= TTIriRef.iri(IM.CODE_SCHEME_ICD10.getIri()+"ICD10Codes");
     private final Map<String,TTEntity> entityMap = new HashMap<>();
     private final TTManager manager= new TTManager();
     private Set<String> snomedCodes;
@@ -123,7 +123,7 @@ public class ICD10Importer implements TTImport {
                     System.out.println("Processed " + count + " records");
                 }
                 String[] fields = line.split("\t");
-                String iri= IM.CODE_SCHEME_ICD10+fields[1];
+                String iri= IM.CODE_SCHEME_ICD10.getIri()+fields[1];
                 String code= fields[1];
                 String label = "Chapter " + fields[0]+ ": "+ fields[2];
                 TTEntity c = new TTEntity()
@@ -158,7 +158,7 @@ public class ICD10Importer implements TTImport {
                 String[] fields = line.split("\t");
                 TTEntity c = new TTEntity()
                   .setCode(fields[0])
-                  .setIri(IM.CODE_SCHEME_ICD10 + fields[1])
+                  .setIri(IM.CODE_SCHEME_ICD10.getIri() + fields[1])
                   .addType(OWL.CLASS);
                 if(fields[4].length()>250){
                     c.setName(fields[4].substring(0,200));

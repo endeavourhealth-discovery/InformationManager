@@ -111,21 +111,23 @@ public class VisionImport implements TTImport {
 				String[] fields = line.split(",");
 				if ("C".equals(fields[6])) {
 					String code= fields[0];
-					if (Character.isLowerCase(code.charAt(0))) {
-						TTEntity readConcept= codeToConcept.get(code);
-						if (readConcept==null){
-							readConcept= new TTEntity()
-								.setIri("vis:"+ code.replace(".",""))
+					if (!code.startsWith(".")){
+						if (!Character.isLowerCase(code.charAt(0))) {
+						TTEntity readConcept = codeToConcept.get(code);
+						if (readConcept == null) {
+							readConcept = new TTEntity()
+								.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".",""))
 								.setCode(code)
 								.addType(OWL.CLASS);
 							document.addEntity(readConcept);
-							codeToConcept.put(code,readConcept);
+							codeToConcept.put(code, readConcept);
 						}
 						String termId = fields[1];
-						String preferred= fields[2];
+						String preferred = fields[2];
 						if (preferred.equals("P"))
 							preferredId.add(termId);
-						r2TermIdMap.put(termId,readConcept);
+						r2TermIdMap.put(termId, readConcept);
+						}
 						count++;
 						if (count % 50000 == 0) {
 							System.out.println("Processed " + count + " read code termid links");
@@ -147,10 +149,10 @@ public class VisionImport implements TTImport {
 			if (shortCode.contains("."))
 				shortCode= shortCode.substring(0,shortCode.indexOf("."));
 			if (shortCode.length()==1)
-				entity.set(IM.IS_CHILD_OF,new TTArray().add(iri("vis:VisionCodes")));
+				entity.set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.CODE_SCHEME_VISION.getIri()+"VisionCodes")));
 			else {
 				String parent = shortCode.substring(0,shortCode.length()-1);
-				entity.set(IM.IS_CHILD_OF, new TTArray().add(iri("vis:" + parent)));
+				entity.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.CODE_SCHEME_VISION.getIri() + parent)));
 			}
 		}
 	}
@@ -168,13 +170,17 @@ public class VisionImport implements TTImport {
 			}
 			String code= rs.getString("read_code");
 			String term= rs.getString("read_term");
-			if (codeToConcept.get(code)==null) {
-				TTEntity c = new TTEntity();
-					c.setIri("vis:" + code);
-					c.setName(term);
-					c.setCode(code);
-					document.addEntity(c);
-					codeToConcept.put(code,c);
+			if (!code.startsWith(".")) {
+				if (!Character.isLowerCase(code.charAt(0))) {
+					if (codeToConcept.get(code) == null) {
+						TTEntity c = new TTEntity();
+						c.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".", ""));
+						c.setName(term);
+						c.setCode(code);
+						document.addEntity(c);
+						codeToConcept.put(code, c);
+					}
+				}
 			}
 		}
 		System.out.println("Process ended with " + count +" additional Vision read like codes created");
@@ -194,7 +200,7 @@ public class VisionImport implements TTImport {
 				snomedConcept.setCrud(IM.ADD);
 				mapDocument.addEntity(snomedConcept);
 				if (codeToConcept.get(code)!=null) {
-					TTManager.addSimpleMap(snomedConcept,"http://endhealth.info/VISION#"+code);
+					TTManager.addSimpleMap(snomedConcept,IM.CODE_SCHEME_VISION.getIri()+code.replace(".",""));
 				}
 			}
 		}
