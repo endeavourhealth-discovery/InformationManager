@@ -94,7 +94,7 @@ public class WinPathKingsImport implements TTImport {
 			backMapDocument.addEntity(snomedEntity);
 			List<String> winpathList = entry.getValue();
 			for (String winpath : winpathList) {
-				TTManager.addSimpleMap(snomedEntity, IM.CODE_SCHEME_KINGS_WINPATH + winpath);
+				TTManager.addSimpleMap(snomedEntity, IM.CODE_SCHEME_KINGS_WINPATH.getIri() + winpath);
 			}
 		}
 	}
@@ -133,7 +133,7 @@ public class WinPathKingsImport implements TTImport {
 				String[] fields = line.split("\t");
 				String readCode = fields[2];
 				String code = fields[0] + "-" + (fields[1].toLowerCase());
-				String iri = IM.CODE_SCHEME_KINGS_WINPATH + fields[0].replace(" ", "") + "-" + (fields[1].replace(" ", ""));
+				String iri = IM.CODE_SCHEME_KINGS_WINPATH.getIri() + fields[0].replace(" ", "") + "-" + (fields[1].replace(" ", ""));
 				TTEntity entity = new TTEntity()
 					.setIri(iri)
 					.addType(OWL.CLASS)
