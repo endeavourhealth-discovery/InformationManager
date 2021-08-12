@@ -125,10 +125,12 @@ INSERT INTO config (name, config) VALUES ('filterDefaults', '{
 		"Draft"
 	],
     "typeOptions": [
-		"Class",
+        "Class",
+        "Concept Set",
         "Folder",
         "Node shape",
         "ObjectProperty",
+        "Property",
         "Query template",
         "Record type",
         "Value set"
