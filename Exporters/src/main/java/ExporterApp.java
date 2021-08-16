@@ -6,7 +6,7 @@ public class ExporterApp {
 		}
 		String exportType=args[1].toLowerCase();
 		switch (exportType) {
-			case "valuesets ":
+			case "valuesets":
 				break;
 			default:
 				throw new Exception("Unrecognised export type");
