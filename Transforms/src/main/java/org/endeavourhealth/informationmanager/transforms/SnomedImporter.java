@@ -459,23 +459,15 @@ public class SnomedImporter implements TTImport {
    }
 
    private void addRelationship(TTEntity c, Integer group, String relationship, String target) {
-      if (relationship.equals(IS_A) || relationship.equals(REPLACED_BY)) {
+      if (relationship.equals(IS_A)) {
          addIsa(c,target);
-         if (relationship.equals(REPLACED_BY)) {
-            TTNode roleGroup = getRoleGroup(c, group);
-            roleGroup.set(OWL.ONPROPERTY,TTIriRef.iri(SN+REPLACED_BY));
-            roleGroup.set(RDF.TYPE,OWL.RESTRICTION);
-            roleGroup.set(OWL.SOMEVALUESFROM,TTIriRef.iri(SN+target));
-         }
-      } else {
+
+      } else if (relationship.equals(REPLACED_BY)){
+         c.addObject(SNOMED.REPLACED_BY,TTIriRef.iri(SNOMED.NAMESPACE+target));
+      }
+      else {
          TTNode roleGroup = getRoleGroup(c, group);
-         TTNode role = new TTNode();
-         if (roleGroup.get(IM.ROLE)==null)
-            roleGroup.set(IM.ROLE,new TTArray());
-         roleGroup.get(IM.ROLE).asArray().add(role);
-         role.set(OWL.ONPROPERTY,TTIriRef.iri(SN+relationship));
-         role.set(RDF.TYPE,OWL.RESTRICTION);
-         role.set(OWL.SOMEVALUESFROM,TTIriRef.iri(SN+target));
+         roleGroup.set(TTIriRef.iri(SN+relationship),TTIriRef.iri(SN+target));
       }
    }
 

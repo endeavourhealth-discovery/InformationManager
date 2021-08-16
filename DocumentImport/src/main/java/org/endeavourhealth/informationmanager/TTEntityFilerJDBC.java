@@ -320,7 +320,7 @@ public class TTEntityFilerJDBC {
       Set<Map.Entry<TTIriRef, TTValue>> entries = node.getPredicateMap().entrySet();
       for (Map.Entry<TTIriRef, TTValue> entry : entries) {
          //Term codes are denormalised into term code table
-         if (!entry.getKey().equals(IM.HAS_TERM_CODE)&(!entry.getKey().equals(IM.HAS_SCHEME))) {
+         if (!entry.getKey().equals(IM.HAS_TERM_CODE)&(!entry.getKey().equals(IM.HAS_SCHEME))&(!entry.getKey().equals(IM.GROUP_NUMBER))) {
             TTValue object = entry.getValue();
             if (object.isIriRef()) {
                fileTriple(entityId, parent, entry.getKey(), object.asIriRef(), null,1);

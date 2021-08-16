@@ -214,9 +214,12 @@ public class ReasonerPlus {
       if (entity.get(IM.ROLE_GROUP)!=null)
          for (TTValue roleGroup : entity.get(IM.ROLE_GROUP).asArray().getElements()) {
             for (TTValue role:roleGroup.asNode().get(IM.ROLE).asArray().getElements()){
-               TTIriRef subProperty= role.asNode().get(OWL.ONPROPERTY).asIriRef();
-               if (manager.isA(subProperty,property))
-                  return true;
+               Set<Map.Entry<TTIriRef,TTValue>> predicates= role.asNode().getPredicateMap().entrySet();
+               for (Map.Entry<TTIriRef,TTValue> entry:predicates){
+                  TTIriRef subProperty = entry.getKey();
+                  if (manager.isA(subProperty, property))
+                     return true;
+               }
             }
 
          }
@@ -296,29 +299,21 @@ public class ReasonerPlus {
          TTNode roleGroup= new TTNode();
          roleGroups.asArray().add(roleGroup);
          roleGroup.set(IM.GROUP_NUMBER,TTLiteral.literal(0));
-         roleGroup.set(IM.ROLE,new TTArray());
       }
-      TTValue roleGroup= roleGroups.asArray().getElements().stream().findFirst().get();
-      if (roleGroup.asNode().get(IM.ROLE)==null)
-         roleGroup.asNode().set(IM.ROLE, new TTArray());
-      TTArray roles= roleGroup.asNode().get(IM.ROLE).asArray();
-      TTNode role = new TTNode();
-      roles.add(role);
+      TTNode roleGroup= roleGroups.asArray().getElements().stream().findFirst().get().asNode();
       if (attribute.get(OWL.ONPROPERTY) != null) {
-         role.set(RDF.TYPE,OWL.RESTRICTION);
-         role.set(OWL.ONPROPERTY,attribute.get(OWL.ONPROPERTY));
          if (attribute.get(OWL.ONCLASS) != null)
-               role.set(OWL.ONCLASS,attribute.get(OWL.ONCLASS));
+               roleGroup.set(attribute.get(OWL.ONPROPERTY).asIriRef(),attribute.get(OWL.ONCLASS));
          else if (attribute.get(OWL.SOMEVALUESFROM) != null)
-               role.set(OWL.SOMEVALUESFROM,attribute.get(OWL.SOMEVALUESFROM));
+               roleGroup.set(attribute.get(OWL.ONPROPERTY).asIriRef(),attribute.get(OWL.SOMEVALUESFROM));
          else if (attribute.get(OWL.ALLVALUESFROM) != null)
-               role.set(OWL.ALLVALUESFROM,attribute.get(OWL.ALLVALUESFROM));
+               roleGroup.set(attribute.get(OWL.ONPROPERTY).asIriRef(),attribute.get(OWL.ALLVALUESFROM));
          else if (attribute.get(OWL.ONDATARANGE) != null)
-               role.set(OWL.ONDATARANGE,attribute.get(OWL.ONDATARANGE));
+               roleGroup.set(attribute.get(OWL.ONPROPERTY).asIriRef(),attribute.get(OWL.ONDATARANGE));
          else if (attribute.get(OWL.ONDATATYPE) != null)
-               role.set(OWL.ONDATATYPE,attribute.get(OWL.ONDATATYPE));
+               roleGroup.set(attribute.get(OWL.ONPROPERTY).asIriRef(),attribute.get(OWL.ONDATATYPE));
          else if (attribute.get(OWL.HASVALUE) != null)
-               role.set(OWL.HASVALUE,attribute.get(OWL.HASVALUE));
+               roleGroup.set(attribute.get(OWL.ONPROPERTY).asIriRef(),attribute.get(OWL.HASVALUE));
             else
                throw new DataFormatException("unknown property construct");
          } else

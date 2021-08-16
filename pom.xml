@@ -38,6 +38,7 @@
     <module>DiscoveryConverter</module>
     <module>V1-V2Migration</module>
     <module>Feeds</module>
+      <module>Exporters</module>
   </modules>
 
   <dependencyManagement>
