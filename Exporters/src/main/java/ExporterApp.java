@@ -7,6 +7,8 @@ public class ExporterApp {
 		String exportType=args[1].toLowerCase();
 		switch (exportType) {
 			case "conceptsets":
+				ConceptSetExporter exporter= new ConceptSetExporter();
+				exporter.exportAll(args[0]);
 				break;
 			default:
 				throw new Exception("Unrecognised export type");

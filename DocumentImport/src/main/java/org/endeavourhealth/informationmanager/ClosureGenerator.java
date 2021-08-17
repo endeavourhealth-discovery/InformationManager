@@ -115,7 +115,7 @@ public class ClosureGenerator {
         if (!relationship.equals(IM.HAS_REPLACED))
             return predicateDbid;
         else {
-            sql="SELECT dbid from entity where iri='"+IM.HAS_REPLACED+"'";
+            sql="SELECT dbid from entity where iri='"+IM.HAS_REPLACED.getIri()+"'";
             PreparedStatement stmt=conn.prepareStatement(sql);
             try (ResultSet rs = stmt.executeQuery()) {
                 rs.next();
