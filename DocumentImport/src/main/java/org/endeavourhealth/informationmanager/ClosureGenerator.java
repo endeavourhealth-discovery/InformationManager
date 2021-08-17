@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -71,27 +72,28 @@ public class ClosureGenerator {
     private static Integer loadRelationships(Connection conn, TTIriRef relationship) throws SQLException {
         System.out.println("Loading relationships...");
         String sql;
+        PreparedStatement stmt;
         if (!relationship.equals(IM.HAS_REPLACED)) {
             sql = "select subject as child, object as parent, p.dbid as predicateDbid\n" +
               "from tpl\n" +
               "JOIN entity p ON p.dbid = tpl.predicate\n" +
               "WHERE p.iri = ?\n" +
               "ORDER BY child";
+            stmt= conn.prepareStatement(sql);
+            DALHelper.setString(stmt,1,relationship.getIri());
         } else{
 
             sql = "select subject as parent, object as child, p.dbid as predicateDbid\n" +
               "from tpl\n" +
               "JOIN entity p ON p.dbid = tpl.predicate\n" +
-              "WHERE p.iri = ?\n" +
+              "WHERE p.iri = 'http://snomed.info/sct#370124000'" +
               "ORDER BY child";
+            stmt= conn.prepareStatement(sql);
 
         }
         Integer previousChildId = null;
         Integer predicateDbid = null;
-        try (PreparedStatement stmt = conn.prepareStatement(sql);) {
-            stmt.setString(1, relationship.getIri());
-
-            try (ResultSet rs = stmt.executeQuery()) {
+        try (ResultSet rs = stmt.executeQuery()) {
                 List<Integer> parents = null;
                 int c = 0;
                 while (rs.next()) {
@@ -108,7 +110,7 @@ public class ClosureGenerator {
                     parents.add(rs.getInt("parent"));
                     previousChildId = childId;
                 }
-            }
+
         }
 
         System.out.println("\nRelationships loaded for " + parentMap.size() + " entities");
@@ -116,7 +118,7 @@ public class ClosureGenerator {
             return predicateDbid;
         else {
             sql="SELECT dbid from entity where iri='"+IM.HAS_REPLACED.getIri()+"'";
-            PreparedStatement stmt=conn.prepareStatement(sql);
+            stmt=conn.prepareStatement(sql);
             try (ResultSet rs = stmt.executeQuery()) {
                 rs.next();
                 predicateDbid= rs.getInt("dbid");
