@@ -43,7 +43,8 @@ public class ImportApp {
                   .validateByType(IM.GRAPH_KINGS_WINPATH,folder)
                 .validateByType(IM.MAP_DISCOVERY,folder)
                 .validateByType(IM.GRAPH_REPORTS,folder)
-                .validateByType(IM.GRAPH_CEG16,folder);
+                .validateByType(IM.GRAPH_CEG16,folder)
+                .validateByType(IM.GRAPH_BARTS_CERNER,folder);
                 importer.importByType(IM.GRAPH_DISCOVERY,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_SNOMED,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_EMIS,folder,bulk,entityMap);
@@ -56,6 +57,7 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_KINGS_WINPATH,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_REPORTS, folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_CEG16,folder,bulk,entityMap);
+                importer.importByType(IM.GRAPH_BARTS_CERNER,folder,bulk,entityMap);
                 break;
             case "prsb":
                 importer = new Importer().validateByType(IM.GRAPH_PRSB,folder);
@@ -111,6 +113,10 @@ public class ImportApp {
             case "cegethnicity":
                 importer= new Importer().validateByType(IM.GRAPH_CEG16,folder);
                 importer.importByType(IM.GRAPH_CEG16,folder,bulk,entityMap);
+                break;
+            case "barts":
+                importer= new Importer().validateByType(IM.GRAPH_BARTS_CERNER,folder);
+                importer.importByType(IM.GRAPH_BARTS_CERNER,folder,bulk,entityMap);
                 break;
             default:
                 throw new Exception("Unknown import type");

@@ -106,9 +106,6 @@ public class EMISImport implements TTImport {
             String[] fields;
             while ((fields = reader.readNext()) != null) {
                 count++;
-                if (count % 10000 == 0) {
-                    System.out.println("Processed " + count + " records looking for new entities");
-                }
                 String codeid = fields[0];
                 String term = fields[1];
                 String emis = fields[2];

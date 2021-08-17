@@ -22,7 +22,9 @@ public class ClosureGenerator {
 
         List<TTIriRef> relationships = Arrays.asList(
             IM.IS_A,
-            IM.IS_CHILD_OF
+            IM.IS_CHILD_OF,
+          SNOMED.REPLACED_BY,
+          IM.HAS_REPLACED
         );
 
         String outFile = outpath + "/closure.txt";
@@ -65,13 +67,25 @@ public class ClosureGenerator {
         return connection;
     }
 
+
     private static Integer loadRelationships(Connection conn, TTIriRef relationship) throws SQLException {
         System.out.println("Loading relationships...");
-        String sql = "select subject as child, object as parent, p.dbid as predicateDbid\n" +
-            "from tpl\n" +
-            "JOIN entity p ON p.dbid = tpl.predicate\n" +
-            "WHERE p.iri = ?\n" +
-            "ORDER BY child";
+        String sql;
+        if (!relationship.equals(IM.HAS_REPLACED)) {
+            sql = "select subject as child, object as parent, p.dbid as predicateDbid\n" +
+              "from tpl\n" +
+              "JOIN entity p ON p.dbid = tpl.predicate\n" +
+              "WHERE p.iri = ?\n" +
+              "ORDER BY child";
+        } else{
+
+            sql = "select subject as parent, object as child, p.dbid as predicateDbid\n" +
+              "from tpl\n" +
+              "JOIN entity p ON p.dbid = tpl.predicate\n" +
+              "WHERE p.iri = ?\n" +
+              "ORDER BY child";
+
+        }
         Integer previousChildId = null;
         Integer predicateDbid = null;
         try (PreparedStatement stmt = conn.prepareStatement(sql);) {
@@ -98,7 +112,18 @@ public class ClosureGenerator {
         }
 
         System.out.println("\nRelationships loaded for " + parentMap.size() + " entities");
-        return predicateDbid;
+        if (!relationship.equals(IM.HAS_REPLACED))
+            return predicateDbid;
+        else {
+            sql="SELECT dbid from entity where iri='"+IM.HAS_REPLACED+"'";
+            PreparedStatement stmt=conn.prepareStatement(sql);
+            try (ResultSet rs = stmt.executeQuery()) {
+                rs.next();
+                predicateDbid= rs.getInt("dbid");
+                return predicateDbid;
+            }
+
+        }
     }
 
     private static void buildClosure() {

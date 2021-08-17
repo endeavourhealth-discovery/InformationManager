@@ -97,7 +97,7 @@ public class ApexKingsImport implements TTImport {
 			backMapDocument.addEntity(snomedEntity);
 			List<String> apexList = entry.getValue();
 			for (String apex : apexList) {
-				TTManager.addSimpleMap(snomedEntity,APK.NAMESPACE+apex);
+				TTManager.addSimpleMap(snomedEntity,IM.CODE_SCHEME_KINGS_APEX.getIri()+apex);
 			}
 		}
 	}
@@ -138,7 +138,7 @@ public class ApexKingsImport implements TTImport {
 				String[] fields = line.split("\t");
 				String readCode= fields[0];
 				String code= fields[1]+"-"+(fields[2].toLowerCase());
-				String iri = APK.NAMESPACE+ fields[1]+ "-"+(fields[2].replace(" ",""));
+				String iri = IM.CODE_SCHEME_KINGS_APEX.getIri()+ fields[1]+ "-"+(fields[2].replace(" ",""));
 				TTEntity entity= new TTEntity()
 					.setIri(iri)
 					.addType(OWL.CLASS)
