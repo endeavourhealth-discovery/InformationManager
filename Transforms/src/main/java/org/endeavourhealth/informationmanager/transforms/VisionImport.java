@@ -166,30 +166,49 @@ public class VisionImport implements TTImport {
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
 			reader.readLine();
 			String line = reader.readLine();
-			int count=0;
+			int count = 0;
 			while (line != null && !line.isEmpty()) {
-				String[] fields = line.split(",");
+				String[] fields = readQuotedCSVLine(reader, line);
 				count++;
-				if(count%10000 == 0){
-					System.out.println("Processed " + count +" terms");
+				if (count % 10000 == 0) {
+					System.out.println("Processed " + count + " terms");
 				}
-				String code= fields[0];
-				String term= fields[1];
+				String code = fields[0];
+				String term = fields[1];
+				code = code.replaceAll("\"", "");
+				term = term.substring(1, term.length() - 1);
 				if (!code.startsWith(".")) {
-				if (!Character.isLowerCase(code.charAt(0))) {
-					if (codeToConcept.get(code)==null) {
-					TTEntity c = new TTEntity();
-					c.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".", ""));
-					c.setName(term);
-					c.setCode(code);
-					document.addEntity(c);
-					codeToConcept.put(code, c);}
-				}
+					if (!Character.isLowerCase(code.charAt(0))) {
+						if (codeToConcept.get(code) == null) {
+							TTEntity c = new TTEntity();
+							c.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".", ""));
+							c.setName(term);
+							c.setCode(code);
+							document.addEntity(c);
+							codeToConcept.put(code, c);
+						}
+					}
 				}
 				line = reader.readLine();
 			}
 			System.out.println("Process ended with " + count + " additional Vision read like codes created");
 		}
+	}
+
+	public String[] readQuotedCSVLine(BufferedReader reader, String line) throws IOException {
+		if (line.split(",").length < 5) {
+			do {
+				String nextLine = reader.readLine();
+				line = line.concat("\n").concat(nextLine);
+			} while (line.split(",").length < 5);
+		}
+		String[] fields = line.split(",");
+		if (fields.length > 5) {
+			for (int i = 2; i < fields.length - 3; i++) {
+				fields[1] = fields[1].concat(",").concat(fields[i]);
+			}
+		}
+		return fields;
 	}
 
 
@@ -199,8 +218,13 @@ public class VisionImport implements TTImport {
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
 			reader.readLine();
 			String line = reader.readLine();
+			int count = 0;
 			while (line != null && !line.isEmpty()) {
 				String[] fields = line.split(",");
+				count++;
+				if (count % 10000 == 0) {
+					System.out.println("Processed " + count);
+				}
 				String code= fields[0];
 				String snomed= fields[1];
 				if (isSnomed(snomed)) {
@@ -213,6 +237,7 @@ public class VisionImport implements TTImport {
 				}
 				line = reader.readLine();
 			}
+			System.out.println("Process ended with " + count);
 		}
 	}
 
@@ -222,28 +247,12 @@ public class VisionImport implements TTImport {
 
 	@Override
 	public TTImport validateFiles(String inFolder) {
-
+		ImportUtils.validateFiles(inFolder,r2Terms,r2Desc,visionRead2Code,visionRead2toSnomed);
 		return this;
 	}
 
 	@Override
 	public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
-		validateVisionTables(conn);
-		return this;
-	}
-	public VisionImport validateVisionTables(Connection conn) throws SQLException {
-		PreparedStatement getVision = conn.prepareStatement("Select read_code from vision_read2_code limit 1");
-		ResultSet rs= getVision.executeQuery();
-		if (!rs.next()) {
-			System.err.println("No Vision read look up table (vision_read2_code)");
-			System.exit(-1);
-		}
-		PreparedStatement getVisions = conn.prepareStatement("Select read_code from vision_read2_to_snomed_map limit 1");
-		rs= getVisions.executeQuery();
-		if (!rs.next()) {
-			System.err.println("No Vision Snomed look up table (vision_read2_to_snomed_map)");
-			System.exit(-1);
-		}
 		return this;
 	}
 

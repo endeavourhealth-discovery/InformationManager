@@ -75,7 +75,6 @@ public class TPPImporter implements TTImport{
         importTppCtv3ToSnomed(inFolder);
         importTPPMaps(inFolder);
 
-
         TTDocumentFiler filer = new TTDocumentFilerJDBC();
         filer.fileDocument(document,bulkImport,entityMap);
         filer = new TTDocumentFilerJDBC();
@@ -201,13 +200,12 @@ public class TPPImporter implements TTImport{
 
     @Override
     public TTImport validateFiles(String inFolder) {
-        ImportUtils.validateFiles(inFolder,concepts,descriptions,terms,hierarchies);
+        ImportUtils.validateFiles(inFolder,concepts,descriptions,terms,hierarchies,tppCtv3Lookup,tppCtv3ToSnomed);
         return this;
     }
 
     @Override
     public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
-        validateTPPTables(conn);
         return this;
     }
 
@@ -225,7 +223,6 @@ public class TPPImporter implements TTImport{
             emisToSnomed.put(emis,snomed);
         }
     }
-
 
     private void importTppCtv3ToSnomed(String folder) throws IOException {
         Path file = ImportUtils.findFileForId(folder, tppCtv3ToSnomed[0]);
@@ -249,9 +246,8 @@ public class TPPImporter implements TTImport{
         }
     }
 
-
     //Imports the used TPP codes provided by TPP.
-    private void importTPPMaps(String folder) throws SQLException, IOException {
+    private void importTPPMaps(String folder) throws IOException {
         Path file = ImportUtils.findFileForId(folder, tppCtv3Lookup[0]);
         System.out.println("Retrieving terms from tpp_TPP+lookup2");
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -259,14 +255,15 @@ public class TPPImporter implements TTImport{
             String line = reader.readLine();
             int count = 0;
             while (line != null && !line.isEmpty()) {
-                String[] fields = line.split(",");
+                String[] fields = readQuotedCSVLine(line);
                 count++;
                 if (count % 10000 == 0) {
                     System.out.println("Processed " + count +" terms");
                 }
                 String code = fields[0];
                 String term= fields[1];
-                term=term.replace("\t","");
+                code=code.replaceAll("\"","");
+                term=term.replace("\t","").replaceAll("\"","");
                 String snomed=tppCtv3ToToSnomed.get(fields[0]);
                 TTEntity TPP= codeToEntity.get(code);
                 if (TPP==null){
@@ -298,76 +295,21 @@ public class TPPImporter implements TTImport{
                         }
                     }
                 }
+                line = reader.readLine();
             }
             System.out.println("Process ended with " + count +" entities created");
         }
-//        PreparedStatement getTerms= conn.prepareStatement("SELECT lk.ctv3_code as code"+
-//            ",lk.ctv3_term as term, sn.snomed_concept_id as snomed \n"+
-//            "from tpp_ctv3_lookup_2 lk \n"+
-//        "left join tpp_ctv3_to_snomed sn on lk.ctv3_code = sn.ctv3_code");
-//        System.out.println("Retrieving terms from tpp_TPP+lookup2");
-//        ResultSet rs= getTerms.executeQuery();
-//        int count=0;
-//        while (rs.next()){
-//            count++;
-//            if(count%10000 == 0){
-//                System.out.println("Processed " + count +" terms");
-//            }
-//            String code= rs.getString("code");
-//            String term= rs.getString("term");
-//            term=term.replace("\t","");
-//            String snomed=rs.getString("snomed");
-//            TTEntity TPP= codeToEntity.get(code);
-//            if (TPP==null){
-//                TPP = new TTEntity()
-//                  .setIri("tpp:" + code)
-//                  .setName(term)
-//                  .setCode(code)
-//                  .addType(OWL.CLASS);
-//                entityMap.put(code, TPP);
-//                TPP.setCrud(IM.REPLACE);
-//                TPP.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.NAMESPACE + "TPPUnlinkedCodes")));
-//                document.addEntity(TPP);
-//            }
-//            if (snomed!=null){
-//                if (isSnomed(snomed)) {
-//                    TTEntity snomedEntity= new TTEntity();
-//                    snomedEntity.setIri(SNOMED.NAMESPACE+ snomed);
-//                    mapDocument.addEntity(snomedEntity);
-//                    TTManager.addSimpleMap(snomedEntity,TPP.getIri());
-//                }
-//            } else {
-//                if (!code.startsWith(".")) {
-//                    snomed = emisToSnomed.get(code.replace(".", ""));
-//                    if (snomed != null) {
-//                        TTEntity snomedEntity = new TTEntity();
-//                        snomedEntity.setIri(SNOMED.NAMESPACE + snomed);
-//                        mapDocument.addEntity(snomedEntity);
-//                        TTManager.addSimpleMap(snomedEntity, TPP.getIri());
-//                    }
-//                }
-//            }
-//        }
-//        System.out.println("Process ended with " + count +" entities created");
     }
 
-    public TPPImporter validateTPPTables(Connection conn) throws SQLException {
-        PreparedStatement getTPP = conn.prepareStatement("Select ctv3_code from tpp_ctv3_lookup_2 limit 1");
-        ResultSet rs= getTPP.executeQuery();
-        if (!rs.next()) {
-            System.err.println("No tpp look up table (tpp_TPP_lookup_2)");
-            System.exit(-1);
+    public String[] readQuotedCSVLine(String line) {
+        String[] fields = line.split(",");
+        if(fields.length>3){
+            for(int i=2;i<fields.length-1;i++){
+                fields[1]=fields[1].concat(",").concat(fields[i]);
+            }
         }
-        PreparedStatement getTPPs = conn.prepareStatement("Select ctv3_code from tpp_ctv3_to_snomed limit 1");
-        rs= getTPPs.executeQuery();
-        if (!rs.next()) {
-            System.err.println("No TPP Snomed look up table (tpp_TPP_to_snomed)");
-            System.exit(-1);
-        }
-        return this;
-
+        return fields;
     }
-
 
     public Boolean isSnomed(String s){
         return snomedCodes.contains(s);
