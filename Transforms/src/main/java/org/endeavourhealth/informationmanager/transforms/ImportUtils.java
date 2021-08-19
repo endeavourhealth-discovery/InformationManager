@@ -95,7 +95,7 @@ public class ImportUtils {
     */
    public static Path findFileForId(String path, String filePattern) throws IOException {
       List<Path> paths = Files.find(Paths.get(path), 16,
-          (file, attr) -> file.toString().matches(filePattern))
+          (file, attr) -> file.toString().replace("/", "\\").matches(filePattern))
           .collect(Collectors.toList());
 
       if (paths.size() == 1)
