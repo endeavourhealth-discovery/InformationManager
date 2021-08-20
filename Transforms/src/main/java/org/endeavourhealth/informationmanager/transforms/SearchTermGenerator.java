@@ -48,7 +48,7 @@ public class SearchTermGenerator {
 
             conn.setAutoCommit(false);
 
-            try (PreparedStatement stmt = conn.prepareStatement("LOAD DATA INFILE ?"
+            try (PreparedStatement stmt = conn.prepareStatement("LOAD DATA LOCAL INFILE ?"
                 + " IGNORE INTO TABLE entity_search"
                 + " FIELDS TERMINATED BY '\t'"
                 + " LINES TERMINATED BY '\r\n'"

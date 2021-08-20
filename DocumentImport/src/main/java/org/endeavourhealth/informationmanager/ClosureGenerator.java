@@ -203,8 +203,11 @@ public class ClosureGenerator {
         System.out.println("Importing closure");
         PreparedStatement dropClosure = conn.prepareStatement("TRUNCATE TABLE tct");
         dropClosure.executeUpdate();
+        try (PreparedStatement stmt = conn.prepareStatement("SET GLOBAL local_infile=1")) {
+            stmt.executeUpdate();
+        }
         conn.setAutoCommit(false);
-        PreparedStatement buildClosure = conn.prepareStatement("LOAD DATA INFILE ?"
+        PreparedStatement buildClosure = conn.prepareStatement("LOAD DATA LOCAL INFILE ?"
             + " INTO TABLE tct"
             + " FIELDS TERMINATED BY '\t'"
             + " LINES TERMINATED BY '\r\n'"
