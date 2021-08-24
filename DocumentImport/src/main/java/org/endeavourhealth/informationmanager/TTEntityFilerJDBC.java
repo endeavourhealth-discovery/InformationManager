@@ -177,6 +177,8 @@ public class TTEntityFilerJDBC {
    public void fileEntity(TTEntity entity, TTIriRef graph) throws SQLException, DataFormatException {
       this.graph = getOrSetEntityId(graph);
       Integer entityId= fileEntityTable(entity);
+      if (entity.getIri().contains("VSET_Oral_NSAIDs"))
+         System.out.println("test entity");
       if (entity.get(RDFS.LABEL)!=null)
          if (entity.get(IM.STATUS)==null)
             entity.set(IM.STATUS,IM.ACTIVE);

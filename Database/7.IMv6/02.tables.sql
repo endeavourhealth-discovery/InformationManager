@@ -5,6 +5,18 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 
 USE im6 ;
 
+drop table if exists im1map;
+
+CREATE TABLE IF NOT EXISTS im1map (
+    id INT auto_increment NOT null,
+    im2 INT NOT NULL,
+    im1 INT NOT NULL,
+    PRIMARY KEY (id),
+    INDEX map_s_c (im2,im1)
+                                  )
+    ENGINE = InnoDB
+    DEFAULT CHARACTER SET = utf8mb4;
+
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS im_schema;
 CREATE TABLE im_schema

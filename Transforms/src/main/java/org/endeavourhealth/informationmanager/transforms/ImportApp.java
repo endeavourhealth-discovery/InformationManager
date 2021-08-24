@@ -124,6 +124,8 @@ public class ImportApp {
         }
         if (bulk)
             BulkFilerJDBC.createIndexes();
+        IM1MapImport im1Mapper= new IM1MapImport();
+        im1Mapper.importData(folder,false,null);
 
         ClosureGenerator.generateClosure(args[0]);
         SearchTermGenerator.generateSearchTerms(args[0]);

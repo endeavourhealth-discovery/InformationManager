@@ -19,6 +19,11 @@ public class DALHelper {
             throw new DALException("Error fetching generated key", e);
         }
     }
+    public static String getNullableString(ResultSet rs, String field) throws SQLException {
+        String result = rs.getString(field);
+        return rs.wasNull() ? null : result;
+    }
+
 
     public static long getGeneratedLongKey(PreparedStatement stmt) {
         try (ResultSet rs = stmt.getGeneratedKeys()) {
