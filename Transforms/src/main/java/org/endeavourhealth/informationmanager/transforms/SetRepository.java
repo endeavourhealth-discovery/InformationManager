@@ -4,7 +4,6 @@ import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
-import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,15 +21,15 @@ public class SetRepository {
 
 	}
 
-	public Set<TTEntity> getAllConceptSets(TTIriRef type) throws SQLException,ClassNotFoundException{
+	public Set<TTEntity> getAllConceptSets(TTIriRef type) throws SQLException {
 		Set<TTEntity> result= new HashSet<>();
-		PreparedStatement getConceptSets= conn.prepareStatement("SELECT iri,name from entity\n"+
+		PreparedStatement getConceptSets= conn.prepareStatement("SELECT iri from entity\n"+
 			"join entity_type et on entity.dbid = et.entity\n"+
 			"where et.type='"+ type.getIri()+"'");
 		try (ResultSet rs= getConceptSets.executeQuery()) {
 			while (rs.next()) {
 				String iri = rs.getString("iri");
-				TTEntity set= getSet(iri);
+				TTEntity set = getSetDefinition(iri);
 				if (set.get(IM.HAS_MEMBER)!=null|(set.get(IM.HAS_SUBSET)!=null))
 					result.add(set);
 			}
@@ -38,12 +37,13 @@ public class SetRepository {
 		return result;
 
 	}
-	public TTEntity getSet(String iri) throws SQLException,ClassNotFoundException {
+	public TTEntity getSetDefinition(String iri) throws SQLException {
 		Set<TTIriRef> predicates= new HashSet<>();
 		predicates.add(IM.HAS_MEMBER);
 		predicates.add(IM.HAS_SUBSET);
 		predicates.add(IM.NOT_MEMBER);
 		predicates.add(IM.IS_CONTAINED_IN);
+		predicates.add(RDFS.LABEL);
 		TTEntity result= new TTEntity().setIri(iri);
 		Map<String, TTNode> dbIdNodes= new HashMap<>();
 		dbIdNodes.put(null,result);
@@ -54,7 +54,7 @@ public class SetRepository {
 			.add("\tJOIN entity e ON tpl.subject=e.dbid")
 			.add("\tJOIN entity p ON p.dbid = tpl.predicate")
 			.add("\tWHERE e.iri = ? ");
-		if (predicates != null && !predicates.isEmpty())
+		if (!predicates.isEmpty())
 			sql.add("\tAND p.iri IN " + inList(predicates.size())) ;
 		sql.add("\tAND tpl.blank_node IS NULL")
 			.add("UNION ALL")
@@ -63,7 +63,7 @@ public class SetRepository {
 			.add("\tJOIN tpl t2 ON t2.blank_node= t.dbid")
 			.add("\tWHERE t2.dbid <> t.dbid")
 			.add(")")
-			.add("SELECT t.dbid, t.parent, p.iri AS predicateIri, p.name AS predicate, o.iri AS objectIri, o.name AS object, t.literal, t.functional")
+			.add("SELECT t.subject,t.dbid, t.parent, p.iri AS predicateIri, p.name AS predicate, o.iri AS objectIri, o.name AS object, t.literal, t.functional")
 			.add("FROM triples t")
 			.add("JOIN entity p ON t.predicate = p.dbid")
 			.add("LEFT JOIN entity o ON t.object = o.dbid")
@@ -75,10 +75,13 @@ public class SetRepository {
 				for (TTIriRef predicate : predicates)
 					statement.setString(++i, predicate.getIri());
 			}
+
 			try (ResultSet rs = statement.executeQuery()) {
 				while (rs.next()) {
 					String parentDbid= rs.getString("parent");
 					TTNode node= dbIdNodes.get(parentDbid);
+					if (parentDbid==null)
+						node.set(IM.DBID,TTLiteral.literal(rs.getInt("subject")));
 					TTIriRef predicate= 	TTIriRef.iri(rs.getString("predicateIri"));
 					TTValue ttobject= node.get(predicate);
 					boolean functional= rs.getInt("functional")==1;
@@ -87,13 +90,18 @@ public class SetRepository {
 							node.set(predicate, new TTArray());
 					}
 					String objectIri=rs.getString("objectIri");
-					if (objectIri!=null) {
+					String data = rs.getString("t.literal");
+					if (data!=null) {
+						node.set(predicate, TTLiteral.literal(data));
+					}
+					else if (objectIri!=null) {
 						TTIriRef rdfObject = TTIriRef.iri(objectIri, rs.getString("object"));
 						if (!functional)
 							node.addObject(predicate, rdfObject);
 						else
 							node.set(predicate, rdfObject);
-					} else {
+					}
+					else {
 						TTNode newNode=new TTNode();
 						dbIdNodes.put(rs.getString("dbid"),newNode);
 						if (!functional)
@@ -111,33 +119,102 @@ public class SetRepository {
 	/**
 	 * Returns a TTEntity with has members consisting of a list of entities representing the TCT of the set
 	 * @param iri  the iri of the concept set
-	 * @param includeLegacy whether to include legacy concepts
 	 * @return the entity with expanded members null if no members
-	 * @throws SQLException
-	 * @throws ClassNotFoundException
+	 * @throws SQLException with database access problems
 	 */
-	public TTEntity getExpandedSet(String iri,boolean includeLegacy) throws SQLException, ClassNotFoundException {
+	public TTEntity getExpansion(String iri) throws SQLException {
 		//First get the definition you want to expand
-		TTEntity definition= getSet(iri);
+		TTEntity definition= getSetDefinition(iri);
 		//Now get expansion
-		TTEntity expanded= getExpansion(definition,includeLegacy);
+		TTEntity expanded= getExpansion(definition);
 		return expanded;
 
+	}
+
+	public TTEntity getIM1Expansion(String iri) throws SQLException{
+		TTEntity definition= getSetDefinition(iri);
+		return getIM1Expansion(definition);
+	}
+
+	public TTEntity getIM1Expansion(TTEntity conceptSet) throws SQLException {
+		PreparedStatement queryIM1Expansion= conn.prepareStatement(buildIM1ExpansionSQL(conceptSet));
+		TTEntity expanded= new TTEntity();
+		ResultSet rs= queryIM1Expansion.executeQuery();
+		while (rs.next()) {
+			TTEntity member = new TTEntity();
+			expanded.addObject(IM.HAS_MEMBER, member);
+			member.setCode(rs.getString("code"));
+			member.setScheme(TTIriRef.iri(rs.getString("scheme")));
+			member.set(IM.DBID, TTLiteral.literal(rs.getInt("im2")));
+			member.set(TTIriRef.iri(IM.NAMESPACE + "im1dbid"), TTLiteral.literal(rs.getInt("im1")));
+		}
+		return expanded;
+	}
+
+	private String buildIM1ExpansionSQL(TTEntity conceptSet) {
+		StringJoiner sql = new StringJoiner("\n");
+		//Create core expansion
+		sql.add("With core as (");
+		sql.add("Select distinct included.dbid as dbid from (");
+		buildIncludedSQL(conceptSet,sql);
+		buildExcludeSQL(conceptSet,sql);
+		sql.add("on included.dbid=excluded.exdbid");
+		sql.add("where excluded.exdbid is null)");
+		//Select core joined to im1
+		sql.add("select entity.dbid as im2,entity.code as code,entity.scheme as scheme,im1map.im1 as im1")
+		.add("from core")
+		.add("join entity on core.dbid= entity.dbid")
+		.add("join im1map on im1map.im2=core.dbid");
+		//Select legacy joined to im1.
+		sql.add("union all")
+		.add("select entity.dbid as im2,entity.code as code,entity.scheme as scheme,im1map.im1 as im1dbid")
+			.add("from core")
+		.add("inner join tpl on tpl.subject= core.dbid")
+			.add("inner join entity matchedTo on tpl.predicate= matchedTo.dbid")
+			.add("inner join entity on tpl.object=entity.dbid")
+			.add("join im1map on im1map.im2=core.dbid")
+			.add("where matchedTo.iri='http://endhealth.info/im#matchedTo'");
+		return sql.toString();
+	}
+
+	public TTEntity getLegacyExpansion(String iri) throws SQLException {
+		TTEntity definition= getSetDefinition(iri);
+		return getLegacyExpansion(definition);
+	}
+	public TTEntity getLegacyExpansion(TTEntity conceptSet) throws SQLException {
+		PreparedStatement queryLegacyExpansion= conn.prepareStatement(buildLegacyExpansionSQL(conceptSet));
+		return populateSet(conceptSet,queryLegacyExpansion);
+	}
+
+	private String buildLegacyExpansionSQL(TTEntity conceptSet) throws SQLException {
+		StringJoiner sql = new StringJoiner("\n");
+		sql.add("Select distinct legacy.dbid as dbid,legacy.code,legacy.name,legacy.scheme,legacy.iri from (");
+		buildIncludedSQL(conceptSet,sql);
+		buildExcludeSQL(conceptSet,sql);
+		sql.add("on included.dbid=excluded.exdbid");
+		sql.add("inner join tpl on tpl.subject= included.dbid")
+			.add("inner join entity matchedTo on tpl.predicate= matchedTo.dbid")
+			.add("inner join entity legacy on tpl.object= legacy.dbid")
+			.add("where matchedTo.iri='"+IM.MATCHED_TO.getIri()+"'")
+			.add("and excluded.exdbid is null");
+		return sql.toString();
 	}
 
 	/**
 	 * Returns a TTEntity with has members consisting of a list of entities representing the TCT of the set
 	 * @param conceptSet The set as an TT Entity
-	 * @param includeLegacy whether to include legacy concepts
 	 * @return the entity with expanded members null of no members
-	 * @throws SQLException
+	 * @throws SQLException with database access problems
 	 */
-	public TTEntity getExpansion(TTEntity conceptSet,boolean includeLegacy) throws SQLException {
+	public TTEntity getExpansion(TTEntity conceptSet) throws SQLException {
 		//No members null return
-		if (conceptSet.get(IM.HAS_MEMBER)==null)
+		if (conceptSet.get(IM.HAS_MEMBER) == null)
 			return null;
 		//build Expansion SQL first
-		PreparedStatement queryExpansion= conn.prepareStatement(buildExpansionSQL(conceptSet,includeLegacy));
+		PreparedStatement queryExpansion = conn.prepareStatement(buildCoreExpansionSQL(conceptSet));
+		return populateSet(conceptSet,queryExpansion);
+	}
+	private TTEntity populateSet(TTEntity conceptSet,PreparedStatement queryExpansion) throws SQLException {
 		TTEntity expanded=new TTEntity();
 		try (ResultSet rs=queryExpansion.executeQuery()) {
 			expanded.setIri(conceptSet.getIri());
@@ -148,27 +225,25 @@ public class SetRepository {
 				member.setCode(rs.getString("code"));
 				member.setScheme(TTIriRef.iri(rs.getString("scheme")));
 				member.setName(rs.getString("name"));
-				if (includeLegacy)
-					member.set(IM.IM1_DBID,TTLiteral.literal("im1map.im1"));
+				member.set(IM.DBID,TTLiteral.literal("dbid"));
 			}
 		}
 		return expanded;
 	}
-	private String buildExpansionSQL(TTEntity conceptSet, boolean includeLegacy) {
+	private String buildCoreExpansionSQL(TTEntity conceptSet) {
 		StringJoiner sql = new StringJoiner("\n");
-		if (includeLegacy){
-			//Outer CTE wrapper so it can select on itself
-			sql.add("With core as (");
-			//Include im1db if present
-			sql.add("Select expanded.dbid as dbid,code,name,scheme,iri,im1map.im1 from (");
-		}
-		else {
-			//Build  select with core only
-			sql.add("Select expanded.dbid as dbid,code,name,scheme,iri from (");
-		}
+		//Build  select with core only
+		sql.add("Select distinct entity.dbid as dbid,entity.code,entity.name,entity.scheme,entity.iri from (");
+		buildIncludedSQL(conceptSet,sql);
+		buildExcludeSQL(conceptSet,sql);
+		sql.add("on included.dbid=excluded.exdbid")
+			.add("join entity on included.dbid= entity.dbid")
+		.add("where excluded.exdbid is null");
+		return sql.toString();
+	}
 
+	private void buildIncludedSQL(TTEntity conceptSet,StringJoiner sql){
 		//select the core dbid  as outer query first with the final result of entity dbids
-		sql.add("select dbid from (");
 
 		//First union all the simple iri members which most concept sets are made up from
 		buildSimpleExpressions(conceptSet, sql);
@@ -184,39 +259,20 @@ public class SetRepository {
 				}
 			}
 		}
-		sql.add(") as include");
-		buildExcludeSQL(conceptSet,sql);
-		sql.add(") as expanded");
-		sql.add("inner join entity on expanded.dbid= entity.dbid");
-		if (includeLegacy){
-			sql.add(")");
-			sql.add("select * from core")
-			.add("union all")
-			.add("select legacy.dbid as dbid,legacy.code as code,legacy.name as name,legacy.scheme as scheme,legacy.iri as iri,im1map.im1")
-			.add("from entity legacy")
-			.add("join tpl on tpl.object=legacy.dbid")
-			.add("join entity matchedTo on tpl.predicate= matchedTo.dbid")
-			.add("join  core on core.dbid=tpl.subject")
-				.add("left join im1map on expanded.dbid=im1map.im2")
-			.add("where matchedTo.iri='http://endhealth.info/im#matchedTo'");
-		}
+		sql.add(") as included");
 
-		return sql.toString();
+
 	}
 
 	private void buildExcludeSQL(TTEntity conceptSet, StringJoiner sql) {
 		sql.add(	"left join ")
-		.add("(select distinct subExclude.dbid as exdbid")
+		.add("(select tct.descendant as exdbid")
 		.add("from entity cs")
-		.add("join tpl on tpl.subject= cs.dbid")
+		.add(" join tpl on tpl.subject= cs.dbid")
 		.add("join entity notMembers on tpl.predicate= notMembers.dbid")
-		.add("join entity superExclude on tpl.object= superExclude.dbid")
-		.add("join tct on tct.ancestor= tpl.object")
-		.add("join entity subExclude on tct.descendant= subExclude.dbid")
+		.add(" join tct on tct.ancestor= tpl.object")
 		.add("where cs.iri='"+conceptSet.getIri()+"'")
-		.add("and notMembers.iri='"+ IM.NOT_MEMBER.getIri()+"') as exclude")
-			.add(" on include.dbid=exclude.exdbid")
-		.add("where exdbid is null");
+		.add("and notMembers.iri='"+ IM.NOT_MEMBER.getIri()+"') as excluded");
 	}
 
 	private void buildIntersectionSQL(TTNode member, StringJoiner sql, StringJoiner from, StringJoiner where) {

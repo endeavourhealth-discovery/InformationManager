@@ -26,21 +26,32 @@ public class SetService {
 
 	}
 
-	public TTEntity getExpandedSet(String iri,boolean includeLegacy) throws SQLException, ClassNotFoundException {
-		return setRepository.getExpandedSet(iri,includeLegacy);
+	public TTEntity getExpansion(String iri) throws SQLException, ClassNotFoundException {
+		return setRepository.getExpansion(iri);
 	}
 
-	public TTEntity getExpansion(TTEntity conceptSet,boolean includeLegacy) throws SQLException {
-		return setRepository.getExpansion(conceptSet,includeLegacy);
+	public TTEntity getExpansion(TTEntity conceptSet) throws SQLException {
+		return setRepository.getExpansion(conceptSet);
 
 	}
-	public TTEntity getSet(String iri) throws SQLException, ClassNotFoundException {
-		Set<TTIriRef> predicates= new HashSet<>();
-		predicates.add(IM.HAS_MEMBER);
-		predicates.add(IM.HAS_SUBSET);
 
-		TTEntity conceptSet= setRepository
-			.getSet(IM.NAMESPACE+"VSET_Oral_NSAIDs");
-		return conceptSet;
+	public TTEntity getIM1Expansion(String iri) throws SQLException{
+		return setRepository.getIM1Expansion(iri);
+	}
+
+	public TTEntity getIM1Expansion(TTEntity conceptSet) throws SQLException{
+		return setRepository.getIM1Expansion(conceptSet);
+	}
+
+	public TTEntity getLegacyExpansion(String iri) throws SQLException{
+		return setRepository.getLegacyExpansion(iri);
+	}
+
+	public TTEntity getLegacyExpansion(TTEntity conceptSet) throws SQLException {
+		return setRepository.getLegacyExpansion(conceptSet);
+
+	}
+	public TTEntity getSetDefinition(String iri) throws SQLException{
+		return setRepository.getSetDefinition(iri);
 	}
 }

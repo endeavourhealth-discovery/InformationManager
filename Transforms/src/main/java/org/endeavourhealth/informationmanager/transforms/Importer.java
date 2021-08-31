@@ -73,6 +73,8 @@ public class Importer implements TTImportByType {
          return new WinPathKingsImport();
       else if (IM.GRAPH_CEG16.equals(importType))
          return new EthnicityCEGImporter();
+      else if (IM.GRAPH_IM1.equals(importType))
+         return new IM1MapImport();
       else
          throw new Exception("Unrecognised import type");
    }

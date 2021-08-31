@@ -161,9 +161,9 @@ public class EthnicityCEGImporter implements TTImport {
 				fields= line.split("\t");
 				String snomed=fields[1];
 				String cat16=fields[11];
-				String catTerm=fields[12];
+				String catTerm=fields[12].replace("\"","");
 				String nhs16=fields[19];
-				String nhsTerm= fields[20];
+				String nhsTerm= fields[20].replace("\"","");
 				String pdsTerm=fields[22];
 				String snoNhs= matchEthnicity(nhsTerm);
 				if (snoNhs==null)
@@ -173,7 +173,7 @@ public class EthnicityCEGImporter implements TTImport {
 					cegSubset= new TTEntity()
 						.setIri(IM.NAMESPACE+"VSET_EthnicCategoryCEG16_"+cat16)
 						.addType(IM.CONCEPT_SET)
-						.setName(catTerm)
+						.setName("Concept set - "+ catTerm)
 						.setCode(cat16)
 						.setDescription("QMUL CEG 16+ Ethnic category "+cat16);
 					document.addEntity(cegSubset);
@@ -187,8 +187,9 @@ public class EthnicityCEGImporter implements TTImport {
 					TTEntity nhsSubset= nhsCatmap.get(snoNhs);
 					if (nhsSubset==null) {
 						nhsSubset = new TTEntity()
-						.setIri(SNOMED.NAMESPACE + snoNhs)
+						.setIri(IM.NAMESPACE + "VSET_SN_"+snoNhs)
 						.addType(IM.CONCEPT_SET)
+							.setName("Concept set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
 						.setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16);
 						document.addEntity(nhsSubset);
 						nhsSet.addObject(IM.HAS_SUBSET, TTIriRef.iri(nhsSubset.getIri()));
@@ -216,8 +217,9 @@ public class EthnicityCEGImporter implements TTImport {
 		cegSet.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"EthnicitySets")));
 		document.addEntity(cegSet);
 		nhsSet= new TTEntity()
-			.setIri(SNOMED.NAMESPACE+"92381000000106")
+			.setIri(IM.NAMESPACE+"VSET_EthnicCategory2001")
 			.addType(IM.CONCEPT_SET)
+			.setName("Concept set - 2001 census Ethnic category")
 			.setDescription("NHS Data Dictionary 2001 census based categorisations of ethnic groups");
 		nhsSet.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"EthnicitySets")));
 		document.addEntity(nhsSet);

@@ -44,7 +44,8 @@ public class ImportApp {
                 .validateByType(IM.MAP_DISCOVERY,folder)
                 .validateByType(IM.GRAPH_REPORTS,folder)
                 .validateByType(IM.GRAPH_CEG16,folder)
-                .validateByType(IM.GRAPH_BARTS_CERNER,folder);
+                .validateByType(IM.GRAPH_BARTS_CERNER,folder)
+                .validateByType(IM.GRAPH_IM1,folder);
                 importer.importByType(IM.GRAPH_DISCOVERY,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_SNOMED,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_EMIS,folder,bulk,entityMap);
@@ -58,6 +59,11 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_REPORTS, folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_CEG16,folder,bulk,entityMap);
                 importer.importByType(IM.GRAPH_BARTS_CERNER,folder,bulk,entityMap);
+                importer.importByType(IM.GRAPH_IM1,folder,bulk,entityMap);
+                break;
+            case "imv1" :
+                importer = new Importer().validateByType(IM.GRAPH_IM1,folder);
+                importer.importByType(IM.GRAPH_IM1,folder,bulk,entityMap);
                 break;
             case "prsb":
                 importer = new Importer().validateByType(IM.GRAPH_PRSB,folder);
@@ -124,11 +130,12 @@ public class ImportApp {
         }
         if (bulk)
             BulkFilerJDBC.createIndexes();
-        IM1MapImport im1Mapper= new IM1MapImport();
-        im1Mapper.importData(folder,false,null);
 
         ClosureGenerator.generateClosure(args[0]);
         SearchTermGenerator.generateSearchTerms(args[0]);
+        IM1MapImport im1Mapper= new IM1MapImport();
+        im1Mapper.importData(folder,false,null);
+
 
         System.out.println("Finished - " + (new Date().toString()));
     }

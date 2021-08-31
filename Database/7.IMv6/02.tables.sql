@@ -174,7 +174,9 @@ CREATE TABLE IF NOT EXISTS entity_search(
     UNIQUE INDEX entity_search_term_entity_uq (term, entity_dbid),
     CONSTRAINT entity_dbid_fk
         FOREIGN KEY (entity_dbid)
-            REFERENCES entity (dbid),
+            REFERENCES entity (dbid)
+            ON DELETE CASCADE
+            ON UPDATE NO ACTION,
     FULLTEXT INDEX entity_search_term_ftx (term)
     )
 ENGINE = InnoDB

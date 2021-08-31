@@ -12,6 +12,8 @@ import org.endeavourhealth.informationmanager.common.transform.TTToECL;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class SetExporter {
@@ -27,23 +29,22 @@ public class SetExporter {
 		FileWriter definitions= new FileWriter(path+"\\ConceptSetDefinitions.txt");
 		FileWriter expansions= new FileWriter(path+"\\ConceptSetExpansions.txt");
 		FileWriter legacies= new FileWriter(path+"\\ConceptSetLegacyExpansions.txt");
-		FileWriter subsets= new FileWriter(path+"\\ConceptSetHierarchy.txt");subsets.write("Concept set iri\tConcept set name\tSubset iri\tSubset name\n");
-		definitions.write("Concept set iri\tConcept set name\tSet definition ECL\tSet definition json-LD\n");
-		expansions.write("Concept set iri\tConcept set name\tCode\tScheme\tMember iri\n");
-		legacies.write("Concept set iri\tConcept set name\tCode\tScheme\tim1 concept dbid\n");
+		FileWriter subsets= new FileWriter(path+"\\ConceptSetHierarchy.txt");subsets.write("Parent set dbid\tChild set dbid\n");
+		FileWriter im1maps= new FileWriter(path+"\\IM1Map.txt");
+		definitions.write("Set dbid\tConcept set iri\tConcept set name\tSet definition ECL\tSet definition json-LD\n");
+		expansions.write("Set dbid\tCore member IM2 dbid\tCore member code\tScheme\tiri\n");
+		legacies.write("Set dbid\tLegacy member IM2 dbid\tLegacy member code\tScheme\tIri\n");
+		im1maps.write("Set dbid\tIM1 dbid\tMember IM2 dbid\n");
 		SetService setService= new SetService();
 		Set<TTEntity> conceptSets= setService.getAllSets(type);
+		Map<String,Integer> setdbids= new HashMap<>();
 
 
 		for (TTEntity conceptSet:conceptSets) {
 			String setIri = conceptSet.getIri();
-			System.out.println("Exporting " + setIri + ": " + conceptSet.getName() + "..");
-
-			if (conceptSet.get(IM.HAS_SUBSET) != null) {
-				for (TTValue value : conceptSet.get(IM.HAS_SUBSET).asArray().getElements()) {
-					subsets.write(conceptSet.getIri() + "\t" + conceptSet.getName() + "\t" + value.asIriRef().getIri() + "\t" + value.asIriRef().getName() + "\n");
-				}
-			} else if (conceptSet.get(IM.HAS_MEMBER) != null) {
+			setdbids.put(conceptSet.getIri(),conceptSet.get(IM.DBID).asLiteral().intValue());
+			System.out.println("Exporting " + setIri+ "..");
+			if (conceptSet.get(IM.HAS_MEMBER) != null) {
 				ObjectMapper objectMapper = new ObjectMapper();
 				objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 				objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
@@ -51,22 +52,45 @@ public class SetExporter {
 				String json = objectMapper.writeValueAsString(conceptSet);
 				TTToECL eclConverter = new TTToECL();
 				String ecl = eclConverter.getConceptSetECL(conceptSet, null);
-				definitions.write(conceptSet.getIri() + "\t" + conceptSet.getName() + "\t" + ecl + "\t" + json + "\n");
+				definitions.write(conceptSet.get(IM.DBID).asLiteral().intValue()+"\t"+conceptSet.getIri() + "\t" + conceptSet.getName() + "\t" + ecl + "\t" + json + "\n");
 
-				TTEntity expanded = setService.getExpansion(conceptSet, false);
+				TTEntity expanded = setService.getExpansion(conceptSet);
 				for (TTValue value : expanded.get(IM.HAS_MEMBER).asArray().getElements()) {
 					TTEntity member = (TTEntity) value.asNode();
 					String code = member.getCode();
 					String scheme = member.getScheme().getIri();
-					expansions.write(conceptSet.getIri() + "\t" + conceptSet.getName() + "\t" + code + "\t" + scheme + "\t" + member.getIri() + "\n");
+					expansions.write(conceptSet.get(IM.DBID).asLiteral().intValue()+"\t"+ member.get(IM.DBID).asLiteral().getValue()+"\t"+ code + "\t" + scheme + "\t" + member.getIri() + "\n");
 				}
-				TTEntity legacy = setService.getExpansion(conceptSet, true);
-				for (TTValue value : legacy.get(IM.HAS_MEMBER).asArray().getElements()) {
-					TTEntity member = (TTEntity) value.asNode();
-					String code = member.getCode();
-					String scheme = member.getScheme().getIri();
-					String im1Dbid = member.get(IM.IM1_DBID).asLiteral().getValue();
-					expansions.write(conceptSet.getIri() + "\t" + conceptSet.getName() + "\t" + code + "\t" + scheme + "\t" + member.getIri() + "\n");
+				TTEntity legacy = setService.getLegacyExpansion(conceptSet);
+				if (legacy.get(IM.HAS_MEMBER)!=null) {
+					for (TTValue value : legacy.get(IM.HAS_MEMBER).asArray().getElements()) {
+						TTEntity member = (TTEntity) value.asNode();
+						String code = member.getCode();
+						String scheme = member.getScheme().getIri();
+						legacies.write(conceptSet.get(IM.DBID).asLiteral().intValue()+ "\t" + member.get(IM.DBID).asLiteral().getValue() + "\t" + code + "\t" + scheme + "\t" + member.getIri() + "\n");
+					}
+				}
+				TTEntity im1 = setService.getIM1Expansion(conceptSet);
+				if (im1.get(IM.HAS_MEMBER)!=null){
+					for (TTValue value : im1.get(IM.HAS_MEMBER).asArray().getElements()) {
+						TTEntity member = (TTEntity) value.asNode();
+						String code = member.getCode();
+						String scheme = member.getScheme().getIri();
+						String im1id = member.get(TTIriRef.iri(IM.NAMESPACE + "im1dbid")).asLiteral().getValue();
+						im1maps.write(conceptSet.get(IM.DBID).asLiteral().intValue()+"\t" + im1id + "\t"+ member.get(IM.DBID).asLiteral().intValue()+"\n");
+					}
+				}
+			}
+		}
+		for (TTEntity conceptSet:conceptSets){
+			String setIri = conceptSet.getIri();
+
+			if (conceptSet.get(IM.HAS_SUBSET) != null) {
+				System.out.println("Exporting subset " + setIri + "..");
+
+				for (TTValue value : conceptSet.get(IM.HAS_SUBSET).asArray().getElements()) {
+					Integer dbid = setdbids.get(value.asIriRef().getIri());
+					subsets.write(conceptSet.get(IM.DBID) + "\t" + dbid + "\n");
 				}
 			}
 		}
