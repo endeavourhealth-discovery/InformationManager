@@ -225,7 +225,7 @@ public class SetRepository {
 				member.setCode(rs.getString("code"));
 				member.setScheme(TTIriRef.iri(rs.getString("scheme")));
 				member.setName(rs.getString("name"));
-				member.set(IM.DBID,TTLiteral.literal("dbid"));
+				member.set(IM.DBID,TTLiteral.literal(rs.getInt("dbid")));
 			}
 		}
 		return expanded;

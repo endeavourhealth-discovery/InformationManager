@@ -98,9 +98,9 @@ public class TPPImporter implements TTImport{
                     TTEntity tpp= codeToEntity.get(child);
                     if (tpp!=null) {
                         if (!parent.startsWith(".")) {
-                            TTManager.addChildOf(tpp, iri("http://endhealth.info/TPP#" + parent));
+                            TTManager.addChildOf(tpp, iri("http://endhealth.info/tpp#" + parent));
                         } else {
-                            TTManager.addChildOf(tpp, iri("http://endhealth.info/TPP#TPPCodes"));
+                            TTManager.addChildOf(tpp, iri("http://endhealth.info/tpp#TPPCodes"));
                         }
                     }
                     line = reader.readLine();
@@ -264,7 +264,7 @@ public class TPPImporter implements TTImport{
                 String term= fields[1];
                 code=code.replaceAll("\"","");
                 term=term.replace("\t","").replaceAll("\"","");
-                String snomed=tppCtv3ToToSnomed.get(fields[0]);
+                String snomed=tppCtv3ToToSnomed.get(code); //"" must be stripped if using file reader.
                 TTEntity TPP= codeToEntity.get(code);
                 if (TPP==null){
                     TPP = new TTEntity()
