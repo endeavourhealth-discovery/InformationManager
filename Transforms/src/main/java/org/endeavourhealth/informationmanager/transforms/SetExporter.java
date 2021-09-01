@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.DataFormatException;
 
 public class SetExporter {
 	/**
@@ -55,8 +56,13 @@ public class SetExporter {
 				objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 				String json = objectMapper.writeValueAsString(conceptSet);
 				TTToECL eclConverter = new TTToECL();
-				String ecl = eclConverter.getConceptSetECL(conceptSet, null);
-				definitions.write(conceptSet.getIri() + "\t" + conceptSet.getName() + "\t" + ecl + "\t" + json + "\n");
+				//ecl only supports snomed and discovery concepts
+				try {
+					String ecl = eclConverter.getConceptSetECL(conceptSet, null);
+					definitions.write(conceptSet.getIri() + "\t" + conceptSet.getName() + "\t" + ecl + "\t" + json + "\n");
+				} catch (DataFormatException e){
+					definitions.write(conceptSet.getIri() + "\t" + conceptSet.getName() + "\t" + "" + "\t" + json + "\n");
+				}
 
 				TTEntity expanded = setService.getExpansion(conceptSet);
 				for (TTValue value : expanded.get(IM.HAS_MEMBER).asArray().getElements()) {
