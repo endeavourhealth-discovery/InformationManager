@@ -4,12 +4,12 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.util.Map;
 
 
 public class DiscoveryReportsImporter implements TTImport {
@@ -29,15 +29,15 @@ public class DiscoveryReportsImporter implements TTImport {
 
    /**
     * Imports the reports document
-    * @param inFolder root folder containing the reports document
+    * @param config import configuration
     * @return TTImport object builder pattern
     * @throws Exception invalid document
     */
-   public TTImport importData(String inFolder, boolean bulkImport, Map<String,Integer> entityMap) throws Exception {
+   public TTImport importData(TTImportConfig config) throws Exception {
       System.out.println("Importing Reports concepts");
-      TTDocument document= loadFile(inFolder);
+      TTDocument document= loadFile(config.folder);
       TTDocumentFiler filer= new TTDocumentFilerJDBC();
-      filer.fileDocument(document,bulkImport,entityMap);
+      filer.fileDocument(document);
       return this;
    }
 

@@ -5,10 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.informationmanager.TTImportByType;
-import org.endeavourhealth.informationmanager.transforms.Importer;
-import org.endeavourhealth.informationmanager.transforms.SnomedImporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -222,20 +218,4 @@ public class TrudUpdater {
 
         return destFile;
     }
-    private static void importSnomed(String folder) throws Exception {
-        try {
-            long start = System.currentTimeMillis();
-            TTImportByType importer= new Importer();
-            importer.importByType(IM.GRAPH_SNOMED,folder,false,null);
-
-            long end =System.currentTimeMillis();
-            long duration = (end-start)/1000/60;
-
-            System.out.println("Duration = "+ String.valueOf(duration)+" minutes");
-        } catch (Exception e){
-            e.printStackTrace();
-            throw e;
-        }
-    }
-
 }

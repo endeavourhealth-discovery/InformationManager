@@ -1,18 +1,16 @@
 package org.endeavourhealth.informationmanager.transforms;
 
-import com.opencsv.CSVReader;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.OWL;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,7 +35,6 @@ public class TPPImporter implements TTImport{
     private static final String[] hierarchies = {".*\\\\TPP\\\\V3hier.v3"};
     private static final String[] tppCtv3Lookup = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_lookup_2.csv"};
     private static final String[] tppCtv3ToSnomed = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_to_snomed.csv"};
-    private final Map<String, TTEntity> entityMap = new HashMap<>();
     private final TTManager manager= new TTManager();
     private Set<String> snomedCodes;
     private final Map<String,String> emisToSnomed = new HashMap<>();
@@ -51,7 +48,7 @@ public class TPPImporter implements TTImport{
 
 
 
-    public TTImport importData(String inFolder, boolean bulkImport, Map<String,Integer> entityMap) throws Exception {
+    public TTImport importData(TTImportConfig config) throws Exception {
 
 
         conn=ImportUtils.getConnection();
@@ -65,20 +62,20 @@ public class TPPImporter implements TTImport{
         importEmis();
 
         addTPPTopLevel();
-        inportTPPConcepts(inFolder);
-        importTPPTerms(inFolder);
-        importTPPDescriptions(inFolder);
+        inportTPPConcepts(config.folder);
+        importTPPTerms(config.folder);
+        importTPPDescriptions(config.folder);
 
-        importCV3Hierarchy(inFolder);
+        importCV3Hierarchy(config.folder);
 
         //Imports the tpp terms from the tpp look up table
-        importTppCtv3ToSnomed(inFolder);
-        importTPPMaps(inFolder);
+        importTppCtv3ToSnomed(config.folder);
+        importTPPMaps(config.folder);
 
         TTDocumentFiler filer = new TTDocumentFilerJDBC();
-        filer.fileDocument(document,bulkImport,entityMap);
+        filer.fileDocument(document);
         filer = new TTDocumentFilerJDBC();
-        filer.fileDocument(mapDocument,bulkImport,entityMap);
+        filer.fileDocument(mapDocument);
         return this;
 
     }
@@ -272,7 +269,6 @@ public class TPPImporter implements TTImport{
                             .setName(term)
                             .setCode(code)
                             .addType(OWL.CLASS);
-                    entityMap.put(code, TPP);
                     TPP.setCrud(IM.REPLACE);
                     TPP.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.NAMESPACE + "TPPUnlinkedCodes")));
                     document.addEntity(TPP);
@@ -324,8 +320,5 @@ public class TPPImporter implements TTImport{
             emisToSnomed.clear();
         if (snomedCodes!=null)
             snomedCodes.clear();
-        if (entityMap!=null)
-            entityMap.clear();
-
     }
 }

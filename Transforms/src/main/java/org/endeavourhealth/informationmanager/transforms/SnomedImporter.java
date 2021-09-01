@@ -2,20 +2,19 @@ package org.endeavourhealth.informationmanager.transforms;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.OWL;
-import org.endeavourhealth.imapi.vocabulary.RDF;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.XSD;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.endeavourhealth.informationmanager.common.transform.*;
 
 import java.io.*;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.*;
-import java.util.zip.DataFormatException;
 
 public class SnomedImporter implements TTImport {
 
@@ -33,8 +32,6 @@ public class SnomedImporter implements TTImport {
      ".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKCRSnapshot_.*\\.txt"
    };
    public static final String[] refsets= {	".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleUKCRSnapshot_.*\\.txt"};
-
-  
 
    public static final String[] descriptions = {
 
@@ -80,42 +77,34 @@ public class SnomedImporter implements TTImport {
    public static final String ACTIVE = "1";
    public static final String REPLACED_BY = "370124000";
 
-
-
-
-
-
-
-
    //======================PUBLIC METHODS============================
-
 
    /**
     * Loads a multi country RF2 release package into a Discovery ontology will process international followed by uk clinical
     * followed by uk drug. Loads MRCM models also. Does not load reference sets.
     *
-    * @param inFolder root folder containing the RF2 folders
+    * @param config import configuration
     * @throws Exception thrown from document filer
     */
 
    @Override
-   public TTImport importData(String inFolder,boolean bulkImport, Map<String,Integer> entityMap) throws Exception {
-      validateFiles(inFolder);
+   public TTImport importData(TTImportConfig config) throws Exception {
+      validateFiles(config.folder);
       conceptMap = new HashMap<>();
       TTManager dmanager= new TTManager();
 
       document= dmanager.createDocument(IM.GRAPH_SNOMED.getIri());
       setRefSetRoot();
-      importConceptFiles(inFolder);
-      importDescriptionFiles(inFolder);
-      importMRCMRangeFiles(inFolder);
-      importRefsetFiles(inFolder);
-      importMRCMDomainFiles(inFolder);
-      importStatedFiles(inFolder);
-      importRelationshipFiles(inFolder);
-      importSubstitution(inFolder);
+      importConceptFiles(config.folder);
+      importDescriptionFiles(config.folder);
+      importMRCMRangeFiles(config.folder);
+      importRefsetFiles(config.folder);
+      importMRCMDomainFiles(config.folder);
+      importStatedFiles(config.folder);
+      importRelationshipFiles(config.folder);
+      importSubstitution(config.folder);
       TTDocumentFiler filer = new TTDocumentFilerJDBC();
-      filer.fileDocument(document,bulkImport,entityMap);
+      filer.fileDocument(document);
       return this;
    }
    private void setRefSetRoot() {

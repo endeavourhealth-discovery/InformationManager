@@ -1,27 +1,21 @@
 package org.endeavourhealth.informationmanager.transforms;
 
-import org.endeavourhealth.imapi.model.tripletree.TTContext;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
-
 
 public class CoreImporter implements TTImport {
    private static final String[] coreEntities = {
-     ".*\\\\SemanticWeb\\\\RDFOntology.json",
-     ".*\\\\SemanticWeb\\\\RDFSOntology.json",
+     ".*\\SemanticWeb\\RDFOntology.json",
+     ".*\\SemanticWeb\\RDFSOntology.json",
      ".*\\\\SemanticWeb\\\\OWLOntology.json",
      ".*\\\\SemanticWeb\\\\SHACLOntology.json",
      ".*\\\\DiscoveryCore\\\\CoreOntologyDocument.json"
@@ -44,30 +38,30 @@ public class CoreImporter implements TTImport {
 
    /**
     * Imports the core ontology document
-    * @param inFolder root folder containing the Core ontology document
+    * @param config import config
     * @return TTImport object builder pattern
     * @throws Exception invalid document
     */
    @Override
-   public TTImport importData(String inFolder, boolean bulkImport, Map<String,Integer> entityMap) throws Exception {
-      importNamespaces(bulkImport,entityMap);
+   public TTImport importData(TTImportConfig config) throws Exception {
+      importNamespaces();
      System.out.println("Importing Core entities");
       for (String coreFile : coreEntities) {
         TTManager manager = new TTManager();
-         Path path = ImportUtils.findFileForId(inFolder, coreFile);
+         Path path = ImportUtils.findFileForId(config.folder, coreFile);
          manager.loadDocument(path.toFile());
          TTDocument document= manager.getDocument();
          TTDocumentFiler filer = new TTDocumentFilerJDBC();
-        filer.fileDocument(document,bulkImport,entityMap);
+        filer.fileDocument(document);
       }
       return this;
    }
 
-   private void importNamespaces( boolean bulkImport, Map<String,Integer> entityMap) throws Exception {
+   private void importNamespaces() throws Exception {
       TTManager manager= new TTManager();
       manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
       TTDocumentFiler filer= new TTDocumentFilerJDBC();
-      filer.fileDocument(manager.getDocument(),bulkImport,entityMap);
+      filer.fileDocument(manager.getDocument());
 
    }
 

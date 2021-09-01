@@ -16,16 +16,23 @@ public class ClosureGenerator {
 
 
     public static void main(String[] args) throws SQLException, IOException, ClassNotFoundException {
-        generateClosure(args[0]);
+        if (args.length == 0 || args.length > 2) {
+            System.err.println("Incorrect parameters:");
+            System.err.println("<output path> [secure]");
+            System.exit(-1);
+        }
+
+        boolean secure = (args.length == 2 && "secure".equalsIgnoreCase(args[1]));
+        generateClosure(args[0], secure);
     }
 
-    public static void generateClosure(String outpath) throws SQLException, IOException, ClassNotFoundException {
+    public static void generateClosure(String outpath, boolean secure) throws SQLException, IOException, ClassNotFoundException {
 
         List<TTIriRef> relationships = Arrays.asList(
             IM.IS_A,
             IM.IS_CHILD_OF,
-          SNOMED.REPLACED_BY,
-          IM.HAS_REPLACED
+            SNOMED.REPLACED_BY,
+            IM.HAS_REPLACED
         );
 
         String outFile = outpath + "/closure.txt";
@@ -41,7 +48,7 @@ public class ClosureGenerator {
                     writeClosureData(fw, predicateDbid);
                 }
             }
-            importClosure(conn, outpath);
+            importClosure(conn, outpath, secure);
         }
     }
 
@@ -199,18 +206,34 @@ public class ClosureGenerator {
         System.out.println();
     }
 
-    private static void importClosure(Connection conn, String outpath) throws SQLException {
+    private static void importClosure(Connection conn, String outpath, boolean secure) throws SQLException {
         System.out.println("Importing closure");
-        PreparedStatement dropClosure = conn.prepareStatement("TRUNCATE TABLE tct");
-        dropClosure.executeUpdate();
+        try (PreparedStatement stmt = conn.prepareStatement("TRUNCATE TABLE tct")) {
+            stmt.executeUpdate();
+        }
+
+        if (secure) {
+            try (PreparedStatement stmt = conn.prepareStatement("SET GLOBAL local_infile=1")) {
+                stmt.executeUpdate();
+            }
+        }
+
         conn.setAutoCommit(false);
-        PreparedStatement buildClosure = conn.prepareStatement("LOAD DATA INFILE ?"
-            + " INTO TABLE tct"
-            + " FIELDS TERMINATED BY '\t'"
-            + " LINES TERMINATED BY '\r\n'"
-            + " (ancestor, descendant, level,type)");
-        buildClosure.setString(1, outpath + "/closure.txt");
-        buildClosure.executeUpdate();
-        conn.commit();
+
+        StringJoiner sql = new StringJoiner("\n")
+            .add("LOAD DATA");
+        if (secure)
+            sql.add("LOCAL");
+        sql.add("INFILE ?")
+            .add("INTO TABLE tct")
+            .add("FIELDS TERMINATED BY '\t'")
+            .add("LINES TERMINATED BY '\r\n'")
+            .add("(ancestor, descendant, level,type)");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            stmt.setString(1, outpath + "/closure.txt");
+            stmt.executeUpdate();
+            conn.commit();
+        }
     }
 }

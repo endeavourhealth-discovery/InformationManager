@@ -19,11 +19,9 @@ public class TTDocumentFilerJDBC implements TTDocumentFiler {
 
    private final Map<String, Integer> namespaceMap = new HashMap<>();
    private final Map<String, String> prefixMap = new HashMap<>();
-   private Map<String, Integer> entityMap;
    private TTIriRef graph;
    private final Connection conn;
    private TTEntityFilerJDBC entityFiler;
-   private boolean bulk;
 
    private final PreparedStatement getNamespace;
    private final PreparedStatement getNsFromPrefix;
@@ -95,14 +93,10 @@ public class TTDocumentFilerJDBC implements TTDocumentFiler {
 
 
    @Override
-   public void fileDocument(TTDocument document,boolean bulk,Map<String,Integer> entityMap) throws SQLException, DataFormatException, IOException, FileFormatException {
+   public void fileDocument(TTDocument document) throws SQLException, DataFormatException, IOException, FileFormatException {
       try {
          this.graph= document.getGraph();
-         this.bulk= bulk;
-         if (entityMap==null)
-            entityMap= new HashMap<>();
-         this.entityMap=entityMap;
-         entityFiler = new TTEntityFilerJDBC(conn,entityMap,prefixMap,bulk);
+         entityFiler = new TTEntityFilerJDBC(conn, prefixMap);
          System.out.println("Saving ontology - " + (new Date().toString()));
          LOG.info("Processing namespaces");
 
@@ -223,24 +217,8 @@ public class TTDocumentFilerJDBC implements TTDocumentFiler {
 
    }
 
-
-
    @Override
    public void setGraph(TTIriRef graph) {
       this.graph= graph;
    }
-
-
-
-   @Override
-   public void setBulk(boolean bulk) {
-      this.bulk=bulk;
-   }
-
-   @Override
-   public Map<String, Integer> getEntityMap() {
-      return entityMap;
-   }
-
-
 }

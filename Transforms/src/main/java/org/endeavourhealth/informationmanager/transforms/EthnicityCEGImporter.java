@@ -1,13 +1,9 @@
 package org.endeavourhealth.informationmanager.transforms;
 
-import com.opencsv.CSVReader;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.informationmanager.ClosureGenerator;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
-import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.*;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.BufferedReader;
@@ -52,15 +48,15 @@ public class EthnicityCEGImporter implements TTImport {
 	}
 
 	@Override
-	public TTImport importData(String inFolder,boolean bulkImport,Map<String,Integer> entityMap ) throws Exception {
+	public TTImport importData(TTImportConfig config) throws Exception {
 		document = manager.createDocument(IM.GRAPH_CEG16.getIri());
 		document.setCrud(IM.UPDATE);
-		retrieveEthnicity(inFolder);
+		retrieveEthnicity(config.folder, config.secure);
 		spellCorrections();
-		importEthnicGroups(inFolder);
+		importEthnicGroups(config.folder);
 
 		TTDocumentFiler filer = new TTDocumentFilerJDBC();
-		filer.fileDocument(document,bulkImport,entityMap);
+		filer.fileDocument(document);
 
 		return this;
 	}
@@ -75,11 +71,11 @@ public class EthnicityCEGImporter implements TTImport {
 		dropWords.add("ethnic group");
 	}
 
-	private void retrieveEthnicity(String folder) throws SQLException, IOException, ClassNotFoundException {
+	private void retrieveEthnicity(String folder, boolean secure) throws SQLException, IOException, ClassNotFoundException {
 		ResultSet rs= get2001Census.executeQuery();
 		if (!rs.next()){
 			System.out.println("Building tct as this is required");
-			ClosureGenerator.generateClosure(folder);
+			ClosureGenerator.generateClosure(folder, secure);
 		}
 
 		rs= get2001Census.executeQuery();

@@ -7,6 +7,7 @@ import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.endeavourhealth.informationmanager.common.transform.ECLToTT;
 import org.endeavourhealth.informationmanager.common.transform.SnomedConcept;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
@@ -47,10 +48,10 @@ public class BartsCernerImport implements TTImport {
 		String descId;
 	}
 	@Override
-	public TTImport importData(String inFolder, boolean bulkImport, Map<String, Integer> entityMap) throws Exception {
+	public TTImport importData(TTImportConfig config) throws Exception {
 	/*
 		conn= ImportUtils.getConnection();
-		System.out.println("retrdocument = {TTDocument@1289} ieving snomed codes from IM");
+		System.out.println("retrieving snomed codes from IM");
 		document= manager.createDocument(IM.GRAPH_BARTS_CERNER.getIri());
 		document.setCrud(IM.REPLACE);
 		mapDocument= manager.createDocument(IM.MAP_SNOMED_BC.getIri());
