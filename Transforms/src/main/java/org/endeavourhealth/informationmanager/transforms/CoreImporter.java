@@ -14,8 +14,8 @@ import java.sql.Connection;
 
 public class CoreImporter implements TTImport {
    private static final String[] coreEntities = {
-     ".*\\SemanticWeb\\RDFOntology.json",
-     ".*\\SemanticWeb\\RDFSOntology.json",
+     ".*\\\\SemanticWeb\\\\RDFOntology.json",
+     ".*\\\\SemanticWeb\\\\RDFSOntology.json",
      ".*\\\\SemanticWeb\\\\OWLOntology.json",
      ".*\\\\SemanticWeb\\\\SHACLOntology.json",
      ".*\\\\DiscoveryCore\\\\CoreOntologyDocument.json"
