@@ -281,7 +281,6 @@ CREATE TABLE IF NOT EXISTS task (
     workflow INT NOT NULL,
     id VARCHAR(200) NOT NULL COLLATE utf8_bin,
     name TEXT not null,
-    name VARCHAR(100) NOT NULL,
     state VARCHAR(100) NOT NULL,
 
     PRIMARY KEY task_pk (dbid),
