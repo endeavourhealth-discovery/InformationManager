@@ -176,10 +176,11 @@ public class ReasonerPlus {
          TTNode newGroup=null;
          for (TTValue element : parentRoleGroups.getElements()) {
             TTNode roleGroup = element.asNode();
-            for (TTValue role:roleGroup.get(IM.ROLE).asArray().getElements()){
-               TTIriRef property= role.asNode().get(OWL.ONPROPERTY).asIriRef();
+            for (Map.Entry<TTIriRef,TTValue> entry:roleGroup.getPredicateMap().entrySet()){
+               TTIriRef property= entry.getKey();
+               TTValue value= entry.getValue();
                if (!overriddenRole(property,entity))
-                  newGroup= addInheritedRole(entity,newGroup,role);
+                  newGroup= addInheritedRole(entity,newGroup,property,value);
             }
          }
       }
@@ -192,7 +193,7 @@ public class ReasonerPlus {
 
    }
 
-   private TTNode addInheritedRole(TTEntity entity, TTNode newGroup, TTValue role) {
+   private TTNode addInheritedRole(TTEntity entity, TTNode newGroup, TTIriRef property,TTValue value) {
       Integer nextGroup = 1;
       if (entity.get(IM.ROLE_GROUP) != null) {
          nextGroup = entity.get(IM.ROLE_GROUP).asArray().size();
@@ -203,26 +204,22 @@ public class ReasonerPlus {
       if (newGroup==null){
          newGroup = new TTNode();
          newGroup.set(IM.GROUP_NUMBER,TTLiteral.literal(nextGroup));
-         newGroup.set(IM.ROLE,new TTArray());
-         entity.get(IM.ROLE_GROUP).asArray().add(newGroup);
+
       }
-      newGroup.get(IM.ROLE).asArray().add(role);
+      newGroup.set(property,value);
       return newGroup;
    }
 
    private boolean overriddenRole(TTIriRef property, TTEntity entity) {
       if (entity.get(IM.ROLE_GROUP)!=null)
          for (TTValue roleGroup : entity.get(IM.ROLE_GROUP).asArray().getElements()) {
-            for (TTValue role:roleGroup.asNode().get(IM.ROLE).asArray().getElements()){
-               Set<Map.Entry<TTIriRef,TTValue>> predicates= role.asNode().getPredicateMap().entrySet();
-               for (Map.Entry<TTIriRef,TTValue> entry:predicates){
+               for (Map.Entry<TTIriRef,TTValue> entry:roleGroup.asNode().getPredicateMap().entrySet()){
                   TTIriRef subProperty = entry.getKey();
                   if (manager.isA(subProperty, property))
                      return true;
                }
             }
 
-         }
       return false;
    }
 

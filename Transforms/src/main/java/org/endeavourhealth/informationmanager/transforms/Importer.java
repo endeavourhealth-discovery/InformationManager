@@ -4,8 +4,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.TTImportByType;
-
-import java.util.Map;
+import org.endeavourhealth.informationmanager.TTImportConfig;
 
 /**
  * Manager Class which imports specialised data from a legacy classification or the core ontology using specialised importers
@@ -16,18 +15,17 @@ public class Importer implements TTImportByType {
    /**
     * Creates a type specific importer and imports and files rthe data
     * @param importType The graph IRI for the particular source data type
-    * @param inFolder root folder holding the data files (if any)
+    * @param config Import configuration
     * @return TTImport object for reuse
     * @throws Exception if one of the sources is invalid
     */
    @Override
-   public TTImportByType importByType(TTIriRef importType, String inFolder,
-                                      boolean bulkImport, Map<String,Integer> entityMap) throws Exception {
+   public TTImportByType importByType(TTIriRef importType, TTImportConfig config) throws Exception {
       System.out.println("Importing "+ importType.getIri());
       try (TTImport importer= getImporter(importType)){
-         importer.validateFiles(inFolder);
+         importer.validateFiles(config.folder);
          importer.validateLookUps(ImportUtils.getConnection());
-         importer.importData(inFolder,bulkImport,entityMap);
+         importer.importData(config);
       }
       return this;
    }
@@ -73,6 +71,8 @@ public class Importer implements TTImportByType {
          return new WinPathKingsImport();
       else if (IM.GRAPH_CEG16.equals(importType))
          return new EthnicityCEGImporter();
+      else if (IM.GRAPH_IM1.equals(importType))
+         return new IM1MapImport();
       else
          throw new Exception("Unrecognised import type");
    }

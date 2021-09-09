@@ -8,6 +8,7 @@ import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.BufferedReader;
@@ -15,8 +16,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.zip.DataFormatException;
 
@@ -27,29 +26,28 @@ public class OPCS4Importer  implements TTImport {
     private static final String[] entities = {".*\\\\nhs_opcs4df_9.0.0_.*\\\\OPCS49 CodesAndTitles.*\\.txt"};
     private static final String[] chapters = {".*\\\\nhs_opcs4df_9.0.0_.*\\\\OPCSChapters.*\\.txt"};
     private static final String[] maps = {".*\\\\SNOMED\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
-    private Map<String,TTEntity> entityMap = new HashMap<>();
 
     private TTManager manager= new TTManager();
     private TTDocument document;
     private Set<String> snomedCodes;
     private Connection conn;
 
-    public TTImport importData(String inFolder,boolean bulkImport,Map<String,Integer> entityMap) throws Exception {
+    public TTImport importData(TTImportConfig config) throws Exception {
         System.out.println("Importing OPCS4.....");
         System.out.println("Checking Snomed codes first");
         conn= ImportUtils.getConnection();
         snomedCodes= ImportUtils.importSnomedCodes(conn);
         document = manager.createDocument(IM.GRAPH_OPCS4.getIri());
-        importChapters(inFolder,document);
-        importEntities(inFolder,document);
+        importChapters(config.folder,document);
+        importEntities(config.folder,document);
         TTDocumentFiler filer= new TTDocumentFilerJDBC();
-        filer.fileDocument(document,bulkImport,entityMap);
+        filer.fileDocument(document);
         document= manager.createDocument(IM.MAP_SNOMED_OPCS.getIri());
 
         document.setCrud(IM.UPDATE);
-        importMaps(inFolder);
+        importMaps(config.folder);
         filer= new TTDocumentFilerJDBC();
-        filer.fileDocument(document,bulkImport,entityMap);
+        filer.fileDocument(document);
         return this;
     }
 
@@ -107,12 +105,10 @@ public class OPCS4Importer  implements TTImport {
                         c.setName(fields[1]);
                     }
 
-                    entityMap.put(fields[0].replace(".",""), c);
                     document.addEntity(c);
                     line = reader.readLine();
             }
             System.out.println("Imported " + count + " records");
-            System.out.println("Creating " + entityMap.size() + " opcs 4 entities");
         }
     }
 

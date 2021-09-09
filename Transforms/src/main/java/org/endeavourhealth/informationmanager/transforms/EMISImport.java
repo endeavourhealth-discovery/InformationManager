@@ -8,6 +8,7 @@ import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.FileReader;
@@ -33,24 +34,18 @@ public class EMISImport implements TTImport {
     private TTDocument document;
     private TTDocument mapDocument;
 
-    private final Map<String,TTEntity> entityMap = new HashMap<>();
-
-
-
     public EMISImport(){}
 
 
     /**
      * Imports EMIS , Read and EMIS codes and creates term code map to Snomed or local legacy entities
      * Requires vision maps to be populated
-     * @param inFolder root folder with sub folder of EMIS, READ
+     * @param config import configuration data
      * @throws Exception From document filer
      */
 
 
-    public TTImport importData(String inFolder,boolean bulkImport,Map<String,Integer> entityMap) throws Exception {
-        if (entityMap==null)
-            entityMap= new HashMap<>();
+    public TTImport importData(TTImportConfig config) throws Exception {
         conn= ImportUtils.getConnection();
         System.out.println("Retrieving filed snomed codes");
         snomedCodes= ImportUtils.importSnomedCodes(conn);
@@ -58,13 +53,13 @@ public class EMISImport implements TTImport {
         mapDocument = manager.createDocument(IM.MAP_SNOMED_EMIS.getIri());
         System.out.println("importing emis code file");
         addEMISUnlinked();
-        importEMISCodes(inFolder);
+        importEMISCodes(config.folder);
         setEmisHierarchy();
         TTDocumentFiler filer = new TTDocumentFilerJDBC();
-        filer.fileDocument(document,bulkImport,entityMap);
+        filer.fileDocument(document);
 
         filer = new TTDocumentFilerJDBC();
-        filer.fileDocument(mapDocument,bulkImport,entityMap);
+        filer.fileDocument(mapDocument);
 
 
         return this;
@@ -191,9 +186,6 @@ public class EMISImport implements TTImport {
     }
 
 
-
-
-
     public EMISImport validateFiles(String inFolder){
         ImportUtils.validateFiles(inFolder,emisEntities);
         return this;
@@ -217,7 +209,6 @@ public class EMISImport implements TTImport {
         codeIdToSnomed.clear();
         parentMap.clear();
 
-        entityMap.clear();
         if (document!=null) {
             if (document.getEntities() != null)
                 document.getEntities().clear();

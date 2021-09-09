@@ -5,10 +5,10 @@ import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -32,12 +32,8 @@ public class WinPathKingsImport implements TTImport {
 	private static final Set<String> utlMembers= new HashSet<>();
 	private Connection conn;
 
-
-
-
-
 	@Override
-	public TTImport importData(String inFolder, boolean bulkImport, Map<String,Integer> entityMap) throws Exception {
+	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager = new TTManager();
 		document= manager.createDocument(IM.GRAPH_KINGS_WINPATH.getIri());
 		TTManager backManager = new TTManager();
@@ -48,16 +44,16 @@ public class WinPathKingsImport implements TTImport {
 		valueSetDocument= vsetManager.createDocument(IM.NAMESPACE);
 		valueSetDocument.setCrud(IM.ADD);
 		importR2Matches();
-		importWinPathKings(inFolder);
+		importWinPathKings(config.folder);
 		createBackMaps();
 		addToUtlSet();
 		TTDocumentFiler filer = new TTDocumentFilerJDBC();
-		filer.fileDocument(document,bulkImport,entityMap);
+		filer.fileDocument(document);
 		filer = new TTDocumentFilerJDBC();
-		filer.fileDocument(backMapDocument, bulkImport,entityMap);
+		filer.fileDocument(backMapDocument);
 		if (valueSetDocument.getEntities()!=null) {
 			filer = new TTDocumentFilerJDBC();
-			filer.fileDocument(valueSetDocument,bulkImport,entityMap);
+			filer.fileDocument(valueSetDocument);
 		}
 		return this;
 

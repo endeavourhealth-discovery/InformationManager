@@ -8,21 +8,15 @@ import org.endeavourhealth.informationmanager.common.transform.exceptions.FileFo
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.DataFormatException;
 
 public interface TTDocumentFiler {
 
-	void fileDocument(TTDocument document,boolean bulk,Map<String,Integer> entityMap) throws SQLException, DataFormatException, IOException, FileFormatException;
+	void fileDocument(TTDocument document) throws SQLException, DataFormatException, IOException, FileFormatException;
 
 	void fileEntities(TTDocument document) throws SQLException, DataFormatException, IOException;
 
 	void fileNamespaces(List<TTPrefix> prefixes) throws SQLException;
 
 	void setGraph(TTIriRef graph);
-
-	void setBulk(boolean bulk);
-
-	Map<String, Integer> getEntityMap();
-
 	}

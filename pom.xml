@@ -35,10 +35,9 @@
     <module>common</module>
     <module>Transforms</module>
     <module>DocumentImport</module>
-    <module>DiscoveryConverter</module>
     <module>V1-V2Migration</module>
     <module>Feeds</module>
-      <module>Exporters</module>
+
   </modules>
 
   <dependencyManagement>

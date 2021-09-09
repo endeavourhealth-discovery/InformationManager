@@ -1,13 +1,9 @@
 package org.endeavourhealth.informationmanager.transforms;
 
-import com.opencsv.CSVReader;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.informationmanager.ClosureGenerator;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
-import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.*;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.BufferedReader;
@@ -52,15 +48,15 @@ public class EthnicityCEGImporter implements TTImport {
 	}
 
 	@Override
-	public TTImport importData(String inFolder,boolean bulkImport,Map<String,Integer> entityMap ) throws Exception {
+	public TTImport importData(TTImportConfig config) throws Exception {
 		document = manager.createDocument(IM.GRAPH_CEG16.getIri());
 		document.setCrud(IM.UPDATE);
-		retrieveEthnicity(inFolder);
+		retrieveEthnicity(config.folder, config.secure);
 		spellCorrections();
-		importEthnicGroups(inFolder);
+		importEthnicGroups(config.folder);
 
 		TTDocumentFiler filer = new TTDocumentFilerJDBC();
-		filer.fileDocument(document,bulkImport,entityMap);
+		filer.fileDocument(document);
 
 		return this;
 	}
@@ -75,11 +71,11 @@ public class EthnicityCEGImporter implements TTImport {
 		dropWords.add("ethnic group");
 	}
 
-	private void retrieveEthnicity(String folder) throws SQLException, IOException, ClassNotFoundException {
+	private void retrieveEthnicity(String folder, boolean secure) throws SQLException, IOException, ClassNotFoundException {
 		ResultSet rs= get2001Census.executeQuery();
 		if (!rs.next()){
 			System.out.println("Building tct as this is required");
-			ClosureGenerator.generateClosure(folder);
+			ClosureGenerator.generateClosure(folder, secure);
 		}
 
 		rs= get2001Census.executeQuery();
@@ -161,9 +157,9 @@ public class EthnicityCEGImporter implements TTImport {
 				fields= line.split("\t");
 				String snomed=fields[1];
 				String cat16=fields[11];
-				String catTerm=fields[12];
+				String catTerm=fields[12].replace("\"","");
 				String nhs16=fields[19];
-				String nhsTerm= fields[20];
+				String nhsTerm= fields[20].replace("\"","");
 				String pdsTerm=fields[22];
 				String snoNhs= matchEthnicity(nhsTerm);
 				if (snoNhs==null)
@@ -171,9 +167,9 @@ public class EthnicityCEGImporter implements TTImport {
 				TTEntity cegSubset= cegCatMap.get(cat16);
 				if (cegSubset==null){
 					cegSubset= new TTEntity()
-						.setIri(IM.NAMESPACE+"VSET_EthnicCategoryCEG16_"+cat16)
+						.setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16_"+cat16)
 						.addType(IM.CONCEPT_SET)
-						.setName(catTerm)
+						.setName("Concept set - "+ catTerm)
 						.setCode(cat16)
 						.setDescription("QMUL CEG 16+ Ethnic category "+cat16);
 					document.addEntity(cegSubset);
@@ -187,8 +183,9 @@ public class EthnicityCEGImporter implements TTImport {
 					TTEntity nhsSubset= nhsCatmap.get(snoNhs);
 					if (nhsSubset==null) {
 						nhsSubset = new TTEntity()
-						.setIri(SNOMED.NAMESPACE + snoNhs)
+						.setIri(IM.NAMESPACE + "CSET_SN_"+snoNhs)
 						.addType(IM.CONCEPT_SET)
+							.setName("Concept set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
 						.setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16);
 						document.addEntity(nhsSubset);
 						nhsSet.addObject(IM.HAS_SUBSET, TTIriRef.iri(nhsSubset.getIri()));
@@ -209,15 +206,16 @@ public class EthnicityCEGImporter implements TTImport {
 
 	private void setConceptSets() {
 		cegSet= new TTEntity()
-			.setIri(IM.NAMESPACE+"VSET_EthnicCategoryCEG16")
+			.setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16")
 			.addType(IM.CONCEPT_SET)
 			.setName("CEG 16+1 Ethnic category (concept set)")
 			.setDescription("QMUL-CEG categorisations of ethnic groups");
 		cegSet.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"EthnicitySets")));
 		document.addEntity(cegSet);
 		nhsSet= new TTEntity()
-			.setIri(SNOMED.NAMESPACE+"92381000000106")
+			.setIri(IM.NAMESPACE+"CSET_EthnicCategory2001")
 			.addType(IM.CONCEPT_SET)
+			.setName("Concept set - 2001 census Ethnic category")
 			.setDescription("NHS Data Dictionary 2001 census based categorisations of ethnic groups");
 		nhsSet.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"EthnicitySets")));
 		document.addEntity(nhsSet);

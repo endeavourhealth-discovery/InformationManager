@@ -10,6 +10,7 @@ import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
+import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.io.BufferedReader;
@@ -22,7 +23,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.DataFormatException;
 
 
@@ -34,32 +34,33 @@ public class ICD10Importer implements TTImport {
 
 
     private final TTIriRef icd10Codes= TTIriRef.iri(IM.CODE_SCHEME_ICD10.getIri()+"ICD10Codes");
-    private final Map<String,TTEntity> entityMap = new HashMap<>();
     private final TTManager manager= new TTManager();
     private Set<String> snomedCodes;
     private final Map<String,TTEntity> startChapterMap= new HashMap<>();
     private final List<String> startChapterList= new ArrayList<>();
     private TTDocument document;
     private Connection conn;
+    private HashMap<String, TTEntity> entityMap = new HashMap<>();
 
-    public TTImport importData(String inFolder,boolean bulkImport,Map<String,Integer> entityMap) throws Exception {
-        validateFiles(inFolder);
+    @Override
+    public TTImport importData(TTImportConfig config) throws Exception {
+        validateFiles(config.folder);
         System.out.println("Importing ICD10....");
         conn= ImportUtils.getConnection();
         System.out.println("Getting snomed codes");
         snomedCodes= ImportUtils.importSnomedCodes(conn);
         document = manager.createDocument(IM.GRAPH_ICD10.getIri());
         createTaxonomy();
-        importChapters(inFolder,document);
-        importEntities(inFolder, document);
+        importChapters(config.folder,document);
+        importEntities(config.folder, document);
         createHierarchy();
         TTDocumentFiler filer= new TTDocumentFilerJDBC();
-        filer.fileDocument(document,bulkImport,entityMap);
+        filer.fileDocument(document);
         document= manager.createDocument(IM.MAP_SNOMED_ICD10.getIri());
         document.setCrud(IM.ADD);
-        importMaps(inFolder);
+        importMaps(config.folder);
         filer= new TTDocumentFilerJDBC();
-        filer.fileDocument(document,bulkImport,entityMap);
+        filer.fileDocument(document);
         return this;
 
     }
