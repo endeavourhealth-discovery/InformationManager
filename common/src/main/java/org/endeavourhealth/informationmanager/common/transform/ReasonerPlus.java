@@ -370,7 +370,7 @@ public class ReasonerPlus {
                          .getIRI()
                          .toString()));});
                   }
-            } else if (c.isType(OWL.DATAPROPERTY)) {
+            } else if (c.isType(RDF.PROPERTY)|(c.isType(OWL.DATAPROPERTY))) {
                OWLDataProperty dpe = dataFactory.getOWLDataProperty(IRI.create(c.getIri()));
                NodeSet<OWLDataProperty> superP = owlReasoner.getSuperDataProperties(dpe, true);
                if (superP != null) {

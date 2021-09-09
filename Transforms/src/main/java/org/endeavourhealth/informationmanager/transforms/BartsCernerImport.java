@@ -268,8 +268,9 @@ public class BartsCernerImport implements TTImport {
 
 	@Override
 	public TTImport validateFiles(String inFolder) {
-			ImportUtils.validateFiles(inFolder,codes, maps,sets,used,hierarchy);
-			return this;
+		return this;
+		//	ImportUtils.validateFiles(inFolder,codes, maps,sets,used,hierarchy);
+			//return this;
 	}
 
 	@Override

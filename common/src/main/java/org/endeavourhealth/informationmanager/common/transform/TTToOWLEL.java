@@ -124,7 +124,9 @@ public class TTToOWLEL {
                   Logger.error("unknown equivalent class type " + currentEntity.getIri());
             } else if (entry.getKey().equals(RDFS.SUBPROPERTYOF)) {
                TTIriRef propertyType;
-               if (entity.isType(OWL.DATAPROPERTY))
+               if (entity.isType(RDF.PROPERTY))
+                  propertyType=OWL.DATAPROPERTY;
+               else if (entity.isType(OWL.DATAPROPERTY))
                   propertyType=OWL.DATAPROPERTY;
                else
                   propertyType= OWL.OBJECTPROPERTY;
@@ -167,6 +169,7 @@ public class TTToOWLEL {
          } else {
             OWLSubDataPropertyOfAxiom subAx = dataFactory.getOWLSubDataPropertyOfAxiom(
                 dataFactory.getOWLDataProperty(iri),dataFactory.getOWLDataProperty(getIri(exp.asIriRef())));
+            manager.addAxiom(ontology,subAx);
 
          }
       }
@@ -304,6 +307,8 @@ public class TTToOWLEL {
          return OWL.OBJECTPROPERTY;
       if (entity.isType(OWL.DATAPROPERTY))
          return OWL.DATAPROPERTY;
+      else  if (entity.isType(RDF.PROPERTY))
+         return OWL.DATAPROPERTY;
       else
          return OWL.OBJECTPROPERTY;
    }
@@ -335,13 +340,15 @@ public class TTToOWLEL {
    private void addDeclaration(TTEntity ttEntity){
 
       IRI iri = getIri(ttEntity.getIri());
-      OWLEntity entity=null;;
+      OWLEntity entity;;
       if (ttEntity.isType(OWL.CLASS))
             entity = dataFactory.getOWLEntity(EntityType.CLASS, iri);
          else if (ttEntity.isType(OWL.OBJECTPROPERTY))
             entity = dataFactory.getOWLEntity(EntityType.OBJECT_PROPERTY, iri);
          else if (ttEntity.isType(OWL.DATAPROPERTY))
             entity = dataFactory.getOWLEntity(EntityType.DATA_PROPERTY, iri);
+      else if (ttEntity.isType(RDF.PROPERTY))
+         entity = dataFactory.getOWLEntity(EntityType.DATA_PROPERTY, iri);
          else if (ttEntity.isType(OWL.ANNOTATIONPROPERTY))
             entity = dataFactory.getOWLEntity(EntityType.ANNOTATION_PROPERTY, iri);
          else if (ttEntity.isType(OWL.NAMEDINDIVIDUAL))
