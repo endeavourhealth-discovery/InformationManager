@@ -5,7 +5,7 @@ import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.TTImportConfig;
-import org.endeavourhealth.informationmanager.common.transform.TTManager;
+import org.endeavourhealth.imapi.transforms.TTManager;
 
 import java.nio.file.Path;
 import java.sql.Connection;
