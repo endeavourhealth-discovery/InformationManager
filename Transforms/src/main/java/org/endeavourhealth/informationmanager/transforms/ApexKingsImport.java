@@ -37,6 +37,7 @@ public class ApexKingsImport implements TTImport {
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
+		//
 		conn = ImportUtils.getConnection();
 		TTManager manager = new TTManager();
 		document= manager.createDocument(IM.GRAPH_KINGS_APEX.getIri());
