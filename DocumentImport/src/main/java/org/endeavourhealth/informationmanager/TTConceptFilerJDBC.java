@@ -12,11 +12,10 @@ import java.sql.*;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
-public class TTGenericFilerJDBC {
+public class TTConceptFilerJDBC {
 
-    private Map<String, String> prefixMap = new HashMap<>();
+    Map<String, String> prefixMap = new HashMap<>();
     private Map<String, Integer> entityMap = new HashMap<>();
-    private Integer graph;
 
     private final Connection conn;
 
@@ -32,27 +31,8 @@ public class TTGenericFilerJDBC {
     private final PreparedStatement updateTermEntity;
     private final PreparedStatement deleteTermEntity;
 
-
-    /**
-     * Constructor for use as part of a TTDocument
-     *
-     * @param conn      the JDBC connection
-     * @param prefixMap a map between prefixes and namespace
-     * @throws SQLException in the event of a connection exception
-     */
-    public TTGenericFilerJDBC(Connection conn, Map<String, String> prefixMap) throws SQLException {
-        this(conn, prefixMap, "");
-    }
-
-    /**
-     * Constructor for use as part of a TTDocument
-     *
-     * @param conn      the JDBC connection
-     * @param prefixMap a map between prefixes and namespace
-     * @throws SQLException in the event of a connection exception
-     */
-    public TTGenericFilerJDBC(Connection conn, Map<String, String> prefixMap, String type) throws SQLException {
-        this(conn, type);
+    public TTConceptFilerJDBC(Connection conn, Map<String, String> prefixMap) throws SQLException {
+        this(conn);
         this.prefixMap = prefixMap;
     }
 
@@ -64,32 +44,22 @@ public class TTGenericFilerJDBC {
      * @param conn JDBC connection
      * @throws SQLException SQL exception
      */
-    private TTGenericFilerJDBC(Connection conn, String type) throws SQLException {
-        String prefix = (type == null || type.isEmpty()) ? "" : type + "_";
-
-        // Specific entity & triple tables
-        String entityTable = prefix + "entity";
-        String tplTable = prefix + "tpl";
-
-        // Shared type and term code tables
-        String typeTable = "entity_type";
-        String termTable = "term_code";
-
+    private TTConceptFilerJDBC(Connection conn) throws SQLException {
         this.conn = conn;
-        getEntityDbId = conn.prepareStatement("SELECT dbid FROM " + entityTable + " WHERE iri = ?");
-        insertEntity = conn.prepareStatement("INSERT INTO " + entityTable + " (iri,name, description, code, scheme, status) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
-        updateEntity = conn.prepareStatement("UPDATE " + entityTable + " SET iri= ?, name = ?, description = ?, code = ?, scheme = ?, status = ? WHERE dbid = ?");
+        getEntityDbId = conn.prepareStatement("SELECT dbid FROM entity WHERE iri = ?");
+        insertEntity = conn.prepareStatement("INSERT INTO entity (iri,name, description, code, scheme, status) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+        updateEntity = conn.prepareStatement("UPDATE entity SET iri= ?, name = ?, description = ?, code = ?, scheme = ?, status = ? WHERE dbid = ?");
 
-        deleteTriples = conn.prepareStatement("DELETE FROM " + tplTable + " WHERE subject=? and graph= ?");
-        insertTriple = conn.prepareStatement("INSERT INTO " + tplTable + " (subject,blank_node,graph,predicate,object,literal,functional) VALUES(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+        deleteTriples = conn.prepareStatement("DELETE FROM tpl WHERE subject=? and graph= ?");
+        insertTriple = conn.prepareStatement("INSERT INTO tpl (subject,blank_node,graph,predicate,object,literal,functional) VALUES(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
 
-        deleteEntityTypes = conn.prepareStatement("DELETE FROM " + typeTable + " where entity=? and graph=?");
-        insertEntityType = conn.prepareStatement("INSERT INTO " + typeTable + " (entity,type,graph) VALUES(?,?,?)");
+        deleteEntityTypes = conn.prepareStatement("DELETE FROM entity_type where entity=? and graph=?");
+        insertEntityType = conn.prepareStatement("INSERT INTO entity_type (entity,type,graph) VALUES(?,?,?)");
 
-        insertTermEntity = conn.prepareStatement("INSERT INTO " + termTable + " SET entity=?, term=?, code=?,graph=?");
-        getTermDbIdFromTerm = conn.prepareStatement("SELECT dbid from " + termTable + " WHERE term =? and entity=?");
-        updateTermEntity = conn.prepareStatement("UPDATE " + termTable + " SET entity=?, term=?,code=?, graph=? where dbid=?");
-        deleteTermEntity = conn.prepareStatement("DELETE from " + termTable + " where entity=? and graph=?");
+        insertTermEntity = conn.prepareStatement("INSERT INTO term_code SET entity=?, term=?, code=?,graph=?");
+        getTermDbIdFromTerm = conn.prepareStatement("SELECT dbid from term_code WHERE term =? and entity=?");
+        updateTermEntity = conn.prepareStatement("UPDATE term_code SET entity=?, term=?,code=?, graph=? where dbid=?");
+        deleteTermEntity = conn.prepareStatement("DELETE from term_code where entity=? and graph=?");
     }
 
 
@@ -102,24 +72,24 @@ public class TTGenericFilerJDBC {
      * @throws DataFormatException   in the node format is incorrect
      * @throws IllegalStateException if the entity is not in the datbase
      */
-    private void updatePredicates(TTEntity entity, Integer entityId) throws SQLException, DataFormatException {
+    private void updatePredicates(TTEntity entity, Integer entityId, int graphId) throws SQLException, DataFormatException {
         if (entity.get(IM.HAS_TERM_CODE) != null) {
-            deleteTermEntities(entity, entityId);
+            deleteTermEntities(entityId, graphId);
         }
         Map<TTIriRef, TTValue> predicates = entity.getPredicateMap();
 
         //Deletes the previous predicate objects ie. clears out all previous objects
-        deletePredicates(entityId, predicates);
+        deletePredicates(entityId, predicates, graphId);
         if (entity.get(RDF.TYPE) != null)
-            deleteEntityTypes(entityId);
+            deleteEntityTypes(entityId, graphId);
         //Creates transactional adds
         TTNode subject = new TTNode();
         subject.setPredicateMap(predicates);
-        fileNode(entityId, null, subject);
+        fileNode(entityId, null, subject, graphId);
         if (entity.get(IM.HAS_TERM_CODE) != null)
-            fileTermCodes(entity, entityId);
+            fileTermCodes(entity, entityId, graphId);
         if (entity.get(RDF.TYPE) != null)
-            fileEntityTypes(entity, entityId);
+            fileEntityTypes(entity, entityId, graphId);
     }
 
     /**
@@ -131,23 +101,22 @@ public class TTGenericFilerJDBC {
      * @throws DataFormatException   in the node format is incorrect
      * @throws IllegalStateException if the entity is not in the datbase
      */
-    public void addPredicateObjects(TTEntity entity, Integer entityId) throws SQLException, DataFormatException {
+    public void addPredicateObjects(TTEntity entity, Integer entityId, int graphId) throws SQLException, DataFormatException {
 
         if (entityId == null)
             throw new IllegalStateException("No entity for this iri - " + entity.getIri());
-        fileTermCodes(entity, entityId);
+        fileTermCodes(entity, entityId, graphId);
         if (entity.get(RDF.TYPE) != null)
-            fileEntityTypes(entity, entityId);
+            fileEntityTypes(entity, entityId, graphId);
         Map<TTIriRef, TTValue> predicates = entity.getPredicateMap();
         //Creates transactional adds
         TTNode subject = new TTNode();
         subject.setPredicateMap(predicates);
-        fileNode(entityId, null, subject);
+        fileNode(entityId, null, subject, graphId);
 
     }
 
-    private void deletePredicates(Integer entityId,
-                                  Map<TTIriRef, TTValue> predicates) throws SQLException {
+    private void deletePredicates(Integer entityId, Map<TTIriRef, TTValue> predicates, int graphId) throws SQLException {
         List<Integer> predList = new ArrayList<>();
         int i = 0;
         for (Map.Entry<TTIriRef, TTValue> po : predicates.entrySet()) {
@@ -165,7 +134,7 @@ public class TTGenericFilerJDBC {
         stmt = "DELETE from tpl where subject=? and graph=? and predicate in (" + placeHolders + ")";
         PreparedStatement deleteObjectPredicates = conn.prepareStatement(stmt);
         DALHelper.setInt(deleteObjectPredicates, 1, entityId);
-        DALHelper.setInt(deleteObjectPredicates, 2, graph);
+        DALHelper.setInt(deleteObjectPredicates, 2, graphId);
         i = 2;
         for (Integer predDbId : predList) {
             DALHelper.setInt(deleteObjectPredicates, ++i, predDbId);
@@ -175,7 +144,7 @@ public class TTGenericFilerJDBC {
 
 
     public void fileEntity(TTEntity entity, TTIriRef graph) throws SQLException, DataFormatException {
-        this.graph = getOrSetEntityId(graph);
+        int graphId = getOrSetEntityId(graph);
         Integer entityId = fileEntityTable(entity);
         if (entity.getIri().contains("VSET_Oral_NSAIDs"))
             System.out.println("test entity");
@@ -184,13 +153,13 @@ public class TTGenericFilerJDBC {
                 entity.set(IM.STATUS, IM.ACTIVE);
         if (entity.getCrud() != null) {
             if (entity.getCrud().equals(IM.UPDATE))
-                updatePredicates(entity, entityId);
+                updatePredicates(entity, entityId, graphId);
             else if (entity.getCrud().equals(IM.ADD))
-                addPredicateObjects(entity, entityId);
+                addPredicateObjects(entity, entityId, graphId);
             else
-                replacePredicates(entity, entityId);
+                replacePredicates(entity, entityId, graphId);
         } else
-            replacePredicates(entity, entityId);
+            replacePredicates(entity, entityId, graphId);
 
     }
 
@@ -219,27 +188,27 @@ public class TTGenericFilerJDBC {
         return entityId;
     }
 
-    private void replacePredicates(TTEntity entity, Integer entityId) throws SQLException, DataFormatException {
+    private void replacePredicates(TTEntity entity, Integer entityId, int graphId) throws SQLException, DataFormatException {
 
-        deleteEntityTypes(entityId);
-        deleteTriples(entityId);
-        fileNode(entityId, null, entity);
-        deleteTermEntities(entity, entityId);
-        fileTermCodes(entity, entityId);
-        fileEntityTypes(entity, entityId);
+        deleteEntityTypes(entityId, graphId);
+        deleteTriples(entityId, graphId);
+        fileNode(entityId, null, entity, graphId);
+        deleteTermEntities(entityId, graphId);
+        fileTermCodes(entity, entityId, graphId);
+        fileEntityTypes(entity, entityId, graphId);
     }
 
-    private void deleteTermEntities(TTEntity entity, Integer entityId) throws SQLException {
+    private void deleteTermEntities(Integer entityId, int graphId) throws SQLException {
         DALHelper.setInt(deleteTermEntity, 1, entityId);
-        DALHelper.setInt(deleteTermEntity, 2, graph);
+        DALHelper.setInt(deleteTermEntity, 2, graphId);
         deleteTermEntity.executeUpdate();
     }
 
-    private void fileTermCodes(TTEntity entity, Integer entityId) throws SQLException {
+    private void fileTermCodes(TTEntity entity, Integer entityId, int graphId) throws SQLException {
         boolean nameFiled = false;
         if (entity.get(IM.HAS_TERM_CODE) != null)
             for (TTValue termCode : entity.get(IM.HAS_TERM_CODE).asArray().getElements()) {
-                fileTermCode(termCode.asNode(), entityId);
+                fileTermCode(termCode.asNode(), entityId, graphId);
                 if (entity.get(RDFS.LABEL) != null)
                     if (termCode.asNode().get(RDFS.LABEL).asLiteral().getValue().equals(entity.getName()))
                         nameFiled = true;
@@ -251,26 +220,26 @@ public class TTGenericFilerJDBC {
                 termCode.set(RDFS.LABEL, TTLiteral.literal(term));
                 if (entity.get(IM.CODE) != null)
                     termCode.set(IM.CODE, entity.get(IM.CODE));
-                fileTermCode(termCode, entityId);
+                fileTermCode(termCode, entityId, graphId);
             }
         }
     }
 
-    private void deleteEntityTypes(Integer entityId) throws SQLException {
+    void deleteEntityTypes(Integer entityId, int graphId) throws SQLException {
         DALHelper.setInt(deleteEntityTypes, 1, entityId);
-        DALHelper.setInt(deleteEntityTypes, 2, graph);
+        DALHelper.setInt(deleteEntityTypes, 2, graphId);
         deleteEntityTypes.executeUpdate();
     }
 
-    private void deleteTriples(Integer entityId) throws SQLException {
+    private void deleteTriples(Integer entityId, int graphId) throws SQLException {
         PreparedStatement delete = deleteTriples;
         DALHelper.setInt(delete, 1, entityId);
-        DALHelper.setInt(delete, 2, graph);
+        DALHelper.setInt(delete, 2, graphId);
         delete.executeUpdate();
 
     }
 
-    private void fileEntityTypes(TTEntity entity, Integer entityId) throws SQLException, DataFormatException {
+    void fileEntityTypes(TTEntity entity, Integer entityId, int graphId) throws SQLException, DataFormatException {
         TTValue typeValue = entity.get(RDF.TYPE);
         if (typeValue == null)
             return;
@@ -278,39 +247,38 @@ public class TTGenericFilerJDBC {
             for (TTValue type : typeValue.asArray().getElements()) {
                 if (!type.isIriRef())
                     throw new DataFormatException("Entity types must be array of IriRef ");
-                fileEntityType(entityId, type);
+                fileEntityType(entityId, type, graphId);
             }
         } else
-            fileEntityType(entityId, typeValue);
+            fileEntityType(entityId, typeValue, graphId);
     }
 
-    private void fileEntityType(Integer entityId, TTValue type) throws SQLException {
+    private void fileEntityType(Integer entityId, TTValue type, int graphId) throws SQLException {
         DALHelper.setInt(insertEntityType, 1, entityId);
         DALHelper.setString(insertEntityType, 2, type.asIriRef().getIri());
-        DALHelper.setInt(insertEntityType, 3, graph);
+        DALHelper.setInt(insertEntityType, 3, graphId);
         insertEntityType.executeUpdate();
 
     }
 
-    private void fileArray(Integer entityId, Long parent, TTIriRef predicate, TTArray array) throws SQLException, DataFormatException {
+    private void fileArray(Integer entityId, Long parent, TTIriRef predicate, TTArray array, int graphId) throws SQLException, DataFormatException {
         for (TTValue element : array.getElements()) {
             if (element.isIriRef()) {
-                fileTriple(entityId, parent, predicate, element.asIriRef(), null, 0);
+                fileTriple(entityId, parent, predicate, element.asIriRef(), null, 0, graphId);
             } else if (element.isNode()) {
-                Long blankNode = fileTriple(entityId, parent, predicate, null, null, 0);
-                fileNode(entityId, blankNode, element.asNode());
+                Long blankNode = fileTriple(entityId, parent, predicate, null, null, 0, graphId);
+                fileNode(entityId, blankNode, element.asNode(), graphId);
             } else if (element.isLiteral()) {
                 TTIriRef dataType = XSD.STRING;
                 if (element.asLiteral().getType() != null)
                     dataType = element.asLiteral().getType();
-                fileTriple(entityId, parent, predicate, dataType,
-                    element.asLiteral().getValue(), 0);
+                fileTriple(entityId, parent, predicate, dataType, element.asLiteral().getValue(), 0, graphId);
             } else
                 throw new DataFormatException("Cannot have an array of an array in RDF");
         }
     }
 
-    private void fileNode(Integer entityId, Long parent, TTNode node) throws SQLException, DataFormatException {
+    private void fileNode(Integer entityId, Long parent, TTNode node, int graphId) throws SQLException, DataFormatException {
         if (node.getPredicateMap() != null)
             if (!node.getPredicateMap().isEmpty()) {
                 Set<Map.Entry<TTIriRef, TTValue>> entries = node.getPredicateMap().entrySet();
@@ -319,7 +287,7 @@ public class TTGenericFilerJDBC {
                     if (!entry.getKey().equals(IM.HAS_TERM_CODE) & (!entry.getKey().equals(IM.HAS_SCHEME)) & (!entry.getKey().equals(IM.GROUP_NUMBER))) {
                         TTValue object = entry.getValue();
                         if (object.isIriRef()) {
-                            fileTriple(entityId, parent, entry.getKey(), object.asIriRef(), null, 1);
+                            fileTriple(entityId, parent, entry.getKey(), object.asIriRef(), null, 1, graphId);
                         } else if (object.isLiteral()) {
                             TTIriRef dataType = XSD.STRING;
                             if (object.asLiteral().getType() != null) {
@@ -328,12 +296,12 @@ public class TTGenericFilerJDBC {
                             String data = object.asLiteral().getValue();
                             if (data.length() > 1000)
                                 data = data.substring(0, 1000) + "...";
-                            fileTriple(entityId, parent, entry.getKey(), dataType, data, 1);
+                            fileTriple(entityId, parent, entry.getKey(), dataType, data, 1, graphId);
                         } else if (object.isList()) {
-                            fileArray(entityId, parent, entry.getKey(), entry.getValue().asArray());
+                            fileArray(entityId, parent, entry.getKey(), entry.getValue().asArray(), graphId);
                         } else if (object.isNode()) {
-                            Long blankNode = fileTriple(entityId, parent, entry.getKey(), null, null, 1);
-                            fileNode(entityId, blankNode, entry.getValue().asNode());
+                            Long blankNode = fileTriple(entityId, parent, entry.getKey(), null, null, 1, graphId);
+                            fileNode(entityId, blankNode, entry.getValue().asNode(), graphId);
                         }
                     }
                 }
@@ -342,12 +310,12 @@ public class TTGenericFilerJDBC {
 
     private Long fileTriple(Integer entityId, Long parent,
                             TTIriRef predicate, TTIriRef targetType, String data,
-                            Integer functional) throws SQLException {
+                            Integer functional, int graphId) throws SQLException {
         int i = 0;
         PreparedStatement insert = insertTriple;
         DALHelper.setInt(insert, ++i, entityId);
         DALHelper.setLong(insert, ++i, parent);
-        DALHelper.setInt(insert, ++i, graph);
+        DALHelper.setInt(insert, ++i, graphId);
         DALHelper.setInt(insert, ++i, getOrSetEntityId(predicate));
         DALHelper.setInt(insert, ++i, getOrSetEntityId(targetType));
         DALHelper.setString(insert, ++i, data);
@@ -357,7 +325,7 @@ public class TTGenericFilerJDBC {
     }
 
 
-    private Integer getEntityId(String iri) throws SQLException {
+    Integer getEntityId(String iri) throws SQLException {
         if (Strings.isNullOrEmpty(iri))
             return null;
         iri = expand(iri);
@@ -377,7 +345,7 @@ public class TTGenericFilerJDBC {
     }
 
     // ------------------------------ Entity ------------------------------
-    private Integer getOrSetEntityId(TTIriRef iri) throws SQLException {
+    Integer getOrSetEntityId(TTIriRef iri) throws SQLException {
         if (iri == null)
             return null;
         String stringIri = expand(iri.getIri());
@@ -452,12 +420,7 @@ public class TTGenericFilerJDBC {
         }
     }
 
-    public Integer getGraph() {
-        return graph;
-    }
-
-
-    private void fileTermCode(TTNode termCode, Integer entityId) throws SQLException {
+    private void fileTermCode(TTNode termCode, Integer entityId, int graphId) throws SQLException {
 
         int i = 0;
         Integer dbid = null;
@@ -473,41 +436,41 @@ public class TTGenericFilerJDBC {
             dbid = rs.getInt("dbid");
 
         if (dbid != null) {
-            updateTermEntity(entityId, term, code, dbid);
+            updateTermEntity(entityId, term, code, dbid, graphId);
         } else {
-            insertTermEntity(entityId, term, code);
+            insertTermEntity(entityId, term, code, graphId);
         }
 
     }
 
-    private void insertTermEntity(Integer entityId, String term, String code) throws SQLException {
+    private void insertTermEntity(Integer entityId, String term, String code, int graphId) throws SQLException {
         int i = 0;
         if (term.length() > 250)
             term = term.substring(0, 250);
         DALHelper.setInt(insertTermEntity, ++i, entityId);
         DALHelper.setString(insertTermEntity, ++i, term);
         DALHelper.setString(insertTermEntity, ++i, code);
-        DALHelper.setInt(insertTermEntity, ++i, graph);
+        DALHelper.setInt(insertTermEntity, ++i, graphId);
         if (insertTermEntity.executeUpdate() == 0)
             throw new SQLException("Failed to save term entity for  ["
                 + term + " ]");
     }
 
-    private void updateTermEntity(Integer entityId, String term, String code, Integer dbid) throws SQLException {
+    private void updateTermEntity(Integer entityId, String term, String code, Integer dbid, int graphId) throws SQLException {
         int i = 0;
         if (term.length() > 250)
             term = term.substring(0, 250);
         DALHelper.setInt(updateTermEntity, ++i, entityId);
         DALHelper.setString(updateTermEntity, ++i, term);
         DALHelper.setString(updateTermEntity, ++i, code);
-        DALHelper.setInt(updateTermEntity, ++i, graph);
+        DALHelper.setInt(updateTermEntity, ++i, graphId);
         DALHelper.setInt(updateTermEntity, ++i, dbid);
         updateTermEntity.executeUpdate();
 
     }
 
 
-    private String expand(String iri) {
+    String expand(String iri) {
         if (prefixMap == null)
             return iri;
         try {
@@ -522,14 +485,5 @@ public class TTGenericFilerJDBC {
             System.err.println("invalid iri " + iri);
             return null;
         }
-    }
-
-    public Map<String, Integer> getEntityMap() {
-        return entityMap;
-    }
-
-    public TTGenericFilerJDBC setEntityMap(Map<String, Integer> entityMap) {
-        this.entityMap = entityMap;
-        return this;
     }
 }
