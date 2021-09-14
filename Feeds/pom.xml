@@ -46,7 +46,7 @@
       <artifactId>mysql-connector-java</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.endeavourhealth.informationManager</groupId>
+      <groupId>org.endeavourhealth.IMAPI</groupId>
       <artifactId>Transforms</artifactId>
       <version>1.0-SNAPSHOT</version>
       <scope>compile</scope>
