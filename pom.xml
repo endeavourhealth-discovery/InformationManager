@@ -36,6 +36,7 @@
     <module>DocumentImport</module>
     <module>V1-V2Migration</module>
     <module>Feeds</module>
+    <module>Transforms</module>
 
   </modules>
 

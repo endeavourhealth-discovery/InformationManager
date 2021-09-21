@@ -1,18 +1,18 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
+import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.TTImportConfig;
-import org.endeavourhealth.informationmanager.common.transform.TTManager;
 
 import java.nio.file.Path;
 import java.sql.Connection;
 
 public class OdsImporter implements TTImport {
    private static final String[] organisationFiles = {
-     ".*\\\\ODS\\\\organisations.json"
+     ".*\\\\ODS\\\\Organisation_Details_mapped.json"
    };
 
    public OdsImporter validateFiles(String inFolder){
