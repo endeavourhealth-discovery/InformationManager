@@ -60,7 +60,8 @@ public class ImportApp {
                     .validateByType(IM.GRAPH_REPORTS, cfg.folder)
                     .validateByType(IM.GRAPH_CEG16, cfg.folder)
                     .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
-                    .validateByType(IM.GRAPH_IM1, cfg.folder);
+                    .validateByType(IM.GRAPH_IM1, cfg.folder)
+                    .validateByType(IM.GRAPH_ODS, cfg.folder);
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
                 importer.importByType(IM.GRAPH_SNOMED, cfg);
                 importer.importByType(IM.GRAPH_EMIS, cfg);
@@ -75,6 +76,7 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_CEG16, cfg);
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
                 importer.importByType(IM.GRAPH_IM1, cfg);
+                 importer.importByType(IM.GRAPH_ODS, cfg);
                 break;
             case "imv1":
                 importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.folder);
@@ -139,6 +141,10 @@ public class ImportApp {
                 importer = new Importer().validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder);
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
                 break;
+            case "ods":
+                importer = new Importer().validateByType(IM.GRAPH_ODS, cfg.folder);
+                importer.importByType(IM.GRAPH_ODS, cfg);
+                break;
             default:
                 throw new Exception("Unknown import type");
 
@@ -146,9 +152,6 @@ public class ImportApp {
 
         ClosureGenerator.generateClosure(cfg.folder, cfg.secure);
         SearchTermGenerator.generateSearchTerms(cfg.folder, cfg.secure);
-        IM1MapImport im1Mapper= new IM1MapImport();
-        im1Mapper.importData(cfg);
-
 
         System.out.println("Finished - " + (new Date().toString()));
     }

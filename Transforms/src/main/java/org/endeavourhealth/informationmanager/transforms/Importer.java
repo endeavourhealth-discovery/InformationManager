@@ -73,6 +73,8 @@ public class Importer implements TTImportByType {
          return new EthnicityCEGImporter();
       else if (IM.GRAPH_IM1.equals(importType))
          return new IM1MapImport();
+      else if (IM.GRAPH_ODS.equals(importType))
+          return new OdsImporter();
       else
          throw new Exception("Unrecognised import type");
    }

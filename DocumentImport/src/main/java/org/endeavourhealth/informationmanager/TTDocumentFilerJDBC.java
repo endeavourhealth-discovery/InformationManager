@@ -3,7 +3,6 @@ package org.endeavourhealth.informationmanager;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.common.dal.DALHelper;
-import org.endeavourhealth.informationmanager.common.transform.exceptions.FileFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +92,7 @@ public class TTDocumentFilerJDBC implements TTDocumentFiler {
 
 
    @Override
-   public void fileDocument(TTDocument document) throws SQLException, DataFormatException, IOException, FileFormatException {
+   public void fileDocument(TTDocument document) throws SQLException, DataFormatException, IOException{
       try {
          this.graph= document.getGraph();
          entityFiler = new TTEntityFilerJDBC(conn, prefixMap);

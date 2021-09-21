@@ -33,10 +33,10 @@
   <modules>
     <module>API</module>
     <module>common</module>
-    <module>Transforms</module>
     <module>DocumentImport</module>
     <module>V1-V2Migration</module>
     <module>Feeds</module>
+    <module>Transforms</module>
 
   </modules>
 
@@ -105,5 +105,7 @@
       <name>libs-release</name>
       <url>https://maven.discoverydataservice.net/artifactory/libs-release</url>
     </repository>
+
+
   </repositories>
 </project>

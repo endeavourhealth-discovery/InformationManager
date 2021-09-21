@@ -1,12 +1,13 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.TTImportConfig;
-import org.endeavourhealth.informationmanager.common.transform.TTManager;
+
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -36,6 +37,7 @@ public class ApexKingsImport implements TTImport {
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
+		//
 		conn = ImportUtils.getConnection();
 		TTManager manager = new TTManager();
 		document= manager.createDocument(IM.GRAPH_KINGS_APEX.getIri());

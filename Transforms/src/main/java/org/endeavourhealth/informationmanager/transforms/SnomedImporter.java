@@ -1,5 +1,8 @@
 package org.endeavourhealth.informationmanager.transforms;
 import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.imapi.transforms.ECLToTT;
+import org.endeavourhealth.imapi.transforms.OWLToTT;
+import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
@@ -9,7 +12,6 @@ import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.TTImportConfig;
-import org.endeavourhealth.informationmanager.common.transform.*;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -179,7 +181,8 @@ public class SnomedImporter implements TTImport {
                            c.addType(OWL.CLASS);
                         c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
                         if (fields[0].equals("138875005")) { // snomed root
-                           c.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "DiscoveryOntology")));
+                           c.set(RDFS.SUBCLASSOF, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "894281000252100")));
+                           c.set(IM.IS_A, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "894281000252100")));
                         }
                         document.addEntity(c);
                         conceptMap.put(fields[0], c);

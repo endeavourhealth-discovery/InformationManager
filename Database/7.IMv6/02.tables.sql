@@ -187,6 +187,7 @@ CREATE TABLE IF NOT EXISTS inst_tpl (
    blank_node BIGINT NULL DEFAULT NULL,
    graph INT NULL DEFAULT NULL,
    predicate INT NOT NULL,
+   instance INT NULL,
    object INT NULL,
    literal VARCHAR(16000) NULL,
    functional TINYINT NOT NULL DEFAULT 0,
@@ -209,12 +210,17 @@ CREATE TABLE IF NOT EXISTS inst_tpl (
            ON UPDATE NO ACTION,
    CONSTRAINT inst_tpl_pred_fk
        FOREIGN KEY (predicate)
+           REFERENCES entity (dbid)
+           ON DELETE CASCADE
+           ON UPDATE NO ACTION,
+   CONSTRAINT inst_tpl_inst_fk
+       FOREIGN KEY (instance)
            REFERENCES inst_entity (dbid)
            ON DELETE CASCADE
            ON UPDATE NO ACTION,
    CONSTRAINT inst_tpl_ob_fk
        FOREIGN KEY (object)
-           REFERENCES inst_entity (dbid)
+           REFERENCES entity (dbid)
            ON DELETE CASCADE
            ON UPDATE NO ACTION
 )

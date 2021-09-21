@@ -1,18 +1,10 @@
 package org.endeavourhealth.informationmanager.transforms;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.model.tripletree.TTValue;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.informationmanager.common.transform.TTToECL;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.List;
+
 import java.util.Set;
 
 public class SetService {
