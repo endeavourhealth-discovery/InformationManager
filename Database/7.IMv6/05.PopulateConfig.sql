@@ -51,7 +51,7 @@ INSERT INTO config (name, config) VALUES ('definition', '[
     "order": 200
   },
   {
-    "label": "Inferred axioms",
+    "label": "Inferred",
     "predicate": "None",
     "type": "TextSectionHeader",
     "size": "100%",
@@ -65,25 +65,32 @@ INSERT INTO config (name, config) VALUES ('definition', '[
     "order": 202
   },
   {
+    "label": "Semantic properties",
+    "predicate": "semanticProperties",
+    "type": "SemanticProperties",
+    "size": "100%",
+    "order": 203
+  },
+  {
     "label": "Has sub types",
     "predicate": "subtypes",
     "type": "ArrayObjectNameListboxWithLabel",
     "size": "100%",
-    "order": 203
+    "order": 204
   },
   {
     "label": "Is child of",
     "predicate": "http://endhealth.info/im#isChildOf",
     "type": "ArrayObjectNameListboxWithLabel",
-    "size": "50%",
-    "order": 204
+    "size": "100%",
+    "order": 205
   },
   {
     "label": "Has children",
     "predicate": "http://endhealth.info/im#hasChildren",
     "type": "ArrayObjectNameListboxWithLabel",
-    "size": "50%",
-    "order": 205
+    "size": "100%",
+    "order": 206
   },
   {
     "label": "InferredStatedDivider",
@@ -93,14 +100,7 @@ INSERT INTO config (name, config) VALUES ('definition', '[
     "order": 300
   },
   {
-    "label": "Stated axioms",
-    "predicate": "None",
-    "type": "TextSectionHeader",
-    "size": "100%",
-    "order": 301
-  },
-  {
-    "label": "Stated axioms",
+    "label": "Axioms",
     "predicate": "axioms",
     "type": "Axioms",
     "size": "100%",
@@ -115,45 +115,10 @@ INSERT INTO config (name, config) VALUES ('definition', '[
   },
   {
     "label": "Terms",
-    "predicate": "None",
-    "type": "TextSectionHeader",
-    "size": "100%",
-    "order": 401
-  },
-  {
-    "label": "Terms",
     "predicate": "termCodes",
     "type": "TermsTable",
     "size": "100%",
     "order": 402
-  },
-  {
-    "label": "TermsPropertiesDivider",
-    "predicate": "None",
-    "type": "SectionDivider",
-    "size": "100%",
-    "order": 500
-  },
-  {
-    "label": "Properties",
-    "predicate": "None",
-    "type": "TextSectionHeader",
-    "size": "100%",
-    "order": 501
-  },
-  {
-    "label": "Semantic properties",
-    "predicate": "semanticProperties",
-    "type": "SemanticProperties",
-    "size": "100%",
-    "order": 502
-  },
-  {
-    "label": "Data model properties",
-    "predicate": "dataModelProperties",
-    "type": "DataModelProperties",
-    "size": "100%",
-    "order": 503
   }
 ]');
 DELETE FROM config WHERE name = 'filterDefaults';
