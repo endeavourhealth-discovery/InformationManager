@@ -14,7 +14,7 @@ public class ImportApp {
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
             System.err.println("Insufficient parameters supplied:");
-            System.err.println("<folder> <import type> [bulk|secure]");
+            System.err.println("<folder> <import type> [secure|skiptct|skipsearch]");
             System.exit(-1);
         }
 
@@ -28,11 +28,14 @@ public class ImportApp {
         if (args.length >= 3) {
             for (int i = 2; i < args.length; i++) {
                 switch (args[i].toLowerCase()) {
-//                    case "bulk":
-//                        cfg.bulk = true;
-//                        break;
                     case "secure":
                         cfg.secure = true;
+                        break;
+                    case "skiptct":
+                        cfg.skiptct = true;
+                        break;
+                    case "skipsearch":
+                        cfg.skipsearch = true;
                         break;
                     default:
                         System.err.println("Unknown parameter " + args[i]);
@@ -145,15 +148,21 @@ public class ImportApp {
                 importer = new Importer().validateByType(IM.GRAPH_ODS, cfg.folder);
                 importer.importByType(IM.GRAPH_ODS, cfg);
                 break;
+            case "tct":
+                cfg.skipsearch = true;
+                break;
+            case "search":
+                cfg.skiptct = true;
+                break;
             default:
                 throw new Exception("Unknown import type");
 
         }
 
-        ClosureGenerator.generateClosure(cfg.folder, cfg.secure);
-        SearchTermGenerator.generateSearchTerms(cfg.folder, cfg.secure);
+        if (!cfg.skiptct) ClosureGenerator.generateClosure(cfg.folder, cfg.secure);
+        if (!cfg.skipsearch) SearchTermGenerator.generateSearchTerms(cfg.folder, cfg.secure);
 
-        System.out.println("Finished - " + (new Date().toString()));
+        System.out.println("Finished - " + (new Date()));
     }
 }
 
