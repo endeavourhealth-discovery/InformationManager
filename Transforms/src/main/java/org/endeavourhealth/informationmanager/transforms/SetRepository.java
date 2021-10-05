@@ -161,18 +161,20 @@ public class SetRepository {
 		sql.add("on included.dbid=excluded.exdbid");
 		sql.add("where excluded.exdbid is null)");
 		//Select core joined to im1
-		sql.add("select entity.dbid as im2,entity.code as code,entity.scheme as scheme,im1map.im1 as im1")
+		sql.add("select entity.dbid as im2,entity.code as code,entity.scheme as scheme,im1map.dbid as im1")
 		.add("from core")
 		.add("join entity on core.dbid= entity.dbid")
-		.add("join im1map on im1map.im2=core.dbid");
+        .add("join im1_scheme_map sm ON sm.namespace = entity.scheme")
+		.add("join im1_dbid_scheme_code im1map on im1map.code = entity.code AND im1map.scheme = sm.scheme");
 		//Select legacy joined to im1.
 		sql.add("union all")
-		.add("select entity.dbid as im2,entity.code as code,entity.scheme as scheme,im1map.im1 as im1dbid")
+		.add("select entity.dbid as im2,entity.code as code,entity.scheme as scheme,im1map.dbid as im1")
 			.add("from core")
 		.add("inner join tpl on tpl.subject= core.dbid")
 			.add("inner join entity matchedTo on tpl.predicate= matchedTo.dbid")
 			.add("inner join entity on tpl.object=entity.dbid")
-			.add("join im1map on im1map.im2=core.dbid")
+            .add("join im1_scheme_map sm ON sm.namespace = entity.scheme")
+            .add("join im1_dbid_scheme_code im1map on im1map.code = entity.code AND im1map.scheme = sm.scheme")
 			.add("where matchedTo.iri='http://endhealth.info/im#matchedTo'");
 		return sql.toString();
 	}
