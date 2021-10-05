@@ -87,7 +87,7 @@ public class SetExporter {
                     exportMembers(definitions, expansions, legacies, im1maps, setService, conceptSet);
 
                 if (conceptSet.get(IM.HAS_SUBSET) != null) {
-                    exportSubsetWithExpansion(setService, definitions, expansions, legacies, subsets, im1maps, conceptSet, setIri);
+                    exportSubsets(subsets, conceptSet, setIri);
                 }
             }
         }
