@@ -10,7 +10,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <java.version>1.8</java.version>
+    <java.version>11</java.version>
     <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
     <maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
     <maven-deploy-plugin.version>2.4</maven-deploy-plugin.version>
