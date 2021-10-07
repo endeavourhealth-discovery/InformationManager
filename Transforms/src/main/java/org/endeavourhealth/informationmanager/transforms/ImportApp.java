@@ -1,7 +1,12 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import org.endeavourhealth.imapi.model.tripletree.TTDocument;
+import org.endeavourhealth.imapi.model.tripletree.TTEntity;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.ClosureGenerator;
+import org.endeavourhealth.informationmanager.TTDocumentFiler;
+import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImportByType;
 import org.endeavourhealth.informationmanager.TTImportConfig;
 
@@ -11,6 +16,8 @@ import java.util.Date;
  * Utility app for importing one or all of the various source files for the ontology initial population.
  */
 public class ImportApp {
+    private static TTDocumentFiler filer;
+
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
             System.err.println("Insufficient parameters supplied:");
@@ -43,28 +50,46 @@ public class ImportApp {
             }
         }
 
+        testImportData(cfg);
+
         importData(cfg);
+    }
+
+    public static void testImportData(TTImportConfig cfg) throws Exception {
+        try {
+            TTDocument document = new TTDocument();
+            TTDocumentFiler filer = new TTDocumentFilerJDBC();
+            filer.fileDocument(document);
+            if (!cfg.skiptct) ClosureGenerator.generateClosure(cfg.folder, cfg.secure);
+            if (!cfg.skipsearch) SearchTermGenerator.generateSearchTerms(cfg.folder, cfg.secure);
+        } catch (Exception e) {
+            if (!cfg.secure) System.err.println("Try with 'secure' argument");
+            if (cfg.secure) System.err.println("Try without 'secure' argument");
+            System.err.println("Try with '&allowLoadLocalInfile=true' added to the jdbc url");
+            throw e;
+        }
+        System.out.println("Test run of ImportApp was successful");
     }
 
     private static void importData(TTImportConfig cfg) throws Exception {
         switch (cfg.importType) {
             case "all":
                 TTImportByType importer = new Importer()
-                    .validateByType(IM.GRAPH_DISCOVERY, cfg.folder)
-                    .validateByType(IM.GRAPH_SNOMED, cfg.folder)
-                    .validateByType(IM.GRAPH_EMIS, cfg.folder)
-                    .validateByType(IM.GRAPH_TPP, cfg.folder)
-                    .validateByType(IM.GRAPH_OPCS4, cfg.folder)
-                    .validateByType(IM.GRAPH_ICD10, cfg.folder)
-                    .validateByType(IM.GRAPH_VISION, cfg.folder)
-                    .validateByType(IM.GRAPH_KINGS_APEX, cfg.folder)
-                    .validateByType(IM.GRAPH_KINGS_WINPATH, cfg.folder)
-                    .validateByType(IM.MAP_DISCOVERY, cfg.folder)
-                    .validateByType(IM.GRAPH_REPORTS, cfg.folder)
-                    .validateByType(IM.GRAPH_CEG16, cfg.folder)
-                    .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
-                    .validateByType(IM.GRAPH_IM1, cfg.folder)
-                    .validateByType(IM.GRAPH_ODS, cfg.folder);
+                        .validateByType(IM.GRAPH_DISCOVERY, cfg.folder)
+                        .validateByType(IM.GRAPH_SNOMED, cfg.folder)
+                        .validateByType(IM.GRAPH_EMIS, cfg.folder)
+                        .validateByType(IM.GRAPH_TPP, cfg.folder)
+                        .validateByType(IM.GRAPH_OPCS4, cfg.folder)
+                        .validateByType(IM.GRAPH_ICD10, cfg.folder)
+                        .validateByType(IM.GRAPH_VISION, cfg.folder)
+                        .validateByType(IM.GRAPH_KINGS_APEX, cfg.folder)
+                        .validateByType(IM.GRAPH_KINGS_WINPATH, cfg.folder)
+                        .validateByType(IM.MAP_DISCOVERY, cfg.folder)
+                        .validateByType(IM.GRAPH_REPORTS, cfg.folder)
+                        .validateByType(IM.GRAPH_CEG16, cfg.folder)
+                        .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
+                        .validateByType(IM.GRAPH_IM1, cfg.folder)
+                        .validateByType(IM.GRAPH_ODS, cfg.folder);
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
                 importer.importByType(IM.GRAPH_SNOMED, cfg);
                 importer.importByType(IM.GRAPH_EMIS, cfg);
@@ -79,7 +104,7 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_CEG16, cfg);
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
                 importer.importByType(IM.GRAPH_IM1, cfg);
-                 importer.importByType(IM.GRAPH_ODS, cfg);
+                importer.importByType(IM.GRAPH_ODS, cfg);
                 break;
             case "imv1":
                 importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.folder);
