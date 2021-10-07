@@ -105,7 +105,7 @@ public class ICD10Importer implements TTImport {
     public void importMaps(String folder) throws IOException, DataFormatException {
 
         validateFiles(folder);
-        Path file = findFileForId(folder,maps[0]);
+        Path file = ImportUtils.findFileForId(folder,maps[0]);
         ComplexMapImporter mapImport= new ComplexMapImporter();
         mapImport.importMap(file.toFile(),document,"999002271000000101",snomedCodes);
     }
@@ -113,7 +113,7 @@ public class ICD10Importer implements TTImport {
 
     private void importChapters(String folder, TTDocument document) throws IOException {
 
-        Path file = findFileForId(folder, chapters[0]);
+        Path file = ImportUtils.findFileForId(folder, chapters[0]);
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
             reader.readLine();
             String line = reader.readLine();
@@ -146,7 +146,7 @@ public class ICD10Importer implements TTImport {
 
     private void importEntities(String folder, TTDocument document) throws IOException {
 
-        Path file = findFileForId(folder, entities[0]);
+        Path file = ImportUtils.findFileForId(folder, entities[0]);
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
             reader.readLine();
             String line = reader.readLine();
@@ -190,20 +190,6 @@ public class ICD10Importer implements TTImport {
     @Override
     public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
         return null;
-    }
-
-    private static Path findFileForId(String path, String regex) throws IOException {
-        List<Path> paths = Files.find(Paths.get(path), 16,
-            (file, attr) -> file.toString().matches(regex))
-            .collect(Collectors.toList());
-
-        if (paths.size() == 1)
-            return paths.get(0);
-
-        if (paths.isEmpty())
-            throw new IOException("No files found in [" + path + "] for expression [" + regex + "]");
-        else
-            throw new IOException("Multiple files found in [" + path + "] for expression [" + regex + "]");
     }
 
     @Override
