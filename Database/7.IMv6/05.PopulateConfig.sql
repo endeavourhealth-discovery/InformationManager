@@ -129,3 +129,17 @@ INSERT INTO config (name, config) VALUES ('filterDefaults', '{
         "Value set"
     ]
 }');
+
+DELETE FROM config WHERE name = 'inferredPredicates';
+INSERT INTO config (name, config) VALUES ('inferredPredicates', '[
+    "http://endhealth.info/im#isA",
+    "http://endhealth.info/im#roleGroup",
+    "http://endhealth.info/im#isContainedIn"
+]');
+
+DELETE FROM config WHERE name = 'axiomPredicates';
+INSERT INTO config (name, config) VALUES ('axiomPredicates', '[
+  "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+  "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+  "http://www.w3.org/2002/07/owl#equivalentClass"
+  ]');
