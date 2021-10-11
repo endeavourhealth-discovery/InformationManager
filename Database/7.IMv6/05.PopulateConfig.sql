@@ -25,7 +25,7 @@ INSERT INTO config (name, config) VALUES ('definition', '[
   {
     "label": "Status",
     "predicate": "http://endhealth.info/im#status",
-    "type": "ObjectNameWithLabel",
+    "type": "ObjectNameTagWithLabel",
     "size": "50%",
     "order": 103
   },

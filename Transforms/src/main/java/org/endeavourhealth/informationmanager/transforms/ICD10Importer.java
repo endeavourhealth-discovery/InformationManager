@@ -194,7 +194,7 @@ public class ICD10Importer implements TTImport {
 
     private static Path findFileForId(String path, String regex) throws IOException {
         List<Path> paths = Files.find(Paths.get(path), 16,
-            (file, attr) -> file.toString().matches(regex))
+            (file, attr) -> file.toString().replace("/", "\\").matches(regex))
             .collect(Collectors.toList());
 
         if (paths.size() == 1)
