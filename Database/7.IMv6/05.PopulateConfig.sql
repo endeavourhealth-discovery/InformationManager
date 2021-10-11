@@ -2,123 +2,109 @@ USE im6;
 DELETE FROM config WHERE name = 'definition';
 INSERT INTO config (name, config) VALUES ('definition', '[
   {
+    "size": "100%",
+    "type": "TextSectionHeader",
     "label": "Summary",
-    "predicate": "None",
-    "type": "TextSectionHeader",
-    "size": "100%",
-    "order": 100
+    "order": 100,
+    "predicate": "None"
   },
   {
+    "size": "50%",
+    "type": "TextWithLabel",
     "label": "Name",
-    "predicate": "http://www.w3.org/2000/01/rdf-schema#label",
-    "type": "TextWithLabel",
-    "size": "50%",
-    "order": 101
+    "order": 101,
+    "predicate": "http://www.w3.org/2000/01/rdf-schema#label"
   },
   {
+    "size": "50%",
+    "type": "TextWithLabel",
     "label": "Iri",
-    "predicate": "@id",
-    "type": "TextWithLabel",
-    "size": "50%",
-    "order": 102
+    "order": 102,
+    "predicate": "@id"
   },
   {
-    "label": "Status",
-    "predicate": "http://endhealth.info/im#status",
+    "size": "50%",
     "type": "ObjectNameTagWithLabel",
-    "size": "50%",
-    "order": 103
+    "label": "Status",
+    "order": 103,
+    "predicate": "http://endhealth.info/im#status"
   },
   {
-    "label": "Types",
-    "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+    "size": "50%",
     "type": "ArrayObjectNamesToStringWithLabel",
-    "size": "50%",
-    "order": 104
+    "label": "Types",
+    "order": 104,
+    "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
   },
   {
-    "label": "Description",
-    "predicate": "http://www.w3.org/2000/01/rdf-schema#comment",
+    "size": "100%",
     "type": "TextHTMLWithLabel",
-    "size": "100%",
-    "order": 105
+    "label": "Description",
+    "order": 105,
+    "predicate": "http://www.w3.org/2000/01/rdf-schema#comment"
   },
   {
+    "size": "100%",
+    "type": "SectionDivider",
     "label": "SummaryInferredDivider",
-    "predicate": "None",
-    "type": "SectionDivider",
-    "size": "100%",
-    "order": 200
+    "order": 200,
+    "predicate": "None"
   },
   {
+    "size": "100%",
+    "type": "TextDefinition",
     "label": "Inferred",
-    "predicate": "None",
-    "type": "TextSectionHeader",
-    "size": "100%",
-    "order": 201
+    "order": 201,
+    "predicate": "inferred"
   },
   {
-    "label": "Is a",
-    "predicate": "http://endhealth.info/im#isA",
+    "size": "100%",
     "type": "ArrayObjectNameListboxWithLabel",
-    "size": "100%",
-    "order": 202
-  },
-  {
-    "label": "Semantic properties",
-    "predicate": "semanticProperties",
-    "type": "SemanticProperties",
-    "size": "100%",
-    "order": 203
-  },
-  {
     "label": "Has sub types",
-    "predicate": "subtypes",
-    "type": "ArrayObjectNameListboxWithLabel",
-    "size": "100%",
-    "order": 204
+    "order": 202,
+    "predicate": "subtypes"
   },
   {
+    "size": "100%",
+    "type": "ArrayObjectNameListboxWithLabel",
     "label": "Is child of",
-    "predicate": "http://endhealth.info/im#isChildOf",
-    "type": "ArrayObjectNameListboxWithLabel",
-    "size": "100%",
-    "order": 205
+    "order": 203,
+    "predicate": "http://endhealth.info/im#isChildOf"
   },
   {
+    "size": "100%",
+    "type": "ArrayObjectNameListboxWithLabel",
     "label": "Has children",
-    "predicate": "http://endhealth.info/im#hasChildren",
-    "type": "ArrayObjectNameListboxWithLabel",
-    "size": "100%",
-    "order": 206
+    "order": 204,
+    "predicate": "http://endhealth.info/im#hasChildren"
   },
   {
+    "size": "100%",
+    "type": "SectionDivider",
     "label": "InferredStatedDivider",
-    "predicate": "None",
-    "type": "SectionDivider",
-    "size": "100%",
-    "order": 300
+    "order": 300,
+    "predicate": "None"
   },
   {
+    "size": "100%",
+    "type": "TextDefinition",
     "label": "Axioms",
-    "predicate": "axioms",
-    "type": "Axioms",
-    "size": "100%",
-    "order": 302
+    "order": 301,
+    "predicate": "axioms"
   },
   {
-    "label": "StatedTermsDivider",
-    "predicate": "None",
+    "size": "100%",
     "type": "SectionDivider",
-    "size": "100%",
-    "order": 400
+    "label": "StatedTermsDivider",
+    "order": 400,
+    "predicate": "None"
   },
   {
-    "label": "Terms",
-    "predicate": "termCodes",
-    "type": "TermsTable",
     "size": "100%",
-    "order": 402
+    "type": "TermsTable",
+    "label": "Terms",
+    "order": 402,
+    "predicate": "termCodes"
   }
 ]');
 DELETE FROM config WHERE name = 'filterDefaults';
@@ -143,3 +129,17 @@ INSERT INTO config (name, config) VALUES ('filterDefaults', '{
         "Value set"
     ]
 }');
+
+DELETE FROM config WHERE name = 'inferredPredicates';
+INSERT INTO config (name, config) VALUES ('inferredPredicates', '[
+    "http://endhealth.info/im#isA",
+    "http://endhealth.info/im#roleGroup",
+    "http://endhealth.info/im#isContainedIn"
+]');
+
+DELETE FROM config WHERE name = 'axiomPredicates';
+INSERT INTO config (name, config) VALUES ('axiomPredicates', '[
+  "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+  "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+  "http://www.w3.org/2002/07/owl#equivalentClass"
+  ]');

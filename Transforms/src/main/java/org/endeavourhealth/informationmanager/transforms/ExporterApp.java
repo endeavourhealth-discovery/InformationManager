@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.logic.service.SetService;
 
 public class ExporterApp {
 	public static void main(String[] args) throws Exception {
@@ -9,7 +10,7 @@ public class ExporterApp {
 			System.exit(-1);
 		}
 		String exportType=args[1].toLowerCase();
-        SetExporter exporter= new SetExporter();
+        SetService exporter= new SetService();
 		switch (exportType) {
 			case "conceptsets":
 				exporter.exportAll(args[0], IM.CONCEPT_SET);
