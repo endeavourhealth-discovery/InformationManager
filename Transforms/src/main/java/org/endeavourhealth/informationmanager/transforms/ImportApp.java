@@ -10,6 +10,7 @@ import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImportByType;
 import org.endeavourhealth.informationmanager.TTImportConfig;
 
+import java.io.FileWriter;
 import java.util.Date;
 
 /**
@@ -50,25 +51,9 @@ public class ImportApp {
             }
         }
 
-        testImportData(cfg);
+        LoadDataTester.testLoadData(cfg.folder, cfg.secure);
 
         importData(cfg);
-    }
-
-    public static void testImportData(TTImportConfig cfg) throws Exception {
-        try {
-            TTDocument document = new TTDocument();
-            TTDocumentFiler filer = new TTDocumentFilerJDBC();
-            filer.fileDocument(document);
-            if (!cfg.skiptct) ClosureGenerator.generateClosure(cfg.folder, cfg.secure);
-            if (!cfg.skipsearch) SearchTermGenerator.generateSearchTerms(cfg.folder, cfg.secure);
-        } catch (Exception e) {
-            if (!cfg.secure) System.err.println("Try with 'secure' argument");
-            if (cfg.secure) System.err.println("Try without 'secure' argument");
-            System.err.println("Try with '&allowLoadLocalInfile=true' added to the jdbc url");
-            throw e;
-        }
-        System.out.println("Test run of ImportApp was successful");
     }
 
     private static void importData(TTImportConfig cfg) throws Exception {
