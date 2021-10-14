@@ -143,3 +143,27 @@ INSERT INTO config (name, config) VALUES ('axiomPredicates', '[
   "http://www.w3.org/2000/01/rdf-schema#subClassOf",
   "http://www.w3.org/2002/07/owl#equivalentClass"
   ]');
+
+DELETE FROM config WHERE name = 'conceptDashboard';
+INSERT INTO config (name, config) VALUES ('conceptDashboard', '[
+  {
+    "type": "ReportTable",
+    "order": 100,
+    "iri": "http://endhealth.info/im#ontologyOverview"
+  },
+  {
+    "type": "ReportPieChart",
+    "order": 200,
+    "iri": "http://endhealth.info/im#ontologyConceptTypes"
+  },
+  {
+    "type": "ReportPieChart",
+    "order": 300,
+    "iri": "http://endhealth.info/im#ontologyConceptSchemes"
+  },
+  {
+    "type": "ReportPieChart",
+    "order": 400,
+    "iri": "http://endhealth.info/im#ontologyConceptStatus"
+  }
+]');
