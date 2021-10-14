@@ -1,16 +1,24 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import org.endeavourhealth.imapi.model.tripletree.TTDocument;
+import org.endeavourhealth.imapi.model.tripletree.TTEntity;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.ClosureGenerator;
+import org.endeavourhealth.informationmanager.TTDocumentFiler;
+import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImportByType;
 import org.endeavourhealth.informationmanager.TTImportConfig;
 
+import java.io.FileWriter;
 import java.util.Date;
 
 /**
  * Utility app for importing one or all of the various source files for the ontology initial population.
  */
 public class ImportApp {
+    private static TTDocumentFiler filer;
+
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
             System.err.println("Insufficient parameters supplied:");
@@ -43,6 +51,8 @@ public class ImportApp {
             }
         }
 
+        LoadDataTester.testLoadData(cfg.folder, cfg.secure);
+
         importData(cfg);
     }
 
@@ -50,21 +60,21 @@ public class ImportApp {
         switch (cfg.importType) {
             case "all":
                 TTImportByType importer = new Importer()
-                    .validateByType(IM.GRAPH_DISCOVERY, cfg.folder)
-                    .validateByType(IM.GRAPH_SNOMED, cfg.folder)
-                    .validateByType(IM.GRAPH_EMIS, cfg.folder)
-                    .validateByType(IM.GRAPH_TPP, cfg.folder)
-                    .validateByType(IM.GRAPH_OPCS4, cfg.folder)
-                    .validateByType(IM.GRAPH_ICD10, cfg.folder)
-                    .validateByType(IM.GRAPH_VISION, cfg.folder)
-                    .validateByType(IM.GRAPH_KINGS_APEX, cfg.folder)
-                    .validateByType(IM.GRAPH_KINGS_WINPATH, cfg.folder)
-                    .validateByType(IM.MAP_DISCOVERY, cfg.folder)
-                    .validateByType(IM.GRAPH_REPORTS, cfg.folder)
-                    .validateByType(IM.GRAPH_CEG16, cfg.folder)
-                    .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
-                    .validateByType(IM.GRAPH_IM1, cfg.folder)
-                    .validateByType(IM.GRAPH_ODS, cfg.folder);
+                        .validateByType(IM.GRAPH_DISCOVERY, cfg.folder)
+                        .validateByType(IM.GRAPH_SNOMED, cfg.folder)
+                        .validateByType(IM.GRAPH_EMIS, cfg.folder)
+                        .validateByType(IM.GRAPH_TPP, cfg.folder)
+                        .validateByType(IM.GRAPH_OPCS4, cfg.folder)
+                        .validateByType(IM.GRAPH_ICD10, cfg.folder)
+                        .validateByType(IM.GRAPH_VISION, cfg.folder)
+                        .validateByType(IM.GRAPH_KINGS_APEX, cfg.folder)
+                        .validateByType(IM.GRAPH_KINGS_WINPATH, cfg.folder)
+                        .validateByType(IM.MAP_DISCOVERY, cfg.folder)
+                        .validateByType(IM.GRAPH_REPORTS, cfg.folder)
+                        .validateByType(IM.GRAPH_CEG16, cfg.folder)
+                        .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
+                        .validateByType(IM.GRAPH_IM1, cfg.folder)
+                        .validateByType(IM.GRAPH_ODS, cfg.folder);
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
                 importer.importByType(IM.GRAPH_SNOMED, cfg);
                 importer.importByType(IM.GRAPH_EMIS, cfg);
@@ -79,7 +89,7 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_CEG16, cfg);
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
                 importer.importByType(IM.GRAPH_IM1, cfg);
-                 importer.importByType(IM.GRAPH_ODS, cfg);
+                importer.importByType(IM.GRAPH_ODS, cfg);
                 break;
             case "imv1":
                 importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.folder);

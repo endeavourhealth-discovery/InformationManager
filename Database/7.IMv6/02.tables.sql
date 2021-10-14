@@ -345,3 +345,14 @@ VALUES
 -- SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 -- SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 
+-- -----------------------------------------------------
+
+DROP TABLE IF EXISTS map_document;
+
+CREATE TABLE map_document (
+                              dbid int NOT NULL AUTO_INCREMENT,
+                              document BLOB NOT NULL,
+                              filename VARCHAR(255) UNIQUE NOT NULL,
+                              PRIMARY KEY (dbid)
+);
+

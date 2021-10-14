@@ -116,7 +116,7 @@ public class ImportUtils {
     */
    public static List<Path> findFilesForId(String path, String filePattern) throws IOException {
       return Files.find(Paths.get(path), 16,
-          (file, attr) -> file.toString().replace("/", "\\")
+          (file, attr) -> getFilePath(file.toString())
               .matches(filePattern))
           .collect(Collectors.toList());
    }
@@ -167,6 +167,12 @@ public class ImportUtils {
       return snomedCodes;
    }
 
+   private static boolean isMacOs() {
+      return (System.getProperty("os.name").toLowerCase().contains("mac"));
+   }
 
+   private static String getFilePath(String path) {
+       return isMacOs() ? path.replace("/", "\\") : path;
+   }
 
 }

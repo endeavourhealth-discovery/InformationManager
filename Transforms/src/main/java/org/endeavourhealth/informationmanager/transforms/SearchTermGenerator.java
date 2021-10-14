@@ -66,6 +66,13 @@ public class SearchTermGenerator {
     }
 
     private static void importTerms(Connection conn, boolean secure, String filename) throws Exception {
+
+        if (secure) {
+            try (PreparedStatement stmt = conn.prepareStatement("SET GLOBAL local_infile=1")) {
+                stmt.executeUpdate();
+            }
+        }
+
         StringJoiner sql = new StringJoiner("\n")
             .add("LOAD DATA");
         if (secure)
