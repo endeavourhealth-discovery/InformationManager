@@ -152,17 +152,17 @@ INSERT INTO config (name, config) VALUES ('conceptDashboard', '[
     "iri": "http://endhealth.info/im#ontologyOverview"
   },
   {
-    "type": "ReportPieChart",
+    "type": "PieChartDashCard",
     "order": 200,
     "iri": "http://endhealth.info/im#ontologyConceptTypes"
   },
   {
-    "type": "ReportPieChart",
+    "type": "PieChartDashCard",
     "order": 300,
     "iri": "http://endhealth.info/im#ontologyConceptSchemes"
   },
   {
-    "type": "ReportPieChart",
+    "type": "PieChartDashCard",
     "order": 400,
     "iri": "http://endhealth.info/im#ontologyConceptStatus"
   }
