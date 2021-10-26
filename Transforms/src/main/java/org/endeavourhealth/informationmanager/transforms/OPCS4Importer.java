@@ -5,7 +5,6 @@ import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
@@ -72,7 +71,7 @@ public class OPCS4Importer  implements TTImport {
                 c.setIri(IM.CODE_SCHEME_OPCS4.getIri()+chapter)
                     .setName(term+" (chapter "+chapter+")")
                     .setCode(chapter)
-                  .addType(OWL.CLASS)
+                  .addType(IM.CONCEPT)
                     .set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.NAMESPACE+"OPCS49Classification")));
                 TTManager.addTermCode(c,term,chapter);
                 document.addEntity(c);
@@ -98,7 +97,7 @@ public class OPCS4Importer  implements TTImport {
                 TTEntity c = new TTEntity()
                         .setCode(fields[0])
                         .setIri(IM.CODE_SCHEME_OPCS4.getIri() + (fields[0].replace(".","")))
-                        .addType(OWL.CLASS)
+                        .addType(IM.CONCEPT)
                     .set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.CODE_SCHEME_OPCS4.getIri()+fields[0].substring(0,1))));
                     if(fields[1].length()>250){
                         c.setName(fields[1].substring(0,150));

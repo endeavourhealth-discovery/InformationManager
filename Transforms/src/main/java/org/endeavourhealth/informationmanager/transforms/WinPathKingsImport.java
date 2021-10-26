@@ -76,8 +76,14 @@ public class WinPathKingsImport implements TTImport {
 			if (!utlSet.contains(member)){
 				if (valueSetDocument.getEntities()==null){
 					valueSetDocument.addEntity( new TTEntity().setIri(IM.NAMESPACE+"VSET_UnifiedTestList"));
+					valueSetDocument.getEntities().get(0).
+						set(IM.DEFINITION,new TTNode()
+							.set(SHACL.OR,new TTArray()));
+
 				}
-				valueSetDocument.getEntities().get(0).addObject(IM.HAS_MEMBER,TTIriRef.iri(member));
+				valueSetDocument.getEntities().get(0)
+					.get(IM.DEFINITION).asNode()
+					.addObject(SHACL.OR,TTIriRef.iri(member));
 			}
 		}
 	}
@@ -133,7 +139,7 @@ public class WinPathKingsImport implements TTImport {
 				String iri = IM.CODE_SCHEME_KINGS_WINPATH.getIri() + fields[0].replace(" ", "") + "-" + (fields[1].replace(" ", ""));
 				TTEntity entity = new TTEntity()
 					.setIri(iri)
-					.addType(OWL.CLASS)
+					.addType(IM.CONCEPT)
 					.setName(fields[1])
 					.setDescription("Local winpath Kings trust pathology system entity ")
 					.setCode(code);

@@ -3,7 +3,6 @@ package org.endeavourhealth.informationmanager.transforms;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
@@ -187,7 +186,7 @@ public class TPPImporter implements TTImport{
 
     private void addTPPTopLevel(){
         TTEntity c= new TTEntity().setIri("tpp:TPPCodes")
-          .addType(OWL.CLASS)
+          .addType(IM.CONCEPT)
           .setName("TPP TPP and local codes")
           .setCode("TPPCodes");
         c.set(IM.IS_CONTAINED_IN,new TTArray());
@@ -268,7 +267,7 @@ public class TPPImporter implements TTImport{
                             .setIri("tpp:" + code)
                             .setName(term)
                             .setCode(code)
-                            .addType(OWL.CLASS);
+                            .addType(IM.CONCEPT);
                     TPP.setCrud(IM.REPLACE);
                     TPP.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.NAMESPACE + "TPPUnlinkedCodes")));
                     document.addEntity(TPP);

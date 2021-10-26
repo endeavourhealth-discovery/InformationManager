@@ -4,7 +4,6 @@ import com.opencsv.CSVReader;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
@@ -120,7 +119,7 @@ public class EMISImport implements TTImport {
                 if (emisConcept==null) {
                     emisConcept = new TTEntity()
                       .setIri("emis:" + emis)
-                      .addType(OWL.CLASS)
+                      .addType(IM.CONCEPT)
                       .setName(name)
                       .setCode(emis);
                     document.addEntity(emisConcept);

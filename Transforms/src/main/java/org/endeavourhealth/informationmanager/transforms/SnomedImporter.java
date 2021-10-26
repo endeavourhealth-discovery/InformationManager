@@ -4,10 +4,12 @@ import org.endeavourhealth.imapi.transforms.ECLToTT;
 import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDF;
 import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.XSD;
+import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
@@ -17,6 +19,7 @@ import java.io.*;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.*;
+import java.util.zip.DataFormatException;
 
 public class SnomedImporter implements TTImport {
 
@@ -73,6 +76,7 @@ public class SnomedImporter implements TTImport {
 
 
    public static final String FULLY_SPECIFIED = "900000000000003001";
+   public static final String DEFINED= "900000000000073002";
    public static final String IS_A = "116680003";
    public static final String SN = "sn:";
    public static final String ALL_CONTENT = "723596005";
@@ -96,25 +100,46 @@ public class SnomedImporter implements TTImport {
       TTManager dmanager= new TTManager();
 
       document= dmanager.createDocument(IM.GRAPH_SNOMED.getIri());
-      setRefSetRoot();
+
       importConceptFiles(config.folder);
       importDescriptionFiles(config.folder);
+      removeQualifiers(document);
       importMRCMRangeFiles(config.folder);
       importRefsetFiles(config.folder);
       importMRCMDomainFiles(config.folder);
-      importStatedFiles(config.folder);
+     // importStatedFiles(config.folder); No longer bothers with OWL axioms;
       importRelationshipFiles(config.folder);
+      setRefSetRoot();
       importSubstitution(config.folder);
+      conceptMap.clear();
+
       TTDocumentFiler filer = new TTDocumentFilerJDBC();
       filer.fileDocument(document);
       return this;
    }
+
+   private void removeQualifiers(TTDocument document) {
+      System.out.println("Removing bracketed qualifiers");
+      Set<String> duplicates= new HashSet<>();
+      for (TTEntity entity:document.getEntities()){
+         String name= entity.getName();
+         if (name.contains(" (")){
+            String[] parts= name.split(" \\(");
+            String qualifier=" ("+parts[parts.length-1];
+            int endIndex= name.indexOf(qualifier);
+            String shortName= name.substring(0,endIndex);
+            if (!duplicates.contains(shortName)) {
+               entity.setName(shortName);
+               entity.setDescription(name);
+               duplicates.add(shortName);
+            }
+         }
+      }
+   }
+
    private void setRefSetRoot() {
-      TTEntity root= new TTEntity();
-      root.setCrud(IM.ADD);
-      root.setIri(SNOMED.NAMESPACE+"900000000000455006");
+      TTEntity root= conceptMap.get("900000000000455006");
       root.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets")));
-      document.addEntity(root);
    }
 
    private void importSubstitution(String path) throws IOException {
@@ -134,7 +159,7 @@ public class SnomedImporter implements TTImport {
                   if (c==null){
                    c= new TTEntity().setIri(SN+old);
                    document.addEntity(c);
-                   c.addType(OWL.CLASS);
+                   c.addType(IM.CONCEPT);
                    c.setStatus(IM.INACTIVE);
                    c.setCode(old);
                   }
@@ -178,11 +203,12 @@ public class SnomedImporter implements TTImport {
                         if (conceptFile.contains("Refset"))
                            c.addType(IM.CONCEPT_SET);
                         else
-                           c.addType(OWL.CLASS);
+                           c.addType(IM.CONCEPT);
+                        if (fields[4].equals(DEFINED))
+                           c.set(IM.DEFINITIONAL_STATUS,IM.SUFFICIENTLY_DEFINED);
                         c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
                         if (fields[0].equals("138875005")) { // snomed root
-                           c.set(RDFS.SUBCLASSOF, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "894281000252100")));
-                           c.set(IM.IS_A, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "894281000252100")));
+                            c.set(IM.IS_A, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "894281000252100")));
                         }
                         document.addEntity(c);
                         conceptMap.put(fields[0], c);
@@ -208,8 +234,12 @@ public class SnomedImporter implements TTImport {
             while (line != null && !line.isEmpty()) {
                String[] fields = line.split("\t");
                TTEntity c= conceptMap.get(fields[4]);
-               if (c!=null)
-                  c.addObject(IM.HAS_MEMBER,TTIriRef.iri(SNOMED.NAMESPACE+fields[5]));
+               if (c!=null) {
+                  if (c.get(IM.MEMBERS)==null)
+                     c.set(IM.MEMBERS,new TTArray());
+                  c.get(IM.MEMBERS).asArray().add(TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
+
+               }
                i++;
                line = reader.readLine();
             }
@@ -231,18 +261,16 @@ public class SnomedImporter implements TTImport {
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
                   String[] fields = line.split("\t");
+                // if (fields[4].equals("900000000000455006"))
+                  // System.out.println(fields[7]);
                   TTEntity c = conceptMap.get(fields[4]);
                   if (c!=null) {
                      if (fields[7].contains("(attribute)")) {
-                        c.getType().getElements().clear();
-                        c.addType(OWL.OBJECTPROPERTY);
-                        c.addType(OWL.FUNCTIONAL);
+                        c.addType(RDF.PROPERTY);
                      }
                      if (ACTIVE.equals(fields[2])) {
-                        if (FULLY_SPECIFIED.equals(fields[6])) {
-                           if (c.getName() == null) {
+                        if (FULLY_SPECIFIED.equals(fields[6])|c.getName()==null) {
                               c.setName(fields[7]);
-                           }
                         }
                         TTManager.addTermCode(c, fields[7],fields[0]);
                      }
@@ -320,7 +348,7 @@ public class SnomedImporter implements TTImport {
       System.out.println("Imported " + i + " property domain axioms");
    }
 
-   private void importMRCMRangeFiles(String path) throws IOException {
+   private void importMRCMRangeFiles(String path) throws IOException,DataFormatException {
       int i = 0;
       //gets attribute range files (usually only 1)
       for (String rangeFile : attributeRanges) {
@@ -343,63 +371,32 @@ public class SnomedImporter implements TTImport {
       System.out.println("Imported " + i + " property range axioms");
    }
 
-   private void addSnomedPropertyRange(TTEntity op, String ecl) {
+   private void addSnomedPropertyRange(TTEntity op, String ecl) throws DataFormatException {
       TTValue expression= eclConverter.getClassExpression(ecl);
-      TTValue already= op.get(RDFS.RANGE);
-      if (already==null) {
-         op.set(RDFS.RANGE,expression);
-      } else {
-         if (already.isIriRef()) {
-            TTNode range = new TTNode();
-            op.set(RDFS.RANGE, range);
-            TTArray unions = new TTArray();
-            range.set(OWL.UNIONOF, unions);
-         }
-         TTArray alreadyUnions = already.asNode().get(OWL.UNIONOF).asArray();
-         if (expression.isIriRef()) {
-            if (!alreadyInUnion(alreadyUnions, expression.asIriRef())) {
-               alreadyUnions.add(expression);
+      if (expression.isIriRef())
+         op.addObject(RDFS.RANGE,expression);
+      else if (expression.isNode()){
+         if (expression.asNode().get(SHACL.OR)!=null){
+            for (TTValue or:expression.asNode().get(SHACL.OR).asArray().getElements()){
+               if (or.isIriRef())
+                  op.addObject(RDFS.RANGE,or);
+              //Code level range not supported
             }
-         } else {
-            TTArray newUnions = expression.asNode().get(OWL.UNIONOF).asArray();
-            for (TTValue newRange : newUnions.getElements()) {
-               if (!alreadyInUnion(alreadyUnions, newRange.asIriRef()))
-                  alreadyUnions.add(newRange);
-            }
-         }
-      }
+         } else
+            throw new DataFormatException("Unrecognised juntion type in MRCM range files");
+
+      } else
+         throw new DataFormatException("Snomed importer does not support intersections in the MRCM range file");
+
    }
 
-   private boolean alreadyInUnion(TTArray alreadyUnions, TTIriRef newRange) {
-      for (TTValue union : alreadyUnions.getElements()) {
-         if (union.asIriRef() == newRange) {
-            return true;
-         }
-      }
-       return false;
-   }
 
    private void addSnomedPropertyDomain(TTEntity op, String domain) {
-      //Assumes all properties are in a group
+      //Assumes all properties may or may nor in a group
       //therefore groups are not modelled in this version
-      TTIriRef imDomain = TTIriRef.iri(SN+ domain);
-      //Is it the first entry
-      TTValue already = op.get(RDFS.DOMAIN);
-      if (already == null) {
-         op.set(RDFS.DOMAIN, imDomain);
-      } else {
-         if (already.isIriRef()) {
-            TTNode expression = new TTNode();
-            op.set(RDFS.DOMAIN, expression);
-            TTArray unions = new TTArray();
-            expression.set(OWL.UNIONOF, unions);
-            unions.add(already);
-            unions.add(imDomain);
-         } else {
-            TTArray unions = already.asNode().get(OWL.UNIONOF).asArray();
-            unions.add(imDomain);
-         }
-      }
+      if (op.get(RDFS.DOMAIN)==null)
+         op.set(RDFS.DOMAIN,new TTArray());
+      op.get(RDFS.DOMAIN).asArray().add(TTIriRef.iri(SN+ domain));
    }
 
    private void importRelationshipFiles(String path) throws IOException {
@@ -421,12 +418,14 @@ public class SnomedImporter implements TTImport {
                      int group = Integer.parseInt(fields[6]);
                      String relationship = fields[7];
                      String target = fields[5];
+                     if (target.equals("900000000000455006"))
+                        System.out.println(c.getName()+" "+fields[4]+" is a ref set");
+
                      if (conceptMap.get(target) == null) {
                         System.err.println("Missing target entity in relationship" + target);
                      }
                      if (ACTIVE.equals(fields[2]) | (relationship.equals(REPLACED_BY))) {
                         addRelationship(c, group, relationship, target);
-                        //  }
                      }
                   }
                   i++;
@@ -464,6 +463,8 @@ public class SnomedImporter implements TTImport {
    }
 
    private TTNode getRoleGroup(TTEntity c, Integer groupNumber) {
+      if (groupNumber==0)
+         return c;
       if (c.get(IM.ROLE_GROUP)==null){
          TTArray roleGroups= new TTArray();
          c.set(IM.ROLE_GROUP,roleGroups);

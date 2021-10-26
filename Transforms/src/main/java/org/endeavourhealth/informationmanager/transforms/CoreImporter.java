@@ -14,11 +14,12 @@ import java.sql.Connection;
 
 public class CoreImporter implements TTImport {
    private static final String[] coreEntities = {
-     ".*\\\\SemanticWeb\\\\RDFOntology.json",
-     ".*\\\\SemanticWeb\\\\RDFSOntology.json",
-     ".*\\\\SemanticWeb\\\\OWLOntology.json",
-     ".*\\\\SemanticWeb\\\\SHACLOntology.json",
-     ".*\\\\DiscoveryCore\\\\CoreOntologyDocument.json"
+     ".*\\\\SemanticWeb\\\\RDFOntology-inferred.json",
+     ".*\\\\SemanticWeb\\\\RDFSOntology-inferred.json",
+     ".*\\\\SemanticWeb\\\\OWLOntology-inferred.json",
+     ".*\\\\SemanticWeb\\\\SHACLOntology-inferred.json",
+     ".*\\\\DiscoveryCore\\\\CoreOntology-inferred.json",
+     ".*\\\\DiscoveryCore\\\\CoreOntology-more-inferred.json"
    };
 
 
@@ -51,6 +52,7 @@ public class CoreImporter implements TTImport {
          Path path = ImportUtils.findFileForId(config.folder, coreFile);
          manager.loadDocument(path.toFile());
          TTDocument document= manager.getDocument();
+        System.out.println("Filing  "+ document.getGraph().getIri());
          TTDocumentFiler filer = new TTDocumentFilerJDBC();
         filer.fileDocument(document);
       }

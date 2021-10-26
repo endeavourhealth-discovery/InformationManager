@@ -4,11 +4,14 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTValue;
 import org.endeavourhealth.imapi.transforms.ECLToTT;
+import org.endeavourhealth.imapi.transforms.SCGToTT;
 import org.endeavourhealth.imapi.transforms.SnomedConcept;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.TTDocumentFiler;
+import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.TTImportConfig;
 
@@ -19,15 +22,16 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.zip.DataFormatException;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class BartsCernerImport implements TTImport {
 
 	private static final String[] used = {".*\\\\Barts\\\\Barts-Cerner-Codes.txt"};
-	private static final String[] codes = {".*\\\\Barts\\\\V500_event_code.txt"};
-	private static final String[] sets = {".*\\\\Barts\\\\V500_Event_Set_Code.txt"};
-	private static final String[] hierarchy = {".*\\\\Barts\\\\V500_event_set_canon.txt"};
+	//private static final String[] codes = {".*\\\\Barts\\\\V500_event_code.txt"};
+	//private static final String[] sets = {".*\\\\Barts\\\\V500_Event_Set_Code.txt"};
+	//private static final String[] hierarchy = {".*\\\\Barts\\\\V500_event_set_canon.txt"};
 	private static final String[] maps = {".*\\\\Barts\\\\Snomed-Barts-Cerner.txt"};
 
 
@@ -49,7 +53,8 @@ public class BartsCernerImport implements TTImport {
 	}
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
-	/*
+
+		/*
 		conn= ImportUtils.getConnection();
 		System.out.println("retrieving snomed codes from IM");
 		document= manager.createDocument(IM.GRAPH_BARTS_CERNER.getIri());
@@ -57,21 +62,21 @@ public class BartsCernerImport implements TTImport {
 		mapDocument= manager.createDocument(IM.MAP_SNOMED_BC.getIri());
 		document.setCrud(IM.UPDATE);
 		setTopLevel();
-		importCodes(inFolder);
-		importSets(inFolder);
-		importUsed(inFolder);
-		importHierarchy(inFolder);
+		//importCodes();
+		//importSets();
+		importUsed(config.folder);
+		importHierarchy();
 		TTDocumentFiler filer = new TTDocumentFilerJDBC();
-		filer.fileDocument(document,bulkImport,entityMap);
-		importMaps(inFolder);
+		filer.fileDocument(document);
+		importMaps(config.folder);
 		filer = new TTDocumentFilerJDBC();
-		filer.fileDocument(mapDocument,bulkImport,entityMap);
+		filer.fileDocument(mapDocument);
 
-	 */
+		 */
 		return this;
 	}
 
-	private void importMaps(String inFolder) throws IOException {
+	private void importMaps(String inFolder) throws IOException, DataFormatException {
 		int count = 0;
 		Integer incremental= 100020;
 		Map<String, TTEntity> snomedToConcept = new HashMap<>();
@@ -86,30 +91,23 @@ public class BartsCernerImport implements TTImport {
 					String[] fields = line.split("\t");
 					String code = fields[1];
 					String snomed = fields[4];
+					String ecl= fields[5];
+					String term=fields[2];
 					TTEntity snomedConcept = snomedToConcept.get(snomed);
 					if (snomedConcept == null) {
-						if (!snomed.contains(":")) {
 							snomedConcept = new TTEntity()
 								.setIri(SNOMED.NAMESPACE + snomed)
-								.setCrud(IM.UPDATE);
+								.addType(IM.CONCEPT)
+								.setCrud(IM.UPDATE)
+								.setName(term)
+								.setDescription("Concept expression");
 							mapDocument.addEntity(snomedConcept);
-						} else {
-							ECLToTT converter = new ECLToTT();
-							TTValue expression= converter.getClassExpression(snomed);
-							TTEntity newConcept= new TTEntity();
-							String conceptId= SnomedConcept.createConcept(incremental,false);
-							incremental++;
-							newConcept.setIri(IM.NAMESPACE+conceptId)
-								.addType(OWL.CLASS)
-								.setName(codeToConcept.get(code).getName());
-							snomedToConcept.put(snomed, snomedConcept);
-						}
-						snomedConcept.addObject(IM.MATCHED_TO, iri(IM.CODE_SCHEME_BARTS_CERNER + code));
-						line = reader.readLine();
+					}
+					snomedConcept.addObject(IM.MATCHED_TO, iri(IM.CODE_SCHEME_BARTS_CERNER + code));
+					line = reader.readLine();
 					}
 				}
 			}
-		}
 		System.out.println("Imported " + count + " maps");
 	}
 
@@ -118,7 +116,7 @@ public class BartsCernerImport implements TTImport {
 		TTEntity topConcept= new TTEntity()
 			.setCrud(IM.REPLACE)
 			.setIri(IM.CODE_SCHEME_BARTS_CERNER.getIri()+"BartsCernerCodes")
-			.addType(OWL.CLASS)
+			.addType(IM.CONCEPT)
 			.setName("Barts Cerner codes")
 			.setDescription("The Cerner codes used in Barts NHS Trust Millennium system");
 		topConcept.addObject(IM.IS_CHILD_OF,iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
@@ -126,7 +124,7 @@ public class BartsCernerImport implements TTImport {
 		TTEntity unmatchedConcept= new TTEntity()
 			.setCrud(IM.REPLACE)
 			.setIri(IM.CODE_SCHEME_BARTS_CERNER.getIri()+"UnclassifiedBartsCernerCodes")
-			.addType(OWL.CLASS)
+			.addType(IM.CONCEPT)
 			.setName("Unclassified Barts Cerner codes")
 			.setDescription("The Cerner codes used in Barts NHS Trust Millennium system"
 				+"that have not yet been placed in the Barts event set hierarchy");
@@ -134,7 +132,9 @@ public class BartsCernerImport implements TTImport {
 		document.addEntity(unmatchedConcept);
 	}
 
-	private void importHierarchy(String inFolder) throws IOException {
+
+	private void importHierarchy() throws IOException {
+		/*
 		Map<String,String> childToParent= new HashMap<>();
 		int count = 0;
 		for (String conceptFile : hierarchy) {
@@ -165,6 +165,8 @@ public class BartsCernerImport implements TTImport {
 			}
 		}
 		System.out.println("Imported " + count + " hierarchy links");
+
+		 */
 	}
 
 	private void importUsed(String inFolder) throws IOException {
@@ -184,7 +186,7 @@ public class BartsCernerImport implements TTImport {
 					if (usedConcept==null) {
 						usedConcept = new TTEntity()
 							.setIri(IM.CODE_SCHEME_BARTS_CERNER.getIri() + "BC_" + code)
-							.addType(OWL.CLASS)
+							.addType(IM.CONCEPT)
 							.setCode(code)
 							.setScheme(IM.CODE_SCHEME_BARTS_CERNER);
 						document.addEntity(usedConcept);
@@ -200,6 +202,7 @@ public class BartsCernerImport implements TTImport {
 	}
 
 	private void importSets(String inFolder) throws IOException {
+		/*
 		int count = 0;
 		for (String conceptFile : sets) {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
@@ -218,7 +221,7 @@ public class BartsCernerImport implements TTImport {
 					} else {
 						TTEntity eventSet = new TTEntity()
 							.setIri(IM.CODE_SCHEME_BARTS_CERNER.getIri() + "BC_" + code)
-							.addType(OWL.CLASS)
+							.addType(IM.CONCEPT)
 							.setName(term)
 							.setCode(code)
 							.setScheme(IM.CODE_SCHEME_BARTS_CERNER);
@@ -230,9 +233,12 @@ public class BartsCernerImport implements TTImport {
 			}
 		}
 		System.out.println("Imported " + count + " sets");
+
+		 */
 	}
 
 	private void importCodes(String inFolder) throws IOException {
+		/*
 		int count = 0;
 		for (String conceptFile : codes) {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
@@ -251,7 +257,7 @@ public class BartsCernerImport implements TTImport {
 						setTermToCode.put(setTerm,code);
 					TTEntity codeConcept= new TTEntity()
 						.setIri(IM.CODE_SCHEME_BARTS_CERNER.getIri()+"BC_"+code)
-						.addType(OWL.CLASS)
+						.addType(IM.CONCEPT)
 						.setName(term)
 						.setCode(code)
 						.setScheme(IM.CODE_SCHEME_BARTS_CERNER);
@@ -262,15 +268,17 @@ public class BartsCernerImport implements TTImport {
 			}
 		}
 		System.out.println("Imported " + count + " codes from look up");
+
+		 */
 	}
 
 
 
 	@Override
 	public TTImport validateFiles(String inFolder) {
-		return this;
-		//	ImportUtils.validateFiles(inFolder,codes, maps,sets,used,hierarchy);
-			//return this;
+
+		ImportUtils.validateFiles(inFolder, maps,used);
+			return this;
 	}
 
 	@Override

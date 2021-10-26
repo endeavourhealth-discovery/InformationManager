@@ -95,7 +95,7 @@ public class ICD10Importer implements TTImport {
         TTEntity icd10= new TTEntity()
           .setIri(icd10Codes.getIri())
           .setName("ICD10 5th edition classification codes")
-          .addType(OWL.CLASS)
+          .addType(IM.CONCEPT)
           .setDescription("ICD1O classification used in backward maps from Snomed");
         icd10.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
         document.addEntity(icd10);
@@ -131,7 +131,7 @@ public class ICD10Importer implements TTImport {
                   .setCode(code)
                   .setName(label)
                   .setIri(iri)
-                  .addType(OWL.CLASS);
+                  .addType(IM.CONCEPT);
                 c.addObject(IM.IS_CHILD_OF,icd10Codes);
                 startChapterMap.put(code.substring(0,code.indexOf("-")),c);
                 startChapterList.add(code.substring(0,code.indexOf("-")));
@@ -160,7 +160,7 @@ public class ICD10Importer implements TTImport {
                 TTEntity c = new TTEntity()
                   .setCode(fields[0])
                   .setIri(IM.CODE_SCHEME_ICD10.getIri() + fields[1])
-                  .addType(OWL.CLASS);
+                  .addType(IM.CONCEPT);
                 if(fields[4].length()>250){
                     c.setName(fields[4].substring(0,200));
                     c.setDescription(fields[4]);

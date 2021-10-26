@@ -13,7 +13,7 @@ import java.sql.Connection;
 
 
 public class DiscoveryReportsImporter implements TTImport {
-   private static final String[] ReportsConcepts = {".*\\\\StatsReportsDocument.json"};
+   private static final String[] ReportsConcepts = {".*\\\\StatsReports-inferred.json"};
 
 
 
