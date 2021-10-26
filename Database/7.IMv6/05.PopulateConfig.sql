@@ -167,3 +167,13 @@ INSERT INTO config (name, config) VALUES ('conceptDashboard', '[
     "iri": "http://endhealth.info/im#ontologyConceptStatus"
   }
 ]');
+
+DELETE FROM config WHERE name = 'defaultPredicateNames';
+INSERT INTO config (name, config) VALUES ('defaultPredicateNames', '{
+    "http://endhealth.info/im#isA": "Is a",
+    "http://endhealth.info/im#roleGroup": "Where",
+    "http://www.w3.org/2002/07/owl#equivalentClass": "Is equivalent to",
+    "http://www.w3.org/2002/07/owl#intersectionOf": "Combination of",
+    "http://www.w3.org/2002/07/owl#someValuesFrom": "With a value",
+    "http://www.w3.org/2002/07/owl#onProperty": "On property"
+  }');
