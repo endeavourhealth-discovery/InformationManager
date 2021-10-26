@@ -4,6 +4,7 @@ import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.informationmanager.*;
 
 import java.io.BufferedReader;
@@ -142,7 +143,7 @@ public class EthnicityCEGImporter implements TTImport {
 
 		Path file = ImportUtils.findFileForId(folder, lookups[0]);
 		System.out.println("Importing Categories");
-		setConceptSets();
+		setConceptSetGroups();
 
 		try( BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))){
 			reader.readLine();
@@ -171,12 +172,13 @@ public class EthnicityCEGImporter implements TTImport {
 						.addType(IM.CONCEPT_SET)
 						.setName("Concept set - "+ catTerm)
 						.setCode(cat16)
-						.setDescription("QMUL CEG 16+ Ethnic category "+cat16);
+						.setDescription("QMUL CEG 16+ Ethnic category "+cat16)
+						.set(IM.DEFINITION,new TTNode().set(SHACL.OR, new TTArray()));
+					cegSubset.addObject(IM.MEMBER_OF_GROUP,TTIriRef.iri(cegSet.getIri()));
 					document.addEntity(cegSubset);
-					cegSet.addObject(IM.HAS_SUBSET,TTIriRef.iri(cegSubset.getIri()));
 					cegCatMap.put(cat16,cegSubset);
 				}
-				cegSubset.addObject(IM.HAS_MEMBER,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+				cegSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).asArray().add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 				if (cegSubset.get(IM.HAS_TERM_CODE)==null)
 					TTManager.addTermCode(cegSubset,catTerm,null);
 				if (!snoNhs.equals("unclassified")){
@@ -186,16 +188,16 @@ public class EthnicityCEGImporter implements TTImport {
 						.setIri(IM.NAMESPACE + "CSET_SN_"+snoNhs)
 						.addType(IM.CONCEPT_SET)
 							.setName("Concept set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
-						.setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16);
+						.setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
+							.set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
+						nhsSubset.addObject(IM.MEMBER_OF_GROUP,TTIriRef.iri(nhsSet.getIri()));
 						document.addEntity(nhsSubset);
-						nhsSet.addObject(IM.HAS_SUBSET, TTIriRef.iri(nhsSubset.getIri()));
 						nhsCatmap.put(snoNhs, nhsSubset);
 					}
 					if (nhsSubset.get(IM.HAS_TERM_CODE)==null)
 						TTManager.addTermCode(nhsSubset,nhsTerm,null);
-					nhsSubset.addObject(IM.HAS_MEMBER,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+					nhsSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).asArray().add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 				}
-
 
 				line=reader.readLine();
 
@@ -204,18 +206,18 @@ public class EthnicityCEGImporter implements TTImport {
 		}
 	}
 
-	private void setConceptSets() {
+	private void setConceptSetGroups() {
 		cegSet= new TTEntity()
 			.setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16")
-			.addType(IM.CONCEPT_SET)
-			.setName("CEG 16+1 Ethnic category (concept set)")
+			.addType(IM.SET_GROUP)
+			.setName("CEG 16+1 Ethnic category (set group)")
 			.setDescription("QMUL-CEG categorisations of ethnic groups");
 		cegSet.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"EthnicitySets")));
 		document.addEntity(cegSet);
 		nhsSet= new TTEntity()
 			.setIri(IM.NAMESPACE+"CSET_EthnicCategory2001")
-			.addType(IM.CONCEPT_SET)
-			.setName("Concept set - 2001 census Ethnic category")
+			.addType(IM.SET_GROUP)
+			.setName("Concept set - 2001 census Ethnic category (set group")
 			.setDescription("NHS Data Dictionary 2001 census based categorisations of ethnic groups");
 		nhsSet.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"EthnicitySets")));
 		document.addEntity(nhsSet);

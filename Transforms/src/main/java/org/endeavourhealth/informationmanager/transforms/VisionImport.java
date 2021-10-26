@@ -113,7 +113,7 @@ public class VisionImport implements TTImport {
 							readConcept = new TTEntity()
 								.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".",""))
 								.setCode(code)
-								.addType(OWL.CLASS);
+								.addType(IM.CONCEPT);
 							document.addEntity(readConcept);
 							codeToConcept.put(code, readConcept);
 						}

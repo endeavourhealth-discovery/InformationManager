@@ -78,8 +78,12 @@ public class ApexKingsImport implements TTImport {
 			if (!utlSet.contains(member)){
 				if (valueSetDocument.getEntities()==null){
 					valueSetDocument.addEntity( new TTEntity().setIri(IM.NAMESPACE+"VSET_UnifiedTestList"));
+					valueSetDocument.getEntities().get(0).
+						set(IM.DEFINITION,new TTNode()
+							.set(SHACL.OR,new TTArray()));
 				}
-				valueSetDocument.getEntities().get(0).addObject(IM.HAS_MEMBER,TTIriRef.iri(member));
+				valueSetDocument.getEntities().get(0).get(IM.DEFINITION).asNode()
+					.get(SHACL.OR).asArray().add(TTIriRef.iri(member));
 			}
 		}
 	}
@@ -138,7 +142,7 @@ public class ApexKingsImport implements TTImport {
 				String iri = IM.CODE_SCHEME_KINGS_APEX.getIri()+ fields[1]+ "-"+(fields[2].replace(" ",""));
 				TTEntity entity= new TTEntity()
 					.setIri(iri)
-					.addType(OWL.CLASS)
+					.addType(IM.CONCEPT)
 					.setName(fields[2])
 					.setDescription("Local apex Kings trust pathology system entity ")
 					.setCode(code);
