@@ -118,7 +118,7 @@ INSERT INTO config (name, config) VALUES ('filterDefaults', '{
 		"Draft"
 	],
     "typeOptions": [
-        "Class",
+        "Concept",
         "Concept Set",
         "Folder",
         "Node shape",
