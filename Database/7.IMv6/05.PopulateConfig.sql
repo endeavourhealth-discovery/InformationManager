@@ -81,29 +81,15 @@ INSERT INTO config (name, config) VALUES ('definition', '[
   {
     "size": "100%",
     "type": "SectionDivider",
-    "label": "InferredStatedDivider",
+    "label": "InferredTermsDivider",
     "order": 300,
-    "predicate": "None"
-  },
-  {
-    "size": "100%",
-    "type": "TextDefinition",
-    "label": "Axioms",
-    "order": 301,
-    "predicate": "axioms"
-  },
-  {
-    "size": "100%",
-    "type": "SectionDivider",
-    "label": "StatedTermsDivider",
-    "order": 400,
     "predicate": "None"
   },
   {
     "size": "100%",
     "type": "TermsTable",
     "label": "Terms",
-    "order": 402,
+    "order": 301,
     "predicate": "termCodes"
   }
 ]');
@@ -118,7 +104,7 @@ INSERT INTO config (name, config) VALUES ('filterDefaults', '{
 		"Draft"
 	],
     "typeOptions": [
-        "Class",
+        "Concept",
         "Concept Set",
         "Folder",
         "Node shape",
