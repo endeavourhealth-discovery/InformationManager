@@ -48,6 +48,7 @@ public class ApexKingsImport implements TTImport {
 		valueSetDocument= vsetManager.createDocument(IM.NAMESPACE);
 		valueSetDocument.setCrud(IM.ADD);
 		importR2Matches();
+		setTopLevel();
 		importApexKings(config.folder);
 		createBackMaps();
 		addToUtlSet();
@@ -60,6 +61,16 @@ public class ApexKingsImport implements TTImport {
 			filer.fileDocument(valueSetDocument);
 		}
 		return this;
+	}
+
+	private void setTopLevel() {
+		TTEntity kings= new TTEntity()
+			.setIri(IM.NAMESPACE+"KingsApexCodes")
+			.addType(IM.CONCEPT)
+			.setName("Kings College Hospital Apex path codes")
+			.setDescription("Local codes for the Apex pathology system in kings")
+			.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies")));
+			document.addEntity(kings);
 	}
 
 	private void addToUtlSet() throws SQLException {
@@ -145,7 +156,8 @@ public class ApexKingsImport implements TTImport {
 					.addType(IM.CONCEPT)
 					.setName(fields[2])
 					.setDescription("Local apex Kings trust pathology system entity ")
-					.setCode(code);
+					.setCode(code)
+					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"KingsApexCodes")));
 				document.addEntity(entity);
 				apexToRead.put(code,readCode);
 				if (readToSnomed.get(readCode)!=null){

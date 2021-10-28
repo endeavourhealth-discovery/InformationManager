@@ -208,7 +208,7 @@ public class SnomedImporter implements TTImport {
                            c.set(IM.DEFINITIONAL_STATUS,IM.SUFFICIENTLY_DEFINED);
                         c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
                         if (fields[0].equals("138875005")) { // snomed root
-                            c.set(IM.IS_A, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "894281000252100")));
+                            c.set(RDFS.SUBCLASSOF, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "894281000252100")));
                         }
                         document.addEntity(c);
                         conceptMap.put(fields[0], c);
@@ -439,11 +439,12 @@ public class SnomedImporter implements TTImport {
    }
 
    private void addIsa(TTEntity entity,String parent){
-      if (entity.get(IM.IS_A)==null) {
+      TTIriRef isa= entity.isType(RDF.PROPERTY) ? RDFS.SUBPROPERTYOF : RDFS.SUBCLASSOF;
+      if (entity.get(isa)==null) {
          TTArray isas = new TTArray();
-         entity.set(IM.IS_A, isas);
+         entity.set(isa, isas);
       }
-      TTArray isas= entity.get(IM.IS_A).asArray();
+      TTArray isas= entity.get(isa).asArray();
       isas.add(TTIriRef.iri(SN+ parent));
       counter++;
 

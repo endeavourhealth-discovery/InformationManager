@@ -2,6 +2,7 @@ package org.endeavourhealth.informationmanager;
 
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
@@ -29,7 +30,8 @@ public class ClosureGenerator {
     public static void generateClosure(String outpath, boolean secure) throws SQLException, IOException, ClassNotFoundException {
 
         List<TTIriRef> relationships = Arrays.asList(
-            IM.IS_A,
+          RDFS.SUBCLASSOF,
+            RDFS.SUBPROPERTYOF,
             IM.IS_CHILD_OF,
             SNOMED.REPLACED_BY,
             IM.HAS_REPLACED

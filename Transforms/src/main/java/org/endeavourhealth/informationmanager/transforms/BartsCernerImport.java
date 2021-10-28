@@ -9,10 +9,7 @@ import org.endeavourhealth.imapi.transforms.ECLToTT;
 import org.endeavourhealth.imapi.transforms.SCGToTT;
 import org.endeavourhealth.imapi.transforms.SnomedConcept;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.OWL;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.XSD;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
 import org.endeavourhealth.informationmanager.TTImport;
@@ -220,7 +217,7 @@ public class BartsCernerImport implements TTImport {
 							.addType(IM.CONCEPT)
 							.setCode(code)
 							.setScheme(IM.CODE_SCHEME_BARTS_CERNER);
-						usedConcept.addObject(IM.IS_A,iri(unclassified));
+						usedConcept.addObject(IM.IS_CHILD_OF,iri(unclassified));
 						document.addEntity(usedConcept);
 						codeToConcept.put(code,usedConcept);
 					}
