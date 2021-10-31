@@ -4,12 +4,10 @@ import com.opencsv.CSVReader;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
+import org.endeavourhealth.informationmanager.TTFilerFactory;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.TTImportConfig;
-import org.endeavourhealth.imapi.transforms.TTManager;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -55,9 +53,9 @@ public class VisionImport implements TTImport {
 		importVisionCodes(config.folder);
 		createHierarchy();
 		addVisionMaps(config.folder);
-		TTDocumentFiler filer = new TTDocumentFilerJDBC();
+		TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
 		filer.fileDocument(document);
-		filer = new TTDocumentFilerJDBC();
+		filer = TTFilerFactory.getDocumentFiler();
 		filer.fileDocument(mapDocument);
 		return this;
 	}

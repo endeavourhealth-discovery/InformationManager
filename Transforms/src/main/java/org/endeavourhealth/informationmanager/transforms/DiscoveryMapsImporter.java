@@ -1,10 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
-import org.endeavourhealth.informationmanager.TTImport;
-import org.endeavourhealth.informationmanager.TTImportConfig;
+import org.endeavourhealth.informationmanager.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 
 import java.nio.file.Path;
@@ -25,7 +22,7 @@ public class DiscoveryMapsImporter implements TTImport {
       Path file = ImportUtils.findFileForId(config.folder, noneCoreEntities[0]);
       TTManager manager= new TTManager();
       TTDocument document = manager.loadDocument(file.toFile());
-      TTDocumentFiler filer= new TTDocumentFilerJDBC();
+      TTDocumentFiler filer= TTFilerFactory.getDocumentFiler();
       filer.fileDocument(document);
    }
 

@@ -1,17 +1,12 @@
 package org.endeavourhealth.informationmanager.transforms;
 
-import org.apache.zookeeper.Shell;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
-import org.endeavourhealth.imapi.model.tripletree.TTValue;
-import org.endeavourhealth.imapi.transforms.ECLToTT;
-import org.endeavourhealth.imapi.transforms.SCGToTT;
-import org.endeavourhealth.imapi.transforms.SnomedConcept;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
+import org.endeavourhealth.informationmanager.TTFilerFactory;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.TTImportConfig;
 
@@ -66,10 +61,10 @@ public class BartsCernerImport implements TTImport {
 		setUsedEventSets();
 		setTopLevel();
 
-		TTDocumentFiler filer = new TTDocumentFilerJDBC();
+		TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
 		filer.fileDocument(document);
 		importMaps(config.folder);
-		filer = new TTDocumentFilerJDBC();
+		filer = TTFilerFactory.getDocumentFiler();
 		filer.fileDocument(mapDocument);
 
 		return this;

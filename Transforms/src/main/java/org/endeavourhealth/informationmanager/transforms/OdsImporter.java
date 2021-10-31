@@ -3,7 +3,7 @@ package org.endeavourhealth.informationmanager.transforms;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
+import org.endeavourhealth.informationmanager.TTFilerFactory;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.TTImportConfig;
 
@@ -39,7 +39,7 @@ public class OdsImporter implements TTImport {
          Path path = ImportUtils.findFileForId(config.folder, orgFile);
          manager.loadDocument(path.toFile());
          TTDocument document= manager.getDocument();
-         TTDocumentFiler filer = new TTDocumentFilerJDBC();
+         TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
         filer.fileDocument(document);
       }
       return this;

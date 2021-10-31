@@ -118,7 +118,7 @@ INSERT INTO config (name, config) VALUES ('filterDefaults', '{
 
 DELETE FROM config WHERE name = 'inferredPredicates';
 INSERT INTO config (name, config) VALUES ('inferredPredicates', '[
-    "http://endhealth.info/im#isA",
+    "http://www.w3.org/2000/01/rdf-schema#subClassOf",
     "http://endhealth.info/im#roleGroup",
     "http://endhealth.info/im#isContainedIn"
 ]');
@@ -156,7 +156,7 @@ INSERT INTO config (name, config) VALUES ('conceptDashboard', '[
 
 DELETE FROM config WHERE name = 'defaultPredicateNames';
 INSERT INTO config (name, config) VALUES ('defaultPredicateNames', '{
-    "http://endhealth.info/im#isA": "Is a",
+    "http://www.w3.org/2000/01/rdf-schema#subClassOf": "Is subclass of",
     "http://endhealth.info/im#roleGroup": "Where",
     "http://www.w3.org/2002/07/owl#equivalentClass": "Is equivalent to",
     "http://www.w3.org/2002/07/owl#intersectionOf": "Combination of",

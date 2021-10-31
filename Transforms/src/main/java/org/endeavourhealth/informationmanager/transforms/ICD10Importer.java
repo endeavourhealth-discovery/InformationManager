@@ -1,28 +1,22 @@
 package org.endeavourhealth.informationmanager.transforms;
 
-import org.endeavourhealth.imapi.model.tripletree.TTArray;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.OWL;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
+import org.endeavourhealth.informationmanager.TTFilerFactory;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.TTImportConfig;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 
 
@@ -54,12 +48,12 @@ public class ICD10Importer implements TTImport {
         importChapters(config.folder,document);
         importEntities(config.folder, document);
         createHierarchy();
-        TTDocumentFiler filer= new TTDocumentFilerJDBC();
+        TTDocumentFiler filer= TTFilerFactory.getDocumentFiler();
         filer.fileDocument(document);
         document= manager.createDocument(IM.MAP_SNOMED_ICD10.getIri());
         document.setCrud(IM.ADD);
         importMaps(config.folder);
-        filer= new TTDocumentFilerJDBC();
+        filer= TTFilerFactory.getDocumentFiler();
         filer.fileDocument(document);
         return this;
 

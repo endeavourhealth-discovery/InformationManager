@@ -12,8 +12,8 @@ import java.sql.*;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
-public class TTInstanceFilerJDBC {
-    private TTConceptFilerJDBC conceptFiler;
+public class TTInstanceFilerJDBC implements TTInstanceFiler {
+    private TTConceptFiler conceptFiler;
     private Map<String, Integer> instanceMap = new HashMap<>();
 
     private final Connection conn;
@@ -33,7 +33,7 @@ public class TTInstanceFilerJDBC {
      * @param conceptFiler  an instance of a concept filer
      * @throws SQLException in the event of a connection exception
      */
-    public TTInstanceFilerJDBC(Connection conn, TTConceptFilerJDBC conceptFiler) throws SQLException {
+    public TTInstanceFilerJDBC(Connection conn, TTConceptFiler conceptFiler) throws TTFilerException {
         this(conn);
         this.conceptFiler = conceptFiler;
     }
@@ -46,17 +46,21 @@ public class TTInstanceFilerJDBC {
      * @param conn JDBC connection
      * @throws SQLException SQL exception
      */
-    private TTInstanceFilerJDBC(Connection conn) throws SQLException {
+    private TTInstanceFilerJDBC(Connection conn) throws TTFilerException {
         this.conn = conn;
-        getInstanceDbid = conn.prepareStatement("SELECT dbid FROM inst_entity WHERE iri = ?");
-        insertInstance = conn.prepareStatement("INSERT INTO inst_entity (iri,name, description, code, scheme, status) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
-        updateInstance = conn.prepareStatement("UPDATE inst_entity SET iri= ?, name = ?, description = ?, code = ?, scheme = ?, status = ? WHERE dbid = ?");
+        try {
+            getInstanceDbid = conn.prepareStatement("SELECT dbid FROM inst_entity WHERE iri = ?");
+            insertInstance = conn.prepareStatement("INSERT INTO inst_entity (iri,name, description, code, scheme, status) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            updateInstance = conn.prepareStatement("UPDATE inst_entity SET iri= ?, name = ?, description = ?, code = ?, scheme = ?, status = ? WHERE dbid = ?");
 
-        deleteInstanceTriples = conn.prepareStatement("DELETE FROM inst_tpl WHERE subject=? and graph= ?");
-        insertInstanceTriple = conn.prepareStatement("INSERT INTO inst_tpl (subject,blank_node,graph,predicate,instance,object,literal,functional) VALUES(?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            deleteInstanceTriples = conn.prepareStatement("DELETE FROM inst_tpl WHERE subject=? and graph= ?");
+            insertInstanceTriple = conn.prepareStatement("INSERT INTO inst_tpl (subject,blank_node,graph,predicate,instance,object,literal,functional) VALUES(?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to prepare statements", e);
+        }
     }
 
-    public void fileEntity(TTEntity instance, TTIriRef graph) throws SQLException, DataFormatException {
+    public void fileEntity(TTEntity instance, TTIriRef graph) throws TTFilerException {
         int graphId = conceptFiler.getOrSetEntityId(graph);
         Integer instanceDbid = fileInstanceTable(instance);
 
@@ -76,7 +80,7 @@ public class TTInstanceFilerJDBC {
 
     }
 
-    private Integer fileInstanceTable(TTEntity instance) throws SQLException, DataFormatException {
+    private Integer fileInstanceTable(TTEntity instance) throws TTFilerException {
         String iri = conceptFiler.expand(instance.getIri());
         Integer instanceDbId = getInstanceDbidByIri(iri);
         String label = instance.getName();
@@ -105,7 +109,7 @@ public class TTInstanceFilerJDBC {
 
     private Integer upsertInstance(Integer id, String iri, String name,
                                    String description, String code, String scheme,
-                                   String status) throws SQLException {
+                                   String status) throws TTFilerException {
 
         try {
             if (id == null) {
@@ -122,7 +126,7 @@ public class TTInstanceFilerJDBC {
                 DALHelper.setString(insertInstance, ++i, status);
 
                 if (insertInstance.executeUpdate() == 0)
-                    throw new SQLException("Failed to insert instance [" + iri + "]");
+                    throw new TTFilerException("Failed to insert instance [" + iri + "]");
                 else {
                     id = DALHelper.getGeneratedKey(insertInstance);
                     return id;
@@ -142,13 +146,13 @@ public class TTInstanceFilerJDBC {
                 DALHelper.setInt(updateInstance, ++i, id);
 
                 if (updateInstance.executeUpdate() == 0) {
-                    throw new SQLException("Failed to update instance [" + iri + "]");
+                    throw new TTFilerException("Failed to update instance [" + iri + "]");
                 } else
                     return id;
             }
-        } catch (Exception e) {
-            System.err.println(iri + " wont file for some reason");
-            throw (e);
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to file instance", e);
+
         }
     }
 
@@ -161,7 +165,7 @@ public class TTInstanceFilerJDBC {
      * @throws DataFormatException   in the node format is incorrect
      * @throws IllegalStateException if the entity is not in the datbase
      */
-    private void updatePredicates(TTEntity instance, Integer entityId, int graphId) throws SQLException, DataFormatException {
+    private void updatePredicates(TTEntity instance, Integer entityId, int graphId) throws TTFilerException {
         Map<TTIriRef, TTValue> predicates = instance.getPredicateMap();
 
         //Deletes the previous predicate objects ie. clears out all previous objects
@@ -177,7 +181,7 @@ public class TTInstanceFilerJDBC {
             conceptFiler.fileEntityTypes(instance, entityId, graphId);
     }
 
-    private void deletePredicates(Integer entityId, Map<TTIriRef, TTValue> predicates, int graphId) throws SQLException {
+    private void deletePredicates(Integer entityId, Map<TTIriRef, TTValue> predicates, int graphId) throws TTFilerException {
         List<Integer> predList = new ArrayList<>();
         int i = 0;
         for (Map.Entry<TTIriRef, TTValue> po : predicates.entrySet()) {
@@ -198,10 +202,12 @@ public class TTInstanceFilerJDBC {
                 DALHelper.setInt(deleteObjectPredicates, ++i, predDbId);
             }
             deleteObjectPredicates.executeUpdate();
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to delete predicates", e);
         }
     }
 
-    private void fileNode(Integer entityId, Long parent, TTNode node, int graphId) throws SQLException, DataFormatException {
+    private void fileNode(Integer entityId, Long parent, TTNode node, int graphId) throws TTFilerException {
         if (node.getPredicateMap() != null)
             if (!node.getPredicateMap().isEmpty()) {
                 Set<Map.Entry<TTIriRef, TTValue>> entries = node.getPredicateMap().entrySet();
@@ -240,7 +246,7 @@ public class TTInstanceFilerJDBC {
      * @throws DataFormatException   in the node format is incorrect
      * @throws IllegalStateException if the entity is not in the datbase
      */
-    public void addPredicateObjects(TTEntity entity, Integer entityId, int graphId) throws SQLException, DataFormatException {
+    public void addPredicateObjects(TTEntity entity, Integer entityId, int graphId) throws TTFilerException {
         if (entityId == null)
             throw new IllegalStateException("No entity for this iri - " + entity.getIri());
 
@@ -255,20 +261,24 @@ public class TTInstanceFilerJDBC {
     }
 
 
-    private void replacePredicates(TTEntity entity, Integer entityId, int graphId) throws SQLException, DataFormatException {
+    private void replacePredicates(TTEntity entity, Integer entityId, int graphId) throws TTFilerException {
         conceptFiler.deleteEntityTypes(entityId, graphId);
         deleteTriples(entityId, graphId);
         fileNode(entityId, null, entity, graphId);
         conceptFiler.fileEntityTypes(entity, entityId, graphId);
     }
 
-    private void deleteTriples(Integer entityId, int graphId) throws SQLException {
+    private void deleteTriples(Integer entityId, int graphId) throws TTFilerException {
         DALHelper.setInt(deleteInstanceTriples, 1, entityId);
         DALHelper.setInt(deleteInstanceTriples, 2, graphId);
-        deleteInstanceTriples.executeUpdate();
+        try {
+            deleteInstanceTriples.executeUpdate();
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to delete instance triples", e);
+        }
     }
 
-    private void fileArray(Integer entityId, Long parent, TTIriRef predicate, TTArray array, int graphId) throws SQLException, DataFormatException {
+    private void fileArray(Integer entityId, Long parent, TTIriRef predicate, TTArray array, int graphId) throws TTFilerException {
         for (TTValue element : array.getElements()) {
             if (element.isIriRef()) {
                 fileTriple(entityId, parent, predicate, element.asIriRef(), null, 0, graphId);
@@ -281,55 +291,65 @@ public class TTInstanceFilerJDBC {
                     dataType = element.asLiteral().getType();
                 fileTriple(entityId, parent, predicate, dataType, element.asLiteral().getValue(), 0, graphId);
             } else
-                throw new DataFormatException("Cannot have an array of an array in RDF");
+                throw new TTFilerException("Cannot have an array of an array in RDF");
         }
     }
 
 
-    private Long fileTriple(Integer entityId, Long parent, TTIriRef predicate, TTIriRef object, String data, Integer functional, int graphId) throws SQLException {
+    private Long fileTriple(Integer entityId, Long parent, TTIriRef predicate, TTIriRef object, String data, Integer functional, int graphId) throws TTFilerException {
         int i = 0;
-        PreparedStatement insert = insertInstanceTriple;
-        DALHelper.setInt(insert, ++i, entityId);
-        DALHelper.setLong(insert, ++i, parent);
-        DALHelper.setInt(insert, ++i, graphId);
-        DALHelper.setInt(insert, ++i, conceptFiler.getOrSetEntityId(predicate));
+
+        DALHelper.setInt(insertInstanceTriple, ++i, entityId);
+        DALHelper.setLong(insertInstanceTriple, ++i, parent);
+        DALHelper.setInt(insertInstanceTriple, ++i, graphId);
+        DALHelper.setInt(insertInstanceTriple, ++i, conceptFiler.getOrSetEntityId(predicate));
 
         Integer conceptId = conceptFiler.getEntityId(object.getIri());
         if (conceptId == null) {
-            DALHelper.setInt(insert, ++i, getOrSetInstanceDbid(object));
-            DALHelper.setInt(insert, ++i, null);
+            DALHelper.setInt(insertInstanceTriple, ++i, getOrSetInstanceDbid(object));
+            DALHelper.setInt(insertInstanceTriple, ++i, null);
         } else {
-            DALHelper.setInt(insert, ++i, null);
-            DALHelper.setInt(insert, ++i, conceptId);
+            DALHelper.setInt(insertInstanceTriple, ++i, null);
+            DALHelper.setInt(insertInstanceTriple, ++i, conceptId);
         }
 
-        DALHelper.setString(insert, ++i, data);
-        DALHelper.setInt(insert, ++i, functional);
-        insert.executeUpdate();
-        return DALHelper.getGeneratedLongKey(insert);
+        DALHelper.setString(insertInstanceTriple, ++i, data);
+        DALHelper.setInt(insertInstanceTriple, ++i, functional);
+
+        try {
+            insertInstanceTriple.executeUpdate();
+            return DALHelper.getGeneratedLongKey(insertInstanceTriple);
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to file instance triple", e);
+        }
     }
 
 
-    private Integer getInstanceDbidByIri(String iri) throws SQLException {
+    private Integer getInstanceDbidByIri(String iri) throws TTFilerException {
         if (Strings.isNullOrEmpty(iri))
             return null;
         iri = conceptFiler.expand(iri);
         Integer id = instanceMap.get(iri);
-        if (id == null) {
-            DALHelper.setString(getInstanceDbid, 1, iri);
-            try (ResultSet rs = getInstanceDbid.executeQuery()) {
-                if (rs.next()) {
-                    instanceMap.put(iri, rs.getInt("dbid"));
-                    return rs.getInt("dbid");
-                } else {
-                    return null;
+
+        try {
+            if (id == null) {
+                DALHelper.setString(getInstanceDbid, 1, iri);
+                try (ResultSet rs = getInstanceDbid.executeQuery()) {
+                    if (rs.next()) {
+                        instanceMap.put(iri, rs.getInt("dbid"));
+                        return rs.getInt("dbid");
+                    } else {
+                        return null;
+                    }
                 }
             }
+            return id;
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to get instance dbid", e);
         }
-        return id;
     }
 
-    private Integer getOrSetInstanceDbid(TTIriRef iri) throws SQLException {
+    private Integer getOrSetInstanceDbid(TTIriRef iri) throws TTFilerException {
         if (iri == null)
             return null;
         String stringIri = conceptFiler.expand(iri.getIri());
@@ -350,6 +370,8 @@ public class TTInstanceFilerJDBC {
                     instanceMap.put(stringIri, id);
                     return id;
                 }
+            } catch (SQLException e) {
+                throw new TTFilerException("Failed to get/create instance dbid");
             }
         }
         return id;

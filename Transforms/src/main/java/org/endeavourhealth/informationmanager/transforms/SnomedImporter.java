@@ -5,15 +5,11 @@ import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDF;
-import org.endeavourhealth.imapi.vocabulary.OWL;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.XSD;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
-import org.endeavourhealth.informationmanager.TTImport;
-import org.endeavourhealth.informationmanager.TTImportConfig;
+import org.endeavourhealth.informationmanager.*;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -113,7 +109,7 @@ public class SnomedImporter implements TTImport {
       importSubstitution(config.folder);
       conceptMap.clear();
 
-      TTDocumentFiler filer = new TTDocumentFilerJDBC();
+      TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
       filer.fileDocument(document);
       return this;
    }

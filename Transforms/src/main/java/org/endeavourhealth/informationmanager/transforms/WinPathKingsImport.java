@@ -3,11 +3,7 @@ package org.endeavourhealth.informationmanager.transforms;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
-import org.endeavourhealth.informationmanager.TTImport;
-import org.endeavourhealth.informationmanager.TTImportConfig;
-import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.informationmanager.*;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -48,12 +44,12 @@ public class WinPathKingsImport implements TTImport {
 		importWinPathKings(config.folder);
 		createBackMaps();
 		addToUtlSet();
-		TTDocumentFiler filer = new TTDocumentFilerJDBC();
+		TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
 		filer.fileDocument(document);
-		filer = new TTDocumentFilerJDBC();
+		filer = TTFilerFactory.getDocumentFiler();
 		filer.fileDocument(backMapDocument);
 		if (valueSetDocument.getEntities()!=null) {
-			filer = new TTDocumentFilerJDBC();
+			filer = TTFilerFactory.getDocumentFiler();
 			filer.fileDocument(valueSetDocument);
 		}
 		return this;

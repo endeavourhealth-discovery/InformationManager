@@ -3,10 +3,7 @@ package org.endeavourhealth.informationmanager.transforms;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
-import org.endeavourhealth.informationmanager.TTImport;
-import org.endeavourhealth.informationmanager.TTImportConfig;
+import org.endeavourhealth.informationmanager.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -53,7 +50,7 @@ public class CoreImporter implements TTImport {
          manager.loadDocument(path.toFile());
          TTDocument document= manager.getDocument();
         System.out.println("Filing  "+ document.getGraph().getIri());
-         TTDocumentFiler filer = new TTDocumentFilerJDBC();
+         TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
         filer.fileDocument(document);
       }
       return this;
@@ -62,7 +59,7 @@ public class CoreImporter implements TTImport {
    private void importNamespaces() throws Exception {
       TTManager manager= new TTManager();
       manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
-      TTDocumentFiler filer= new TTDocumentFilerJDBC();
+      TTDocumentFiler filer= TTFilerFactory.getDocumentFiler();
       filer.fileDocument(manager.getDocument());
 
    }

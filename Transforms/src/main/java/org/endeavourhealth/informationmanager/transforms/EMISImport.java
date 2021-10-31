@@ -6,7 +6,7 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTDocumentFilerJDBC;
+import org.endeavourhealth.informationmanager.TTFilerFactory;
 import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.informationmanager.TTImportConfig;
 
@@ -54,10 +54,10 @@ public class EMISImport implements TTImport {
         addEMISUnlinked();
         importEMISCodes(config.folder);
         setEmisHierarchy();
-        TTDocumentFiler filer = new TTDocumentFilerJDBC();
+        TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
         filer.fileDocument(document);
 
-        filer = new TTDocumentFilerJDBC();
+        filer = TTFilerFactory.getDocumentFiler();
         filer.fileDocument(mapDocument);
 
 

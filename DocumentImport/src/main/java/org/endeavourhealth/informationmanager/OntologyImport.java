@@ -28,7 +28,7 @@ public class OntologyImport {
             TTDocument document = objectMapper.readValue(inputFile, TTDocument.class);
 
 
-            TTDocumentFiler filer= new TTDocumentFilerJDBC();
+            TTDocumentFiler filer= TTFilerFactory.getDocumentFiler();
             filer.fileDocument(document);
     }
 

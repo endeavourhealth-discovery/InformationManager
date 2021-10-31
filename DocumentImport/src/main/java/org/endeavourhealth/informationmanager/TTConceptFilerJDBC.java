@@ -12,7 +12,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
-public class TTConceptFilerJDBC {
+public class TTConceptFilerJDBC implements TTConceptFiler {
 
     Map<String, String> prefixMap = new HashMap<>();
     private Map<String, Integer> entityMap = new HashMap<>();
@@ -31,7 +31,7 @@ public class TTConceptFilerJDBC {
     private final PreparedStatement updateTermEntity;
     private final PreparedStatement deleteTermEntity;
 
-    public TTConceptFilerJDBC(Connection conn, Map<String, String> prefixMap) throws SQLException {
+    public TTConceptFilerJDBC(Connection conn, Map<String, String> prefixMap) throws TTFilerException {
         this(conn);
         this.prefixMap = prefixMap;
     }
@@ -44,22 +44,26 @@ public class TTConceptFilerJDBC {
      * @param conn JDBC connection
      * @throws SQLException SQL exception
      */
-    private TTConceptFilerJDBC(Connection conn) throws SQLException {
+    private TTConceptFilerJDBC(Connection conn) throws TTFilerException {
         this.conn = conn;
-        getEntityDbId = conn.prepareStatement("SELECT dbid FROM entity WHERE iri = ?");
-        insertEntity = conn.prepareStatement("INSERT INTO entity (iri,name, description, code, scheme, status) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
-        updateEntity = conn.prepareStatement("UPDATE entity SET iri= ?, name = ?, description = ?, code = ?, scheme = ?, status = ? WHERE dbid = ?");
+        try {
+            getEntityDbId = conn.prepareStatement("SELECT dbid FROM entity WHERE iri = ?");
+            insertEntity = conn.prepareStatement("INSERT INTO entity (iri,name, description, code, scheme, status) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            updateEntity = conn.prepareStatement("UPDATE entity SET iri= ?, name = ?, description = ?, code = ?, scheme = ?, status = ? WHERE dbid = ?");
 
-        deleteTriples = conn.prepareStatement("DELETE FROM tpl WHERE subject=? and graph= ?");
-        insertTriple = conn.prepareStatement("INSERT INTO tpl (subject,blank_node,graph,predicate,object,literal,functional) VALUES(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            deleteTriples = conn.prepareStatement("DELETE FROM tpl WHERE subject=? and graph= ?");
+            insertTriple = conn.prepareStatement("INSERT INTO tpl (subject,blank_node,graph,predicate,object,literal,functional) VALUES(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
 
-        deleteEntityTypes = conn.prepareStatement("DELETE FROM entity_type where entity=? and graph=?");
-        insertEntityType = conn.prepareStatement("INSERT INTO entity_type (entity,type,graph) VALUES(?,?,?)");
+            deleteEntityTypes = conn.prepareStatement("DELETE FROM entity_type where entity=? and graph=?");
+            insertEntityType = conn.prepareStatement("INSERT INTO entity_type (entity,type,graph) VALUES(?,?,?)");
 
-        insertTermEntity = conn.prepareStatement("INSERT INTO term_code SET entity=?, term=?, code=?,graph=?");
-        getTermDbIdFromTerm = conn.prepareStatement("SELECT dbid from term_code WHERE term =? and entity=?");
-        updateTermEntity = conn.prepareStatement("UPDATE term_code SET entity=?, term=?,code=?, graph=? where dbid=?");
-        deleteTermEntity = conn.prepareStatement("DELETE from term_code where entity=? and graph=?");
+            insertTermEntity = conn.prepareStatement("INSERT INTO term_code SET entity=?, term=?, code=?,graph=?");
+            getTermDbIdFromTerm = conn.prepareStatement("SELECT dbid from term_code WHERE term =? and entity=?");
+            updateTermEntity = conn.prepareStatement("UPDATE term_code SET entity=?, term=?,code=?, graph=? where dbid=?");
+            deleteTermEntity = conn.prepareStatement("DELETE from term_code where entity=? and graph=?");
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to prepare statements", e);
+        }
     }
 
 
@@ -72,7 +76,7 @@ public class TTConceptFilerJDBC {
      * @throws DataFormatException   in the node format is incorrect
      * @throws IllegalStateException if the entity is not in the datbase
      */
-    private void updatePredicates(TTEntity entity, Integer entityId, int graphId) throws SQLException, DataFormatException {
+    private void updatePredicates(TTEntity entity, Integer entityId, int graphId) throws TTFilerException {
         if (entity.get(IM.HAS_TERM_CODE) != null) {
             deleteTermEntities(entityId, graphId);
         }
@@ -101,7 +105,7 @@ public class TTConceptFilerJDBC {
      * @throws DataFormatException   in the node format is incorrect
      * @throws IllegalStateException if the entity is not in the datbase
      */
-    public void addPredicateObjects(TTEntity entity, Integer entityId, int graphId) throws SQLException, DataFormatException {
+    public void addPredicateObjects(TTEntity entity, Integer entityId, int graphId) throws TTFilerException {
 
         if (entityId == null)
             throw new IllegalStateException("No entity for this iri - " + entity.getIri());
@@ -116,7 +120,7 @@ public class TTConceptFilerJDBC {
 
     }
 
-    private void deletePredicates(Integer entityId, Map<TTIriRef, TTValue> predicates, int graphId) throws SQLException {
+    private void deletePredicates(Integer entityId, Map<TTIriRef, TTValue> predicates, int graphId) throws TTFilerException {
         List<Integer> predList = new ArrayList<>();
         int i = 0;
         for (Map.Entry<TTIriRef, TTValue> po : predicates.entrySet()) {
@@ -132,19 +136,24 @@ public class TTConceptFilerJDBC {
         String placeHolders = builder.deleteCharAt(builder.length() - 1).toString();
         String stmt;
         stmt = "DELETE from tpl where subject=? and graph=? and predicate in (" + placeHolders + ")";
-        PreparedStatement deleteObjectPredicates = conn.prepareStatement(stmt);
-        DALHelper.setInt(deleteObjectPredicates, 1, entityId);
-        DALHelper.setInt(deleteObjectPredicates, 2, graphId);
-        i = 2;
-        for (Integer predDbId : predList) {
-            DALHelper.setInt(deleteObjectPredicates, ++i, predDbId);
+
+        try (PreparedStatement deleteObjectPredicates = conn.prepareStatement(stmt)) {
+            DALHelper.setInt(deleteObjectPredicates, 1, entityId);
+            DALHelper.setInt(deleteObjectPredicates, 2, graphId);
+            i = 2;
+            for (Integer predDbId : predList) {
+                DALHelper.setInt(deleteObjectPredicates, ++i, predDbId);
+            }
+            deleteObjectPredicates.executeUpdate();
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to delete predicates", e);
         }
-        deleteObjectPredicates.executeUpdate();
     }
 
 
-    public void fileEntity(TTEntity entity, TTIriRef graph) throws SQLException, DataFormatException {
+    public void fileEntity(TTEntity entity, TTIriRef graph) throws TTFilerException {
         int graphId = getOrSetEntityId(graph);
+
         Integer entityId = fileEntityTable(entity);
         if (entity.getIri().contains("VSET_Oral_NSAIDs"))
             System.out.println("test entity");
@@ -160,10 +169,9 @@ public class TTConceptFilerJDBC {
                 replacePredicates(entity, entityId, graphId);
         } else
             replacePredicates(entity, entityId, graphId);
-
     }
 
-    private Integer fileEntityTable(TTEntity entity) throws SQLException, DataFormatException {
+    private Integer fileEntityTable(TTEntity entity) throws TTFilerException {
         String iri = expand(entity.getIri());
         Integer entityId = getEntityId(iri);
         String label = entity.getName();
@@ -188,7 +196,7 @@ public class TTConceptFilerJDBC {
         return entityId;
     }
 
-    private void replacePredicates(TTEntity entity, Integer entityId, int graphId) throws SQLException, DataFormatException {
+    private void replacePredicates(TTEntity entity, Integer entityId, int graphId) throws TTFilerException {
 
         deleteEntityTypes(entityId, graphId);
         deleteTriples(entityId, graphId);
@@ -198,13 +206,17 @@ public class TTConceptFilerJDBC {
         fileEntityTypes(entity, entityId, graphId);
     }
 
-    private void deleteTermEntities(Integer entityId, int graphId) throws SQLException {
-        DALHelper.setInt(deleteTermEntity, 1, entityId);
-        DALHelper.setInt(deleteTermEntity, 2, graphId);
-        deleteTermEntity.executeUpdate();
+    private void deleteTermEntities(Integer entityId, int graphId) throws TTFilerException {
+        try {
+            DALHelper.setInt(deleteTermEntity, 1, entityId);
+            DALHelper.setInt(deleteTermEntity, 2, graphId);
+            deleteTermEntity.executeUpdate();
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to delete term entities", e);
+        }
     }
 
-    private void fileTermCodes(TTEntity entity, Integer entityId, int graphId) throws SQLException {
+    private void fileTermCodes(TTEntity entity, Integer entityId, int graphId) throws TTFilerException {
         boolean nameFiled = false;
         if (entity.get(IM.HAS_TERM_CODE) != null)
             for (TTValue termCode : entity.get(IM.HAS_TERM_CODE).asArray().getElements()) {
@@ -225,32 +237,42 @@ public class TTConceptFilerJDBC {
         }
     }
 
-    void deleteEntityTypes(Integer entityId, int graphId) throws SQLException {
-        DALHelper.setInt(deleteEntityTypes, 1, entityId);
-        DALHelper.setInt(deleteEntityTypes, 2, graphId);
-        deleteEntityTypes.executeUpdate();
+    public void deleteEntityTypes(Integer entityId, int graphId) throws TTFilerException {
+        try {
+            DALHelper.setInt(deleteEntityTypes, 1, entityId);
+            DALHelper.setInt(deleteEntityTypes, 2, graphId);
+            deleteEntityTypes.executeUpdate();
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to delete entity type", e);
+        }
     }
 
-    private void deleteTriples(Integer entityId, int graphId) throws SQLException {
-        PreparedStatement delete = deleteTriples;
-        DALHelper.setInt(delete, 1, entityId);
-        DALHelper.setInt(delete, 2, graphId);
-        delete.executeUpdate();
-
+    private void deleteTriples(Integer entityId, int graphId) throws TTFilerException {
+        try {
+            DALHelper.setInt(deleteTriples, 1, entityId);
+            DALHelper.setInt(deleteTriples, 2, graphId);
+            deleteTriples.executeUpdate();
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to delete triples", e);
+        }
     }
 
-    void fileEntityTypes(TTEntity entity, Integer entityId, int graphId) throws SQLException, DataFormatException {
-        TTValue typeValue = entity.get(RDF.TYPE);
-        if (typeValue == null)
-            return;
-        if (typeValue.isList()) {
-            for (TTValue type : typeValue.asArray().getElements()) {
-                if (!type.isIriRef())
-                    throw new DataFormatException("Entity types must be array of IriRef ");
-                fileEntityType(entityId, type, graphId);
-            }
-        } else
-            fileEntityType(entityId, typeValue, graphId);
+    public void fileEntityTypes(TTEntity entity, Integer entityId, int graphId) throws TTFilerException {
+        try {
+            TTValue typeValue = entity.get(RDF.TYPE);
+            if (typeValue == null)
+                return;
+            if (typeValue.isList()) {
+                for (TTValue type : typeValue.asArray().getElements()) {
+                    if (!type.isIriRef())
+                        throw new TTFilerException("Entity types must be array of IriRef ");
+                    fileEntityType(entityId, type, graphId);
+                }
+            } else
+                fileEntityType(entityId, typeValue, graphId);
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to file entity types", e);
+        }
     }
 
     private void fileEntityType(Integer entityId, TTValue type, int graphId) throws SQLException {
@@ -261,7 +283,7 @@ public class TTConceptFilerJDBC {
 
     }
 
-    private void fileArray(Integer entityId, Long parent, TTIriRef predicate, TTArray array, int graphId) throws SQLException, DataFormatException {
+    private void fileArray(Integer entityId, Long parent, TTIriRef predicate, TTArray array, int graphId) throws TTFilerException {
         for (TTValue element : array.getElements()) {
             if (element.isIriRef()) {
                 fileTriple(entityId, parent, predicate, element.asIriRef(), null, 0, graphId);
@@ -274,11 +296,11 @@ public class TTConceptFilerJDBC {
                     dataType = element.asLiteral().getType();
                 fileTriple(entityId, parent, predicate, dataType, element.asLiteral().getValue(), 0, graphId);
             } else
-                throw new DataFormatException("Cannot have an array of an array in RDF");
+                throw new TTFilerException("Cannot have an array of an array in RDF");
         }
     }
 
-    private void fileNode(Integer entityId, Long parent, TTNode node, int graphId) throws SQLException, DataFormatException {
+    private void fileNode(Integer entityId, Long parent, TTNode node, int graphId) throws TTFilerException {
         if (node.getPredicateMap() != null)
             if (!node.getPredicateMap().isEmpty()) {
                 Set<Map.Entry<TTIriRef, TTValue>> entries = node.getPredicateMap().entrySet();
@@ -310,70 +332,82 @@ public class TTConceptFilerJDBC {
 
     private Long fileTriple(Integer entityId, Long parent,
                             TTIriRef predicate, TTIriRef targetType, String data,
-                            Integer functional, int graphId) throws SQLException {
+                            Integer functional, int graphId) throws TTFilerException {
         int i = 0;
-        PreparedStatement insert = insertTriple;
-        DALHelper.setInt(insert, ++i, entityId);
-        DALHelper.setLong(insert, ++i, parent);
-        DALHelper.setInt(insert, ++i, graphId);
-        DALHelper.setInt(insert, ++i, getOrSetEntityId(predicate));
-        DALHelper.setInt(insert, ++i, getOrSetEntityId(targetType));
-        DALHelper.setString(insert, ++i, data);
-        DALHelper.setInt(insert, ++i, functional);
-        insert.executeUpdate();
-        return DALHelper.getGeneratedLongKey(insert);
+        try {
+            DALHelper.setInt(insertTriple, ++i, entityId);
+            DALHelper.setLong(insertTriple, ++i, parent);
+            DALHelper.setInt(insertTriple, ++i, graphId);
+            DALHelper.setInt(insertTriple, ++i, getOrSetEntityId(predicate));
+            DALHelper.setInt(insertTriple, ++i, getOrSetEntityId(targetType));
+            DALHelper.setString(insertTriple, ++i, data);
+            DALHelper.setInt(insertTriple, ++i, functional);
+            insertTriple.executeUpdate();
+            return DALHelper.getGeneratedLongKey(insertTriple);
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to file triple", e);
+        }
     }
 
 
-    Integer getEntityId(String iri) throws SQLException {
-        if (Strings.isNullOrEmpty(iri))
-            return null;
-        iri = expand(iri);
-        Integer id = entityMap.get(iri);
-        if (id == null) {
-            DALHelper.setString(getEntityDbId, 1, iri);
-            try (ResultSet rs = getEntityDbId.executeQuery()) {
-                if (rs.next()) {
-                    entityMap.put(iri, rs.getInt("dbid"));
-                    return rs.getInt("dbid");
-                } else {
-                    return null;
+    public Integer getEntityId(String iri) throws TTFilerException {
+        try {
+            if (Strings.isNullOrEmpty(iri))
+                return null;
+            iri = expand(iri);
+            Integer id = entityMap.get(iri);
+            if (id == null) {
+                DALHelper.setString(getEntityDbId, 1, iri);
+                try (ResultSet rs = getEntityDbId.executeQuery()) {
+                    if (rs.next()) {
+                        entityMap.put(iri, rs.getInt("dbid"));
+                        return rs.getInt("dbid");
+                    } else {
+                        return null;
+                    }
                 }
             }
+            return id;
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to get entity id by IRI", e);
         }
-        return id;
     }
 
     // ------------------------------ Entity ------------------------------
-    Integer getOrSetEntityId(TTIriRef iri) throws SQLException {
+    public Integer getOrSetEntityId(TTIriRef iri) throws TTFilerException {
         if (iri == null)
             return null;
-        String stringIri = expand(iri.getIri());
-        String scheme = null;
-        int lnpos = stringIri.indexOf("#");
-        if (lnpos > 0)
-            scheme = stringIri.substring(0, stringIri.indexOf("#"));
-        Integer id = entityMap.get(stringIri);
-        if (id == null) {
-            DALHelper.setString(getEntityDbId, 1, stringIri);
-            try (ResultSet rs = getEntityDbId.executeQuery()) {
-                if (rs.next()) {
-                    entityMap.put(stringIri, rs.getInt("dbid"));
-                    return rs.getInt("dbid");
-                } else {
-                    id = upsertEntity(null, stringIri,
-                        null, null, null, scheme, IM.DRAFT.getIri());
-                    entityMap.put(stringIri, id);
-                    return id;
+
+        try {
+            String stringIri = expand(iri.getIri());
+            String scheme = null;
+            int lnpos = stringIri.indexOf("#");
+            if (lnpos > 0)
+                scheme = stringIri.substring(0, stringIri.indexOf("#"));
+            Integer id = entityMap.get(stringIri);
+            if (id == null) {
+                DALHelper.setString(getEntityDbId, 1, stringIri);
+                try (ResultSet rs = getEntityDbId.executeQuery()) {
+                    if (rs.next()) {
+                        entityMap.put(stringIri, rs.getInt("dbid"));
+                        return rs.getInt("dbid");
+                    } else {
+                        id = upsertEntity(null, stringIri,
+                            null, null, null, scheme, IM.DRAFT.getIri());
+                        entityMap.put(stringIri, id);
+                        return id;
+                    }
                 }
             }
+            return id;
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to get/create entity id", e);
         }
-        return id;
     }
 
     private Integer upsertEntity(Integer id, String iri, String name,
                                  String description, String code, String scheme,
-                                 String status) throws SQLException {
+                                 String status) throws TTFilerException {
 
         try {
             if (id == null) {
@@ -390,7 +424,7 @@ public class TTConceptFilerJDBC {
                 DALHelper.setString(insertEntity, ++i, status);
 
                 if (insertEntity.executeUpdate() == 0)
-                    throw new SQLException("Failed to insert entity [" + iri + "]");
+                    throw new TTFilerException("Failed to insert entity [" + iri + "]");
                 else {
                     id = DALHelper.getGeneratedKey(insertEntity);
                     return id;
@@ -410,18 +444,16 @@ public class TTConceptFilerJDBC {
                 DALHelper.setInt(updateEntity, ++i, id);
 
                 if (updateEntity.executeUpdate() == 0) {
-                    throw new SQLException("Failed to update entity [" + iri + "]");
+                    throw new TTFilerException("Failed to update entity [" + iri + "]");
                 } else
                     return id;
             }
-        } catch (Exception e) {
-            System.err.println(iri + " wont file for some reason");
-            throw (e);
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to file " + iri, e);
         }
     }
 
-    private void fileTermCode(TTNode termCode, Integer entityId, int graphId) throws SQLException {
-
+    private void fileTermCode(TTNode termCode, Integer entityId, int graphId) throws TTFilerException {
         int i = 0;
         Integer dbid = null;
         String term = termCode.get(RDFS.LABEL).asLiteral().getValue();
@@ -431,14 +463,18 @@ public class TTConceptFilerJDBC {
             code = termCode.get(IM.CODE).asLiteral().getValue();
         DALHelper.setString(getTermDbIdFromTerm, ++i, term);
         DALHelper.setInt(getTermDbIdFromTerm, ++i, entityId);
-        ResultSet rs = getTermDbIdFromTerm.executeQuery();
-        if (rs.next())
-            dbid = rs.getInt("dbid");
 
-        if (dbid != null) {
-            updateTermEntity(entityId, term, code, dbid, graphId);
-        } else {
-            insertTermEntity(entityId, term, code, graphId);
+        try (ResultSet rs = getTermDbIdFromTerm.executeQuery()) {
+            if (rs.next())
+                dbid = rs.getInt("dbid");
+
+            if (dbid != null) {
+                updateTermEntity(entityId, term, code, dbid, graphId);
+            } else {
+                insertTermEntity(entityId, term, code, graphId);
+            }
+        } catch (SQLException e) {
+            throw new TTFilerException("Failed to file term code", e);
         }
 
     }
@@ -470,7 +506,7 @@ public class TTConceptFilerJDBC {
     }
 
 
-    String expand(String iri) {
+    public String expand(String iri) {
         if (prefixMap == null)
             return iri;
         try {
