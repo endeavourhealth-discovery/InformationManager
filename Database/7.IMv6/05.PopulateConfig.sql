@@ -46,14 +46,14 @@ INSERT INTO config (name, config) VALUES ('definition', '[
   {
     "size": "100%",
     "type": "SectionDivider",
-    "label": "SummaryInferredDivider",
+    "label": "SummaryDefinitionDivider",
     "order": 200,
     "predicate": "None"
   },
   {
     "size": "100%",
     "type": "TextDefinition",
-    "label": "Inferred",
+    "label": "Definition",
     "order": 201,
     "predicate": "inferred"
   },
@@ -81,7 +81,7 @@ INSERT INTO config (name, config) VALUES ('definition', '[
   {
     "size": "100%",
     "type": "SectionDivider",
-    "label": "InferredTermsDivider",
+    "label": "DefinitionTermsDivider",
     "order": 300,
     "predicate": "None"
   },
@@ -163,3 +163,4 @@ INSERT INTO config (name, config) VALUES ('defaultPredicateNames', '{
     "http://www.w3.org/2002/07/owl#someValuesFrom": "With a value",
     "http://www.w3.org/2002/07/owl#onProperty": "On property"
   }');
+
