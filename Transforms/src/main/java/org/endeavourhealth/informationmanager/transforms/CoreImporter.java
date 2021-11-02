@@ -1,21 +1,25 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
+import org.endeavourhealth.imapi.transforms.ReasonerPlus;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.*;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.zip.DataFormatException;
 
 public class CoreImporter implements TTImport {
    private static final String[] coreEntities = {
-     ".*\\\\SemanticWeb\\\\RDFOntology-inferred.json",
-     ".*\\\\SemanticWeb\\\\RDFSOntology-inferred.json",
-     ".*\\\\SemanticWeb\\\\OWLOntology-inferred.json",
-     ".*\\\\SemanticWeb\\\\SHACLOntology-inferred.json",
-     ".*\\\\DiscoveryCore\\\\CoreOntology-inferred.json",
+     ".*\\\\SemanticWeb\\\\RDFOntology.json",
+     ".*\\\\SemanticWeb\\\\RDFSOntology.json",
+     ".*\\\\SemanticWeb\\\\OWLOntology.json",
+     ".*\\\\SemanticWeb\\\\SHACLOntology.json",
+     ".*\\\\DiscoveryCore\\\\CoreOntology.json",
      ".*\\\\DiscoveryCore\\\\CoreOntology-more-inferred.json"
    };
 
@@ -42,9 +46,13 @@ public class CoreImporter implements TTImport {
     */
    @Override
    public TTImport importData(TTImportConfig config) throws Exception {
-      importNamespaces();
+     System.out.println("Generating inferred ontologies...");
+     generateInferred(config);
+     importNamespaces();
      System.out.println("Importing Core entities");
       for (String coreFile : coreEntities) {
+        if (!coreFile.contains("-inferred.json"))
+          coreFile = coreFile.substring(0, coreFile.indexOf(".json")) + "-inferred.json";
         TTManager manager = new TTManager();
          Path path = ImportUtils.findFileForId(config.folder, coreFile);
          manager.loadDocument(path.toFile());
@@ -55,6 +63,24 @@ public class CoreImporter implements TTImport {
       }
       return this;
    }
+
+  private static void generateInferred(TTImportConfig config) throws IOException, DataFormatException, OWLOntologyCreationException {
+
+    for(String coreFile:coreEntities) {
+      if (!coreFile.contains("-inferred.json")) {
+        TTManager manager = new TTManager();
+        Path path = ImportUtils.findFileForId(config.folder, coreFile);
+        TTDocument document = manager.loadDocument(path.toFile());
+        ReasonerPlus reasoner = new ReasonerPlus();
+        TTDocument inferred = reasoner.generateInferred(document);
+        manager = new TTManager();
+        manager.setDocument(inferred);
+        String inferredFile = path.toString().substring(0, path.toString().indexOf(".json")) + "-inferred.json";
+        manager.saveDocument(new File(inferredFile));
+      }
+
+    }
+  }
 
    private void importNamespaces() throws Exception {
       TTManager manager= new TTManager();
