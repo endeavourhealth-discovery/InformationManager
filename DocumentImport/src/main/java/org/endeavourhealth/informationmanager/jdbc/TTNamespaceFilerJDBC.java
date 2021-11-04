@@ -1,10 +1,11 @@
-package org.endeavourhealth.informationmanager;
+package org.endeavourhealth.informationmanager.jdbc;
 
 import org.endeavourhealth.imapi.model.tripletree.TTPrefix;
+import org.endeavourhealth.informationmanager.TTFilerException;
+import org.endeavourhealth.informationmanager.TTNamespaceFiler;
 import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
 import java.sql.*;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,8 +17,8 @@ public class TTNamespaceFilerJDBC implements TTNamespaceFiler {
     private PreparedStatement insertNamespace;
     private PreparedStatement updateNamespace;
 
-    public TTNamespaceFilerJDBC() throws TTFilerException {
-        conn = ConnectionManagerJDBC.get();
+    public TTNamespaceFilerJDBC(Connection conn) throws TTFilerException {
+        this.conn = conn;
         prepareStatements();
     }
 

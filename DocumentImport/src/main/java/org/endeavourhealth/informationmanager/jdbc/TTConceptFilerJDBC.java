@@ -1,4 +1,4 @@
-package org.endeavourhealth.informationmanager;
+package org.endeavourhealth.informationmanager.jdbc;
 
 import com.google.common.base.Strings;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -6,13 +6,15 @@ import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDF;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.XSD;
+import org.endeavourhealth.informationmanager.TTEntityFiler;
+import org.endeavourhealth.informationmanager.TTFilerException;
 import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
 import java.sql.*;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
-public class TTConceptFilerJDBC implements TTConceptFiler {
+public class TTConceptFilerJDBC implements TTEntityFiler {
 
     Map<String, String> prefixMap = new HashMap<>();
     private Map<String, Integer> entityMap = new HashMap<>();
@@ -80,16 +82,13 @@ public class TTConceptFilerJDBC implements TTConceptFiler {
         if (entity.get(IM.HAS_TERM_CODE) != null) {
             deleteTermEntities(entityId, graphId);
         }
-        Map<TTIriRef, TTValue> predicates = entity.getPredicateMap();
 
         //Deletes the previous predicate objects ie. clears out all previous objects
-        deletePredicates(entityId, predicates, graphId);
+        deletePredicates(entityId,  entity.getPredicateMap(), graphId);
         if (entity.get(RDF.TYPE) != null)
             deleteEntityTypes(entityId, graphId);
         //Creates transactional adds
-        TTNode subject = new TTNode();
-        subject.setPredicateMap(predicates);
-        fileNode(entityId, null, subject, graphId);
+        fileNode(entityId, null, entity, graphId);
         if (entity.get(IM.HAS_TERM_CODE) != null)
             fileTermCodes(entity, entityId, graphId);
         if (entity.get(RDF.TYPE) != null)
@@ -157,8 +156,7 @@ public class TTConceptFilerJDBC implements TTConceptFiler {
         Integer entityId = fileEntityTable(entity);
         if (entity.getIri().contains("VSET_Oral_NSAIDs"))
             System.out.println("test entity");
-        if (entity.get(RDFS.LABEL) != null)
-            if (entity.get(IM.STATUS) == null)
+        if (entity.get(RDFS.LABEL) != null && entity.get(IM.STATUS) == null)
                 entity.set(IM.STATUS, IM.ACTIVE);
         if (entity.getCrud() != null) {
             if (entity.getCrud().equals(IM.UPDATE))
@@ -221,20 +219,18 @@ public class TTConceptFilerJDBC implements TTConceptFiler {
         if (entity.get(IM.HAS_TERM_CODE) != null)
             for (TTValue termCode : entity.get(IM.HAS_TERM_CODE).asArray().getElements()) {
                 fileTermCode(termCode.asNode(), entityId, graphId);
-                if (entity.get(RDFS.LABEL) != null)
-                    if (termCode.asNode().get(RDFS.LABEL).asLiteral().getValue().equals(entity.getName()))
-                        nameFiled = true;
+                if (entity.get(RDFS.LABEL) != null && termCode.asNode().get(RDFS.LABEL).asLiteral().getValue().equals(entity.getName()))
+                    nameFiled = true;
             }
-        if (!nameFiled) {
-            if (entity.get(RDFS.LABEL) != null) {
-                String term = entity.get(RDFS.LABEL).asLiteral().getValue();
-                TTNode termCode = new TTNode();
-                termCode.set(RDFS.LABEL, TTLiteral.literal(term));
-                if (entity.get(IM.CODE) != null)
-                    termCode.set(IM.CODE, entity.get(IM.CODE));
-                fileTermCode(termCode, entityId, graphId);
-            }
+        if (!nameFiled && entity.get(RDFS.LABEL) != null) {
+            String term = entity.get(RDFS.LABEL).asLiteral().getValue();
+            TTNode termCode = new TTNode();
+            termCode.set(RDFS.LABEL, TTLiteral.literal(term));
+            if (entity.get(IM.CODE) != null)
+                termCode.set(IM.CODE, entity.get(IM.CODE));
+            fileTermCode(termCode, entityId, graphId);
         }
+
     }
 
     public void deleteEntityTypes(Integer entityId, int graphId) throws TTFilerException {
@@ -301,33 +297,32 @@ public class TTConceptFilerJDBC implements TTConceptFiler {
     }
 
     private void fileNode(Integer entityId, Long parent, TTNode node, int graphId) throws TTFilerException {
-        if (node.getPredicateMap() != null)
-            if (!node.getPredicateMap().isEmpty()) {
-                Set<Map.Entry<TTIriRef, TTValue>> entries = node.getPredicateMap().entrySet();
-                for (Map.Entry<TTIriRef, TTValue> entry : entries) {
-                    //Term codes are denormalised into term code table
-                    if (!entry.getKey().equals(IM.HAS_TERM_CODE) & (!entry.getKey().equals(IM.HAS_SCHEME)) & (!entry.getKey().equals(IM.GROUP_NUMBER))) {
-                        TTValue object = entry.getValue();
-                        if (object.isIriRef()) {
-                            fileTriple(entityId, parent, entry.getKey(), object.asIriRef(), null, 1, graphId);
-                        } else if (object.isLiteral()) {
-                            TTIriRef dataType = XSD.STRING;
-                            if (object.asLiteral().getType() != null) {
-                                dataType = object.asLiteral().getType();
-                            }
-                            String data = object.asLiteral().getValue();
-                            if (data.length() > 1000)
-                                data = data.substring(0, 1000) + "...";
-                            fileTriple(entityId, parent, entry.getKey(), dataType, data, 1, graphId);
-                        } else if (object.isList()) {
-                            fileArray(entityId, parent, entry.getKey(), entry.getValue().asArray(), graphId);
-                        } else if (object.isNode()) {
-                            Long blankNode = fileTriple(entityId, parent, entry.getKey(), null, null, 1, graphId);
-                            fileNode(entityId, blankNode, entry.getValue().asNode(), graphId);
+        if (node.getPredicateMap() != null && !node.getPredicateMap().isEmpty()) {
+            Set<Map.Entry<TTIriRef, TTValue>> entries = node.getPredicateMap().entrySet();
+            for (Map.Entry<TTIriRef, TTValue> entry : entries) {
+                //Term codes are denormalised into term code table
+                if (!entry.getKey().equals(IM.HAS_TERM_CODE) && (!entry.getKey().equals(IM.HAS_SCHEME)) && (!entry.getKey().equals(IM.GROUP_NUMBER))) {
+                    TTValue object = entry.getValue();
+                    if (object.isIriRef()) {
+                        fileTriple(entityId, parent, entry.getKey(), object.asIriRef(), null, 1, graphId);
+                    } else if (object.isLiteral()) {
+                        TTIriRef dataType = XSD.STRING;
+                        if (object.asLiteral().getType() != null) {
+                            dataType = object.asLiteral().getType();
                         }
+                        String data = object.asLiteral().getValue();
+                        if (data.length() > 1000)
+                            data = data.substring(0, 1000) + "...";
+                        fileTriple(entityId, parent, entry.getKey(), dataType, data, 1, graphId);
+                    } else if (object.isList()) {
+                        fileArray(entityId, parent, entry.getKey(), entry.getValue().asArray(), graphId);
+                    } else if (object.isNode()) {
+                        Long blankNode = fileTriple(entityId, parent, entry.getKey(), null, null, 1, graphId);
+                        fileNode(entityId, blankNode, entry.getValue().asNode(), graphId);
                     }
                 }
             }
+        }
     }
 
     private Long fileTriple(Integer entityId, Long parent,
@@ -413,9 +408,9 @@ public class TTConceptFilerJDBC implements TTConceptFiler {
             if (id == null) {
                 // Insert
                 int i = 0;
-                if (name != null)
-                    if (name.length() > 200)
+                if (name != null && name.length() > 200)
                         name = name.substring(0, 199);
+
                 DALHelper.setString(insertEntity, ++i, iri);
                 DALHelper.setString(insertEntity, ++i, name);
                 DALHelper.setString(insertEntity, ++i, description);
@@ -432,8 +427,7 @@ public class TTConceptFilerJDBC implements TTConceptFiler {
             } else {
                 //update
                 int i = 0;
-                if (name != null)
-                    if (name.length() > 200)
+                if (name != null && name.length() > 200)
                         name = name.substring(0, 199);
                 DALHelper.setString(updateEntity, ++i, iri);
                 DALHelper.setString(updateEntity, ++i, name);

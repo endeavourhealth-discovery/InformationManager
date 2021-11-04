@@ -1,17 +1,21 @@
-package org.endeavourhealth.informationmanager;
+package org.endeavourhealth.informationmanager.jdbc;
+
+import org.endeavourhealth.informationmanager.TTDocumentFiler;
+import org.endeavourhealth.informationmanager.TTFilerException;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
-class TTDocumentFilerJDBC extends TTDocumentFiler {
+public class TTDocumentFilerJDBC extends TTDocumentFiler {
     private Connection conn;
 
     public TTDocumentFilerJDBC() throws TTFilerException {
         conn = ConnectionManagerJDBC.get();
 
-        namespaceFiler = new TTNamespaceFilerJDBC();
-        conceptFiler = new TTConceptFilerJDBC(conn, prefixMap);
-        instanceFiler = new TTInstanceFilerJDBC(conn, conceptFiler);
+        namespaceFiler = new TTNamespaceFilerJDBC(conn);
+        TTConceptFilerJDBC conceptFilerJDBC = new TTConceptFilerJDBC(conn, prefixMap);
+        conceptFiler = conceptFilerJDBC;
+        instanceFiler = new TTInstanceFilerJDBC(conn, conceptFilerJDBC);
     }
 
     @Override

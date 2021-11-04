@@ -57,9 +57,10 @@ public class CoreImporter implements TTImport {
          Path path = ImportUtils.findFileForId(config.folder, coreFile);
          manager.loadDocument(path.toFile());
          TTDocument document= manager.getDocument();
-        System.out.println("Filing  "+ document.getGraph().getIri());
-         TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(document);
+        System.out.println("Filing  "+ document.getGraph().getIri() + " from " + coreFile);
+         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+             filer.fileDocument(document);
+         }
       }
       return this;
    }
@@ -85,9 +86,9 @@ public class CoreImporter implements TTImport {
    private void importNamespaces() throws Exception {
       TTManager manager= new TTManager();
       manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
-      TTDocumentFiler filer= TTFilerFactory.getDocumentFiler();
-      filer.fileDocument(manager.getDocument());
-
+      try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
+          filer.fileDocument(manager.getDocument());
+      }
    }
 
    public void fileDocument(TTDocument document) throws Exception {
@@ -104,9 +105,7 @@ public class CoreImporter implements TTImport {
    public TTDocument loadFile(String inFolder) throws IOException {
       Path file = ImportUtils.findFileForId(inFolder, coreEntities[0]);
       TTManager manager= new TTManager();
-      TTDocument document = manager.loadDocument(file.toFile());
-      return document;
-
+      return manager.loadDocument(file.toFile());
    }
 
 

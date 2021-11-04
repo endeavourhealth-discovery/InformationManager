@@ -21,15 +21,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.openlink.virtuoso</groupId>
-      <artifactId>virtjdbc4</artifactId>
-      <version>4.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.openlink.virtuoso</groupId>
-      <artifactId>virt_rdf4j</artifactId>
-      <version>3.0</version>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-storage</artifactId>
+      <type>pom</type>
     </dependency>
 
     <dependency>
@@ -63,13 +57,6 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-storage</artifactId>
-      <version>3.5.0</version>
-      <type>pom</type>
     </dependency>
 
     <dependency>
@@ -110,7 +97,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>RELEASE</version>
+      <version>${maven-junit.version}</version>
       <scope>test</scope>
     </dependency>
 
