@@ -24,6 +24,7 @@ public class TTNamespaceFilerRdf4j implements TTNamespaceFiler {
         try {
             for (TTPrefix prefix : prefixes) {
                 conn.setNamespace(prefix.getPrefix(), prefix.getIri());
+                prefixMap.put(prefix.getPrefix(), prefix.getIri());
             }
         } catch (RepositoryException e) {
             throw new TTFilerException("Failed to file namespaces", e);

@@ -61,12 +61,15 @@ public class BartsCernerImport implements TTImport {
 		setUsedEventSets();
 		setTopLevel();
 
-		TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
-		filer.fileDocument(document);
-		importMaps(config.folder);
-		filer = TTFilerFactory.getDocumentFiler();
-		filer.fileDocument(mapDocument);
+        try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
 
+		importMaps(config.folder);
+        try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(mapDocument);
+        }
+        
 		return this;
 	}
 

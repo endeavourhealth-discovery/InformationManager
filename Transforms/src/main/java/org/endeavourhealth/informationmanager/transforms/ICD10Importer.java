@@ -48,13 +48,16 @@ public class ICD10Importer implements TTImport {
         importChapters(config.folder,document);
         importEntities(config.folder, document);
         createHierarchy();
-        TTDocumentFiler filer= TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(document);
+        try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
+
         document= manager.createDocument(IM.MAP_SNOMED_ICD10.getIri());
         document.setCrud(IM.ADD);
         importMaps(config.folder);
-        filer= TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(document);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
         return this;
 
     }

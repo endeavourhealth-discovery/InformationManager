@@ -37,14 +37,17 @@ public class OPCS4Importer implements TTImport {
         document = manager.createDocument(IM.GRAPH_OPCS4.getIri());
         importChapters(config.folder,document);
         importEntities(config.folder,document);
-        TTDocumentFiler filer= TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(document);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
+
         document= manager.createDocument(IM.MAP_SNOMED_OPCS.getIri());
 
         document.setCrud(IM.UPDATE);
         importMaps(config.folder);
-        filer= TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(document);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
         return this;
     }
 
@@ -121,9 +124,8 @@ public class OPCS4Importer implements TTImport {
 
     @Override
     public void close() throws Exception {
-        if (conn!=null)
-            if (!conn.isClosed())
-                conn.close();
+        if (conn != null && !conn.isClosed())
+            conn.close();
 
     }
 }

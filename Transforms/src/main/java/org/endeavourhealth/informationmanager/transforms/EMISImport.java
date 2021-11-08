@@ -54,12 +54,13 @@ public class EMISImport implements TTImport {
         addEMISUnlinked();
         importEMISCodes(config.folder);
         setEmisHierarchy();
-        TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(document);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
 
-        filer = TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(mapDocument);
-
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(mapDocument);
+        }
 
         return this;
 

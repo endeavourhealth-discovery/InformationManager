@@ -53,10 +53,12 @@ public class VisionImport implements TTImport {
 		importVisionCodes(config.folder);
 		createHierarchy();
 		addVisionMaps(config.folder);
-		TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
-		filer.fileDocument(document);
-		filer = TTFilerFactory.getDocumentFiler();
-		filer.fileDocument(mapDocument);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(mapDocument);
+        }
 		return this;
 	}
 
@@ -166,20 +168,16 @@ public class VisionImport implements TTImport {
 				}
 				String code = fields[0];
 				String term = fields[1];
-				code = code.replaceAll("\"", "");
+				code = code.replace("\"", "");
 				term = term.substring(1, term.length() - 1);
-				if (!code.startsWith(".")) {
-					if (!Character.isLowerCase(code.charAt(0))) {
-						if (codeToConcept.get(code) == null) {
-							TTEntity c = new TTEntity();
-							c.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".", ""));
-							c.setName(term);
-							c.setCode(code);
-							document.addEntity(c);
-							codeToConcept.put(code, c);
-						}
-					}
-				}
+				if (!code.startsWith(".") && !Character.isLowerCase(code.charAt(0)) && codeToConcept.get(code) == null) {
+                    TTEntity c = new TTEntity();
+                    c.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".", ""));
+                    c.setName(term);
+                    c.setCode(code);
+                    document.addEntity(c);
+                    codeToConcept.put(code, c);
+                }
 				line = reader.readLine();
 			}
 			System.out.println("Process ended with " + count + " additional Vision read like codes created");

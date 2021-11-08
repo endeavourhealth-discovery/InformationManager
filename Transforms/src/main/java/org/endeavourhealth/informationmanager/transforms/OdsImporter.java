@@ -39,8 +39,9 @@ public class OdsImporter implements TTImport {
          Path path = ImportUtils.findFileForId(config.folder, orgFile);
          manager.loadDocument(path.toFile());
          TTDocument document= manager.getDocument();
-         TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(document);
+          try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+              filer.fileDocument(document);
+          }
       }
       return this;
    }

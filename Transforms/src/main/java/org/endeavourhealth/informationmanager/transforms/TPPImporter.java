@@ -71,10 +71,13 @@ public class TPPImporter implements TTImport{
         importTppCtv3ToSnomed(config.folder);
         importTPPMaps(config.folder);
 
-        TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(document);
-        filer = TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(mapDocument);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
+
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(mapDocument);
+        }
         return this;
 
     }
@@ -117,12 +120,11 @@ public class TPPImporter implements TTImport{
                 String line = reader.readLine();
                 while (line != null && !line.isEmpty()) {
                     String[] fields = line.split("\\|");
-                    String termCode= fields[0];
-                    String term=fields[2].replace("\t","");
-                    if (fields.length>3)
-                     if (!fields[3].equals(""))
-                            term=fields[3].replace("\t","");
-                     termCodes.put(termCode,term);
+                    String termCode = fields[0];
+                    String term = fields[2].replace("\t", "");
+                    if (fields.length > 3 && !fields[3].equals(""))
+                        term = fields[3].replace("\t", "");
+                    termCodes.put(termCode, term);
                     i++;
                     line = reader.readLine();
                 }
@@ -258,8 +260,8 @@ public class TPPImporter implements TTImport{
                 }
                 String code = fields[0];
                 String term= fields[1];
-                code=code.replaceAll("\"","");
-                term=term.replace("\t","").replaceAll("\"","");
+                code=code.replace("\"","");
+                term=term.replace("\t","").replace("\"","");
                 String snomed=tppCtv3ToToSnomed.get(code); //"" must be stripped if using file reader.
                 TTEntity TPP= codeToEntity.get(code);
                 if (TPP==null){
@@ -312,8 +314,7 @@ public class TPPImporter implements TTImport{
 
     @Override
     public void close() throws Exception {
-        if (conn!=null)
-            if (!conn.isClosed())
+        if (conn!=null && !conn.isClosed())
                 conn.close();
         if (emisToSnomed!=null)
             emisToSnomed.clear();

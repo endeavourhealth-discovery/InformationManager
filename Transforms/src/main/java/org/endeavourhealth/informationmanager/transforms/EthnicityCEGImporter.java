@@ -56,8 +56,9 @@ public class EthnicityCEGImporter implements TTImport {
 		spellCorrections();
 		importEthnicGroups(config.folder);
 
-		TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
-		filer.fileDocument(document);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
 
 		return this;
 	}
