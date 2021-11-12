@@ -66,8 +66,8 @@ public class TTInstanceFilerJDBC implements TTEntityFiler {
         int graphId = conceptFiler.getOrSetEntityId(graph);
         Integer instanceDbid = fileInstanceTable(instance);
 
-        if (instance.get(RDFS.LABEL) != null && instance.get(IM.STATUS) == null)
-                instance.set(IM.STATUS, IM.ACTIVE);
+        if (instance.get(RDFS.LABEL) != null && instance.get(IM.HAS_STATUS) == null)
+                instance.set(IM.HAS_STATUS, IM.ACTIVE);
 
         if (instance.getCrud() != null) {
             if (instance.getCrud().equals(IM.UPDATE))

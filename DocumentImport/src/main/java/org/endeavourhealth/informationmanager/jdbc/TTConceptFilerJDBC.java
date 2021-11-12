@@ -156,8 +156,8 @@ public class TTConceptFilerJDBC implements TTEntityFiler {
         Integer entityId = fileEntityTable(entity);
         if (entity.getIri().contains("VSET_Oral_NSAIDs"))
             System.out.println("test entity");
-        if (entity.get(RDFS.LABEL) != null && entity.get(IM.STATUS) == null)
-                entity.set(IM.STATUS, IM.ACTIVE);
+        if (entity.get(RDFS.LABEL) != null && entity.get(IM.HAS_STATUS) == null)
+                entity.set(IM.HAS_STATUS, IM.ACTIVE);
         if (entity.getCrud() != null) {
             if (entity.getCrud().equals(IM.UPDATE))
                 updatePredicates(entity, entityId, graphId);
