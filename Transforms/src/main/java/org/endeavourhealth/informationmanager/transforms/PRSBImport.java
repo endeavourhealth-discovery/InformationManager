@@ -117,7 +117,7 @@ public class PRSBImport implements TTImport {
 
 	private TTEntity newEntity(JSONObject c, TTIriRef... types) throws DataFormatException {
 		TTEntity entity= new TTEntity();
-		entity.set(IM.STATUS,mapStatus(c.get("statusCode").toString()));
+		entity.set(IM.HAS_STATUS,mapStatus(c.get("statusCode").toString()));
 		Arrays.stream(types).forEach( type-> entity.addType(type));
 		String prsbId= c.get("iddisplay").toString();
 		entity.setCode(prsbId);
