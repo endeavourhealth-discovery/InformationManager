@@ -141,7 +141,8 @@ INSERT INTO config (name, config) VALUES ('inferredExcludePredicates', '[
     "http://www.w3.org/2000/01/rdf-schema#comment",
     "http://endhealth.info/im#isChildOf",
     "http://endhealth.info/im#hasChildren",
-    "http://endhealth.info/im#isContainedIn"
+    "http://endhealth.info/im#isContainedIn",
+    "http://endhealth.info/im#code"
   ]');
 
 DELETE FROM config WHERE name = 'conceptDashboard';
