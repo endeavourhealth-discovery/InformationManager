@@ -24,6 +24,13 @@ INSERT INTO config (name, config) VALUES ('definition', '[
   },
   {
     "size": "50%",
+    "type": "TextWithLabel",
+    "label": "Code",
+    "order": 103,
+    "predicate": "http://endhealth.info/im#code"
+  },
+  {
+    "size": "50%",
     "type": "ObjectNameTagWithLabel",
     "label": "Status",
     "order": 103,
@@ -124,10 +131,17 @@ INSERT INTO config (name, config) VALUES ('inferredPredicates', '[
 ]');
 
 DELETE FROM config WHERE name = 'axiomPredicates';
-INSERT INTO config (name, config) VALUES ('axiomPredicates', '[
-  "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
-  "http://www.w3.org/2000/01/rdf-schema#subClassOf",
-  "http://www.w3.org/2002/07/owl#equivalentClass"
+
+DELETE FROM config WHERE name = 'inferredExcludePredicates';
+INSERT INTO config (name, config) VALUES ('inferredExcludePredicates', '[
+    "http://www.w3.org/2000/01/rdf-schema#label",
+    "http://endhealth.info/im#status",
+    "http://endhealth.info/im#Status",
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+    "http://www.w3.org/2000/01/rdf-schema#comment",
+    "http://endhealth.info/im#isChildOf",
+    "http://endhealth.info/im#hasChildren",
+    "http://endhealth.info/im#isContainedIn"
   ]');
 
 DELETE FROM config WHERE name = 'conceptDashboard';
