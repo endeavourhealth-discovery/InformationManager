@@ -4,6 +4,7 @@ import com.opencsv.CSVReader;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTFilerFactory;
@@ -31,7 +32,7 @@ public class EMISImport implements TTImport {
     private Connection conn;
     private final TTManager manager= new TTManager();
     private TTDocument document;
-    private TTDocument mapDocument;
+
 
     public EMISImport(){}
 
@@ -49,7 +50,6 @@ public class EMISImport implements TTImport {
         System.out.println("Retrieving filed snomed codes");
         snomedCodes= ImportUtils.importSnomedCodes(conn);
         document = manager.createDocument(IM.GRAPH_EMIS.getIri());
-        mapDocument = manager.createDocument(IM.MAP_SNOMED_EMIS.getIri());
         System.out.println("importing emis code file");
         addEMISUnlinked();
         importEMISCodes(config.folder);
@@ -58,9 +58,6 @@ public class EMISImport implements TTImport {
             filer.fileDocument(document);
         }
 
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(mapDocument);
-        }
 
         return this;
 
@@ -70,15 +67,20 @@ public class EMISImport implements TTImport {
 
 
     private void setEmisHierarchy() {
-        Map<String,TTEntity> backMap= new HashMap<>();
         for (Map.Entry<String,List<String>> entry:parentMap.entrySet()){
             String child= entry.getKey();
             TTEntity childEntity= codeIdToEntity.get(child);
+            //if (childEntity.getIri().contains("1B85-1"))
+              //  System.out.println("1B85");
             List<String> parents=entry.getValue();
             for (String parentId:parents) {
-                if (codeIdToEntity.get(parentId)!=null) {
+                TTEntity parentEntity= codeIdToEntity.get(parentId);
+                if (parentEntity!=null) {
                     String parentIri = codeIdToEntity.get(parentId).getIri();
-                    TTManager.addChildOf(childEntity, iri(parentIri));
+                    if (isEMIS(childEntity.getCode()))
+                        childEntity.addObject(RDFS.SUBCLASSOF,TTIriRef.iri(parentIri));
+                    else
+                        TTManager.addChildOf(childEntity, iri(parentIri));
                 }
             }
         }
@@ -107,6 +109,8 @@ public class EMISImport implements TTImport {
                 String snomed = fields[3];
                 String descid = fields[4];
                 String parent = fields[10];
+                //if (emis.equals("1B85-1"))
+                  //  System.out.println("1B85-1");
 
                 if (parent.equals(""))
                     parent = null;
@@ -119,8 +123,9 @@ public class EMISImport implements TTImport {
                 TTEntity emisConcept= emisToEntity.get(emis);
                 if (emisConcept==null) {
                     emisConcept = new TTEntity()
-                      .setIri("emis:" + emis)
+                      .setIri(IM.CODE_SCHEME_EMIS.getIri() + emis)
                       .addType(IM.CONCEPT)
+                      .setScheme(IM.CODE_SCHEME_EMIS)
                       .setName(name)
                       .setCode(emis);
                     document.addEntity(emisConcept);
@@ -128,12 +133,8 @@ public class EMISImport implements TTImport {
                 }
                 codeIdToEntity.put(codeid, emisConcept);
                 if (isSnomed(snomed)) {
-                    parent=null;
-                    TTEntity snomedConcept= new TTEntity().setIri(SNOMED.NAMESPACE+ snomed);
-                    snomedConcept.setCrud(IM.ADD);
-                    mapDocument.addEntity(snomedConcept);
-                    codeIdToSnomed.put(codeid, snomed);
-                    TTManager.addSimpleMap(snomedConcept,emisConcept.getIri());
+                    emisConcept.addObject(RDFS.SUBCLASSOF,
+                      TTIriRef.iri(SNOMED.NAMESPACE+snomed));
                 }
                 else {
                     emisConcept.addObject(IM.ALTERNATIVE_CODE, TTLiteral.literal(snomed));
@@ -162,6 +163,14 @@ public class EMISImport implements TTImport {
 
     public Boolean isSnomed(String s){
         return snomedCodes.contains(s);
+    }
+    public Boolean isEMIS(String s){
+     if (s.length()>5)
+            return true;
+     else if (s.contains("DRG")|s.contains("SHAPT")|s.contains("EMIS"))
+         return true;
+     else
+        return false;
     }
 
 

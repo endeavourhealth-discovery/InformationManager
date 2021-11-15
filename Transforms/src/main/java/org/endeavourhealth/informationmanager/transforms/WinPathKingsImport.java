@@ -19,7 +19,6 @@ public class WinPathKingsImport implements TTImport {
 
 
 	private static final String[] kingsWinPath = {".*\\\\Kings\\\\Winpath.txt"};
-	private TTDocument backMapDocument;
 	private TTDocument document;
 	private TTDocument valueSetDocument;
 	private final Map<String, List<String>> readToSnomed = new HashMap<>();
@@ -36,20 +35,15 @@ public class WinPathKingsImport implements TTImport {
 		TTManager backManager = new TTManager();
 		TTManager vsetManager = new TTManager();
 		conn = ImportUtils.getConnection();
-		backMapDocument = backManager.createDocument(IM.MAP_SNOMED_WINPATH_KINGS.getIri());
-		backMapDocument.setCrud(IM.UPDATE);
 		valueSetDocument= vsetManager.createDocument(IM.NAMESPACE);
 		valueSetDocument.setCrud(IM.ADD);
 		importR2Matches();
 		importWinPathKings(config.folder);
-		createBackMaps();
 		addToUtlSet();
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(backMapDocument);
-        }
+
 		if (valueSetDocument.getEntities()!=null) {
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(valueSetDocument);
@@ -89,30 +83,17 @@ public class WinPathKingsImport implements TTImport {
 	}
 
 
-	private void createBackMaps() {
-		for (Map.Entry<String, List<String>> entry : snomedToWinpath.entrySet()) {
-			String entityId = entry.getKey();
-			TTEntity snomedEntity = new TTEntity()
-				.setIri(SNOMED.NAMESPACE + entityId);
-			backMapDocument.addEntity(snomedEntity);
-			List<String> winpathList = entry.getValue();
-			for (String winpath : winpathList) {
-				TTManager.addSimpleMap(snomedEntity, IM.CODE_SCHEME_KINGS_WINPATH.getIri() + winpath);
-			}
-		}
-	}
-
 
 	private void importR2Matches() throws SQLException, ClassNotFoundException {
 		System.out.println("Retrieving read vision 2 snomed map");
 
 		try (PreparedStatement getR2Matches= conn.prepareStatement("select vis.code as code,snomed.code as snomed \n"+
 			"from entity snomed \n" +
-			"join tpl maps on maps.subject= snomed.dbid\n" +
+			"join tpl maps on maps.object= snomed.dbid\n" +
 			"join entity p on maps.predicate=p.dbid\n" +
 			"join entity vis on maps.subject=vis.dbid\n" +
 			"where snomed.iri like '"+ SNOMED.NAMESPACE+"%'\n"+
-			"and p.iri='"+IM.MATCHED_TO+"'\n" +
+			"and p.iri='" +RDFS.SUBCLASSOF.getIri()+ "'\n" +
 			"and vis.iri like 'http://endhealth.info/VISION#'")) {
             ResultSet rs = getR2Matches.executeQuery();
             while (rs.next()) {
@@ -147,8 +128,7 @@ public class WinPathKingsImport implements TTImport {
 				document.addEntity(entity);
 				if (readToSnomed.get(readCode) != null) {
 					for (String snomed : readToSnomed.get(readCode)) {
-						List<String> maps = snomedToWinpath.computeIfAbsent(snomed, k -> new ArrayList<>());
-						maps.add(snomed);
+						entity.addObject(RDFS.SUBCLASSOF,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 					}
 				}
 

@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 
 
@@ -10,7 +11,6 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 /**
  * Imports the RF2 format extended complex backward mapping from snomed to ICD10 or OPCS 4
@@ -20,12 +20,13 @@ public class ComplexMapImporter {
    private static final String OPCS4_REFERENCE_SET = "1126441000000105";
    private static final String ICD10_REFERENCE_SET = "999002271000000101";
 
-   private Map<String, List<ComplexMap>> snomedMap = new HashMap<>();
+   private final Map<String, List<ComplexMap>> snomedMap = new HashMap<>();
    private TTDocument document;
    private String refset;
    private Set<String> sourceCodes;
    private String namespace;
-   private TTManager manager = new TTManager();
+   private Map<String,TTEntity> legacyCodeToEntity;
+
 
    /**
     * Imports a file containing the RF2 format extended complex backward maps between snomed and ICD10 or OPC4 4
@@ -39,10 +40,11 @@ public class ComplexMapImporter {
     * @throws IOException         in the event of a file import problem
     * @throws DataFormatException if the file content is invalid
     */
-   public TTDocument importMap(File file, TTDocument document, String refset, Set<String> sourceCodes) throws IOException, DataFormatException {
+   public TTDocument importMap(File file, TTDocument document, Map<String,TTEntity> legacyCodeToEntity,String refset, Set<String> sourceCodes) throws IOException, DataFormatException {
       this.document = document;
       this.refset = refset;
       this.sourceCodes = sourceCodes;
+      this.legacyCodeToEntity= legacyCodeToEntity;
       document.setCrud(IM.UPDATE);
       if (refset.equals(OPCS4_REFERENCE_SET))
          namespace=IM.CODE_SCHEME_OPCS4.getIri();
@@ -55,11 +57,11 @@ public class ComplexMapImporter {
       importFile(file);
 
       //takes the snomed maps creates reference entities and the 3 types of maps
-      createEntityMaps(namespace);
+      createEntityMaps();
       return document;
    }
 
-   private void createEntityMaps(String namespace) throws DataFormatException {
+   private void createEntityMaps() {
       Set<Map.Entry<String, List<ComplexMap>>> entries = snomedMap.entrySet();
       for (Map.Entry<String, List<ComplexMap>> entry : entries) {
          String snomed = entry.getKey();
@@ -71,7 +73,7 @@ public class ComplexMapImporter {
       }
    }
 
-   private void setMapsForEntity(String snomed, List<ComplexMap> mapList) throws DataFormatException {
+   private void setMapsForEntity(String snomed, List<ComplexMap> mapList)  {
       TTEntity entity = new TTEntity().setIri((SNOMED.NAMESPACE + snomed));  // snomed entity reference
       document.addEntity(entity);
       for (ComplexMap sourceMap : mapList) {
@@ -82,7 +84,10 @@ public class ComplexMapImporter {
             TTArray ttTargetGroup = new TTArray();
             ttComplexMap.set(IM.SOME_OF, ttTargetGroup);
             for (ComplexMapTarget sourceTarget:targetGroup.getTargetMaps()) {
-               addMapTarget(ttTargetGroup, sourceTarget);
+               TTEntity legacy= legacyCodeToEntity.get(sourceTarget.getTarget());
+               if (legacy!=null){
+               legacy.addObject(RDFS.SUBCLASSOF,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+               addMapTarget(ttTargetGroup, sourceTarget);}
             }
          } else{
             TTArray targetGroups = new TTArray();
@@ -93,6 +98,7 @@ public class ComplexMapImporter {
                TTArray ttTargetChoice= new TTArray();
                ttTargetGroup.set(IM.ONE_OF,ttTargetChoice);
                for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
+                     if (legacyCodeToEntity.get(sourceTarget.getTarget())!=null)
                      addMapTarget(ttTargetChoice, sourceTarget);
                   }
                }
@@ -116,10 +122,10 @@ public class ComplexMapImporter {
 
    private void importFile(File file) throws IOException {
       try(BufferedReader reader = new BufferedReader(new FileReader(file))){
-         String line = reader.readLine();
+         reader.readLine();
+         String line;
          line = reader.readLine();
          int count=0;
-
          while (line!=null && !line.isEmpty()){
 
             String[] fields= line.split("\t");

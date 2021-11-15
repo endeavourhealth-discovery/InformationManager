@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTFilerFactory;
@@ -32,14 +33,14 @@ public class TPPImporter implements TTImport{
     private static final String[] descriptions = {".*\\\\TPP\\\\Descrip.v3"};
     private static final String[] terms = {".*\\\\TPP\\\\Terms.v3"};
     private static final String[] hierarchies = {".*\\\\TPP\\\\V3hier.v3"};
+    private static final String[] nhsMap = {".*\\\\TPP\\\\CTV3SCTMAP.txt"};
     private static final String[] tppCtv3Lookup = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_lookup_2.csv"};
     private static final String[] tppCtv3ToSnomed = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_to_snomed.csv"};
     private final TTManager manager= new TTManager();
     private Set<String> snomedCodes;
     private final Map<String,String> emisToSnomed = new HashMap<>();
-    private final Map<String,String> tppCtv3ToToSnomed = new HashMap<>();
+    private final Map<String,String> emisToTerm = new HashMap<>();
     private TTDocument document;
-    private TTDocument mapDocument;
     private Connection conn;
     private static final Map<String,TTEntity> codeToEntity= new HashMap<>();
     private static final Map<String,String> termCodes= new HashMap<>();
@@ -47,15 +48,14 @@ public class TPPImporter implements TTImport{
 
 
 
-    public TTImport importData(TTImportConfig config) throws Exception {
 
+    public TTImport importData(TTImportConfig config) throws Exception {
 
         conn=ImportUtils.getConnection();
         System.out.println("Looking for Snomed codes");
         //Gets the snomed codes from the IM to use as look up
         snomedCodes= ImportUtils.importSnomedCodes(conn);
         document = manager.createDocument(IM.GRAPH_TPP.getIri());
-        mapDocument= manager.createDocument(IM.MAP_SNOMED_TPP.getIri());
 
         //Gets the emis read 2 codes from the IM to use as look up as some are missing
         importEmis();
@@ -69,18 +69,53 @@ public class TPPImporter implements TTImport{
 
         //Imports the tpp terms from the tpp look up table
         importTppCtv3ToSnomed(config.folder);
-        importTPPMaps(config.folder);
+        importnhsMaps(config.folder);
 
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
 
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(mapDocument);
-        }
         return this;
 
     }
+
+    private void importnhsMaps(String folder) throws IOException{
+            Path file = ImportUtils.findFileForId(folder, nhsMap[0]);
+            System.out.println("Retrieving terms from tpp_TPP+lookup2");
+            try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+                reader.readLine();
+                String line = reader.readLine();
+                int count = 0;
+                while (line != null && !line.isEmpty()) {
+                    String[] fields = line.split("\t");
+                    count++;
+                    if (count % 10000 == 0) {
+                        System.out.println("Processed " + count +" terms");
+                    }
+                    String code = fields[0];
+                    String snomed= fields[2];
+                    TTEntity tpp= codeToEntity.get(code);
+                    if (!alreadyMapped(tpp,snomed))
+                        tpp.addObject(RDFS.SUBCLASSOF,iri(SNOMED.NAMESPACE+snomed));
+
+                    line = reader.readLine();
+                }
+                System.out.println("Process ended with " + count +" entities created");
+            }
+
+
+    }
+
+    private boolean alreadyMapped(TTEntity tpp, String snomed) {
+        if (tpp.get(RDFS.SUBCLASSOF)==null)
+            return false;
+        for (TTValue superClass:tpp.get(RDFS.SUBCLASSOF).asArray().getElements()){
+            if (superClass.asIriRef().getIri().split("#")[1].equals(snomed))
+                return true;
+        }
+        return false;
+    }
+
 
     private void importCV3Hierarchy(String path) throws IOException {
         for (String hierFile : hierarchies) {
@@ -97,9 +132,9 @@ public class TPPImporter implements TTImport{
                     TTEntity tpp= codeToEntity.get(child);
                     if (tpp!=null) {
                         if (!parent.startsWith(".")) {
-                            TTManager.addChildOf(tpp, iri("http://endhealth.info/tpp#" + parent));
+                            TTManager.addChildOf(tpp, iri(IM.CODE_SCHEME_TPP.getIri()+ parent));
                         } else {
-                            TTManager.addChildOf(tpp, iri("http://endhealth.info/tpp#TPPCodes"));
+                            TTManager.addChildOf(tpp, iri(IM.CODE_SCHEME_TPP.getIri()+"TPPCodes"));
                         }
                     }
                     line = reader.readLine();
@@ -172,12 +207,15 @@ public class TPPImporter implements TTImport{
                     while (line != null && !line.isEmpty()) {
                         String[] fields = line.split("\\|");
                         String code= fields[0];
-                        if (!code.startsWith(".")) {
-                            TTEntity tpp = new TTEntity().setIri("tpp:" + code);
-                            tpp.setCode(code);
-                            codeToEntity.put(code, tpp);
-                            document.addEntity(tpp);
-                        }
+                        String iri=IM.CODE_SCHEME_TPP.getIri()+
+                              (code.replace(".","_"));
+                        TTEntity tpp = new TTEntity().setIri(iri);
+                        tpp.setCode(code);
+                        tpp.addType(IM.CONCEPT);
+                        if (code.startsWith("."))
+                            tpp.setStatus(IM.INACTIVE);
+                        codeToEntity.put(code, tpp);
+                        document.addEntity(tpp);
                         i++;
                         line = reader.readLine();
                     }
@@ -198,7 +236,7 @@ public class TPPImporter implements TTImport{
 
     @Override
     public TTImport validateFiles(String inFolder) {
-        ImportUtils.validateFiles(inFolder,concepts,descriptions,terms,hierarchies,tppCtv3Lookup,tppCtv3ToSnomed);
+        ImportUtils.validateFiles(inFolder,concepts,descriptions,terms,hierarchies,tppCtv3Lookup,tppCtv3ToSnomed,nhsMap);
         return this;
     }
 
@@ -209,16 +247,19 @@ public class TPPImporter implements TTImport{
 
     private void importEmis() throws SQLException {
         System.out.println("Importing EMIS/Read from IM for look up....");
-        PreparedStatement getEMIS= conn.prepareStatement("SELECT ct.code as code,c.code as snomed\n"
-            +"from term_code ct\n"
-        +"join entity c on ct.entity = c.dbid\n"
-            +"where c.scheme='"+ "http://endhealth.info/emis#'\n"
-        +"and ct.code not like '%-%'");
+        PreparedStatement getEMIS= conn.prepareStatement("SELECT entity.code as code,snomed.code as snomed,entity.name as name\n" +
+          "from entity\n" +
+          "join tpl on tpl.subject= entity.dbid\n" +
+          "join entity snomed on tpl.object= snomed.dbid\n" +
+          "join entity subclass on tpl.predicate=subclass.dbid\n" +
+          "where entity.scheme='http://endhealth.info/emis#'\n" +
+          "and snomed.scheme='http://snomed.info/sct#'");
         ResultSet rs= getEMIS.executeQuery();
         while (rs.next()){
             String emis= rs.getString("code");
             String snomed=rs.getString("snomed");
             emisToSnomed.put(emis,snomed);
+            emisToTerm.put(rs.getString("code"),rs.getString("name"));
         }
     }
 
@@ -237,66 +278,24 @@ public class TPPImporter implements TTImport{
                 }
                 String code = fields[0];
                 String snomed = fields[1];
-                tppCtv3ToToSnomed.put(code,snomed);
+                TTEntity tpp=codeToEntity.get(code);
+                if (tpp==null){
+                    tpp = new TTEntity().setIri(IM.CODE_SCHEME_TPP.getIri()+code.replace(".","_"));
+                    tpp.setCode(code);
+                    tpp.setName("TPP local code. name unknown");
+                    tpp.addType(IM.CONCEPT);
+                    codeToEntity.put(code, tpp);
+                    document.addEntity(tpp);
+
+                }
+                if (!alreadyMapped(tpp,snomed))
+                    tpp.addObject(RDFS.SUBCLASSOF,iri(SNOMED.NAMESPACE+snomed));
                 line = reader.readLine();
             }
             System.out.println("Process ended with " + count);
         }
     }
 
-    //Imports the used TPP codes provided by TPP.
-    private void importTPPMaps(String folder) throws IOException {
-        Path file = ImportUtils.findFileForId(folder, tppCtv3Lookup[0]);
-        System.out.println("Retrieving terms from tpp_TPP+lookup2");
-        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();
-            String line = reader.readLine();
-            int count = 0;
-            while (line != null && !line.isEmpty()) {
-                String[] fields = readQuotedCSVLine(line);
-                count++;
-                if (count % 10000 == 0) {
-                    System.out.println("Processed " + count +" terms");
-                }
-                String code = fields[0];
-                String term= fields[1];
-                code=code.replace("\"","");
-                term=term.replace("\t","").replace("\"","");
-                String snomed=tppCtv3ToToSnomed.get(code); //"" must be stripped if using file reader.
-                TTEntity TPP= codeToEntity.get(code);
-                if (TPP==null){
-                    TPP = new TTEntity()
-                            .setIri("tpp:" + code)
-                            .setName(term)
-                            .setCode(code)
-                            .addType(IM.CONCEPT);
-                    TPP.setCrud(IM.REPLACE);
-                    TPP.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.NAMESPACE + "TPPUnlinkedCodes")));
-                    document.addEntity(TPP);
-                }
-                if (snomed!=null){
-                    if (isSnomed(snomed)) {
-                        TTEntity snomedEntity= new TTEntity();
-                        snomedEntity.setIri(SNOMED.NAMESPACE+ snomed);
-                        mapDocument.addEntity(snomedEntity);
-                        TTManager.addSimpleMap(snomedEntity,TPP.getIri());
-                    }
-                } else {
-                    if (!code.startsWith(".")) {
-                        snomed = emisToSnomed.get(code.replace(".", ""));
-                        if (snomed != null) {
-                            TTEntity snomedEntity = new TTEntity();
-                            snomedEntity.setIri(SNOMED.NAMESPACE + snomed);
-                            mapDocument.addEntity(snomedEntity);
-                            TTManager.addSimpleMap(snomedEntity, TPP.getIri());
-                        }
-                    }
-                }
-                line = reader.readLine();
-            }
-            System.out.println("Process ended with " + count +" entities created");
-        }
-    }
 
     public String[] readQuotedCSVLine(String line) {
         String[] fields = line.split(",");
@@ -316,8 +315,6 @@ public class TPPImporter implements TTImport{
     public void close() throws Exception {
         if (conn!=null && !conn.isClosed())
                 conn.close();
-        if (emisToSnomed!=null)
-            emisToSnomed.clear();
         if (snomedCodes!=null)
             snomedCodes.clear();
     }

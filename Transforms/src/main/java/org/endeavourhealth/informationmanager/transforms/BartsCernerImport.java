@@ -2,6 +2,7 @@ package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
@@ -39,7 +40,6 @@ public class BartsCernerImport implements TTImport {
 
 	private Connection conn;
 	private final TTManager manager= new TTManager();
-	private TTDocument mapDocument;
 	private static final String unclassified= IM.CODE_SCHEME_BARTS_CERNER.getIri()+"UnClassifiedBartsCernerCode";
 
 	private final Map<String,TTEntity> entityMap = new HashMap<>();
@@ -52,7 +52,6 @@ public class BartsCernerImport implements TTImport {
 		System.out.println("retrieving snomed codes from IM");
 		document= manager.createDocument(IM.GRAPH_BARTS_CERNER.getIri());
 		document.setCrud(IM.REPLACE);
-		mapDocument= manager.createDocument(IM.MAP_SNOMED_BC.getIri());
 		document.setCrud(IM.UPDATE);
 		importSets(config.folder);
 		importHierarchy(config.folder);
@@ -60,15 +59,13 @@ public class BartsCernerImport implements TTImport {
 		importUsed(config.folder);
 		setUsedEventSets();
 		setTopLevel();
+		importMaps(config.folder);
 
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
 
-		importMaps(config.folder);
-        try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(mapDocument);
-        }
+
         
 		return this;
 	}
@@ -98,8 +95,6 @@ public class BartsCernerImport implements TTImport {
 
 	private void importMaps(String inFolder) throws IOException, DataFormatException {
 		int count = 0;
-		Integer incremental= 100020;
-		Map<String, TTEntity> snomedToConcept = new HashMap<>();
 		for (String conceptFile : maps) {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
 			System.out.println("Processing  Snomed maps " + file.getFileName().toString());
@@ -112,15 +107,11 @@ public class BartsCernerImport implements TTImport {
 					String code = fields[0];
 					String iri= IM.CODE_SCHEME_BARTS_CERNER.getIri()+code;
 					String snomed = fields[2];
-					TTEntity snomedConcept = snomedToConcept.get(snomed);
-					if (snomedConcept == null) {
-							snomedConcept = new TTEntity()
-								.setIri(SNOMED.NAMESPACE + snomed)
-								.addType(IM.CONCEPT)
-								.setCrud(IM.UPDATE);
-							mapDocument.addEntity(snomedConcept);
-					}
-					snomedConcept.addObject(IM.MATCHED_TO, iri(iri));
+					TTEntity barts=codeToConcept.get(code);
+					if (snomed.contains("1000252"))
+						barts.addObject(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+snomed));
+					else
+						barts.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(SNOMED.NAMESPACE+snomed));;
 					line = reader.readLine();
 					}
 				}
@@ -227,6 +218,7 @@ public class BartsCernerImport implements TTImport {
 		System.out.println("Imported " + count + " codes from look up");
 
 	}
+
 
 	private void importSets(String inFolder) throws IOException {
 		int count = 0;
