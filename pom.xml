@@ -15,6 +15,7 @@
     <maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
     <maven-deploy-plugin.version>2.4</maven-deploy-plugin.version>
     <maven-jacoco-plugin.version>0.7.5.201505241946</maven-jacoco-plugin.version>
+    <maven-junit.version>5.8.1</maven-junit.version>
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     <maven-surefire-plugin.version>2.12.4</maven-surefire-plugin.version>
     <maven-sonar-plugin.version>3.5.0.1254</maven-sonar-plugin.version>
@@ -52,7 +53,7 @@
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
         <artifactId>rdf4j-bom</artifactId>
-        <version>3.5.0</version>
+        <version>3.7.3</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

@@ -19,11 +19,10 @@ public class WinPathKingsImport implements TTImport {
 
 
 	private static final String[] kingsWinPath = {".*\\\\Kings\\\\Winpath.txt"};
-	private TTDocument backMapDocument;
 	private TTDocument document;
 	private TTDocument valueSetDocument;
 	private final Map<String, List<String>> readToSnomed = new HashMap<>();
-	private final Map<String, List<String>> snomedToWinpath = new HashMap();
+	private final Map<String, List<String>> snomedToWinpath = new HashMap<>();
 	private static final TTIriRef utl= TTIriRef.iri(IM.NAMESPACE+"VSET_UnifiedTestList");
 	private static final Set<String> utlSet= new HashSet<>();
 	private static final Set<String> utlMembers= new HashSet<>();
@@ -36,88 +35,75 @@ public class WinPathKingsImport implements TTImport {
 		TTManager backManager = new TTManager();
 		TTManager vsetManager = new TTManager();
 		conn = ImportUtils.getConnection();
-		backMapDocument = backManager.createDocument(IM.MAP_SNOMED_WINPATH_KINGS.getIri());
-		backMapDocument.setCrud(IM.UPDATE);
 		valueSetDocument= vsetManager.createDocument(IM.NAMESPACE);
 		valueSetDocument.setCrud(IM.ADD);
 		importR2Matches();
 		importWinPathKings(config.folder);
-		createBackMaps();
 		addToUtlSet();
-		TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
-		filer.fileDocument(document);
-		filer = TTFilerFactory.getDocumentFiler();
-		filer.fileDocument(backMapDocument);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
+
 		if (valueSetDocument.getEntities()!=null) {
-			filer = TTFilerFactory.getDocumentFiler();
-			filer.fileDocument(valueSetDocument);
+            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                filer.fileDocument(valueSetDocument);
+            }
 		}
 		return this;
 
 	}
 
 	private void addToUtlSet() throws SQLException {
-		PreparedStatement getUtlSet= conn.prepareStatement("Select o.iri\n" +
+		try (PreparedStatement getUtlSet= conn.prepareStatement("Select o.iri\n" +
 			"from tpl\n" +
 			"join entity e on tpl.subject= e.dbid\n" +
 			"join entity p on tpl.predicate=p.dbid\n" +
 			"join entity o on tpl.object= o.dbid\n" +
-			"where e.iri='http://endhealth.info/im#VSET_UnifiedTestList' and p.iri='http://endhealth.info/im#hasMembers'");
-		ResultSet rs= getUtlSet.executeQuery();
-		while (rs.next()){
-			String member= rs.getString("iri");
-			utlSet.add(member);
-		}
-		for (String member:utlMembers){
-			if (!utlSet.contains(member)){
-				if (valueSetDocument.getEntities()==null){
-					valueSetDocument.addEntity( new TTEntity().setIri(IM.NAMESPACE+"VSET_UnifiedTestList"));
-					valueSetDocument.getEntities().get(0).
-						set(IM.DEFINITION,new TTNode()
-							.set(SHACL.OR,new TTArray()));
+			"where e.iri='http://endhealth.info/im#VSET_UnifiedTestList' and p.iri='http://endhealth.info/im#hasMembers'")) {
+            ResultSet rs = getUtlSet.executeQuery();
+            while (rs.next()) {
+                String member = rs.getString("iri");
+                utlSet.add(member);
+            }
+            for (String member : utlMembers) {
+                if (!utlSet.contains(member)) {
+                    if (valueSetDocument.getEntities() == null) {
+                        valueSetDocument.addEntity(new TTEntity().setIri(IM.NAMESPACE + "VSET_UnifiedTestList"));
+                        valueSetDocument.getEntities().get(0).
+                            set(IM.DEFINITION, new TTNode()
+                                .set(SHACL.OR, new TTArray()));
 
-				}
-				valueSetDocument.getEntities().get(0)
-					.get(IM.DEFINITION).asNode()
-					.addObject(SHACL.OR,TTIriRef.iri(member));
-			}
-		}
+                    }
+                    valueSetDocument.getEntities().get(0)
+                        .get(IM.DEFINITION).asNode()
+                        .addObject(SHACL.OR, TTIriRef.iri(member));
+                }
+            }
+        }
 	}
 
-
-	private void createBackMaps() {
-		for (Map.Entry<String, List<String>> entry : snomedToWinpath.entrySet()) {
-			String entityId = entry.getKey();
-			TTEntity snomedEntity = new TTEntity()
-				.setIri(SNOMED.NAMESPACE + entityId);
-			backMapDocument.addEntity(snomedEntity);
-			List<String> winpathList = entry.getValue();
-			for (String winpath : winpathList) {
-				TTManager.addSimpleMap(snomedEntity, IM.CODE_SCHEME_KINGS_WINPATH.getIri() + winpath);
-			}
-		}
-	}
 
 
 	private void importR2Matches() throws SQLException, ClassNotFoundException {
 		System.out.println("Retrieving read vision 2 snomed map");
 
-		PreparedStatement getR2Matches= conn.prepareStatement("select vis.code as code,snomed.code as snomed \n"+
+		try (PreparedStatement getR2Matches= conn.prepareStatement("select vis.code as code,snomed.code as snomed \n"+
 			"from entity snomed \n" +
-			"join tpl maps on maps.subject= snomed.dbid\n" +
+			"join tpl maps on maps.object= snomed.dbid\n" +
 			"join entity p on maps.predicate=p.dbid\n" +
 			"join entity vis on maps.subject=vis.dbid\n" +
 			"where snomed.iri like '"+ SNOMED.NAMESPACE+"%'\n"+
-			"and p.iri='"+IM.MATCHED_TO+"'\n" +
-			"and vis.iri like 'http://endhealth.info/VISION#'");
-		ResultSet rs= getR2Matches.executeQuery();
-		while (rs.next()){
-			String snomed= rs.getString("snomed");
-			String read= rs.getString("code");
-			List<String> maps = readToSnomed.computeIfAbsent(read, k -> new ArrayList<>());
-			maps.add(snomed);
+			"and p.iri='" +RDFS.SUBCLASSOF.getIri()+ "'\n" +
+			"and vis.iri like 'http://endhealth.info/VISION#'")) {
+            ResultSet rs = getR2Matches.executeQuery();
+            while (rs.next()) {
+                String snomed = rs.getString("snomed");
+                String read = rs.getString("code");
+                List<String> maps = readToSnomed.computeIfAbsent(read, k -> new ArrayList<>());
+                maps.add(snomed);
 
-		}
+            }
+        }
 	}
 
 	private void importWinPathKings(String folder) throws IOException {
@@ -142,8 +128,7 @@ public class WinPathKingsImport implements TTImport {
 				document.addEntity(entity);
 				if (readToSnomed.get(readCode) != null) {
 					for (String snomed : readToSnomed.get(readCode)) {
-						List<String> maps = snomedToWinpath.computeIfAbsent(snomed, k -> new ArrayList<>());
-						maps.add(snomed);
+						entity.addObject(RDFS.SUBCLASSOF,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 					}
 				}
 

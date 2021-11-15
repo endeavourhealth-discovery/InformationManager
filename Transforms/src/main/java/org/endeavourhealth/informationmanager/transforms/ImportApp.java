@@ -12,7 +12,6 @@ import java.util.Date;
  * Utility app for importing one or all of the various source files for the ontology initial population.
  */
 public class ImportApp {
-    private static TTDocumentFiler filer;
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {

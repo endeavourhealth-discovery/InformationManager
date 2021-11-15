@@ -1,4 +1,6 @@
-package org.endeavourhealth.informationmanager;
+package org.endeavourhealth.informationmanager.jdbc;
+
+import org.endeavourhealth.informationmanager.TTFilerException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -7,7 +9,9 @@ import java.util.Map;
 import java.util.Properties;
 
 public class ConnectionManagerJDBC {
-    public synchronized static Connection get() throws TTFilerException {
+    private ConnectionManagerJDBC() {}
+
+    public static synchronized Connection get() throws TTFilerException {
         Map<String, String> envVars = System.getenv();
 
         String url = envVars.get("CONFIG_JDBC_URL");

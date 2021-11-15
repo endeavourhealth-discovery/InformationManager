@@ -13,6 +13,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.DataFormatException;
 
@@ -26,7 +28,10 @@ public class OPCS4Importer implements TTImport {
 
     private TTManager manager= new TTManager();
     private TTDocument document;
+    private TTDocument mapDocument;
+
     private Set<String> snomedCodes;
+    private final Map<String,TTEntity> codeToEntity= new HashMap<>();
     private Connection conn;
 
     public TTImport importData(TTImportConfig config) throws Exception {
@@ -37,21 +42,26 @@ public class OPCS4Importer implements TTImport {
         document = manager.createDocument(IM.GRAPH_OPCS4.getIri());
         importChapters(config.folder,document);
         importEntities(config.folder,document);
-        TTDocumentFiler filer= TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(document);
-        document= manager.createDocument(IM.MAP_SNOMED_OPCS.getIri());
 
-        document.setCrud(IM.UPDATE);
+
+        mapDocument= manager.createDocument(IM.MAP_SNOMED_OPCS.getIri());
+
+        mapDocument.setCrud(IM.UPDATE);
         importMaps(config.folder);
-        filer= TTFilerFactory.getDocumentFiler();
-        filer.fileDocument(document);
+        //Important to file after maps set
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
         return this;
     }
 
     public TTDocument importMaps(String folder) throws IOException, DataFormatException {
         Path file = ImportUtils.findFileForId(folder,maps[0]);
         ComplexMapImporter mapImport= new ComplexMapImporter();
-        mapImport.importMap(file.toFile(),document,"1126441000000105",snomedCodes);
+        mapImport.importMap(file.toFile(),mapDocument,codeToEntity,"1126441000000105",snomedCodes);
         return document;
     }
 
@@ -96,6 +106,7 @@ public class OPCS4Importer implements TTImport {
                         .setIri(IM.CODE_SCHEME_OPCS4.getIri() + (fields[0].replace(".","")))
                         .addType(IM.CONCEPT)
                     .set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.CODE_SCHEME_OPCS4.getIri()+fields[0].substring(0,1))));
+                codeToEntity.put(fields[0].replace(".",""),c);
                     if(fields[1].length()>250){
                         c.setName(fields[1].substring(0,150));
                     }else {
@@ -121,9 +132,8 @@ public class OPCS4Importer implements TTImport {
 
     @Override
     public void close() throws Exception {
-        if (conn!=null)
-            if (!conn.isClosed())
-                conn.close();
+        if (conn != null && !conn.isClosed())
+            conn.close();
 
     }
 }

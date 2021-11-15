@@ -109,8 +109,9 @@ public class SnomedImporter implements TTImport {
       importSubstitution(config.folder);
       conceptMap.clear();
 
-      TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
-      filer.fileDocument(document);
+       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+           filer.fileDocument(document);
+       }
       return this;
    }
 
@@ -265,7 +266,7 @@ public class SnomedImporter implements TTImport {
                         c.addType(RDF.PROPERTY);
                      }
                      if (ACTIVE.equals(fields[2])) {
-                        if (FULLY_SPECIFIED.equals(fields[6])|c.getName()==null) {
+                        if (FULLY_SPECIFIED.equals(fields[6]) || c.getName()==null) {
                               c.setName(fields[7]);
                         }
                         TTManager.addTermCode(c, fields[7],fields[0]);
@@ -292,22 +293,20 @@ public class SnomedImporter implements TTImport {
                reader.readLine(); // Skip header
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
-                  String[] fields = line.split("\t");
-                  TTEntity c = conceptMap.get(fields[5]);
-                  String axiom = fields[6];
-                  if (!axiom.startsWith("Prefix"))
-                     if (ACTIVE.equals(fields[2]))
-                        if (!axiom.startsWith("Ontology"))
-                           try {
-                              //System.out.println(c.getIri());
-                              axiom=axiom.replace(":609096000","im:roleGroup");
-                              owlConverter.convertAxiom(c, axiom, statedContext);
-                           } catch (Exception e){
-                              System.err.println(Arrays.toString(e.getStackTrace()));
-                              throw new IOException("owl parser error");
-                           }
-                  i++;
-                  line = reader.readLine();
+                   String[] fields = line.split("\t");
+                   TTEntity c = conceptMap.get(fields[5]);
+                   String axiom = fields[6];
+                   if (!axiom.startsWith("Prefix") && ACTIVE.equals(fields[2]) && !axiom.startsWith("Ontology"))
+                       try {
+                           //System.out.println(c.getIri());
+                           axiom = axiom.replace(":609096000", "im:roleGroup");
+                           owlConverter.convertAxiom(c, axiom, statedContext);
+                       } catch (Exception e) {
+                           System.err.println(Arrays.toString(e.getStackTrace()));
+                           throw new IOException("owl parser error");
+                       }
+                   i++;
+                   line = reader.readLine();
                }
             } catch (Exception e){
                System.err.println(Arrays.toString(e.getStackTrace()));
@@ -420,7 +419,7 @@ public class SnomedImporter implements TTImport {
                      if (conceptMap.get(target) == null) {
                         System.err.println("Missing target entity in relationship" + target);
                      }
-                     if (ACTIVE.equals(fields[2]) | (relationship.equals(REPLACED_BY))) {
+                     if (ACTIVE.equals(fields[2]) || (relationship.equals(REPLACED_BY))) {
                         addRelationship(c, group, relationship, target);
                      }
                   }

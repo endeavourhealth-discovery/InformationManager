@@ -28,8 +28,9 @@ public class OntologyImport {
             TTDocument document = objectMapper.readValue(inputFile, TTDocument.class);
 
 
-            TTDocumentFiler filer= TTFilerFactory.getDocumentFiler();
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
+        }
     }
 
     public static void main(String[] argv) throws Exception {

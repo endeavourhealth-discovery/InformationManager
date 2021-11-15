@@ -4,6 +4,8 @@ import com.opencsv.CSVReader;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
+import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTFilerFactory;
 import org.endeavourhealth.informationmanager.TTImport;
@@ -14,6 +16,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -38,7 +42,10 @@ public class VisionImport implements TTImport {
 	private final Set<String> preferredId = new HashSet<>();
 	private Connection conn;
 	private final TTManager manager= new TTManager();
-	private TTDocument mapDocument;
+	private final Map<String,List<String>> emisToSnomed = new HashMap<>();
+	private final Map<String,String> visionToSnomed = new HashMap<>();
+
+
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
@@ -47,17 +54,33 @@ public class VisionImport implements TTImport {
 		System.out.println("retrieving snomed codes from IM");
 		snomedCodes= ImportUtils.importSnomedCodes(conn);
 		document= manager.createDocument(IM.GRAPH_VISION.getIri());
-		mapDocument= manager.createDocument(IM.MAP_SNOMED_VISION.getIri());
+
+		importEmis();
 		importR2Desc(config.folder);
 		importR2Terms(config.folder);
 		importVisionCodes(config.folder);
 		createHierarchy();
 		addVisionMaps(config.folder);
-		TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
-		filer.fileDocument(document);
-		filer = TTFilerFactory.getDocumentFiler();
-		filer.fileDocument(mapDocument);
+		addMissingMaps();
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
+
 		return this;
+	}
+
+	private void addMissingMaps() {
+		for (Map.Entry<String,TTEntity> entry:codeToConcept.entrySet()){
+			String code= entry.getKey();
+			TTEntity vision= entry.getValue();
+			if (vision.get(RDFS.SUBCLASSOF)==null){
+				if (emisToSnomed.get(code.replace(".",""))!=null){
+					vision.addObject(RDFS.SUBCLASSOF,iri(SNOMED.NAMESPACE+
+						emisToSnomed.get(code.replace(".",""))));
+				}
+			}
+
+		}
 	}
 
 
@@ -88,6 +111,25 @@ public class VisionImport implements TTImport {
 			System.out.println("Process ended with " + count +" read 2 terms");
 		}
 	}
+
+	private void importEmis() throws SQLException {
+		System.out.println("Importing EMIS/Read from IM for look up....");
+		PreparedStatement getEMIS= conn.prepareStatement("SELECT entity.code as code,snomed.code as snomed\n" +
+			"from entity\n" +
+			"join tpl on tpl.subject= entity.dbid\n" +
+			"join entity snomed on tpl.object= snomed.dbid\n" +
+			"join entity subclass on tpl.predicate=subclass.dbid\n" +
+			"where entity.scheme='http://endhealth.info/emis#'\n" +
+			"and snomed.scheme='http://snomed.info/sct#'");
+		ResultSet rs= getEMIS.executeQuery();
+		while (rs.next()){
+			String emis= rs.getString("code");
+			String snomed=rs.getString("snomed");
+			emisToSnomed.computeIfAbsent(emis, k -> new ArrayList<>());
+			emisToSnomed.get(emis).add(snomed);
+		}
+	}
+
 
 	private void importR2Desc(String folder) throws IOException {
 
@@ -166,20 +208,16 @@ public class VisionImport implements TTImport {
 				}
 				String code = fields[0];
 				String term = fields[1];
-				code = code.replaceAll("\"", "");
+				code = code.replace("\"", "");
 				term = term.substring(1, term.length() - 1);
-				if (!code.startsWith(".")) {
-					if (!Character.isLowerCase(code.charAt(0))) {
-						if (codeToConcept.get(code) == null) {
-							TTEntity c = new TTEntity();
-							c.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".", ""));
-							c.setName(term);
-							c.setCode(code);
-							document.addEntity(c);
-							codeToConcept.put(code, c);
-						}
-					}
-				}
+				if (!code.startsWith(".") && !Character.isLowerCase(code.charAt(0)) && codeToConcept.get(code) == null) {
+                    TTEntity c = new TTEntity();
+                    c.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".", ""));
+                    c.setName(term);
+                    c.setCode(code);
+                    document.addEntity(c);
+                    codeToConcept.put(code, c);
+                }
 				line = reader.readLine();
 			}
 			System.out.println("Process ended with " + count + " additional Vision read like codes created");
@@ -218,18 +256,33 @@ public class VisionImport implements TTImport {
 				}
 				String code= fields[0];
 				String snomed= fields[1];
-				if (isSnomed(snomed)) {
-					TTEntity snomedConcept= new TTEntity().setIri("sn:"+snomed);
-					snomedConcept.setCrud(IM.ADD);
-					mapDocument.addEntity(snomedConcept);
-					if (codeToConcept.get(code)!=null) {
-						TTManager.addSimpleMap(snomedConcept,IM.CODE_SCHEME_VISION.getIri()+code.replace(".",""));
+				TTEntity vision = codeToConcept.get(code);
+				if (vision!=null) {
+					if (isSnomed(snomed)) {
+						String iri = SNOMED.NAMESPACE + snomed;
+						vision.addObject(RDFS.SUBCLASSOF, iri(iri));
+					}
+					String emis = code.replace(".", "");
+					if (emisToSnomed.get(emis) != null) {
+						for (String map : emisToSnomed.get(emis)) {
+							if (!alreadyMapped(vision, map))
+								vision.addObject(RDFS.SUBCLASSOF, iri(SNOMED.NAMESPACE + map));
+						}
 					}
 				}
 				line = reader.readLine();
 			}
 			System.out.println("Process ended with " + count);
 		}
+	}
+	private boolean alreadyMapped(TTEntity entity, String snomed) {
+		if (entity.get(RDFS.SUBCLASSOF)==null)
+			return false;
+		for (TTValue superClass:entity.get(RDFS.SUBCLASSOF).asArray().getElements()){
+			if (superClass.asIriRef().getIri().split("#")[1].equals(snomed))
+				return true;
+		}
+		return false;
 	}
 
 	public Boolean isSnomed(String s){

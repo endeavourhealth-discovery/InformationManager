@@ -1,4 +1,4 @@
-package org.endeavourhealth.informationmanager;
+package org.endeavourhealth.informationmanager.jdbc;
 
 import com.google.common.base.Strings;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -6,14 +6,16 @@ import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDF;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.XSD;
+import org.endeavourhealth.informationmanager.TTFilerException;
+import org.endeavourhealth.informationmanager.TTEntityFiler;
 import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
 import java.sql.*;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
-public class TTInstanceFilerJDBC implements TTInstanceFiler {
-    private TTConceptFiler conceptFiler;
+public class TTInstanceFilerJDBC implements TTEntityFiler {
+    private TTConceptFilerJDBC conceptFiler;
     private Map<String, Integer> instanceMap = new HashMap<>();
 
     private final Connection conn;
@@ -33,7 +35,7 @@ public class TTInstanceFilerJDBC implements TTInstanceFiler {
      * @param conceptFiler  an instance of a concept filer
      * @throws SQLException in the event of a connection exception
      */
-    public TTInstanceFilerJDBC(Connection conn, TTConceptFiler conceptFiler) throws TTFilerException {
+    public TTInstanceFilerJDBC(Connection conn, TTConceptFilerJDBC conceptFiler) throws TTFilerException {
         this(conn);
         this.conceptFiler = conceptFiler;
     }
@@ -64,9 +66,8 @@ public class TTInstanceFilerJDBC implements TTInstanceFiler {
         int graphId = conceptFiler.getOrSetEntityId(graph);
         Integer instanceDbid = fileInstanceTable(instance);
 
-        if (instance.get(RDFS.LABEL) != null)
-            if (instance.get(IM.STATUS) == null)
-                instance.set(IM.STATUS, IM.ACTIVE);
+        if (instance.get(RDFS.LABEL) != null && instance.get(IM.HAS_STATUS) == null)
+                instance.set(IM.HAS_STATUS, IM.ACTIVE);
 
         if (instance.getCrud() != null) {
             if (instance.getCrud().equals(IM.UPDATE))
@@ -115,8 +116,7 @@ public class TTInstanceFilerJDBC implements TTInstanceFiler {
             if (id == null) {
                 // Insert
                 int i = 0;
-                if (name != null)
-                    if (name.length() > 200)
+                if (name != null && name.length() > 200)
                         name = name.substring(0, 199);
                 DALHelper.setString(insertInstance, ++i, iri);
                 DALHelper.setString(insertInstance, ++i, name);
@@ -134,8 +134,7 @@ public class TTInstanceFilerJDBC implements TTInstanceFiler {
             } else {
                 //update
                 int i = 0;
-                if (name != null)
-                    if (name.length() > 200)
+                if (name != null && name.length() > 200)
                         name = name.substring(0, 199);
                 DALHelper.setString(updateInstance, ++i, iri);
                 DALHelper.setString(updateInstance, ++i, name);
@@ -208,12 +207,11 @@ public class TTInstanceFilerJDBC implements TTInstanceFiler {
     }
 
     private void fileNode(Integer entityId, Long parent, TTNode node, int graphId) throws TTFilerException {
-        if (node.getPredicateMap() != null)
-            if (!node.getPredicateMap().isEmpty()) {
+        if (node.getPredicateMap() != null && !node.getPredicateMap().isEmpty()) {
                 Set<Map.Entry<TTIriRef, TTValue>> entries = node.getPredicateMap().entrySet();
                 for (Map.Entry<TTIriRef, TTValue> entry : entries) {
                     //Term codes are denormalised into term code table
-                    if (!entry.getKey().equals(IM.HAS_TERM_CODE) & (!entry.getKey().equals(IM.HAS_SCHEME)) & (!entry.getKey().equals(IM.GROUP_NUMBER))) {
+                    if (!entry.getKey().equals(IM.HAS_TERM_CODE) && (!entry.getKey().equals(IM.HAS_SCHEME)) && (!entry.getKey().equals(IM.GROUP_NUMBER))) {
                         TTValue object = entry.getValue();
                         if (object.isIriRef()) {
                             fileTriple(entityId, parent, entry.getKey(), object.asIriRef(), null, 1, graphId);

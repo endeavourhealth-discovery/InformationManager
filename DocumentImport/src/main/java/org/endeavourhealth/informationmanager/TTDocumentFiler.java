@@ -14,41 +14,38 @@ public abstract class TTDocumentFiler implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(TTDocumentFiler.class);
 
     private TTIriRef graph;
-    Map<String, String> prefixMap = new HashMap<>();
+    protected Map<String, String> prefixMap = new HashMap<>();
     protected TTNamespaceFiler namespaceFiler;
-    protected TTConceptFiler conceptFiler;
-    protected TTInstanceFiler instanceFiler;
+    protected TTEntityFiler conceptFiler;
+    protected TTEntityFiler instanceFiler;
 
     protected abstract void startTransaction() throws TTFilerException;
     protected abstract void commit() throws TTFilerException;
     protected abstract void rollback() throws TTFilerException;
 
     public void fileDocument(TTDocument document) throws TTFilerException {
-        try {
-            //Sets the graph namesepace id for use in statements so they are owned by the namespace graph
-            this.graph = document.getGraph();
 
-            LOG.info("Saving ontology - {}", new Date());
-            LOG.info("Processing namespaces");
+        //Sets the graph namesepace id for use in statements so they are owned by the namespace graph
+        this.graph = document.getGraph();
 
-            // Ensure all namespaces exist (auto-create)
-            // Different prefixes for filing are not allowed in this version
-            namespaceFiler.fileNamespaces(document.getContext().getNameSpaces(), prefixMap);
+        LOG.info("Saving ontology - {}", new Date());
+        LOG.info("Processing namespaces");
 
-            // Record document details, updating ontology and module
-            LOG.info("Processing document-ontology-module");
+        // Ensure all namespaces exist (auto-create)
+        // Different prefixes for filing are not allowed in this version
+        namespaceFiler.fileNamespaces(document.getContext().getNameSpaces(), prefixMap);
 
-            fileEntities(prefixMap, document);
+        // Record document details, updating ontology and module
+        LOG.info("Processing document-ontology-module");
 
-            LOG.info("Ontology filed");
-        } catch (SQLException e) {
-            LOG.info("Error - {}", new Date());
-            throw new TTFilerException("Failed to file document", e);
-        }
+        fileEntities(prefixMap, document);
+
+        LOG.info("Ontology filed");
+
         LOG.info("Finished - {}", new Date());
     }
 
-    private void fileEntities(Map<String, String> prefixMap, TTDocument document) throws TTFilerException, SQLException {
+    private void fileEntities(Map<String, String> prefixMap, TTDocument document) throws TTFilerException {
         LOG.info("Filing entities.... ");
 
         startTransaction();
@@ -56,12 +53,13 @@ public abstract class TTDocumentFiler implements AutoCloseable {
             int i = 0;
             for (TTEntity entity : document.getEntities()) {
                 //inherit crud
-                if (entity.getCrud() == null)
+                if (entity.getCrud() == null) {
                     if (document.getCrud() == null) {
                         entity.setCrud(IM.REPLACE);
                     } else {
                         entity.setCrud(document.getCrud());
                     }
+                }
                 fileEntity(entity, graph);
                 i++;
                 if (i % 1000 == 0) {

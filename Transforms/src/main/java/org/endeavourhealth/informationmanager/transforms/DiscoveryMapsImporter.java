@@ -22,8 +22,9 @@ public class DiscoveryMapsImporter implements TTImport {
       Path file = ImportUtils.findFileForId(config.folder, noneCoreEntities[0]);
       TTManager manager= new TTManager();
       TTDocument document = manager.loadDocument(file.toFile());
-      TTDocumentFiler filer= TTFilerFactory.getDocumentFiler();
-      filer.fileDocument(document);
+       try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
+           filer.fileDocument(document);
+       }
    }
 
    public DiscoveryMapsImporter validateFiles(String inFolder){
