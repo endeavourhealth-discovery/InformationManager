@@ -3,15 +3,12 @@ package org.endeavourhealth.informationmanager.rdf4j;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
-import org.eclipse.rdf4j.repository.sail.SailRepository;
-import org.eclipse.rdf4j.sail.nativerdf.NativeStore;
+import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTFilerException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 public class TTDocumentFilerRdf4j extends TTDocumentFiler {
     private static final Logger LOG = LoggerFactory.getLogger(TTDocumentFilerRdf4j.class);
@@ -21,9 +18,10 @@ public class TTDocumentFilerRdf4j extends TTDocumentFiler {
 
     public TTDocumentFilerRdf4j() throws TTFilerException {
         LOG.info("Connecting");
-        repo = new SailRepository(new NativeStore(new File("Z:\\rdf4j")));
 
         try {
+            // repo = new SailRepository(new NativeStore(new File("Z:\\rdf4j"), "spoc,opsc,posc"));
+            repo = new HTTPRepository("http://localhost:7200/", "im");
             repo.initialize();
             conn = repo.getConnection();
             LOG.info("Connected");

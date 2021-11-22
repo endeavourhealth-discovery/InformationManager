@@ -103,8 +103,12 @@ public class ImportUtils {
 
       if (paths.isEmpty())
          throw new IOException("No files found in [" + path + "] for expression [" + filePattern + "]");
-      else
-         throw new IOException("Multiple files found in [" + path + "] for expression [" + filePattern + "]");
+      else {
+          for(Path p : paths) {
+              System.err.println("Found match : " + p.toString());
+          }
+          throw new IOException("Multiple files found in [" + path + "] for expression [" + filePattern + "]");
+      }
    }
 
    /**
