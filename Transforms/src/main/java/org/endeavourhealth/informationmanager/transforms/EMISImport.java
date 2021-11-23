@@ -77,13 +77,29 @@ public class EMISImport implements TTImport {
                 TTEntity parentEntity= codeIdToEntity.get(parentId);
                 if (parentEntity!=null) {
                     String parentIri = codeIdToEntity.get(parentId).getIri();
-                    if (isEMIS(childEntity.getCode()))
-                        childEntity.addObject(RDFS.SUBCLASSOF,TTIriRef.iri(parentIri));
+                    if (isEMIS(childEntity.getCode())) {
+                        if (!isCoreSublass(childEntity))
+                            childEntity.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(parentIri));
+                        else
+                            TTManager.addChildOf(childEntity, iri(parentIri));
+                    }
                     else
                         TTManager.addChildOf(childEntity, iri(parentIri));
                 }
             }
         }
+    }
+
+    private boolean isCoreSublass(TTEntity subclass) {
+        if (subclass.get(RDFS.SUBCLASSOF)==null)
+            return false;
+        for (TTValue value:subclass.get(RDFS.SUBCLASSOF).asArray().getElements()) {
+            if (value.asIriRef().getIri().contains(SNOMED.NAMESPACE))
+                return true;
+            if (value.asIriRef().getIri().contains(IM.NAMESPACE))
+                return true;
+        }
+        return false;
     }
 
     private void addEMISUnlinked(){
