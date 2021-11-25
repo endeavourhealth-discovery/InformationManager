@@ -103,23 +103,23 @@ INSERT INTO config (name, config) VALUES ('definition', '[
 DELETE FROM config WHERE name = 'filterDefaults';
 INSERT INTO config (name, config) VALUES ('filterDefaults', '{
 	"schemeOptions": [
-		"Discovery namespace",
-		"Snomed-CT namespace"
+		"http://endhealth.info/im#",
+        "http://snomed.info/sct#"
 	],
     "statusOptions": [
-		"Active",
-		"Draft"
+      "http://endhealth.info/im#Active",
+      "http://endhealth.info/im#Draft"
 	],
     "typeOptions": [
-        "Concept",
-        "Concept Set",
-        "Folder",
-        "Node shape",
-        "ObjectProperty",
-        "Property",
-        "Query template",
-        "Record type",
-        "Value set"
+      "http://endhealth.info/im#Concept",
+      "http://endhealth.info/im#ConceptSet",
+      "http://endhealth.info/im#ConceptSetGroup",
+      "http://endhealth.info/im#Folder",
+      "http://www.w3.org/ns/shacl#NodeShape",
+      "http://www.w3.org/2002/07/owl#ObjectProperty",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property",
+      "http://endhealth.info/im#QueryTemplate",
+      "http://endhealth.info/im#ValueSet"
     ]
 }');
 
