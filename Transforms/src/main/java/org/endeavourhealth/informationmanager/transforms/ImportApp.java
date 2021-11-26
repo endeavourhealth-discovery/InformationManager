@@ -1,10 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.informationmanager.ClosureGenerator;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTImportByType;
-import org.endeavourhealth.informationmanager.TTImportConfig;
+import org.endeavourhealth.informationmanager.*;
 
 import java.util.Date;
 
@@ -25,6 +22,8 @@ public class ImportApp {
         // Mandatory/ordered args
         cfg.folder = args[0];
         cfg.importType = args[1].toLowerCase();
+
+        TTFilerFactory.skipDeletes="all".equals(cfg.importType);
 
         // Optional switch args
         if (args.length >= 3) {

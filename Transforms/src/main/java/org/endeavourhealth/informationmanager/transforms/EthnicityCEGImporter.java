@@ -11,10 +11,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 
 public class EthnicityCEGImporter implements TTImport {
@@ -22,7 +18,6 @@ public class EthnicityCEGImporter implements TTImport {
 	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
 	private final TTManager manager = new TTManager();
 	private TTDocument document;
-	private final Map<String,String> ethnicMap= new HashMap<>();
 	private final Map<String,String> ethnicCensusMap= new HashMap<>();
 	private final Map<String,String> raceMap = new HashMap<>();
 	private final Map<String,TTEntity> nhsCatmap= new HashMap<>();
@@ -31,28 +26,14 @@ public class EthnicityCEGImporter implements TTImport {
 	private final Set<String> dropWords= new HashSet<>();
 	private TTEntity nhsSet;
 	private TTEntity cegSet;
+	Map<String,List<String>> census2001;
 
-	private Connection conn;
-	
-	private PreparedStatement get2001Census;
-	
-	public EthnicityCEGImporter() throws SQLException, ClassNotFoundException {
-		conn= ImportUtils.getConnection();
-		get2001Census= conn.prepareStatement("select tc.term,child.iri,child.code,child.name from tct\n" +
-			"join entity parent on tct.ancestor= parent.dbid \n" +
-			"join entity child on tct.descendant= child.dbid\n" +
-			"left join term_code tc on tc.entity= child.dbid\n" +
-			"where parent.iri='http://snomed.info/sct#92381000000106'\n"+
-			"and child.status='"+IM.ACTIVE.getIri()+"'");
-
-
-	}
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		document = manager.createDocument(IM.GRAPH_CEG16.getIri());
 		document.setCrud(IM.UPDATE);
-		retrieveEthnicity(config.folder, config.secure);
+		retrieveEthnicity(config.secure);
 		spellCorrections();
 		importEthnicGroups(config.folder);
 
@@ -73,33 +54,28 @@ public class EthnicityCEGImporter implements TTImport {
 		dropWords.add("ethnic group");
 	}
 
-	private void retrieveEthnicity(String folder, boolean secure) throws SQLException, IOException, ClassNotFoundException {
-		ResultSet rs= get2001Census.executeQuery();
-		if (!rs.next()){
-			System.out.println("Building tct as this is required");
-			ClosureGenerator.generateClosure(folder, secure);
-		}
-
-		rs= get2001Census.executeQuery();
-		while (rs.next()){
-			String term=rs.getString("term").toLowerCase();
-			String snomed=rs.getString("code");
-			term=term.replace(","," ");
-			term.replace("  "," ");
-			if (spellMaps.get(term)!=null)
-				term=spellMaps.get(term);
-			ethnicCensusMap.put(term,snomed);
-			if (term.contains("(")) {
-				term = term.substring(0, term.indexOf("("));
-				term = term.substring(0, term.lastIndexOf(" "));
-			}
-			if (term.contains(": ")) {
-				term = term.split(": ")[1];
-				ethnicCensusMap.put(term,snomed);
-			}
-			if (term.contains(" - ")) {
-				term = term.split(" - ")[0];
+	private void retrieveEthnicity(boolean secure) throws TTFilerException {
+		census2001= ImportUtils.getDescendants("http://snomed.info/sct#92381000000106",IM.CODE_SCHEME_SNOMED.getIri());
+		for (Map.Entry<String,List<String>> entry:census2001.entrySet()) {
+			String snomed = entry.getKey();
+			for (String term : entry.getValue()) {
+				term = term.replace(",", " ");
+				term=term.replace("  ", " ");
+				if (spellMaps.get(term) != null)
+					term = spellMaps.get(term);
 				ethnicCensusMap.put(term, snomed);
+				if (term.contains("(")) {
+					term = term.substring(0, term.indexOf("("));
+					term = term.substring(0, term.lastIndexOf(" "));
+				}
+				if (term.contains(": ")) {
+					term = term.split(": ")[1];
+					ethnicCensusMap.put(term, snomed);
+				}
+				if (term.contains(" - ")) {
+					term = term.split(" - ")[0];
+					ethnicCensusMap.put(term, snomed);
+				}
 			}
 		}
 
@@ -114,8 +90,6 @@ public class EthnicityCEGImporter implements TTImport {
 		if (spellMaps.get(term)!=null)
 			term=spellMaps.get(term);
 
-		if (ethnicMap.get(term)!=null)
-			return ethnicMap.get(term);
 		if (ethnicCensusMap.get(term)!=null)
 			return ethnicCensusMap.get(term);
 
@@ -226,25 +200,12 @@ public class EthnicityCEGImporter implements TTImport {
 
 
 	@Override
-	public TTImport validateFiles(String inFolder) {
+	public TTImport validateFiles(String inFolder) throws TTFilerException {
 		ImportUtils.validateFiles(inFolder,lookups);
 		return this;
 	}
 
-	@Override
-	public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
 
-		return this;
-	}
-
-	@Override
-	public void close() throws Exception {
-		if (conn!=null)
-			if (!conn.isClosed())
-				conn.close();
-
-
-	}
 }
 
 

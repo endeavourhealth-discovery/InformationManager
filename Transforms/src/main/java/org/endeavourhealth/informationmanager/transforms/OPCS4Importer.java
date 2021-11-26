@@ -32,13 +32,11 @@ public class OPCS4Importer implements TTImport {
 
     private Set<String> snomedCodes;
     private final Map<String,TTEntity> codeToEntity= new HashMap<>();
-    private Connection conn;
 
     public TTImport importData(TTImportConfig config) throws Exception {
         System.out.println("Importing OPCS4.....");
         System.out.println("Checking Snomed codes first");
-        conn= ImportUtils.getConnection();
-        snomedCodes= ImportUtils.importSnomedCodes(conn);
+        snomedCodes= ImportUtils.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_OPCS4.getIri());
         importChapters(config.folder,document);
         importEntities(config.folder,document);
@@ -125,15 +123,4 @@ public class OPCS4Importer implements TTImport {
         return this;
     }
 
-    @Override
-    public TTImport validateLookUps(Connection conn) {
-        return this;
-    }
-
-    @Override
-    public void close() throws Exception {
-        if (conn != null && !conn.isClosed())
-            conn.close();
-
-    }
 }

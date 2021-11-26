@@ -30,13 +30,6 @@ public class CoreImporter implements TTImport {
       return this;
    }
 
-   @Override
-   public TTImport validateLookUps(Connection conn) {
-      return this;
-   }
-
-
-
 
    /**
     * Imports the core ontology document
@@ -109,8 +102,4 @@ public class CoreImporter implements TTImport {
    }
 
 
-   @Override
-   public void close() throws Exception {
-
-   }
 }

@@ -22,20 +22,16 @@ public class Importer implements TTImportByType {
    @Override
    public TTImportByType importByType(TTIriRef importType, TTImportConfig config) throws Exception {
       System.out.println("Importing "+ importType.getIri());
-      try (TTImport importer= getImporter(importType)){
-         importer.validateFiles(config.folder);
-         importer.validateLookUps(ImportUtils.getConnection());
-         importer.importData(config);
-      }
+      TTImport importer= getImporter(importType);
+      importer.validateFiles(config.folder);
+      importer.importData(config);
       return this;
    }
 
    @Override
    public TTImportByType validateByType(TTIriRef importType, String inFolder) throws Exception {
-      try (TTImport importer= getImporter(importType)){
-         importer.validateFiles(inFolder);
-         importer.validateLookUps(ImportUtils.getConnection());
-      }
+      TTImport importer= getImporter(importType);
+      importer.validateFiles(inFolder);
       return this;
    }
 

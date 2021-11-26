@@ -105,13 +105,5 @@ public class IM1MapImport implements TTImport {
         return this;
 	}
 
-	@Override
-	public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
-		return this;
-	}
 
-	@Override
-	public void close() throws Exception {
-
-	}
 }

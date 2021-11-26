@@ -34,7 +34,6 @@ public class ICD10Importer implements TTImport {
     private final List<String> startChapterList= new ArrayList<>();
     private TTDocument document;
     private TTDocument mapDocument;
-    private Connection conn;
     private final Map<String,TTEntity> codeToEntity= new HashMap<>();
     private final Map<String,TTEntity> noDotCodeToEntity= new HashMap<>();
 
@@ -42,9 +41,8 @@ public class ICD10Importer implements TTImport {
     public TTImport importData(TTImportConfig config) throws Exception {
         validateFiles(config.folder);
         System.out.println("Importing ICD10....");
-        conn= ImportUtils.getConnection();
         System.out.println("Getting snomed codes");
-        snomedCodes= ImportUtils.importSnomedCodes(conn);
+        snomedCodes= ImportUtils.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_ICD10.getIri());
         createTaxonomy();
         importChapters(config.folder,document);
@@ -188,16 +186,4 @@ public class ICD10Importer implements TTImport {
         return this;
     }
 
-    @Override
-    public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
-        return null;
-    }
-
-    @Override
-    public void close() throws Exception {
-        if (conn!=null)
-            if (!conn.isClosed())
-                conn.close();
-
-    }
 }

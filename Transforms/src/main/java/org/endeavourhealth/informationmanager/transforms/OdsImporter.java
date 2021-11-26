@@ -20,10 +20,7 @@ public class OdsImporter implements TTImport {
       return this;
    }
 
-   @Override
-   public TTImport validateLookUps(Connection conn) {
-      return this;
-   }
+
 
    /**
     * Imports the core ontology document
@@ -46,8 +43,4 @@ public class OdsImporter implements TTImport {
       return this;
    }
 
-   @Override
-   public void close() throws Exception {
-
-   }
 }

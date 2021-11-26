@@ -78,6 +78,7 @@ public class SnomedImporter implements TTImport {
    public static final String ALL_CONTENT = "723596005";
    public static final String ACTIVE = "1";
    public static final String REPLACED_BY = "370124000";
+   public static final String SNOMED_ATTRIBUTE = "sn:106237007";
 
    //======================PUBLIC METHODS============================
 
@@ -448,6 +449,8 @@ public class SnomedImporter implements TTImport {
    private void addRelationship(TTEntity c, Integer group, String relationship, String target) {
       if (relationship.equals(IS_A)) {
          addIsa(c,target);
+         if (c.getIri().equals(SNOMED_ATTRIBUTE))
+            c.addObject(RDFS.SUBPROPERTYOF,RDF.PROPERTY);
 
       } else if (relationship.equals(REPLACED_BY)){
          c.addObject(SNOMED.REPLACED_BY,TTIriRef.iri(SNOMED.NAMESPACE+target));
@@ -485,18 +488,4 @@ public class SnomedImporter implements TTImport {
 
    }
 
-   @Override
-   public TTImport validateLookUps(Connection conn) {
-      return this;
-   }
-
-
-
-   @Override
-   public void close() throws Exception {
-      if (conceptMap!=null)
-         conceptMap.clear();
-
-
-   }
 }

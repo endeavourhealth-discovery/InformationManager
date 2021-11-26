@@ -22,10 +22,7 @@ public class DiscoveryReportsImporter implements TTImport {
       return this;
    }
 
-   @Override
-   public TTImport validateLookUps(Connection conn) {
-      return null;
-   }
+
 
    /**
     * Imports the reports document
@@ -57,8 +54,4 @@ public class DiscoveryReportsImporter implements TTImport {
    }
 
 
-   @Override
-   public void close() throws Exception {
-
-   }
 }

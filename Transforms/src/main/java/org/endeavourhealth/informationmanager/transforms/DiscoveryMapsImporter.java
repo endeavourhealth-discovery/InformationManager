@@ -32,14 +32,7 @@ public class DiscoveryMapsImporter implements TTImport {
       return this;
    }
 
-   @Override
-   public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
-      return null;
-   }
 
 
-   @Override
-   public void close() throws Exception {
 
-   }
 }

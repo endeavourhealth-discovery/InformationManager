@@ -28,6 +28,7 @@ public class EMISImport implements TTImport {
     private final Map<String,TTEntity> codeIdToEntity= new HashMap<>();
     private final Map<String,String> codeIdToSnomed = new HashMap<>();
     private final Map<String,List<String>> parentMap = new HashMap<>();
+    private final Map<String,String> remaps= new HashMap<>();
 
     private Connection conn;
     private final TTManager manager= new TTManager();
@@ -46,11 +47,11 @@ public class EMISImport implements TTImport {
 
 
     public TTImport importData(TTImportConfig config) throws Exception {
-        conn= ImportUtils.getConnection();
         System.out.println("Retrieving filed snomed codes");
-        snomedCodes= ImportUtils.importSnomedCodes(conn);
+        snomedCodes= ImportUtils.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_EMIS.getIri());
         System.out.println("importing emis code file");
+        populateRemaps();
         addEMISUnlinked();
         importEMISCodes(config.folder);
         setEmisHierarchy();
@@ -63,7 +64,13 @@ public class EMISImport implements TTImport {
 
     }
 
-
+    private void populateRemaps() {
+        remaps.put("65O2","116813009");
+        remaps.put("65O3","268504008");
+        remaps.put("65O4","271498007");
+        remaps.put("65O5","384702009");
+        remaps.put("65OZ","709562004");
+    }
 
 
     private void setEmisHierarchy() {
@@ -79,7 +86,10 @@ public class EMISImport implements TTImport {
                     String parentIri = codeIdToEntity.get(parentId).getIri();
                     if (isEMIS(childEntity.getCode())) {
                         if (!isCoreSublass(childEntity))
-                            childEntity.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(parentIri));
+                            if (!isBlackList(parentIri.substring(parentIri.lastIndexOf("=")+1))) {
+                                childEntity.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(parentIri));
+                            } else
+                                TTManager.addChildOf(childEntity,iri(parentIri));
                         else
                             TTManager.addChildOf(childEntity, iri(parentIri));
                     }
@@ -139,7 +149,7 @@ public class EMISImport implements TTImport {
                 TTEntity emisConcept= emisToEntity.get(emis);
                 if (emisConcept==null) {
                     emisConcept = new TTEntity()
-                      .setIri(IM.CODE_SCHEME_EMIS.getIri() + emis)
+                      .setIri(IM.CODE_SCHEME_EMIS.getIri() + emis.replace("^","%"))
                       .addType(IM.CONCEPT)
                       .setScheme(IM.CODE_SCHEME_EMIS)
                       .setName(name)
@@ -149,8 +159,13 @@ public class EMISImport implements TTImport {
                 }
                 codeIdToEntity.put(codeid, emisConcept);
                 if (isSnomed(snomed)) {
-                    emisConcept.addObject(RDFS.SUBCLASSOF,
-                      TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+                    if (remaps.get(emis)!=null)
+                        snomed=remaps.get(emis);
+                    if (!isBlackList(snomed)) {
+                        emisConcept.addObject(RDFS.SUBCLASSOF,
+                          TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+                    } else
+                        emisConcept.addObject(IM.IS_CHILD_OF,iri("emis:EMISUnlinkedCodes"));
                 }
                 else {
                     emisConcept.addObject(IM.ALTERNATIVE_CODE, TTLiteral.literal(snomed));
@@ -172,6 +187,14 @@ public class EMISImport implements TTImport {
             }
             System.out.println("Process ended with " + count + " records");
         }
+
+    }
+
+    public boolean isBlackList(String code){
+        String[] blacklist= {"373873005"};
+        if (Arrays.asList(blacklist).contains(code))
+            return true;
+        else return false;
 
     }
 
@@ -216,30 +239,6 @@ public class EMISImport implements TTImport {
         return this;
     }
 
-    @Override
-    public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
-
-        return this;
-    }
 
 
-    @Override
-    public void close() throws Exception {
-        if (conn!=null)
-            if (!conn.isClosed())
-                conn.close();
-        if (snomedCodes!=null)
-            snomedCodes.clear();
-        codeIdToEntity.clear();;
-        codeIdToSnomed.clear();
-        parentMap.clear();
-
-        if (document!=null) {
-            if (document.getEntities() != null)
-                document.getEntities().clear();
-            if (document.getEntities() != null)
-                document.getEntities().clear();
-        }
-
-    }
 }
