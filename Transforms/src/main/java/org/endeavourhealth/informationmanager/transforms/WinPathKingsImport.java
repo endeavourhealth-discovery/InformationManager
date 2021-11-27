@@ -65,6 +65,7 @@ public class WinPathKingsImport implements TTImport {
 					.addType(IM.CONCEPT)
 					.setName(fields[1])
 					.setDescription("Local winpath Kings trust pathology system entity ")
+					.setScheme(IM.CODE_SCHEME_KINGS_WINPATH)
 					.setCode(code);
 				document.addEntity(entity);
 				if (readToSnomed.get(readCode) != null) {

@@ -194,6 +194,7 @@ public class VisionImport implements TTImport {
                     c.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".", ""));
                     c.setName(term);
                     c.setCode(code);
+										c.setScheme(IM.CODE_SCHEME_VISION);
                     document.addEntity(c);
                     codeToConcept.put(code, c);
                 }
@@ -239,7 +240,7 @@ public class VisionImport implements TTImport {
 				if (vision!=null) {
 					if (isSnomed(snomed)) {
 						String iri = SNOMED.NAMESPACE + snomed;
-						vision.addObject(RDFS.SUBCLASSOF, iri(iri));
+						vision.addObject(RDFS.SUBCLASSOF, iri(SNOMED.NAMESPACE+snomed));
 					}
 					String emis = code.replace(".", "");
 					if (emisToSnomed.get(emis) != null) {

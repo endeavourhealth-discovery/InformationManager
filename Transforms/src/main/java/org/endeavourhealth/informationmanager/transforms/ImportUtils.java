@@ -196,11 +196,9 @@ public class ImportUtils {
       Map<String, List<String>> codeToTerm = new HashMap<>();
       RepositoryConnection conn = getGraphConnection();
       TupleQuery qry = conn.prepareTupleQuery("select ?child ?name\n" +
-        "where {?child <" + RDFS.SUBCLASSOF.getIri() + ">+ ?concept.\n" +
-        "?child <"+IM.HAS_SCHEME.getIri()+"> ?scheme.\n"+
-        "?concept <" + RDFS.LABEL.getIri() + "> ?name.}");
+        "where {GRAPH <"+IM.GRAPH_SNOMED.getIri()+"> { ?child <" + RDFS.SUBCLASSOF.getIri() + ">+ ?concept.\n" +
+        "?child <" + RDFS.LABEL.getIri() + "> ?name.}}");
       qry.setBinding("concept", valueFactory.createIRI(concept));
-      qry.setBinding("scheme",valueFactory.createIRI(scheme));
       try {
          TupleQueryResult rs = qry.evaluate();
          while (rs.hasNext()) {
@@ -286,9 +284,8 @@ public class ImportUtils {
    private static Map<String, List<String>> importReadToSnomedRdf4j(Map<String, List<String>> readToSnomed) throws TTFilerException {
      RepositoryConnection conn= getGraphConnection();
      TupleQuery qry= conn.prepareTupleQuery("select ?code ?snomed\n"+
-       "where {?concept <"+IM.CODE.getIri()+"> ?code. \n"+
-       "?concept <"+IM.HAS_SCHEME.getIri()+"> <"+IM.CODE_SCHEME_VISION.getIri()+">.\n"+
-   "?concept <"+RDFS.SUBCLASSOF.getIri()+"> ?snomed.}");
+       "where {GRAPH <"+IM.GRAPH_VISION.getIri()+"> {?concept <"+IM.CODE.getIri()+"> ?code. \n"+
+   "?concept <"+RDFS.SUBCLASSOF.getIri()+"> ?snomed.}}");
      try {
         TupleQueryResult rs= qry.evaluate();
         while (rs.hasNext()){
@@ -331,10 +328,12 @@ public class ImportUtils {
    private static void importEmisToSnomedRdf4j(Map<String, List<String>> emisToSnomed, Map<String,String> emisToTerm) throws TTFilerException {
       RepositoryConnection conn= getGraphConnection();
       TupleQuery qry= conn.prepareTupleQuery("select ?code ?snomed  ?name\n"+
-        "where {?concept <"+IM.CODE.getIri()+"> ?code. \n"+
-        "?concept <"+IM.HAS_SCHEME.getIri()+"> <"+IM.CODE_SCHEME_EMIS.getIri()+">.\n"+
-        "?concept <"+RDFS.SUBCLASSOF.getIri()+"> ?snomed." +
-        "?concept <"+RDFS.LABEL.getIri()+"> ?name}");
+        "where {GRAPH <"+IM.GRAPH_EMIS.getIri()+"> \n"+
+          "{?concept <"+IM.CODE.getIri()+"> ?code. \n"+
+        "?concept <"+RDFS.LABEL.getIri()+"> ?name.\n"+
+        "?concept <"+RDFS.SUBCLASSOF.getIri()+"> ?snomedIri.}\n" +
+        "GRAPH <"+IM.GRAPH_SNOMED.getIri()+"> {"+
+        "?snomedIri <"+IM.CODE.getIri()+"> ?snomed.}}");
       try {
          TupleQueryResult rs= qry.evaluate();
          while (rs.hasNext()){

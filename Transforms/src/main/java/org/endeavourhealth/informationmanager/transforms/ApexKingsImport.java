@@ -74,6 +74,7 @@ public class ApexKingsImport implements TTImport {
 					.setName(fields[2])
 					.setDescription("Local apex Kings trust pathology system entity ")
 					.setCode(code)
+					.setScheme(IM.CODE_SCHEME_KINGS_APEX)
 					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"KingsApexCodes")));
 				document.addEntity(entity);
 				apexToRead.put(code,readCode);

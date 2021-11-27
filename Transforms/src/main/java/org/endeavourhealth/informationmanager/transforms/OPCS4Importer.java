@@ -101,6 +101,7 @@ public class OPCS4Importer implements TTImport {
                 String[] fields = line.split("\t");
                 TTEntity c = new TTEntity()
                         .setCode(fields[0])
+                  .setScheme(IM.CODE_SCHEME_OPCS4)
                         .setIri(IM.CODE_SCHEME_OPCS4.getIri() + (fields[0].replace(".","")))
                         .addType(IM.CONCEPT)
                     .set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.CODE_SCHEME_OPCS4.getIri()+fields[0].substring(0,1))));

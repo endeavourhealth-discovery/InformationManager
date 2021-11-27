@@ -135,8 +135,6 @@ public class EMISImport implements TTImport {
                 String snomed = fields[3];
                 String descid = fields[4];
                 String parent = fields[10];
-                //if (emis.equals("1B85-1"))
-                  //  System.out.println("1B85-1");
 
                 if (parent.equals(""))
                     parent = null;

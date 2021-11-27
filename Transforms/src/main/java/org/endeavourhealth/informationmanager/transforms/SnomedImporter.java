@@ -198,6 +198,7 @@ public class SnomedImporter implements TTImport {
                         TTEntity c = new TTEntity();
                         c.setIri(SN + fields[0]);
                         c.setCode(fields[0]);
+                        c.setScheme(IM.CODE_SCHEME_SNOMED);
                         if (conceptFile.contains("Refset"))
                            c.addType(IM.CONCEPT_SET);
                         else

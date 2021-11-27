@@ -157,6 +157,7 @@ public class ICD10Importer implements TTImport {
                 String[] fields = line.split("\t");
                 TTEntity c = new TTEntity()
                   .setCode(fields[0])
+                  .setScheme(IM.CODE_SCHEME_ICD10)
                   .setIri(IM.CODE_SCHEME_ICD10.getIri() + fields[1])
                   .addType(IM.CONCEPT);
                 if(fields[4].length()>250){
