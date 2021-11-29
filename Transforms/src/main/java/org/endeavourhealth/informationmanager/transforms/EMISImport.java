@@ -22,6 +22,7 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 public class EMISImport implements TTImport {
 
     private static final String[] emisEntities = {".*\\\\EMIS\\\\EMISCodes.csv"};
+    private static final String[] allergies = {".*\\\\EMIS\\\\Allergies.json"};
 
     private Set<String> snomedCodes;
     private final Map<String,TTEntity> emisToEntity = new HashMap<>();
@@ -50,11 +51,14 @@ public class EMISImport implements TTImport {
         System.out.println("Retrieving filed snomed codes");
         snomedCodes= ImportUtils.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_EMIS.getIri());
+        document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(),"EMIS code scheme and graph",
+          "The EMIS local code scheme and graph i.e. local codes with links to codeIds +EMIS snomed extension."));
         System.out.println("importing emis code file");
         populateRemaps();
         addEMISUnlinked();
         importEMISCodes(config.folder);
         setEmisHierarchy();
+        allergyMaps(config.folder);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
@@ -62,6 +66,18 @@ public class EMISImport implements TTImport {
 
         return this;
 
+    }
+
+    private void allergyMaps(String folder) throws IOException {
+        Path path = ImportUtils.findFileForId(folder, allergies[0]);
+        TTManager allMgr= new TTManager();
+        TTDocument allDoc= allMgr.loadDocument(path.toFile());
+        for (TTEntity all:allDoc.getEntities()){
+            TTEntity emisEntity= manager.getEntity(all.getIri());
+            for (TTValue superClass:all.get(RDFS.SUBCLASSOF).asArray().getElements()){
+                emisEntity.addObject(RDFS.SUBCLASSOF,superClass);
+            }
+        }
     }
 
     private void populateRemaps() {
@@ -147,7 +163,7 @@ public class EMISImport implements TTImport {
                 TTEntity emisConcept= emisToEntity.get(emis);
                 if (emisConcept==null) {
                     emisConcept = new TTEntity()
-                      .setIri(IM.CODE_SCHEME_EMIS.getIri() + emis.replace("^","%"))
+                      .setIri(IM.CODE_SCHEME_EMIS.getIri() + emis.replace("^","_").replace(".","_"))
                       .addType(IM.CONCEPT)
                       .setScheme(IM.CODE_SCHEME_EMIS)
                       .setName(name)
@@ -233,7 +249,7 @@ public class EMISImport implements TTImport {
 
 
     public EMISImport validateFiles(String inFolder){
-        ImportUtils.validateFiles(inFolder,emisEntities);
+        ImportUtils.validateFiles(inFolder,emisEntities,allergies);
         return this;
     }
 

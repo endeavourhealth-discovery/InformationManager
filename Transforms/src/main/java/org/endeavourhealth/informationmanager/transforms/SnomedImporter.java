@@ -96,7 +96,9 @@ public class SnomedImporter implements TTImport {
       conceptMap = new HashMap<>();
       TTManager dmanager= new TTManager();
 
-      document= dmanager.createDocument(IM.GRAPH_SNOMED.getIri());
+      document= dmanager.createDocument(SNOMED.GRAPH_SNOMED.getIri());
+      document.addEntity(dmanager.createGraph(SNOMED.GRAPH_SNOMED.getIri(), "Snomed-CT code scheme and graph",
+        "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions"));
 
       importConceptFiles(config.folder);
       importDescriptionFiles(config.folder);
@@ -198,7 +200,7 @@ public class SnomedImporter implements TTImport {
                         TTEntity c = new TTEntity();
                         c.setIri(SN + fields[0]);
                         c.setCode(fields[0]);
-                        c.setScheme(IM.CODE_SCHEME_SNOMED);
+                        c.setScheme(SNOMED.GRAPH_SNOMED);
                         if (conceptFile.contains("Refset"))
                            c.addType(IM.CONCEPT_SET);
                         else

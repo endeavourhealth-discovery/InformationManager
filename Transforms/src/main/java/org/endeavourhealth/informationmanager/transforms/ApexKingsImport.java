@@ -27,6 +27,8 @@ public class ApexKingsImport implements TTImport {
 
         TTManager manager = new TTManager();
         document = manager.createDocument(IM.GRAPH_KINGS_APEX.getIri());
+				document.addEntity(manager.createGraph(IM.GRAPH_KINGS_APEX.getIri(),"Kings Apex pathology code scheme and graph",
+					"The Kings Apex LIMB local code scheme and graph"));
 
         importR2Matches();
         setTopLevel();
@@ -40,9 +42,11 @@ public class ApexKingsImport implements TTImport {
 
 	private void setTopLevel() {
 		TTEntity kings= new TTEntity()
-			.setIri(IM.NAMESPACE+"KingsApexCodes")
+			.setIri(IM.GRAPH_KINGS_APEX.getIri()+"KingsApexCodes")
 			.addType(IM.CONCEPT)
 			.setName("Kings College Hospital Apex path codes")
+			.setCode("KingsApexCodes")
+			.setScheme(IM.GRAPH_KINGS_APEX)
 			.setDescription("Local codes for the Apex pathology system in kings")
 			.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies")));
 			document.addEntity(kings);
@@ -75,7 +79,7 @@ public class ApexKingsImport implements TTImport {
 					.setDescription("Local apex Kings trust pathology system entity ")
 					.setCode(code)
 					.setScheme(IM.CODE_SCHEME_KINGS_APEX)
-					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"KingsApexCodes")));
+					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(IM.GRAPH_KINGS_APEX.getIri()+"KingsApexCodes")));
 				document.addEntity(entity);
 				apexToRead.put(code,readCode);
 				if (readToSnomed.get(readCode)!=null){

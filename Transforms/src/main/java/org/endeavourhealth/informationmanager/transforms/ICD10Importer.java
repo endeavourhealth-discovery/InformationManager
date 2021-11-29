@@ -44,13 +44,14 @@ public class ICD10Importer implements TTImport {
         System.out.println("Getting snomed codes");
         snomedCodes= ImportUtils.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_ICD10.getIri());
+        document.addEntity(manager.createGraph(IM.GRAPH_ICD10.getIri(),"ICD10  code scheme and graph","The ICD10 code scheme and graph including links to core"));
         createTaxonomy();
         importChapters(config.folder,document);
         importEntities(config.folder, document);
         createHierarchy();
 
 
-        mapDocument= manager.createDocument(IM.MAP_SNOMED_ICD10.getIri());
+        mapDocument= manager.createDocument(IM.GRAPH_ICD10.getIri());
         mapDocument.setCrud(IM.ADD);
         importMaps(config.folder);
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
@@ -94,6 +95,8 @@ public class ICD10Importer implements TTImport {
           .setIri(icd10Codes.getIri())
           .setName("ICD10 5th edition classification codes")
           .addType(IM.CONCEPT)
+          .setCode("ICD10Codes")
+          .setScheme(IM.GRAPH_ICD10)
           .setDescription("ICD1O classification used in backward maps from Snomed");
         icd10.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
         document.addEntity(icd10);

@@ -196,7 +196,7 @@ public class ImportUtils {
       Map<String, List<String>> codeToTerm = new HashMap<>();
       RepositoryConnection conn = getGraphConnection();
       TupleQuery qry = conn.prepareTupleQuery("select ?child ?name\n" +
-        "where {GRAPH <"+IM.GRAPH_SNOMED.getIri()+"> { ?child <" + RDFS.SUBCLASSOF.getIri() + ">+ ?concept.\n" +
+        "where {GRAPH <"+SNOMED.GRAPH_SNOMED.getIri()+"> { ?child <" + RDFS.SUBCLASSOF.getIri() + ">+ ?concept.\n" +
         "?child <" + RDFS.LABEL.getIri() + "> ?name.}}");
       qry.setBinding("concept", valueFactory.createIRI(concept));
       try {
@@ -229,7 +229,7 @@ public class ImportUtils {
    private static Set<String> importSnomedRDF4J(Set<String> snomedCodes) throws TTFilerException {
       RepositoryConnection conn= getGraphConnection();
       TupleQuery qry= conn.prepareTupleQuery("select ?snomed\n"+
-        "where {?concept <"+ IM.HAS_SCHEME.getIri()+"> <"+IM.CODE_SCHEME_SNOMED.getIri()+">.\n"+
+        "where {?concept <"+ IM.HAS_SCHEME.getIri()+"> <"+SNOMED.GRAPH_SNOMED.getIri()+">.\n"+
    "?concept <"+IM.CODE.getIri()+"> ?snomed}");
       try {
          TupleQueryResult rs= qry.evaluate();
@@ -332,7 +332,7 @@ public class ImportUtils {
           "{?concept <"+IM.CODE.getIri()+"> ?code. \n"+
         "?concept <"+RDFS.LABEL.getIri()+"> ?name.\n"+
         "?concept <"+RDFS.SUBCLASSOF.getIri()+"> ?snomedIri.}\n" +
-        "GRAPH <"+IM.GRAPH_SNOMED.getIri()+"> {"+
+        "GRAPH <"+SNOMED.GRAPH_SNOMED.getIri()+"> {"+
         "?snomedIri <"+IM.CODE.getIri()+"> ?snomed.}}");
       try {
          TupleQueryResult rs= qry.evaluate();

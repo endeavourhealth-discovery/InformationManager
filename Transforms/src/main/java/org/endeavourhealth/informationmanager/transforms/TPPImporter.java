@@ -46,6 +46,8 @@ public class TPPImporter implements TTImport{
         System.out.println("Looking for Snomed codes");
 
         document = manager.createDocument(IM.GRAPH_TPP.getIri());
+        document.addEntity(manager.createGraph(IM.GRAPH_TPP.getIri(),"TPP CTV3 code scheme and graph",
+          "CTV3 and TPP local code scheme and graph including CTV3 and local codes"));
 
         //Gets the emis read 2 codes from the IM to use as look up as some are missing
        // importEmis();
@@ -218,6 +220,7 @@ public class TPPImporter implements TTImport{
         TTEntity c= new TTEntity().setIri("tpp:TPPCodes")
           .addType(IM.CONCEPT)
           .setName("TPP TPP and local codes")
+          .setScheme(IM.GRAPH_TPP)
           .setCode("TPPCodes");
         c.set(IM.IS_CONTAINED_IN,new TTArray());
         c.get(IM.IS_CONTAINED_IN).asArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));

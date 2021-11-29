@@ -28,8 +28,11 @@ public class WinPathKingsImport implements TTImport {
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager = new TTManager();
 		document= manager.createDocument(IM.GRAPH_KINGS_WINPATH.getIri());
+		document.addEntity(manager.createGraph(IM.GRAPH_KINGS_WINPATH.getIri(),"Kings Winpath pathology code scheme and graph",
+			"The Kings pathology Winpath LIMB local code scheme and graph"));
 		TTManager backManager = new TTManager();
 		TTManager vsetManager = new TTManager();
+		setTopLevel();
 		conn = ImportUtils.getConnection();
 		importR2Matches();
 		importWinPathKings(config.folder);
@@ -38,6 +41,17 @@ public class WinPathKingsImport implements TTImport {
         }
 		return this;
 
+	}
+	private void setTopLevel() {
+		TTEntity kings= new TTEntity()
+			.setIri(IM.GRAPH_KINGS_WINPATH.getIri()+"KingsWinPathCodes")
+			.addType(IM.CONCEPT)
+			.setName("Kings College Hospital  Winpath codes")
+			.setCode("KingsWinPathCodes")
+			.setScheme(IM.CODE_SCHEME_KINGS_WINPATH)
+			.setDescription("Local codes for the Winpath pathology system in kings")
+			.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies")));
+		document.addEntity(kings);
 	}
 
 
@@ -66,6 +80,7 @@ public class WinPathKingsImport implements TTImport {
 					.setName(fields[1])
 					.setDescription("Local winpath Kings trust pathology system entity ")
 					.setScheme(IM.CODE_SCHEME_KINGS_WINPATH)
+					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(IM.GRAPH_KINGS_APEX.getIri()+"KingsWinPathCodes")))
 					.setCode(code);
 				document.addEntity(entity);
 				if (readToSnomed.get(readCode) != null) {

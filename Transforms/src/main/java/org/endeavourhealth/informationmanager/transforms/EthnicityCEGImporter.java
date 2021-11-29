@@ -35,7 +35,11 @@ public class EthnicityCEGImporter implements TTImport {
 	public TTImport importData(TTImportConfig config) throws Exception {
 		document = manager.createDocument(IM.GRAPH_CEG16.getIri());
 		document.setCrud(IM.UPDATE);
+		document.addEntity(manager.createGraph(IM.GRAPH_CEG16.getIri(),"CEG (QMUL) ethnic category concept sets graph",
+			"The sets used in CEG for for the 16+ ethnic category"));
 		nhsDocument= nhsManager.createDocument(IM.GRAPH_NHSDD_ETHNIC_2001.getIri());
+		nhsDocument.addEntity(nhsManager.createGraph(IM.GRAPH_NHSDD_ETHNIC_2001.getIri(),"NHS Data Dictionary ethnic category 2001 concept set graph"
+		,"The graph for the sets used in NHS Data Dictionary for ethnic category"));
 
 		retrieveEthnicity(config.secure);
 		spellCorrections();
@@ -63,7 +67,7 @@ public class EthnicityCEGImporter implements TTImport {
 	}
 
 	private void retrieveEthnicity(boolean secure) throws TTFilerException {
-		census2001= ImportUtils.getDescendants("http://snomed.info/sct#92381000000106",IM.CODE_SCHEME_SNOMED.getIri());
+		census2001= ImportUtils.getDescendants("http://snomed.info/sct#92381000000106",SNOMED.GRAPH_SNOMED.getIri());
 		for (Map.Entry<String,List<String>> entry:census2001.entrySet()) {
 			String snomed = entry.getKey();
 			for (String term : entry.getValue()) {

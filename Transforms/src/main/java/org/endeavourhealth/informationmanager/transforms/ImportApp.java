@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.*;
 
 import java.util.Date;
@@ -38,6 +39,9 @@ public class ImportApp {
                     case "skipsearch":
                         cfg.skipsearch = true;
                         break;
+                    case "skipdeletes":
+                        TTFilerFactory.skipDeletes=true;
+                        break;
                     default:
                         System.err.println("Unknown parameter " + args[i]);
                 }
@@ -54,7 +58,8 @@ public class ImportApp {
             case "all":
                 TTImportByType importer = new Importer()
                         .validateByType(IM.GRAPH_DISCOVERY, cfg.folder)
-                        .validateByType(IM.GRAPH_SNOMED, cfg.folder)
+                        .validateByType(SNOMED.GRAPH_SNOMED, cfg.folder)
+                  .validateByType(IM.GRAPH_ENCOUNTERS,cfg.folder)
                         .validateByType(IM.GRAPH_EMIS, cfg.folder)
                         .validateByType(IM.GRAPH_TPP, cfg.folder)
                         .validateByType(IM.GRAPH_OPCS4, cfg.folder)
@@ -62,23 +67,20 @@ public class ImportApp {
                         .validateByType(IM.GRAPH_VISION, cfg.folder)
                         .validateByType(IM.GRAPH_KINGS_APEX, cfg.folder)
                         .validateByType(IM.GRAPH_KINGS_WINPATH, cfg.folder)
-                        .validateByType(IM.MAP_DISCOVERY, cfg.folder)
-                        .validateByType(IM.GRAPH_REPORTS, cfg.folder)
                         .validateByType(IM.GRAPH_CEG16, cfg.folder)
                         .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
                         .validateByType(IM.GRAPH_IM1, cfg.folder)
                         .validateByType(IM.GRAPH_ODS, cfg.folder);
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
-                importer.importByType(IM.GRAPH_SNOMED, cfg);
+                importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
+                importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
                 importer.importByType(IM.GRAPH_EMIS, cfg);
                 importer.importByType(IM.GRAPH_TPP, cfg);
                 importer.importByType(IM.GRAPH_OPCS4, cfg);
                 importer.importByType(IM.GRAPH_ICD10, cfg);
-                importer.importByType(IM.MAP_DISCOVERY, cfg);
                 importer.importByType(IM.GRAPH_VISION, cfg);
                 importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
                 importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
-                importer.importByType(IM.GRAPH_REPORTS, cfg);
                 importer.importByType(IM.GRAPH_CEG16, cfg);
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
                 importer.importByType(IM.GRAPH_IM1, cfg);
@@ -98,8 +100,8 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
                 break;
             case "snomed":
-                importer = new Importer().validateByType(IM.GRAPH_SNOMED, cfg.folder);
-                importer.importByType(IM.GRAPH_SNOMED, cfg);
+                importer = new Importer().validateByType(SNOMED.GRAPH_SNOMED, cfg.folder);
+                importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
                 break;
             case "emis":
                 importer = new Importer().validateByType(IM.GRAPH_EMIS, cfg.folder);
@@ -119,8 +121,8 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_ICD10, cfg);
                 break;
             case "discoverymaps":
-                importer = new Importer().validateByType(IM.MAP_DISCOVERY, cfg.folder);
-                importer.importByType(IM.MAP_DISCOVERY, cfg);
+                importer = new Importer().validateByType(IM.GRAPH_ENCOUNTERS, cfg.folder);
+                importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
                 break;
             case "read2":
             case "vision":
@@ -135,10 +137,7 @@ public class ImportApp {
                 importer = new Importer().validateByType(IM.GRAPH_KINGS_WINPATH, cfg.folder);
                 importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
                 break;
-            case "reports":
-                importer = new Importer().validateByType(IM.GRAPH_REPORTS, cfg.folder);
-                importer.importByType(IM.GRAPH_REPORTS, cfg);
-                break;
+
             case "cegethnicity":
                 importer = new Importer().validateByType(IM.GRAPH_CEG16, cfg.folder);
                 importer.importByType(IM.GRAPH_CEG16, cfg);

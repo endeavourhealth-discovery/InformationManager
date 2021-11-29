@@ -53,6 +53,8 @@ public class BartsCernerImport implements TTImport {
 		document= manager.createDocument(IM.GRAPH_BARTS_CERNER.getIri());
 		document.setCrud(IM.REPLACE);
 		document.setCrud(IM.UPDATE);
+		document.addEntity(manager.createGraph(IM.GRAPH_BARTS_CERNER.getIri(),"Barts Cerner code scheme and graph"
+		,"The Barts Cerner local code scheme and graph i.e. local codes with links to cor"));
 		importSets(config.folder);
 		importHierarchy(config.folder);
 		importCodes(config.folder);
@@ -126,6 +128,8 @@ public class BartsCernerImport implements TTImport {
 			.setIri(IM.CODE_SCHEME_BARTS_CERNER.getIri()+"BartsCernerCodes")
 			.addType(IM.CONCEPT)
 			.setName("Barts Cerner codes")
+			.setCode("BartsCernerCodes")
+			.setScheme(IM.GRAPH_BARTS_CERNER)
 			.setDescription("The Cerner codes used in Barts NHS Trust Millennium system");
 		topConcept.addObject(IM.IS_CHILD_OF,iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
 		document.addEntity(topConcept);

@@ -20,7 +20,8 @@ public class CoreImporter implements TTImport {
      ".*\\\\SemanticWeb\\\\OWLOntology.json",
      ".*\\\\SemanticWeb\\\\SHACLOntology.json",
      ".*\\\\DiscoveryCore\\\\CoreOntology.json",
-     ".*\\\\DiscoveryCore\\\\CoreOntology-more-inferred.json"
+     ".*\\\\DiscoveryCore\\\\CoreOntology-more-inferred.json",
+  ".*\\\\DiscoveryCore\\\\StatsReports.json"
    };
 
 

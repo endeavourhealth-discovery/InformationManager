@@ -46,6 +46,8 @@ public class VisionImport implements TTImport {
 		System.out.println("retrieving snomed codes from IM");
 		snomedCodes= ImportUtils.importSnomedCodes();
 		document= manager.createDocument(IM.GRAPH_VISION.getIri());
+		document.addEntity(manager.createGraph(IM.GRAPH_VISION.getIri(),"Vision Read2 code scheme and graph",
+			"The Vision Read 2 scheme and graph including the Vision version of Read 2 and Vision local codes"));
 
 		importEmis();
 		importR2Desc(config.folder);
@@ -158,12 +160,20 @@ public class VisionImport implements TTImport {
 
 
 	private void createHierarchy() {
+		TTEntity vision= new TTEntity()
+			.setIri(IM.GRAPH_VISION.getIri()+"VisionCodes")
+			.setName("Vision read 2 and localcodes")
+			.addType(IM.CONCEPT)
+			.setCode("VisionCodes")
+			.setScheme(IM.GRAPH_VISION)
+			.setDescription("Vision and read 2 codes mapped to core");
+		vision.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
 		for (TTEntity entity:document.getEntities()){
 			String shortCode = entity.getCode();
 			if (shortCode.contains("."))
 				shortCode= shortCode.substring(0,shortCode.indexOf("."));
 			if (shortCode.length()==1)
-				entity.set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.CODE_SCHEME_VISION.getIri()+"VisionCodes")));
+				entity.set(IM.IS_CHILD_OF,new TTArray().add(iri(vision.getIri())));
 			else {
 				String parent = shortCode.substring(0,shortCode.length()-1);
 				entity.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.CODE_SCHEME_VISION.getIri() + parent)));
