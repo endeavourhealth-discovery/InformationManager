@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import com.opencsv.CSVReader;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -59,6 +60,7 @@ public class EMISImport implements TTImport {
         importEMISCodes(config.folder);
         setEmisHierarchy();
         allergyMaps(config.folder);
+        supplementary(config.folder);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
@@ -66,6 +68,18 @@ public class EMISImport implements TTImport {
 
         return this;
 
+    }
+
+    private void supplementary(String folder) {
+        addSub("EMISNQDT1","310551000000106");
+        addSub("EMISNQHA21","428975001");
+        addSub("TRISHE2","16584000");
+        addSub("EMISNQRO5","415354003");
+    }
+
+    private void addSub(String child, String parent) {
+        TTEntity childEntity= manager.getEntity(IM.GRAPH_EMIS+child);
+        childEntity.addObject(RDFS.SUBCLASSOF,iri(SNOMED.NAMESPACE+parent));
     }
 
     private void allergyMaps(String folder) throws IOException {

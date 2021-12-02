@@ -56,6 +56,7 @@ public class TPPImporter implements TTImport{
         inportTPPConcepts(config.folder);
         importTPPTerms(config.folder);
         importTPPDescriptions(config.folder);
+        importLocals(config.folder);
 
         importCV3Hierarchy(config.folder);
 
@@ -69,6 +70,37 @@ public class TPPImporter implements TTImport{
 
         return this;
 
+    }
+
+    private void importLocals(String folder) throws IOException {
+        Path file = ImportUtils.findFileForId(folder, tppCtv3Lookup[0]);
+        System.out.println("Importing TPP Ctv3 local codes");
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            reader.readLine();
+            String line = reader.readLine();
+            int count = 0;
+            while (line != null && !line.isEmpty()) {
+                String[] fields = line.split(",");
+                count++;
+                if (count % 10000 == 0) {
+                    System.out.println("Processed " + count);
+                }
+                String code = fields[0].replace("\"","");
+                String term = fields[1];
+                TTEntity tpp=codeToEntity.get(code);
+                if (tpp==null){
+                    tpp = new TTEntity().setIri(IM.CODE_SCHEME_TPP.getIri()+code.replace(".","_"));
+                    tpp.setCode(code);
+                    tpp.setName(term);
+                    tpp.addType(IM.CONCEPT);
+                    codeToEntity.put(code, tpp);
+                    document.addEntity(tpp);
+
+                }
+                line = reader.readLine();
+            }
+            System.out.println("Process ended with " + count);
+        }
     }
 
     private void importnhsMaps(String folder) throws IOException{
