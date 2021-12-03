@@ -109,7 +109,7 @@ public class TPPImporter implements TTImport{
     private boolean alreadyMapped(TTEntity tpp, String snomed) {
         if (tpp.get(RDFS.SUBCLASSOF)==null)
             return false;
-        for (TTValue superClass:tpp.get(RDFS.SUBCLASSOF).asArray().getElements()){
+        for (TTValue superClass:tpp.get(RDFS.SUBCLASSOF).iterator()){
             if (superClass.asIriRef().getIri().split("#")[1].equals(snomed))
                 return true;
         }
@@ -230,7 +230,7 @@ public class TPPImporter implements TTImport{
           .setName("TPP TPP and local codes")
           .setCode("TPPCodes");
         c.set(IM.IS_CONTAINED_IN,new TTArray());
-        c.get(IM.IS_CONTAINED_IN).asArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+        c.get(IM.IS_CONTAINED_IN).add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
         document.addEntity(c);
     }
 

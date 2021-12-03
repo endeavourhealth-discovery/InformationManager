@@ -11,15 +11,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class Main {
+    private static final int BULKSIZE= 10000;
     private static Client client = ClientBuilder.newClient();
-    private static WebTarget target = client.target("http://3.10.169.133").path("indexes/concepts/documents");
+    private static WebTarget target = client.target("https://search.endeavourhealth.net").path("_bulk");
     private static ObjectMapper om = new ObjectMapper();
 
-    public static void main(String[] argv) throws SQLException, ClassNotFoundException, JsonProcessingException {
+    public static void main(String[] argv) throws SQLException, ClassNotFoundException, JsonProcessingException, InterruptedException {
         String sql = new StringJoiner(System.lineSeparator())
             .add("SELECT e.dbid, e.iri, e.name, e.code, e.scheme AS scheme, REPLACE(n.name, \" namespace\", \"\") as schemeName, et.type, e.status")
             .add("FROM entity e")
@@ -36,7 +38,7 @@ public class Main {
             ResultSet rs = stmt.executeQuery()) {
 
             System.out.println("Processing...");
-            List<MeiliBlob> docs = new ArrayList<>(100);
+            List<MeiliBlob> docs = new ArrayList<>(BULKSIZE);
             MeiliBlob blob = null;
             int i = 0;
             while(rs.next()) {
@@ -54,7 +56,7 @@ public class Main {
                 if (rs.getInt("dbid") == blob.getId()) {
                     blob.addType(iri(rs.getString("type")));
                 } else {
-                    if (((++i) % 1000) == 0) {
+                    if (((++i) % BULKSIZE) == 0) {
                         postMeili(docs);
                         docs.clear();
                         System.out.println("...processed " + i + " rows");
@@ -73,17 +75,36 @@ public class Main {
         }
     }
 
-    private static void postMeili(List<MeiliBlob> docs) throws JsonProcessingException {
-        String json = om.writeValueAsString(docs);
-        Response response = target
-            .request()
-            .header("X-Meili-API-Key", "d4f1ed8ec4e12866e0d5c7a05b05d01b54e497d5e63a7ff72a9fcbd334af78f6")
-            .post(Entity.entity(json, MediaType.APPLICATION_JSON));
+    private static void postMeili(List<MeiliBlob> docs) throws JsonProcessingException, InterruptedException {
+        StringJoiner batch = new StringJoiner("\n");
 
-        if (response.getStatus() != 202) {
-            System.err.println(response.getEntity().toString());
-            throw new IllegalStateException("Error posting to MeiliSearch");
+        for (MeiliBlob doc : docs) {
+            batch.add("{ \"index\" : { \"_index\": \"dev-test2\", \"_id\" : \"" + doc.getId() + "\" } }");
+            batch.add(om.writeValueAsString(doc));
         }
+        batch.add("");
+
+        boolean retry;
+
+        do {
+            System.out.println("Sending...");
+            retry = false;
+            Response response = target
+                .request()
+                .header("Authorization", "Basic " + System.getenv("OPENSEARCH_AUTH"))
+                .post(Entity.entity(batch.toString(), MediaType.APPLICATION_JSON));
+
+            if (response.getStatus() == 429) {
+                retry = true;
+                System.err.println("Queue busy, retrying");
+                TimeUnit.SECONDS.sleep(1);
+            } else if (response.getStatus() != 200 && response.getStatus() != 201) {
+                System.err.println(response.readEntity(String.class));
+                throw new IllegalStateException("Error posting to OpenSearch");
+            }
+
+        } while (retry);
+        System.out.println("Done.");
     }
 
     private static Connection getConnection() throws SQLException, ClassNotFoundException {

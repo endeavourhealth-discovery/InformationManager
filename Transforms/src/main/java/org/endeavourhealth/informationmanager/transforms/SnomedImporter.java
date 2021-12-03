@@ -234,7 +234,7 @@ public class SnomedImporter implements TTImport {
                if (c!=null) {
                   if (c.get(IM.MEMBERS)==null)
                      c.set(IM.MEMBERS,new TTArray());
-                  c.get(IM.MEMBERS).asArray().add(TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
+                  c.get(IM.MEMBERS).add(TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
 
                }
                i++;
@@ -372,7 +372,7 @@ public class SnomedImporter implements TTImport {
          op.addObject(RDFS.RANGE,expression);
       else if (expression.isNode()){
          if (expression.asNode().get(SHACL.OR)!=null){
-            for (TTValue or:expression.asNode().get(SHACL.OR).asArray().getElements()){
+            for (TTValue or:expression.asNode().get(SHACL.OR).iterator()){
                if (or.isIriRef())
                   op.addObject(RDFS.RANGE,or);
               //Code level range not supported
@@ -391,7 +391,7 @@ public class SnomedImporter implements TTImport {
       //therefore groups are not modelled in this version
       if (op.get(RDFS.DOMAIN)==null)
          op.set(RDFS.DOMAIN,new TTArray());
-      op.get(RDFS.DOMAIN).asArray().add(TTIriRef.iri(SN+ domain));
+      op.get(RDFS.DOMAIN).add(TTIriRef.iri(SN+ domain));
    }
 
    private void importRelationshipFiles(String path) throws IOException {
@@ -439,7 +439,7 @@ public class SnomedImporter implements TTImport {
          TTArray isas = new TTArray();
          entity.set(isa, isas);
       }
-      TTArray isas= entity.get(isa).asArray();
+      TTArray isas= entity.get(isa);
       isas.add(TTIriRef.iri(SN+ parent));
       counter++;
 
@@ -465,7 +465,7 @@ public class SnomedImporter implements TTImport {
          TTArray roleGroups= new TTArray();
          c.set(IM.ROLE_GROUP,roleGroups);
       }
-      TTArray groups=c.get(IM.ROLE_GROUP).asArray();
+      TTArray groups=c.get(IM.ROLE_GROUP);
       for (TTValue group:groups.getElements()) {
          if (Integer.parseInt(group.asNode().get(IM.GROUP_NUMBER).asLiteral().getValue()) == groupNumber)
             return group.asNode();

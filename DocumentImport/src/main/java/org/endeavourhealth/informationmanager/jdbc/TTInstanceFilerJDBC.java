@@ -165,7 +165,7 @@ public class TTInstanceFilerJDBC implements TTEntityFiler {
      * @throws IllegalStateException if the entity is not in the datbase
      */
     private void updatePredicates(TTEntity instance, Integer entityId, int graphId) throws TTFilerException {
-        Map<TTIriRef, TTValue> predicates = instance.getPredicateMap();
+        Map<TTIriRef, TTArray> predicates = instance.getPredicateMap();
 
         //Deletes the previous predicate objects ie. clears out all previous objects
         deletePredicates(entityId, predicates, graphId);
@@ -180,11 +180,11 @@ public class TTInstanceFilerJDBC implements TTEntityFiler {
             conceptFiler.fileEntityTypes(instance, entityId, graphId);
     }
 
-    private void deletePredicates(Integer entityId, Map<TTIriRef, TTValue> predicates, int graphId) throws TTFilerException {
+    private void deletePredicates(Integer entityId, Map<TTIriRef, TTArray> predicates, int graphId) throws TTFilerException {
         List<Integer> predList = new ArrayList<>();
         int i = 0;
-        for (Map.Entry<TTIriRef, TTValue> po : predicates.entrySet()) {
-            String predicateIri = po.getKey().getIri();
+        for (TTIriRef po : predicates.keySet()) {
+            String predicateIri = po.getIri();
             Integer predicateId = conceptFiler.getEntityId(predicateIri);
             predList.add(predicateId);
             i++;
@@ -208,31 +208,15 @@ public class TTInstanceFilerJDBC implements TTEntityFiler {
 
     private void fileNode(Integer entityId, Long parent, TTNode node, int graphId) throws TTFilerException {
         if (node.getPredicateMap() != null && !node.getPredicateMap().isEmpty()) {
-                Set<Map.Entry<TTIriRef, TTValue>> entries = node.getPredicateMap().entrySet();
-                for (Map.Entry<TTIriRef, TTValue> entry : entries) {
-                    //Term codes are denormalised into term code table
-                    if (!entry.getKey().equals(IM.HAS_TERM_CODE) && (!entry.getKey().equals(IM.HAS_SCHEME)) && (!entry.getKey().equals(IM.GROUP_NUMBER))) {
-                        TTValue object = entry.getValue();
-                        if (object.isIriRef()) {
-                            fileTriple(entityId, parent, entry.getKey(), object.asIriRef(), null, 1, graphId);
-                        } else if (object.isLiteral()) {
-                            TTIriRef dataType = XSD.STRING;
-                            if (object.asLiteral().getType() != null) {
-                                dataType = object.asLiteral().getType();
-                            }
-                            String data = object.asLiteral().getValue();
-                            if (data.length() > 1000)
-                                data = data.substring(0, 1000) + "...";
-                            fileTriple(entityId, parent, entry.getKey(), dataType, data, 1, graphId);
-                        } else if (object.isList()) {
-                            fileArray(entityId, parent, entry.getKey(), entry.getValue().asArray(), graphId);
-                        } else if (object.isNode()) {
-                            Long blankNode = fileTriple(entityId, parent, entry.getKey(), null, null, 1, graphId);
-                            fileNode(entityId, blankNode, entry.getValue().asNode(), graphId);
-                        }
-                    }
+            Set<Map.Entry<TTIriRef, TTArray>> entries = node.getPredicateMap().entrySet();
+            for (Map.Entry<TTIriRef, TTArray> entry : entries) {
+                //Term codes are denormalised into term code table
+                if (!entry.getKey().equals(IM.HAS_TERM_CODE) && (!entry.getKey().equals(IM.HAS_SCHEME)) && (!entry.getKey().equals(IM.GROUP_NUMBER))) {
+                    TTArray object = entry.getValue();
+                    fileArray(entityId, parent, entry.getKey(), entry.getValue(), graphId);
                 }
             }
+        }
     }
 
     /**
@@ -251,7 +235,7 @@ public class TTInstanceFilerJDBC implements TTEntityFiler {
         if (entity.get(RDF.TYPE) != null)
             conceptFiler.fileEntityTypes(entity, entityId, graphId);
 
-        Map<TTIriRef, TTValue> predicates = entity.getPredicateMap();
+        Map<TTIriRef, TTArray> predicates = entity.getPredicateMap();
         //Creates transactional adds
         TTNode subject = new TTNode();
         subject.setPredicateMap(predicates);

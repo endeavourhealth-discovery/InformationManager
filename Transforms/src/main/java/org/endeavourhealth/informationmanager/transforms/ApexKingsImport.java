@@ -86,7 +86,7 @@ public class ApexKingsImport implements TTImport {
                                 .set(SHACL.OR, new TTArray()));
                     }
                     valueSetDocument.getEntities().get(0).get(IM.DEFINITION).asNode()
-                        .get(SHACL.OR).asArray().add(TTIriRef.iri(member));
+                        .get(SHACL.OR).add(TTIriRef.iri(member));
                 }
             }
         }

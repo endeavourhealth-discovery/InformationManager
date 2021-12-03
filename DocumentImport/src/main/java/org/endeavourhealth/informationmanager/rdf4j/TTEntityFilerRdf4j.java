@@ -7,8 +7,9 @@ import org.eclipse.rdf4j.model.util.ModelBuilder;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.informationmanager.TTEntityFiler;
+import org.endeavourhealth.imapi.vocabulary.RDF;
 import org.endeavourhealth.informationmanager.TTFilerException;
+import org.endeavourhealth.informationmanager.TTEntityFiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,12 +36,18 @@ public class TTEntityFilerRdf4j implements TTEntityFiler {
         try {
             ModelBuilder builder = new ModelBuilder();
             builder = builder.namedGraph(graph.getIri());
-            for (Map.Entry<TTIriRef, TTValue> entry : entity.getPredicateMap().entrySet()) {
+            for (Map.Entry<TTIriRef, TTArray> entry : entity.getPredicateMap().entrySet()) {
                 addTriple(builder, toIri(entity.getIri()), toIri(entry.getKey().getIri()), entry.getValue());
             }
             conn.add(builder.build());
         } catch (RepositoryException e) {
             throw new TTFilerException("Failed to file entities", e);
+        }
+    }
+
+    private void addTriple(ModelBuilder builder, Resource subject, IRI predicate, TTArray array) throws TTFilerException {
+        for (TTValue value : array.iterator()) {
+            addTriple(builder, subject, predicate, value);
         }
     }
 
@@ -56,13 +63,8 @@ public class TTEntityFilerRdf4j implements TTEntityFiler {
             TTNode node = value.asNode();
             BNode bNode = bnode();
             builder.add(subject, predicate, bNode);
-            for (Map.Entry<TTIriRef, TTValue> entry : node.getPredicateMap().entrySet()) {
+            for (Map.Entry<TTIriRef, TTArray> entry : node.getPredicateMap().entrySet()) {
                 addTriple(builder, bNode, toIri(entry.getKey().getIri()), entry.getValue());
-            }
-        } else if (value.isList()) {
-            TTArray list = value.asArray();
-            for (TTValue element: list.getElements()) {
-                addTriple(builder, subject, predicate, element);
             }
         } else {
             throw new TTFilerException("Unknown value type");

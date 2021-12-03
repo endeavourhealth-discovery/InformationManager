@@ -93,7 +93,7 @@ public class EMISImport implements TTImport {
     private boolean isCoreSublass(TTEntity subclass) {
         if (subclass.get(RDFS.SUBCLASSOF)==null)
             return false;
-        for (TTValue value:subclass.get(RDFS.SUBCLASSOF).asArray().getElements()) {
+        for (TTValue value:subclass.get(RDFS.SUBCLASSOF).iterator()) {
             if (value.asIriRef().getIri().contains(SNOMED.NAMESPACE))
                 return true;
             if (value.asIriRef().getIri().contains(IM.NAMESPACE))

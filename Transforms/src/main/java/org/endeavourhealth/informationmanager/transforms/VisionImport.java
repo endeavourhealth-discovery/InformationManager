@@ -278,7 +278,7 @@ public class VisionImport implements TTImport {
 	private boolean alreadyMapped(TTEntity entity, String snomed) {
 		if (entity.get(RDFS.SUBCLASSOF)==null)
 			return false;
-		for (TTValue superClass:entity.get(RDFS.SUBCLASSOF).asArray().getElements()){
+		for (TTValue superClass:entity.get(RDFS.SUBCLASSOF).iterator()){
 			if (superClass.asIriRef().getIri().split("#")[1].equals(snomed))
 				return true;
 		}
