@@ -22,10 +22,11 @@ public class TTDocumentFilerRdf4j extends TTDocumentFiler {
 
     public TTDocumentFilerRdf4j() throws TTFilerException {
         LOG.info("Connecting");
-        //repo = new SailRepository(new NativeStore(new File("Z:\\rdf4j")));
+//repo = new SailRepository(new NativeStore(new File("Z:\\rdf4j")));
         repo = new HTTPRepository("http://localhost:7200/", "im");
 
         try {
+            repo = new HTTPRepository("http://localhost:7200/", "im");
             repo.initialize();
             conn = repo.getConnection();
             LOG.info("Connected");
