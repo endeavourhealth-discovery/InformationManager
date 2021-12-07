@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
@@ -38,7 +39,7 @@ public class BartsCernerImport implements TTImport {
 	Map<String,Set<String>> childToParent= new HashMap<>();
 	private TTDocument document;
 
-	private Connection conn;
+	private RepositoryConnection conn;
 	private final TTManager manager= new TTManager();
 	private static final String unclassified= IM.CODE_SCHEME_BARTS_CERNER.getIri()+"UnClassifiedBartsCernerCode";
 
@@ -48,7 +49,7 @@ public class BartsCernerImport implements TTImport {
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 
-		conn= ImportUtils.getConnection();
+		conn= ImportUtils.getGraphConnection();
 		System.out.println("retrieving snomed codes from IM");
 		document= manager.createDocument(IM.GRAPH_BARTS_CERNER.getIri());
 		document.setCrud(IM.REPLACE);
