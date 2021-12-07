@@ -6,18 +6,13 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTFilerFactory;
-import org.endeavourhealth.informationmanager.TTImport;
-import org.endeavourhealth.informationmanager.TTImportConfig;
+import org.endeavourhealth.informationmanager.*;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -27,9 +22,6 @@ public class VisionImport implements TTImport {
 
 	private static final String[] r2Terms = {".*\\\\READ\\\\Term.csv"};
 	private static final String[] r2Desc = {".*\\\\READ\\\\DESC.csv"};
-	private static final String[] r2Maps = {".*\\\\SNOMED\\\\Mapping Tables\\\\Updated\\\\Clinically Assured\\\\rcsctmap2_uk_.*\\.txt"};
-	private static final String[] altMaps = {".*\\\\SNOMED\\\\Mapping Tables\\\\Updated\\\\Clinically Assured"+
-		"\\\\codesWithValues_AlternateMaps_READ2_.*\\.txt"};
 	private static final String[] visionRead2Code = {".*\\\\TPP_Vision_Maps\\\\vision_read2_code.csv"};
 	private static final String[] visionRead2toSnomed = {".*\\\\TPP_Vision_Maps\\\\vision_read2_to_snomed_map.csv"};
 
@@ -40,20 +32,22 @@ public class VisionImport implements TTImport {
 	private TTDocument document;
 	private final Map<String,TTEntity> r2TermIdMap= new HashMap<>();
 	private final Set<String> preferredId = new HashSet<>();
-	private Connection conn;
 	private final TTManager manager= new TTManager();
 	private final Map<String,List<String>> emisToSnomed = new HashMap<>();
-	private final Map<String,String> visionToSnomed = new HashMap<>();
+	private final Map<String,String> emisToTerm = new HashMap<>();
+
 
 
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
-		conn= ImportUtils.getConnection();
+
 		System.out.println("importing vision codes");
 		System.out.println("retrieving snomed codes from IM");
-		snomedCodes= ImportUtils.importSnomedCodes(conn);
+		snomedCodes= ImportUtils.importSnomedCodes();
 		document= manager.createDocument(IM.GRAPH_VISION.getIri());
+		document.addEntity(manager.createGraph(IM.GRAPH_VISION.getIri(),"Vision Read2 code scheme and graph",
+			"The Vision Read 2 scheme and graph including the Vision version of Read 2 and Vision local codes"));
 
 		importEmis();
 		importR2Desc(config.folder);
@@ -112,23 +106,11 @@ public class VisionImport implements TTImport {
 		}
 	}
 
-	private void importEmis() throws SQLException {
+	private void importEmis() throws SQLException, TTFilerException, ClassNotFoundException {
 		System.out.println("Importing EMIS/Read from IM for look up....");
-		PreparedStatement getEMIS= conn.prepareStatement("SELECT entity.code as code,snomed.code as snomed\n" +
-			"from entity\n" +
-			"join tpl on tpl.subject= entity.dbid\n" +
-			"join entity snomed on tpl.object= snomed.dbid\n" +
-			"join entity subclass on tpl.predicate=subclass.dbid\n" +
-			"where entity.scheme='http://endhealth.info/emis#'\n" +
-			"and snomed.scheme='http://snomed.info/sct#'");
-		ResultSet rs= getEMIS.executeQuery();
-		while (rs.next()){
-			String emis= rs.getString("code");
-			String snomed=rs.getString("snomed");
-			emisToSnomed.computeIfAbsent(emis, k -> new ArrayList<>());
-			emisToSnomed.get(emis).add(snomed);
+		ImportUtils.importEmisToSnomed(emisToSnomed,emisToTerm);
+
 		}
-	}
 
 
 	private void importR2Desc(String folder) throws IOException {
@@ -178,13 +160,20 @@ public class VisionImport implements TTImport {
 
 
 	private void createHierarchy() {
+		TTEntity vision= new TTEntity()
+			.setIri(IM.GRAPH_VISION.getIri()+"VisionCodes")
+			.setName("Vision read 2 and localcodes")
+			.addType(IM.CONCEPT)
+			.setCode("VisionCodes")
+			.setScheme(IM.GRAPH_VISION)
+			.setDescription("Vision and read 2 codes mapped to core");
+		vision.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
 		for (TTEntity entity:document.getEntities()){
-			String code= entity.getCode();
-			String shortCode= code;
+			String shortCode = entity.getCode();
 			if (shortCode.contains("."))
 				shortCode= shortCode.substring(0,shortCode.indexOf("."));
 			if (shortCode.length()==1)
-				entity.set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.CODE_SCHEME_VISION.getIri()+"VisionCodes")));
+				entity.set(IM.IS_CHILD_OF,new TTArray().add(iri(vision.getIri())));
 			else {
 				String parent = shortCode.substring(0,shortCode.length()-1);
 				entity.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.CODE_SCHEME_VISION.getIri() + parent)));
@@ -215,6 +204,7 @@ public class VisionImport implements TTImport {
                     c.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".", ""));
                     c.setName(term);
                     c.setCode(code);
+										c.setScheme(IM.CODE_SCHEME_VISION);
                     document.addEntity(c);
                     codeToConcept.put(code, c);
                 }
@@ -260,7 +250,7 @@ public class VisionImport implements TTImport {
 				if (vision!=null) {
 					if (isSnomed(snomed)) {
 						String iri = SNOMED.NAMESPACE + snomed;
-						vision.addObject(RDFS.SUBCLASSOF, iri(iri));
+						vision.addObject(RDFS.SUBCLASSOF, iri(SNOMED.NAMESPACE+snomed));
 					}
 					String emis = code.replace(".", "");
 					if (emisToSnomed.get(emis) != null) {
@@ -295,13 +285,5 @@ public class VisionImport implements TTImport {
 		return this;
 	}
 
-	@Override
-	public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
-		return this;
-	}
 
-	@Override
-	public void close() throws Exception {
-
-	}
 }

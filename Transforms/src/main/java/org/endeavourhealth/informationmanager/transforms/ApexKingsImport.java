@@ -10,9 +10,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -21,102 +18,45 @@ public class ApexKingsImport implements TTImport {
 
 	private static final String[] kingsPath = {".*\\\\Kings\\\\KingsPathMap.txt"};
 	private TTDocument document;
-	private TTDocument valueSetDocument;
-	private final Map<String, List<String>> readToSnomed = new HashMap<>();
-	private final Map<String, List<String>> snomedToApex = new HashMap<>();
+	private Map<String, List<String>> readToSnomed = new HashMap<>();
 	private final Map<String, String> apexToRead = new HashMap<>();
-	private static final TTIriRef utl= TTIriRef.iri(IM.NAMESPACE+"VSET_UnifiedTestList");
-	private static final Set<String> utlSet= new HashSet<>();
-	private static final Set<String> utlMembers= new HashSet<>();
-	private Connection conn;
+
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
-        //
-        conn = ImportUtils.getConnection();
+
         TTManager manager = new TTManager();
         document = manager.createDocument(IM.GRAPH_KINGS_APEX.getIri());
-        TTManager vsetManager = new TTManager();
-        valueSetDocument = vsetManager.createDocument(IM.NAMESPACE);
-        valueSetDocument.setCrud(IM.ADD);
+				document.addEntity(manager.createGraph(IM.GRAPH_KINGS_APEX.getIri(),"Kings Apex pathology code scheme and graph",
+					"The Kings Apex LIMB local code scheme and graph"));
+
         importR2Matches();
         setTopLevel();
         importApexKings(config.folder);
 
-        addToUtlSet();
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
-        }
-        if (valueSetDocument.getEntities() != null) {
-            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-                filer.fileDocument(valueSetDocument);
-            }
         }
         return this;
     }
 
 	private void setTopLevel() {
 		TTEntity kings= new TTEntity()
-			.setIri(IM.NAMESPACE+"KingsApexCodes")
+			.setIri(IM.GRAPH_KINGS_APEX.getIri()+"KingsApexCodes")
 			.addType(IM.CONCEPT)
 			.setName("Kings College Hospital Apex path codes")
+			.setCode("KingsApexCodes")
+			.setScheme(IM.GRAPH_KINGS_APEX)
 			.setDescription("Local codes for the Apex pathology system in kings")
 			.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies")));
 			document.addEntity(kings);
 	}
 
-	private void addToUtlSet() throws SQLException {
-		try (PreparedStatement getUtlSet= conn.prepareStatement("Select o.iri\n" +
-			"from tpl\n" +
-			"join entity e on tpl.subject= e.dbid\n" +
-			"join entity p on tpl.predicate=p.dbid\n" +
-			"join entity o on tpl.object= o.dbid\n" +
-			"where e.iri='http://endhealth.info/im#VSET_UnifiedTestList' and p.iri='http://endhealth.info/im#hasMembers'")) {
-            ResultSet rs = getUtlSet.executeQuery();
-            while (rs.next()) {
-                String member = rs.getString("iri");
-                utlSet.add(member);
-            }
-            for (String member : utlMembers) {
-                if (!utlSet.contains(member)) {
-                    if (valueSetDocument.getEntities() == null) {
-                        valueSetDocument.addEntity(new TTEntity().setIri(IM.NAMESPACE + "VSET_UnifiedTestList"));
-                        valueSetDocument.getEntities().get(0).
-                            set(IM.DEFINITION, new TTNode()
-                                .set(SHACL.OR, new TTArray()));
-                    }
-                    valueSetDocument.getEntities().get(0).get(IM.DEFINITION).asNode()
-                        .get(SHACL.OR).asArray().add(TTIriRef.iri(member));
-                }
-            }
-        }
-	}
 
-
-
-
-
-	private void importR2Matches() throws SQLException {
+	private void importR2Matches() throws SQLException, TTFilerException, ClassNotFoundException {
 		System.out.println("Retrieving read vision 2 snomed map");
+		readToSnomed=ImportUtils.importReadToSnomed();
 
-		try (PreparedStatement getR2Matches= conn.prepareStatement("select vis.code as code,snomed.code as snomed \n"+
-				"from entity snomed \n" +
-			"join tpl maps on maps.object= snomed.dbid\n" +
-			"join entity p on maps.predicate=p.dbid\n" +
-			"join entity vis on maps.subject=vis.dbid\n" +
-			"where snomed.iri like '"+ SNOMED.NAMESPACE+"%'\n"+
-			"and p.iri='"+RDFS.SUBCLASSOF.getIri()+"'\n" +
-			"and vis.iri like 'http://endhealth.info/VISION#'")) {
-            ResultSet rs = getR2Matches.executeQuery();
-            while (rs.next()) {
-                String snomed = rs.getString("snomed");
-                String read = rs.getString("code");
-                List<String> maps = readToSnomed.computeIfAbsent(read, k -> new ArrayList<>());
-                maps.add(snomed);
-
-
-            }
-        }
 	}
 
 	private void importApexKings(String folder) throws IOException {
@@ -138,7 +78,8 @@ public class ApexKingsImport implements TTImport {
 					.setName(fields[2])
 					.setDescription("Local apex Kings trust pathology system entity ")
 					.setCode(code)
-					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"KingsApexCodes")));
+					.setScheme(IM.CODE_SCHEME_KINGS_APEX)
+					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(IM.GRAPH_KINGS_APEX.getIri()+"KingsApexCodes")));
 				document.addEntity(entity);
 				apexToRead.put(code,readCode);
 				if (readToSnomed.get(readCode)!=null){
@@ -165,13 +106,5 @@ public class ApexKingsImport implements TTImport {
 		return null;
 	}
 
-	@Override
-	public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
-		return null;
-	}
 
-	@Override
-	public void close() throws Exception {
-
-	}
 }

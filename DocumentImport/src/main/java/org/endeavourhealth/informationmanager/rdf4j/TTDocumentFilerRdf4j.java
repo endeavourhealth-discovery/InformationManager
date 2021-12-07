@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.rdf4j;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.sail.nativerdf.NativeStore;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
@@ -21,9 +22,11 @@ public class TTDocumentFilerRdf4j extends TTDocumentFiler {
 
     public TTDocumentFilerRdf4j() throws TTFilerException {
         LOG.info("Connecting");
-        repo = new SailRepository(new NativeStore(new File("Z:\\rdf4j")));
+//repo = new SailRepository(new NativeStore(new File("Z:\\rdf4j")));
+        repo = new HTTPRepository("http://localhost:7200/", "im");
 
         try {
+            repo = new HTTPRepository("http://localhost:7200/", "im");
             repo.initialize();
             conn = repo.getConnection();
             LOG.info("Connected");

@@ -34,7 +34,6 @@ public class ICD10Importer implements TTImport {
     private final List<String> startChapterList= new ArrayList<>();
     private TTDocument document;
     private TTDocument mapDocument;
-    private Connection conn;
     private final Map<String,TTEntity> codeToEntity= new HashMap<>();
     private final Map<String,TTEntity> noDotCodeToEntity= new HashMap<>();
 
@@ -42,17 +41,17 @@ public class ICD10Importer implements TTImport {
     public TTImport importData(TTImportConfig config) throws Exception {
         validateFiles(config.folder);
         System.out.println("Importing ICD10....");
-        conn= ImportUtils.getConnection();
         System.out.println("Getting snomed codes");
-        snomedCodes= ImportUtils.importSnomedCodes(conn);
+        snomedCodes= ImportUtils.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_ICD10.getIri());
+        document.addEntity(manager.createGraph(IM.GRAPH_ICD10.getIri(),"ICD10  code scheme and graph","The ICD10 code scheme and graph including links to core"));
         createTaxonomy();
         importChapters(config.folder,document);
         importEntities(config.folder, document);
         createHierarchy();
 
 
-        mapDocument= manager.createDocument(IM.MAP_SNOMED_ICD10.getIri());
+        mapDocument= manager.createDocument(IM.GRAPH_ICD10.getIri());
         mapDocument.setCrud(IM.ADD);
         importMaps(config.folder);
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
@@ -96,6 +95,8 @@ public class ICD10Importer implements TTImport {
           .setIri(icd10Codes.getIri())
           .setName("ICD10 5th edition classification codes")
           .addType(IM.CONCEPT)
+          .setCode("ICD10Codes")
+          .setScheme(IM.GRAPH_ICD10)
           .setDescription("ICD1O classification used in backward maps from Snomed");
         icd10.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
         document.addEntity(icd10);
@@ -159,6 +160,7 @@ public class ICD10Importer implements TTImport {
                 String[] fields = line.split("\t");
                 TTEntity c = new TTEntity()
                   .setCode(fields[0])
+                  .setScheme(IM.CODE_SCHEME_ICD10)
                   .setIri(IM.CODE_SCHEME_ICD10.getIri() + fields[1])
                   .addType(IM.CONCEPT);
                 if(fields[4].length()>250){
@@ -188,16 +190,4 @@ public class ICD10Importer implements TTImport {
         return this;
     }
 
-    @Override
-    public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
-        return null;
-    }
-
-    @Override
-    public void close() throws Exception {
-        if (conn!=null)
-            if (!conn.isClosed())
-                conn.close();
-
-    }
 }

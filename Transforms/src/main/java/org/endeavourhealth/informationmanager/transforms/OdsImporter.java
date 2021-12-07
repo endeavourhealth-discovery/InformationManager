@@ -2,6 +2,7 @@ package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTFilerFactory;
 import org.endeavourhealth.informationmanager.TTImport;
@@ -20,10 +21,7 @@ public class OdsImporter implements TTImport {
       return this;
    }
 
-   @Override
-   public TTImport validateLookUps(Connection conn) {
-      return this;
-   }
+
 
    /**
     * Imports the core ontology document
@@ -34,11 +32,16 @@ public class OdsImporter implements TTImport {
    @Override
    public TTImport importData(TTImportConfig config) throws Exception {
      System.out.println("Importing Organisation files");
+     Boolean hasGraph=false;
       for (String orgFile : organisationFiles) {
         TTManager manager = new TTManager();
          Path path = ImportUtils.findFileForId(config.folder, orgFile);
          manager.loadDocument(path.toFile());
          TTDocument document= manager.getDocument();
+         if (!hasGraph)
+           document.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(),"ODS Organisational code scheme and graph",
+           "Official ODS code scheme and graph"));
+         hasGraph=true;
           try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
               filer.fileDocument(document);
           }
@@ -46,8 +49,4 @@ public class OdsImporter implements TTImport {
       return this;
    }
 
-   @Override
-   public void close() throws Exception {
-
-   }
 }
