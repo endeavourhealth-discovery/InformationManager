@@ -176,11 +176,15 @@ INSERT INTO config (name, config) VALUES ('defaultPredicateNames', '{
     "http://www.w3.org/2002/07/owl#equivalentClass": "Is equivalent to",
     "http://www.w3.org/2002/07/owl#intersectionOf": "Combination of",
     "http://www.w3.org/2002/07/owl#someValuesFrom": "With a value",
-    "http://www.w3.org/2002/07/owl#onProperty": "On property"
+    "http://www.w3.org/2002/07/owl#onProperty": "On property",
+  "http://www.w3.org/ns/shacl#property": "Properties",
+  "http://www.w3.org/ns/shacl#class": "Type",
+  "http://www.w3.org/ns/shacl#path": "Property",
+  "http://www.w3.org/ns/shacl#datatype": "Type"
   }');
 
-DELETE FROM config WHERE name = 'xlmSchemaDataTypes';
-INSERT INTO config (name, config) VALUES ('xlmSchemaDataTypes', '[
+DELETE FROM config WHERE name = 'xmlSchemaDataTypes';
+INSERT INTO config (name, config) VALUES ('xmlSchemaDataTypes', '[
     "http://www.w3.org/2001/XMLSchema#string",
     "http://www.w3.org/2001/XMLSchema#boolean",
     "http://www.w3.org/2001/XMLSchema#float",

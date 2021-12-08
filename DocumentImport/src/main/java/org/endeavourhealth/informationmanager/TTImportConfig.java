@@ -6,4 +6,6 @@ public class TTImportConfig {
     public boolean secure = false;
     public boolean skiptct = false;
     public boolean skipsearch = false;
+    public boolean skipdelete= false;
+
 }

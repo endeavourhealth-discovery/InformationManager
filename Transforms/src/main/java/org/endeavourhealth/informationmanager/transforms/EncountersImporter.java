@@ -5,11 +5,9 @@ import org.endeavourhealth.informationmanager.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.SQLException;
 
-public class DiscoveryMapsImporter implements TTImport {
-   private static final String[] noneCoreEntities ={ ".*\\\\DiscoveryNoneCore\\\\NoneCoreOntology.json"};
+public class EncountersImporter implements TTImport {
+   private static final String[] encounters ={ ".*\\\\DiscoveryNoneCore\\\\Encounters.json"};
 
 
    public TTImport importData(TTImportConfig config) throws Exception {
@@ -19,7 +17,7 @@ public class DiscoveryMapsImporter implements TTImport {
    }
 
    private void importNoneCoreFile(TTImportConfig config) throws Exception {
-      Path file = ImportUtils.findFileForId(config.folder, noneCoreEntities[0]);
+      Path file = ImportUtils.findFileForId(config.folder, encounters[0]);
       TTManager manager= new TTManager();
       TTDocument document = manager.loadDocument(file.toFile());
        try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
@@ -27,19 +25,12 @@ public class DiscoveryMapsImporter implements TTImport {
        }
    }
 
-   public DiscoveryMapsImporter validateFiles(String inFolder){
-      ImportUtils.validateFiles(inFolder,noneCoreEntities);
+   public EncountersImporter validateFiles(String inFolder){
+      ImportUtils.validateFiles(inFolder,encounters);
       return this;
    }
 
-   @Override
-   public TTImport validateLookUps(Connection conn) throws SQLException, ClassNotFoundException {
-      return null;
-   }
 
 
-   @Override
-   public void close() throws Exception {
 
-   }
 }

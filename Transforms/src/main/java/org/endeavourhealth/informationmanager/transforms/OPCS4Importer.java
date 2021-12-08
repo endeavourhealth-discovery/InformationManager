@@ -3,8 +3,10 @@ package org.endeavourhealth.informationmanager.transforms;
 import org.endeavourhealth.imapi.model.tripletree.TTArray;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.*;
 
 
@@ -29,22 +31,22 @@ public class OPCS4Importer implements TTImport {
     private TTManager manager= new TTManager();
     private TTDocument document;
     private TTDocument mapDocument;
+    private TTIriRef opcscodes= TTIriRef.iri(IM.GRAPH_ICD10.getIri()+"OPCS49Classification");
 
     private Set<String> snomedCodes;
     private final Map<String,TTEntity> codeToEntity= new HashMap<>();
-    private Connection conn;
 
     public TTImport importData(TTImportConfig config) throws Exception {
         System.out.println("Importing OPCS4.....");
         System.out.println("Checking Snomed codes first");
-        conn= ImportUtils.getConnection();
-        snomedCodes= ImportUtils.importSnomedCodes(conn);
+        snomedCodes= ImportUtils.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_OPCS4.getIri());
+        document.addEntity(manager.createGraph(IM.GRAPH_OPCS4.getIri(),"OPCS4 code scheme and graph","OPCS4-9 official code scheme and graph"));
         importChapters(config.folder,document);
         importEntities(config.folder,document);
 
 
-        mapDocument= manager.createDocument(IM.MAP_SNOMED_OPCS.getIri());
+        mapDocument= manager.createDocument(IM.GRAPH_OPCS4.getIri());
 
         mapDocument.setCrud(IM.UPDATE);
         importMaps(config.folder);
@@ -67,6 +69,15 @@ public class OPCS4Importer implements TTImport {
 
     private void importChapters(String inFolder, TTDocument document) throws IOException {
         Path file = ImportUtils.findFileForId(inFolder, chapters[0]);
+        TTEntity opcs= new TTEntity()
+          .setIri(opcscodes.getIri())
+          .addType(IM.CONCEPT)
+          .setName("OPCS 4-9 Classification")
+          .setCode("OPCS49Classification")
+          .setScheme(IM.GRAPH_OPCS4)
+          .setDescription("Classification of OPCS4 with chapter headings");
+           opcs.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+        document.addEntity(opcs);
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
             String line = reader.readLine();
@@ -79,7 +90,7 @@ public class OPCS4Importer implements TTImport {
                     .setName(term+" (chapter "+chapter+")")
                     .setCode(chapter)
                   .addType(IM.CONCEPT)
-                    .set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.NAMESPACE+"OPCS49Classification")));
+                    .set(IM.IS_CHILD_OF,new TTArray().add(iri(opcs.getIri())));
                 TTManager.addTermCode(c,term,chapter);
                 document.addEntity(c);
                 line= reader.readLine();
@@ -103,6 +114,7 @@ public class OPCS4Importer implements TTImport {
                 String[] fields = line.split("\t");
                 TTEntity c = new TTEntity()
                         .setCode(fields[0])
+                  .setScheme(IM.CODE_SCHEME_OPCS4)
                         .setIri(IM.CODE_SCHEME_OPCS4.getIri() + (fields[0].replace(".","")))
                         .addType(IM.CONCEPT)
                     .set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.CODE_SCHEME_OPCS4.getIri()+fields[0].substring(0,1))));
@@ -125,15 +137,4 @@ public class OPCS4Importer implements TTImport {
         return this;
     }
 
-    @Override
-    public TTImport validateLookUps(Connection conn) {
-        return this;
-    }
-
-    @Override
-    public void close() throws Exception {
-        if (conn != null && !conn.isClosed())
-            conn.close();
-
-    }
 }

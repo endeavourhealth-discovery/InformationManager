@@ -72,12 +72,12 @@
     </dependency>
     <dependency>
       <groupId>org.endeavourhealth.imapi</groupId>
-      <artifactId>vocabulary</artifactId>
+      <artifactId>models</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.endeavourhealth.imapi</groupId>
-      <artifactId>logic</artifactId>
+      <artifactId>vocabulary</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
@@ -85,7 +85,11 @@
       <artifactId>transforms</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.endeavourhealth.imapi</groupId>
+      <artifactId>logic</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <repositories>

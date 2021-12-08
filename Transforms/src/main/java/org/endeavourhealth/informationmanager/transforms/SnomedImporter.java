@@ -78,6 +78,7 @@ public class SnomedImporter implements TTImport {
    public static final String ALL_CONTENT = "723596005";
    public static final String ACTIVE = "1";
    public static final String REPLACED_BY = "370124000";
+   public static final String SNOMED_ATTRIBUTE = "sn:106237007";
 
    //======================PUBLIC METHODS============================
 
@@ -95,7 +96,9 @@ public class SnomedImporter implements TTImport {
       conceptMap = new HashMap<>();
       TTManager dmanager= new TTManager();
 
-      document= dmanager.createDocument(IM.GRAPH_SNOMED.getIri());
+      document= dmanager.createDocument(SNOMED.GRAPH_SNOMED.getIri());
+      document.addEntity(dmanager.createGraph(SNOMED.GRAPH_SNOMED.getIri(), "Snomed-CT code scheme and graph",
+        "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions"));
 
       importConceptFiles(config.folder);
       importDescriptionFiles(config.folder);
@@ -197,6 +200,7 @@ public class SnomedImporter implements TTImport {
                         TTEntity c = new TTEntity();
                         c.setIri(SN + fields[0]);
                         c.setCode(fields[0]);
+                        c.setScheme(SNOMED.GRAPH_SNOMED);
                         if (conceptFile.contains("Refset"))
                            c.addType(IM.CONCEPT_SET);
                         else
@@ -448,6 +452,8 @@ public class SnomedImporter implements TTImport {
    private void addRelationship(TTEntity c, Integer group, String relationship, String target) {
       if (relationship.equals(IS_A)) {
          addIsa(c,target);
+         if (c.getIri().equals(SNOMED_ATTRIBUTE))
+            c.addObject(RDFS.SUBPROPERTYOF,RDF.PROPERTY);
 
       } else if (relationship.equals(REPLACED_BY)){
          c.addObject(SNOMED.REPLACED_BY,TTIriRef.iri(SNOMED.NAMESPACE+target));
@@ -485,18 +491,4 @@ public class SnomedImporter implements TTImport {
 
    }
 
-   @Override
-   public TTImport validateLookUps(Connection conn) {
-      return this;
-   }
-
-
-
-   @Override
-   public void close() throws Exception {
-      if (conceptMap!=null)
-         conceptMap.clear();
-
-
-   }
 }

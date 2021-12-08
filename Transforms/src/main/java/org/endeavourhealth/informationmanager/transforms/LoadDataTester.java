@@ -9,6 +9,7 @@ import static org.endeavourhealth.informationmanager.transforms.ImportUtils.getC
 
 public class LoadDataTester {
     public static void testLoadData(String outpath, boolean secure) throws Exception {
+        /*
         System.out.println("Testing LOAD DATA configuration.");
 
         String filename = outpath + "/test.tst";
@@ -52,5 +53,9 @@ public class LoadDataTester {
                 throw e;
             }
         }
+
+         */
     }
+
+
 }

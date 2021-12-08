@@ -20,7 +20,8 @@ public class CoreImporter implements TTImport {
      ".*\\\\SemanticWeb\\\\OWLOntology.json",
      ".*\\\\SemanticWeb\\\\SHACLOntology.json",
      ".*\\\\DiscoveryCore\\\\CoreOntology.json",
-     ".*\\\\DiscoveryCore\\\\CoreOntology-more-inferred.json"
+     ".*\\\\DiscoveryCore\\\\CoreOntology-more-inferred.json",
+  ".*\\\\DiscoveryCore\\\\StatsReports.json"
    };
 
 
@@ -29,13 +30,6 @@ public class CoreImporter implements TTImport {
       ImportUtils.validateFiles(inFolder,coreEntities);
       return this;
    }
-
-   @Override
-   public TTImport validateLookUps(Connection conn) {
-      return this;
-   }
-
-
 
 
    /**
@@ -109,8 +103,4 @@ public class CoreImporter implements TTImport {
    }
 
 
-   @Override
-   public void close() throws Exception {
-
-   }
 }
