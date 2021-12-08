@@ -23,12 +23,33 @@ public class Main {
 
     public static void main(String[] argv) throws SQLException, ClassNotFoundException, JsonProcessingException, InterruptedException {
         String sql = new StringJoiner(System.lineSeparator())
-            .add("SELECT e.dbid, e.iri, e.name, e.code, e.scheme AS scheme, REPLACE(n.name, \" namespace\", \"\") as schemeName, et.type, e.status")
+            .add("SELECT e.dbid, e.iri, e.name, e.code, e.scheme AS scheme, REPLACE(n.name, \" namespace\", \"\") as schemeName, et.type, typ.name AS typeName, e.status, stt.name AS statusName")
             .add("FROM entity e")
             .add("JOIN entity_type et ON et.entity = e.dbid")
             .add("LEFT JOIN namespace n ON n.iri = e.scheme")
+            .add("LEFT JOIN entity typ ON typ.iri = et.type")
+            .add("LEFT JOIN entity stt ON stt.iri = e.status")
             .add("ORDER BY e.dbid;")
             .toString();
+
+        /* TODO: Migrate to graph/sparql
+
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX im: <http://endhealth.info/im#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            select ?iri ?name ?code ?scheme ?schemeName ?type ?typeName ?status ?statusName
+            where {
+                GRAPH ?scheme { ?iri rdfs:label ?name;
+                    im:code ?code;
+                 im:status ?status;
+                 rdf:type ?type }
+                OPTIONAL { ?status rdfs:label ?statusName }
+                OPTIONAL { ?scheme rdfs:label ?schemeName }
+                OPTIONAL { ?type rdfs:label ?typeName }
+            }
+            order by ?iri
+            limit 100
+         */
 
         System.out.println("Connecting to database...");
 
@@ -49,12 +70,12 @@ public class Main {
                         .setName(rs.getString("name"))
                         .setCode(rs.getString("code"))
                         .setScheme(iri(rs.getString("scheme"), rs.getString("schemeName")))
-                        .setStatus(iri(rs.getString("status")));
+                        .setStatus(iri(rs.getString("status"), rs.getString("statusName")));
                     docs.add(blob);
                 }
 
                 if (rs.getInt("dbid") == blob.getId()) {
-                    blob.addType(iri(rs.getString("type")));
+                    blob.addType(iri(rs.getString("type"), rs.getString("typeName")));
                 } else {
                     if (((++i) % BULKSIZE) == 0) {
                         postMeili(docs);
@@ -68,7 +89,8 @@ public class Main {
                         .setName(rs.getString("name"))
                         .setCode(rs.getString("code"))
                         .setScheme(iri(rs.getString("scheme"), rs.getString("schemeName")))
-                        .setStatus(iri(rs.getString("status")));
+                        .setStatus(iri(rs.getString("status"), rs.getString("statusName")))
+                        .addType(iri(rs.getString("type"), rs.getString("typeName")));
                     docs.add(blob);
                 }
             }
