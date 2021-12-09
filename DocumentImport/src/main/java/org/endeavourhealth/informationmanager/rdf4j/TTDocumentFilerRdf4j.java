@@ -4,7 +4,6 @@ import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
-import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.endeavourhealth.informationmanager.TTDocumentFiler;
 import org.endeavourhealth.informationmanager.TTFilerException;
 
@@ -21,7 +20,7 @@ public class TTDocumentFilerRdf4j extends TTDocumentFiler {
         LOG.info("Connecting");
 
         try {
-            repo = new HTTPRepository("http://localhost:7200/", "im");
+            repo = new HTTPRepository("http://dev-im-test1.cluster-cwwwbkhdusnw.eu-west-2.neptune.amazonaws.com:8182/", "im");
             repo.initialize();
             conn = repo.getConnection();
             LOG.info("Connected");

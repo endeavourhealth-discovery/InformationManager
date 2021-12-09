@@ -88,7 +88,7 @@ public class EMISImport implements TTImport {
         TTDocument allDoc= allMgr.loadDocument(path.toFile());
         for (TTEntity all:allDoc.getEntities()){
             TTEntity emisEntity= manager.getEntity(all.getIri());
-            for (TTValue superClass:all.get(RDFS.SUBCLASSOF).asArray().getElements()){
+            for (TTValue superClass:all.get(RDFS.SUBCLASSOF).getElements()){
                 emisEntity.addObject(RDFS.SUBCLASSOF,superClass);
             }
         }

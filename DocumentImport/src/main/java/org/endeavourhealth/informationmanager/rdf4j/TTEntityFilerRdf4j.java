@@ -18,6 +18,7 @@ import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.RDF;
 import org.endeavourhealth.informationmanager.TTFilerException;
 import org.endeavourhealth.informationmanager.TTEntityFiler;
+import org.endeavourhealth.informationmanager.TTFilerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,8 +113,8 @@ public class TTEntityFilerRdf4j implements TTEntityFiler {
     private void deletePredicates(TTEntity entity, TTIriRef graph) throws TTFilerException {
         StringBuilder predList= new StringBuilder();
         int i=0;
-        Map<TTIriRef,TTValue> predicates= entity.getPredicateMap();
-        for (Map.Entry<TTIriRef, TTValue> po : predicates.entrySet()) {
+        Map<TTIriRef,TTArray> predicates= entity.getPredicateMap();
+        for (Map.Entry<TTIriRef, TTArray> po : predicates.entrySet()) {
             String predicateIri = po.getKey().getIri();
             i++;
             if (i > 1)
