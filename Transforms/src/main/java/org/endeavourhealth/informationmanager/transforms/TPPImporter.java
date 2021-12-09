@@ -7,6 +7,7 @@ import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.*;
 
+import javax.xml.stream.events.Characters;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -119,8 +120,10 @@ public class TPPImporter implements TTImport{
                     String code = fields[0];
                     String snomed= fields[2];
                     TTEntity tpp= codeToEntity.get(code);
-                    if (alreadyMapped(tpp, snomed))
-                        tpp.addObject(RDFS.SUBCLASSOF,iri(SNOMED.NAMESPACE+snomed));
+                    if (tpp!=null) {
+                        if (alreadyMapped(tpp, snomed))
+                            tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + snomed));
+                    }
 
                     line = reader.readLine();
                 }
@@ -131,9 +134,9 @@ public class TPPImporter implements TTImport{
     }
 
     private boolean alreadyMapped(TTEntity tpp, String snomed) {
-        if (tpp.get(RDFS.SUBCLASSOF)==null)
+        if (tpp.get(IM.MATCHED_TO)==null)
             return true;
-        for (TTValue superClass:tpp.get(RDFS.SUBCLASSOF).asArray().getElements()){
+        for (TTValue superClass:tpp.get(IM.MATCHED_TO).asArray().getElements()){
             if (superClass.asIriRef().getIri().split("#")[1].equals(snomed))
                 return false;
         }
@@ -231,15 +234,17 @@ public class TPPImporter implements TTImport{
                     while (line != null && !line.isEmpty()) {
                         String[] fields = line.split("\\|");
                         String code= fields[0];
-                        String iri=IM.CODE_SCHEME_TPP.getIri()+
-                              (code.replace(".","_"));
-                        TTEntity tpp = new TTEntity().setIri(iri);
-                        tpp.setCode(code);
-                        tpp.addType(IM.CONCEPT);
-                        if (code.startsWith("."))
-                            tpp.setStatus(IM.INACTIVE);
-                        codeToEntity.put(code, tpp);
-                        document.addEntity(tpp);
+                        if (!Character.isLowerCase(code.charAt(0))) {
+                            String iri = IM.CODE_SCHEME_TPP.getIri() +
+                              (code.replace(".", "_"));
+                            TTEntity tpp = new TTEntity().setIri(iri);
+                            tpp.setCode(code);
+                            tpp.addType(IM.CONCEPT);
+                            if (code.startsWith("."))
+                                tpp.setStatus(IM.INACTIVE);
+                            codeToEntity.put(code, tpp);
+                            document.addEntity(tpp);
+                        }
                         i++;
                         line = reader.readLine();
                     }
@@ -300,7 +305,7 @@ public class TPPImporter implements TTImport{
 
                 }
                 if (alreadyMapped(tpp, snomed))
-                    tpp.addObject(RDFS.SUBCLASSOF,iri(SNOMED.NAMESPACE+snomed));
+                    tpp.addObject(IM.MATCHED_TO,iri(SNOMED.NAMESPACE+snomed));
                 line = reader.readLine();
             }
             System.out.println("Process ended with " + count);

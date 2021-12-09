@@ -67,9 +67,9 @@ public class VisionImport implements TTImport {
 		for (Map.Entry<String,TTEntity> entry:codeToConcept.entrySet()){
 			String code= entry.getKey();
 			TTEntity vision= entry.getValue();
-			if (vision.get(RDFS.SUBCLASSOF)==null){
+			if (vision.get(IM.MATCHED_TO)==null){
 				if (emisToSnomed.get(code.replace(".",""))!=null){
-					vision.addObject(RDFS.SUBCLASSOF,iri(SNOMED.NAMESPACE+
+					vision.addObject(IM.MATCHED_TO,iri(SNOMED.NAMESPACE+
 						emisToSnomed.get(code.replace(".",""))));
 				}
 			}
@@ -250,13 +250,13 @@ public class VisionImport implements TTImport {
 				if (vision!=null) {
 					if (isSnomed(snomed)) {
 						String iri = SNOMED.NAMESPACE + snomed;
-						vision.addObject(RDFS.SUBCLASSOF, iri(SNOMED.NAMESPACE+snomed));
+						vision.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE+snomed));
 					}
 					String emis = code.replace(".", "");
 					if (emisToSnomed.get(emis) != null) {
 						for (String map : emisToSnomed.get(emis)) {
 							if (!alreadyMapped(vision, map))
-								vision.addObject(RDFS.SUBCLASSOF, iri(SNOMED.NAMESPACE + map));
+								vision.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + map));
 						}
 					}
 				}
@@ -266,9 +266,9 @@ public class VisionImport implements TTImport {
 		}
 	}
 	private boolean alreadyMapped(TTEntity entity, String snomed) {
-		if (entity.get(RDFS.SUBCLASSOF)==null)
+		if (entity.get(IM.MATCHED_TO)==null)
 			return false;
-		for (TTValue superClass:entity.get(RDFS.SUBCLASSOF).asArray().getElements()){
+		for (TTValue superClass:entity.get(IM.MATCHED_TO).asArray().getElements()){
 			if (superClass.asIriRef().getIri().split("#")[1].equals(snomed))
 				return true;
 		}
