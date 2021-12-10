@@ -11,6 +11,8 @@ import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
+import org.endeavourhealth.imapi.model.tripletree.TTEntity;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
@@ -142,17 +144,15 @@ public class ImportUtils {
 
    /**
     * Retrieves EMIS to Snomed code maps
-    * @param emisToSnomed Mapping object for emis code to many snomed codes
-    * @param emisToTerm Map object for emis code to term
     * @throws SQLException
     * @throws ClassNotFoundException
     * @throws TTFilerException
     */
-   public static void importEmisToSnomed(Map<String,List<String>> emisToSnomed,Map<String,String> emisToTerm) throws SQLException, ClassNotFoundException, TTFilerException {
+   public static Map<String,Set<String>> importEmisToSnomed() throws SQLException, ClassNotFoundException, TTFilerException {
       if (getFilerType()==FilerType.JDBC)
-         importEmisToSnomedJDBC(emisToSnomed,emisToTerm);
+         return importEmisToSnomedJDBC();
       else
-         importEmisToSnomedRdf4j(emisToSnomed,emisToTerm);
+         return importEmisToSnomedRdf4j();
    }
 
    /**
@@ -218,20 +218,14 @@ public class ImportUtils {
 
 
 
-   public static Set<String> importSimpleSet(String iri) throws TTFilerException, SQLException, ClassNotFoundException {
-      Set<String> aSet= new HashSet<>();
-      if (getFilerType()== FilerType.JDBC)
-         return importSimpleSetJDBC(aSet,iri);
-      else
-         return importSimpleSetRdf4j(aSet,iri);
-   }
+
 
    private static Set<String> importSnomedRDF4J(Set<String> snomedCodes) throws TTFilerException {
-      RepositoryConnection conn= getGraphConnection();
-      TupleQuery qry= conn.prepareTupleQuery("select ?snomed\n"+
-        "where {?concept <"+ IM.HAS_SCHEME.getIri()+"> <"+SNOMED.GRAPH_SNOMED.getIri()+">.\n"+
-   "?concept <"+IM.CODE.getIri()+"> ?snomed}");
-      try {
+
+      try (RepositoryConnection conn= getGraphConnection();){
+         TupleQuery qry= conn.prepareTupleQuery("select ?snomed\n"+
+           "where {?concept <"+ IM.HAS_SCHEME.getIri()+"> <"+SNOMED.GRAPH_SNOMED.getIri()+">.\n"+
+           "?concept <"+IM.CODE.getIri()+"> ?snomed}");
          TupleQueryResult rs= qry.evaluate();
          while (rs.hasNext()){
             BindingSet bs=rs.next();
@@ -244,49 +238,13 @@ public class ImportUtils {
    }
 
 
-   private static Set<String> importSimpleSetRdf4j(Set<String> aSet,String iri) throws TTFilerException {
-      RepositoryConnection conn= getGraphConnection();
-      TupleQuery qry= conn.prepareTupleQuery("select ?code\n"+
-        "where {?member ^<"+SHACL.OR.getIri()+"> ?def.\n" +
-        "?def <"+IM.DEFINITION.getIri()+"> ?set.\n        "+
-         "?member <"+IM.CODE.getIri()+"> ?code}");
-      try {
-         TupleQueryResult rs = qry.evaluate();
-         while (rs.hasNext()) {
-            BindingSet bs = rs.next();
-            aSet.add(bs.getValue("code").stringValue());
-         }
-      }catch (RepositoryException e){
-         throw new TTFilerException("unable to retrieve set members : "+e);
-      }
-      return aSet;
-   }
-
-   private static Set<String> importSimpleSetJDBC(Set<String> aSet,String iri) throws SQLException, ClassNotFoundException {
-      Connection conn= getConnection();
-      try (PreparedStatement getSet= conn.prepareStatement("Select o.iri\n" +
-        "from tpl\n" +
-        "join entity e on tpl.subject= e.dbid\n" +
-        "join entity p on tpl.predicate=p.dbid\n" +
-        "join entity o on tpl.object= o.dbid\n" +
-        "where e.iri=?set and p.iri='"+ SHACL.OR.getIri()+"'")) {
-         DALHelper.setString(getSet,1,iri);
-         ResultSet rs = getSet.executeQuery();
-         while (rs.next()) {
-            String member = rs.getString("iri");
-            aSet.add(member);
-         }
-      }
-         return aSet;
-   }
-
 
    private static Map<String, List<String>> importReadToSnomedRdf4j(Map<String, List<String>> readToSnomed) throws TTFilerException {
-     RepositoryConnection conn= getGraphConnection();
+
+      try (RepositoryConnection conn= getGraphConnection()){
      TupleQuery qry= conn.prepareTupleQuery("select ?code ?snomed\n"+
        "where {GRAPH <"+IM.GRAPH_VISION.getIri()+"> {?concept <"+IM.CODE.getIri()+"> ?code. \n"+
-   "?concept <"+RDFS.SUBCLASSOF.getIri()+"> ?snomed.}}");
-     try {
+   "?concept <"+IM.MATCHED_TO.getIri()+"> ?snomed.}}");
         TupleQueryResult rs= qry.evaluate();
         while (rs.hasNext()){
            BindingSet bs= rs.next();
@@ -294,13 +252,56 @@ public class ImportUtils {
            String snomed= bs.getValue("snomed").stringValue();
            List<String> maps = readToSnomed.computeIfAbsent(read, k -> new ArrayList<>());
            maps.add(snomed);
-
         }
-
      } catch (RepositoryException e){
         throw new TTFilerException("unable to retrieve vision/read "+e);
      }
      return readToSnomed;
+   }
+
+   public static Map<String,TTEntity> getEMISReadAsVision() throws TTFilerException {
+      if (getFilerType()== FilerType.JDBC) {
+         throw new TTFilerException("No JDBC version for get emis entities");
+      }else {
+         return getEMISReadAsVisionRdf4j();
+      }
+
+   }
+
+   private static Map<String, TTEntity> getEMISReadAsVisionRdf4j() {
+      Map<String,TTEntity> emisRead2= new HashMap<>();
+      try (RepositoryConnection conn= getGraphConnection()) {
+         StringJoiner sql = new StringJoiner("\n");
+         sql.add("SELECT ?code ?name ?snomed");
+         sql.add("WHERE {");
+         sql.add("Graph <" + IM.GRAPH_EMIS.getIri() + "> {");
+         sql.add("?concept <" + IM.CODE.getIri() + "> ?code.");
+         sql.add("?concept <" + RDFS.LABEL.getIri() + "> ?name.");
+         sql.add("?concept <" + IM.MATCHED_TO.getIri() + "> ?snomed. } }");
+         TupleQuery qry = conn.prepareTupleQuery(sql.toString());
+         TupleQueryResult rs = qry.evaluate();
+         while (rs.hasNext()) {
+            BindingSet bs = rs.next();
+            String code = bs.getValue("code").stringValue();
+            String name = bs.getValue("name").stringValue();
+            String snomed = bs.getValue("snomed").stringValue();
+            if (isRead(code)) {
+               code = (code + ".....").substring(0, 5);
+               TTEntity entity = emisRead2.computeIfAbsent(code, k -> new TTEntity());
+               entity.setName(name);
+               entity.setCode(code);
+               entity.setIri(IM.GRAPH_VISION.getIri() + code.replace(".", ""));
+               entity.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+            }
+         }
+      }
+      return emisRead2;
+   }
+   public static Boolean isRead(String s){
+      if (s.length()<6)
+         return !s.contains("DRG") & !s.contains("SHAPT") & !s.contains("EMIS") & !s.contains("-");
+      else
+         return false;
    }
 
    private static Map<String, List<String>> importReadToSnomedJdbc(Map<String, List<String>> readToSnomed) throws SQLException, ClassNotFoundException {
@@ -325,13 +326,14 @@ public class ImportUtils {
       return readToSnomed;
    }
 
-   private static void importEmisToSnomedRdf4j(Map<String, List<String>> emisToSnomed, Map<String,String> emisToTerm) throws TTFilerException {
+   private static Map<String,Set<String>> importEmisToSnomedRdf4j() throws TTFilerException {
+      Map<String,Set<String>> emisToSnomed= new HashMap<>();
       RepositoryConnection conn= getGraphConnection();
       TupleQuery qry= conn.prepareTupleQuery("select ?code ?snomed  ?name\n"+
         "where {GRAPH <"+IM.GRAPH_EMIS.getIri()+"> \n"+
           "{?concept <"+IM.CODE.getIri()+"> ?code. \n"+
         "?concept <"+RDFS.LABEL.getIri()+"> ?name.\n"+
-        "?concept <"+RDFS.SUBCLASSOF.getIri()+"> ?snomedIri.}\n" +
+        "?concept <"+IM.MATCHED_TO.getIri()+"> ?snomedIri.}\n" +
         "GRAPH <"+SNOMED.GRAPH_SNOMED.getIri()+"> {"+
         "?snomedIri <"+IM.CODE.getIri()+"> ?snomed.}}");
       try {
@@ -340,41 +342,41 @@ public class ImportUtils {
             BindingSet bs= rs.next();
             String read= bs.getValue("code").stringValue();
             String snomed= bs.getValue("snomed").stringValue();
-            List<String> maps = emisToSnomed.computeIfAbsent(read, k -> new ArrayList<>());
+            Set<String> maps = emisToSnomed.computeIfAbsent(read, k -> new HashSet<>());
             maps.add(snomed);
-            emisToTerm.put(read,bs.getValue("name").stringValue());
-
          }
+         return emisToSnomed;
 
       } catch (RepositoryException e){
          throw new TTFilerException("unable to retrieve vision/read "+e);
       }
    }
 
-   private static void importEmisToSnomedJDBC(Map<String, List<String>> emisToSnomed,Map<String,String> emisToTerm) throws SQLException, ClassNotFoundException {
+   private static Map<String,Set<String>> importEmisToSnomedJDBC() throws SQLException, ClassNotFoundException {
       Connection conn= getConnection();
+      Map<String,Set<String>> emisToSnomed= new HashMap<>();
 
    PreparedStatement getEMIS= conn.prepareStatement("SELECT entity.code as code,snomed.code as snomed,entity.name as name\n" +
         "from entity\n" +
         "join tpl on tpl.subject= entity.dbid\n" +
         "join entity snomed on tpl.object= snomed.dbid\n" +
-        "join entity subclass on tpl.predicate=subclass.dbid\n" +
+        "join entity matchTo on tpl.predicate=matchTo.dbid\n" +
         "where entity.scheme='http://endhealth.info/emis#'\n" +
-        "and snomed.scheme='http://snomed.info/sct#'");
+        "and snomed.scheme='http://snomed.info/sct#'"+
+        "and matchTo.iri='http://endhealth.info/im#matchedTo'");
       ResultSet rs= getEMIS.executeQuery();
       while (rs.next()){
          String emis= rs.getString("code");
          String snomed=rs.getString("snomed");
-         emisToSnomed.computeIfAbsent(emis, k -> new ArrayList<>());
+         emisToSnomed.computeIfAbsent(emis, k -> new HashSet<>());
          emisToSnomed.get(emis).add(snomed);
-         emisToTerm.put(rs.getString("code"),rs.getString("name"));
       }
       conn.close();
+      return emisToSnomed;
    }
 
-   private static Set<String> importSnomedJDBC(Set<String> snomedCodes) throws TTFilerException, SQLException, ClassNotFoundException {
-         Connection conn = getConnection();
-      try {
+   private static Set<String> importSnomedJDBC(Set<String> snomedCodes) throws  SQLException, ClassNotFoundException {
+      try (Connection conn = getConnection()) {
          PreparedStatement getSnomed = conn.prepareStatement("SELECT code from entity "
            + "where iri like 'http://snomed.info/sct%'");
          ResultSet rs = getSnomed.executeQuery();
@@ -384,11 +386,10 @@ public class ImportUtils {
             System.err.println("Snomed must be loaded first");
             System.exit(-1);
          }
-         conn.close();
-      } catch (SQLException e){
+
+
+      } catch (SQLException e) {
          throw new RepositoryException("unable to retrieve snomed codes");
-      } finally {
-         conn.close();
       }
       return snomedCodes;
    }

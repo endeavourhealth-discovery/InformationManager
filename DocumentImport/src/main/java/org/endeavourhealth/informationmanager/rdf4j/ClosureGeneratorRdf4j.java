@@ -84,24 +84,18 @@ public class ClosureGeneratorRdf4j implements TCGenerator {
 		} else {
 			stmt = conn.prepareTupleQuery(getDefaultPrefixes() + "\nSelect ?child ?parent\n" +
 				"where {?child <" + relationship.getIri() + "> ?parent }\n");
-
 		}
 		try (TupleQueryResult rs = stmt.evaluate()) {
 			int c = 0;
 			while (rs.hasNext()) {
 				BindingSet bs = rs.next();
-				//	if (c++ % 1000 == 0)
-				//	System.out.print("\rLoaded " + c + " relationships...");
 				String child = bs.getValue("child").stringValue();
 				String parent = bs.getValue("parent").stringValue();
 				Set<String> parents = parentMap.computeIfAbsent(child, k -> new HashSet<>());
 				parents.add(parent);
 			}
-
 		}
-
 		System.out.println("Relationships loaded for " + relationship.getIri() + " " + parentMap.size() + " entities");
-
 	}
 
 	private void buildClosure() {

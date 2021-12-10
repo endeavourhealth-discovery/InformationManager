@@ -33,8 +33,7 @@ public class VisionImport implements TTImport {
 	private final Map<String,TTEntity> r2TermIdMap= new HashMap<>();
 	private final Set<String> preferredId = new HashSet<>();
 	private final TTManager manager= new TTManager();
-	private final Map<String,List<String>> emisToSnomed = new HashMap<>();
-	private final Map<String,String> emisToTerm = new HashMap<>();
+	private  Map<String,TTEntity> emisRead;
 
 
 
@@ -53,6 +52,7 @@ public class VisionImport implements TTImport {
 		importR2Desc(config.folder);
 		importR2Terms(config.folder);
 		importVisionCodes(config.folder);
+		addMoreReadCodes();
 		createHierarchy();
 		addVisionMaps(config.folder);
 		addMissingMaps();
@@ -63,14 +63,36 @@ public class VisionImport implements TTImport {
 		return this;
 	}
 
+	private void addMoreReadCodes() throws TTFilerException {
+		for (Map.Entry<String,TTEntity> entry:emisRead.entrySet()){
+			String code= entry.getKey();
+			if (codeToConcept.get(code)==null)
+				document.addEntity(entry.getValue());
+			else {
+				TTEntity vision= codeToConcept.get(code);
+				TTEntity read= entry.getValue();
+				if (read.get(IM.MATCHED_TO)!=null){
+					if (vision.get(IM.MATCHED_TO)==null){
+						vision.set(IM.MATCHED_TO,read.get(IM.MATCHED_TO));
+					} else {
+						for (TTValue snoExtra:read.get(IM.MATCHED_TO).asArray().getElements()) {
+							if (!vision.get(IM.MATCHED_TO).asArray().contains(snoExtra)) {
+								vision.get(IM.MATCHED_TO).asArray().add(snoExtra);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	private void addMissingMaps() {
 		for (Map.Entry<String,TTEntity> entry:codeToConcept.entrySet()){
 			String code= entry.getKey();
 			TTEntity vision= entry.getValue();
 			if (vision.get(IM.MATCHED_TO)==null){
-				if (emisToSnomed.get(code.replace(".",""))!=null){
-					vision.addObject(IM.MATCHED_TO,iri(SNOMED.NAMESPACE+
-						emisToSnomed.get(code.replace(".",""))));
+				if (emisRead.get(code)!=null){
+					vision.addObject(IM.MATCHED_TO,emisRead.get(code).get(IM.MATCHED_TO));
 				}
 			}
 
@@ -108,7 +130,7 @@ public class VisionImport implements TTImport {
 
 	private void importEmis() throws SQLException, TTFilerException, ClassNotFoundException {
 		System.out.println("Importing EMIS/Read from IM for look up....");
-		ImportUtils.importEmisToSnomed(emisToSnomed,emisToTerm);
+		emisRead= ImportUtils.getEMISReadAsVision();
 
 		}
 
@@ -158,6 +180,16 @@ public class VisionImport implements TTImport {
 	}
 
 
+	public Boolean isEMIS(String s){
+		if (s.length()>5)
+			return true;
+		else if (s.contains("DRG")|s.contains("SHAPT")|s.contains("EMIS"))
+			return true;
+		else
+			return false;
+	}
+
+
 
 	private void createHierarchy() {
 		TTEntity vision= new TTEntity()
@@ -170,13 +202,15 @@ public class VisionImport implements TTImport {
 		vision.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
 		for (TTEntity entity:document.getEntities()){
 			String shortCode = entity.getCode();
-			if (shortCode.contains("."))
-				shortCode= shortCode.substring(0,shortCode.indexOf("."));
-			if (shortCode.length()==1)
-				entity.set(IM.IS_CHILD_OF,new TTArray().add(iri(vision.getIri())));
-			else {
-				String parent = shortCode.substring(0,shortCode.length()-1);
-				entity.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.CODE_SCHEME_VISION.getIri() + parent)));
+			if (shortCode!=null) {
+				if (shortCode.contains("."))
+					shortCode = shortCode.substring(0, shortCode.indexOf("."));
+				if (shortCode.length() == 1)
+					entity.set(IM.IS_CHILD_OF, new TTArray().add(iri(vision.getIri())));
+				else {
+					String parent = shortCode.substring(0, shortCode.length() - 1);
+					entity.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.CODE_SCHEME_VISION.getIri() + parent)));
+				}
 			}
 		}
 	}
@@ -252,28 +286,13 @@ public class VisionImport implements TTImport {
 						String iri = SNOMED.NAMESPACE + snomed;
 						vision.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE+snomed));
 					}
-					String emis = code.replace(".", "");
-					if (emisToSnomed.get(emis) != null) {
-						for (String map : emisToSnomed.get(emis)) {
-							if (!alreadyMapped(vision, map))
-								vision.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + map));
-						}
-					}
 				}
 				line = reader.readLine();
 			}
 			System.out.println("Process ended with " + count);
 		}
 	}
-	private boolean alreadyMapped(TTEntity entity, String snomed) {
-		if (entity.get(IM.MATCHED_TO)==null)
-			return false;
-		for (TTValue superClass:entity.get(IM.MATCHED_TO).asArray().getElements()){
-			if (superClass.asIriRef().getIri().split("#")[1].equals(snomed))
-				return true;
-		}
-		return false;
-	}
+
 
 	public Boolean isSnomed(String s){
 		return snomedCodes.contains(s);

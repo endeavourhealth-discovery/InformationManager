@@ -76,6 +76,9 @@ public class EMISImport implements TTImport {
         addSub("EMISNQHA21","428975001");
         addSub("TRISHE2","16584000");
         addSub("EMISNQRO5","415354003");
+        addSub("EMISNQ1S1","414259000");
+        addSub("EMISNQ2N1","415507003");
+        addSub("EMISNQ3R1","415712004");
     }
 
     private void addSub(String child, String parent) {
