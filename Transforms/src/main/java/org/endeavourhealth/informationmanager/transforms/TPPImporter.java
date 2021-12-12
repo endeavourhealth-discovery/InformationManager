@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import com.opencsv.CSVReader;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -30,11 +31,13 @@ public class TPPImporter implements TTImport{
     private static final String[] terms = {".*\\\\TPP\\\\Terms.v3"};
     private static final String[] hierarchies = {".*\\\\TPP\\\\V3hier.v3"};
     private static final String[] nhsMap = {".*\\\\TPP\\\\CTV3SCTMAP.txt"};
+    private static final String[] vaccineMaps = {".*\\\\TPP\\\\VaccineMaps.json"};
     private static final String[] tppCtv3Lookup = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_lookup_2.csv"};
     private static final String[] tppCtv3ToSnomed = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_to_snomed.csv"};
     private final TTManager manager= new TTManager();
     private Map<String,Set<String>> emisToSnomed;
     private TTDocument document;
+    private TTDocument vDocument;
     private static final Map<String,TTEntity> codeToEntity= new HashMap<>();
     private static final Map<String,String> termCodes= new HashMap<>();
 
@@ -69,8 +72,18 @@ public class TPPImporter implements TTImport{
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
+        importVaccineMaps(config.folder);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(vDocument);
+        }
 
         return this;
+
+    }
+
+    private void importVaccineMaps(String folder) throws IOException {
+        Path file = ImportUtils.findFileForId(folder, vaccineMaps[0]);
+        vDocument= manager.loadDocument(file.toFile());
 
     }
 
@@ -103,12 +116,11 @@ public class TPPImporter implements TTImport{
     private void importLocals(String folder) throws IOException {
         Path file = ImportUtils.findFileForId(folder, tppCtv3Lookup[0]);
         System.out.println("Importing TPP Ctv3 local codes");
-        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();
-            String line = reader.readLine();
+        try (CSVReader reader = new CSVReader(new FileReader(file.toFile()))) {
+            reader.readNext();
+            String[] fields;
             int count = 0;
-            while (line != null && !line.isEmpty()) {
-                String[] fields = line.split(",");
+            while ((fields = reader.readNext()) != null){
                 count++;
                 if (count % 10000 == 0) {
                     System.out.println("Processed " + count);
@@ -125,7 +137,6 @@ public class TPPImporter implements TTImport{
                     document.addEntity(tpp);
 
                 }
-                line = reader.readLine();
             }
             System.out.println("Process ended with " + count);
         }
@@ -331,7 +342,7 @@ public class TPPImporter implements TTImport{
 
     @Override
     public TTImport validateFiles(String inFolder) {
-        ImportUtils.validateFiles(inFolder,concepts,descriptions,dcf,terms,hierarchies,tppCtv3Lookup,tppCtv3ToSnomed,nhsMap);
+        ImportUtils.validateFiles(inFolder,concepts,descriptions,dcf,terms,hierarchies,tppCtv3Lookup,tppCtv3ToSnomed,nhsMap,vaccineMaps);
         return this;
     }
 
@@ -340,12 +351,11 @@ public class TPPImporter implements TTImport{
     private void importTppCtv3ToSnomed(String folder) throws IOException {
         Path file = ImportUtils.findFileForId(folder, tppCtv3ToSnomed[0]);
         System.out.println("Importing TPP Ctv3 to Snomed");
-        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();
-            String line = reader.readLine();
+        try (CSVReader reader = new CSVReader(new FileReader(file.toFile()))) {
+            reader.readNext();
+            String[] fields;
             int count = 0;
-            while (line != null && !line.isEmpty()) {
-                String[] fields = line.split(",");
+            while ((fields = reader.readNext()) != null) {
                 count++;
                 if (count % 10000 == 0) {
                     System.out.println("Processed " + count);
@@ -365,7 +375,6 @@ public class TPPImporter implements TTImport{
                 if (!alreadyMapped(tpp, snomed)) {
                     tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + snomed));
                 }
-                line = reader.readLine();
             }
             System.out.println("Process ended with " + count);
         }
