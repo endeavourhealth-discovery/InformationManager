@@ -112,9 +112,9 @@ public class BartsCernerImport implements TTImport {
 					String snomed = fields[2];
 					TTEntity barts=codeToConcept.get(code);
 					if (snomed.contains("1000252"))
-						barts.addObject(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+snomed));
+						barts.addObject(IM.MATCHED_TO,TTIriRef.iri(IM.NAMESPACE+snomed));
 					else
-						barts.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(SNOMED.NAMESPACE+snomed));;
+						barts.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE+snomed));;
 					line = reader.readLine();
 					}
 				}

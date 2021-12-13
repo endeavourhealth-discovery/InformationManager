@@ -58,8 +58,9 @@ public class EMISImport implements TTImport {
         populateRemaps();
         addEMISUnlinked();
         importEMISCodes(config.folder);
-        setEmisHierarchy();
         allergyMaps(config.folder);
+        setEmisHierarchy();
+        manager.createIndex();
         supplementary(config.folder);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
@@ -75,11 +76,14 @@ public class EMISImport implements TTImport {
         addSub("EMISNQHA21","428975001");
         addSub("TRISHE2","16584000");
         addSub("EMISNQRO5","415354003");
+        addSub("EMISNQ1S1","414259000");
+        addSub("EMISNQ2N1","415507003");
+        addSub("EMISNQ3R1","415712004");
     }
 
     private void addSub(String child, String parent) {
-        TTEntity childEntity= manager.getEntity(IM.GRAPH_EMIS+child);
-        childEntity.addObject(RDFS.SUBCLASSOF,iri(SNOMED.NAMESPACE+parent));
+        TTEntity childEntity= manager.getEntity(IM.GRAPH_EMIS.getIri()+child);
+        childEntity.addObject(IM.MATCHED_TO,iri(SNOMED.NAMESPACE+parent));
     }
 
     private void allergyMaps(String folder) throws IOException {
@@ -88,8 +92,8 @@ public class EMISImport implements TTImport {
         TTDocument allDoc= allMgr.loadDocument(path.toFile());
         for (TTEntity all:allDoc.getEntities()){
             TTEntity emisEntity= manager.getEntity(all.getIri());
-            for (TTValue superClass:all.get(RDFS.SUBCLASSOF).getElements()){
-                emisEntity.addObject(RDFS.SUBCLASSOF,superClass);
+            for (TTValue superClass:all.get(IM.MATCHED_TO).getElements()){
+                emisEntity.addObject(IM.MATCHED_TO,superClass);
             }
         }
     }
@@ -104,43 +108,39 @@ public class EMISImport implements TTImport {
 
 
     private void setEmisHierarchy() {
-        for (Map.Entry<String,List<String>> entry:parentMap.entrySet()){
-            String child= entry.getKey();
-            TTEntity childEntity= codeIdToEntity.get(child);
-            //if (childEntity.getIri().contains("1B85-1"))
-              //  System.out.println("1B85");
-            List<String> parents=entry.getValue();
-            for (String parentId:parents) {
-                TTEntity parentEntity= codeIdToEntity.get(parentId);
-                if (parentEntity!=null) {
+        for (Map.Entry<String,List<String>> entry:parentMap.entrySet()) {
+            String child = entry.getKey();
+            TTEntity childEntity = codeIdToEntity.get(child);
+            if (isEMIS(childEntity.getCode())) {
+                if (childEntity.get(IM.MATCHED_TO)==null)
+                    setNearestCoreMatch(child,child);
+            }
+            List<String> parents = entry.getValue();
+            for (String parentId : parents) {
+                TTEntity parentEntity = codeIdToEntity.get(parentId);
+                if (parentEntity != null) {
                     String parentIri = codeIdToEntity.get(parentId).getIri();
-                    if (isEMIS(childEntity.getCode())) {
-                        if (!isCoreSublass(childEntity))
-                            if (!isBlackList(parentIri.substring(parentIri.lastIndexOf("=")+1))) {
-                                childEntity.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(parentIri));
-                            } else
-                                TTManager.addChildOf(childEntity,iri(parentIri));
-                        else
-                            TTManager.addChildOf(childEntity, iri(parentIri));
-                    }
-                    else
-                        TTManager.addChildOf(childEntity, iri(parentIri));
+                    TTManager.addChildOf(childEntity, iri(parentIri));
                 }
             }
         }
     }
 
-    private boolean isCoreSublass(TTEntity subclass) {
-        if (subclass.get(RDFS.SUBCLASSOF)==null)
-            return false;
-        for (TTValue value:subclass.get(RDFS.SUBCLASSOF).iterator()) {
-            if (value.asIriRef().getIri().contains(SNOMED.NAMESPACE))
-                return true;
-            if (value.asIriRef().getIri().contains(IM.NAMESPACE))
-                return true;
+    private void setNearestCoreMatch(String descendant,String child) {
+        List<String> parentIds= parentMap.get(child);
+        for (String parentId:parentIds){
+            TTEntity parentEntity= codeIdToEntity.get(parentId);
+            if (parentEntity.get(IM.MATCHED_TO)!=null){
+                for (TTValue match:parentEntity.get(IM.MATCHED_TO).asArray().getElements()){
+                    codeIdToEntity.get(descendant).addObject(IM.MATCHED_TO,match);
+                }
+            }
+            else if (parentMap.get(parentId)!=null)
+                setNearestCoreMatch(descendant,parentId);
         }
-        return false;
+
     }
+
 
     private void addEMISUnlinked(){
         TTEntity c= new TTEntity().setIri("emis:EMISUnlinkedCodes")
@@ -190,7 +190,7 @@ public class EMISImport implements TTImport {
                     if (remaps.get(emis)!=null)
                         snomed=remaps.get(emis);
                     if (!isBlackList(snomed)) {
-                        emisConcept.addObject(RDFS.SUBCLASSOF,
+                        emisConcept.addObject(IM.MATCHED_TO,
                           TTIriRef.iri(SNOMED.NAMESPACE + snomed));
                     } else
                         emisConcept.addObject(IM.IS_CHILD_OF,iri("emis:EMISUnlinkedCodes"));

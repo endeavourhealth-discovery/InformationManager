@@ -1,9 +1,10 @@
-package org.endeavourhealth.informationmanager;
+package org.endeavourhealth.informationmanager.jdbc;
 
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.TCGenerator;
 import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
 import java.io.FileWriter;
@@ -11,23 +12,15 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 
-public class ClosureGenerator {
+public class ClosureGeneratorJDBC implements TCGenerator {
     private static HashMap<Integer, List<Integer>> parentMap;
     private static HashMap<Integer, List<Closure>> closureMap;
+    private static int counter;
 
 
-    public static void main(String[] args) throws SQLException, IOException, ClassNotFoundException {
-        if (args.length == 0 || args.length > 2) {
-            System.err.println("Incorrect parameters:");
-            System.err.println("<output path> [secure]");
-            System.exit(-1);
-        }
 
-        boolean secure = (args.length == 2 && "secure".equalsIgnoreCase(args[1]));
-        generateClosure(args[0], secure);
-    }
 
-    public static void generateClosure(String outpath, boolean secure) throws SQLException, IOException, ClassNotFoundException {
+    public void generateClosure(String outpath, boolean secure) throws SQLException, IOException, ClassNotFoundException {
 
         List<TTIriRef> relationships = Arrays.asList(
           RDFS.SUBCLASSOF,
@@ -102,6 +95,7 @@ public class ClosureGenerator {
         }
         Integer previousChildId = null;
         Integer predicateDbid = null;
+        int entityCount=0;
         try (ResultSet rs = stmt.executeQuery()) {
                 List<Integer> parents = null;
                 int c = 0;
@@ -115,6 +109,7 @@ public class ClosureGenerator {
                     if (!childId.equals(previousChildId)) {
                         parents = new ArrayList<>();
                         parentMap.put(childId, parents);
+                        entityCount++;
                     }
                     parents.add(rs.getInt("parent"));
                     previousChildId = childId;
@@ -122,7 +117,7 @@ public class ClosureGenerator {
 
         }
 
-        System.out.println("\nRelationships loaded for " + parentMap.size() + " entities");
+        System.out.println("\nRelationships loaded for " + parentMap.size() + " entities ("+entityCount);
         if (!relationship.equals(IM.HAS_REPLACED))
             return predicateDbid;
         else {
@@ -144,13 +139,13 @@ public class ClosureGenerator {
         System.out.println("Generating closures");
         int c = 0;
         for (Map.Entry<Integer, List<Integer>> row : parentMap.entrySet()) {
-            if (c++ % 1000 == 0)
-                System.out.print("\rGenerating for child " + c + " / " + parentMap.size());
+          //  if (c++ % 1000 == 0)
+             //   System.out.print("Generating for child " + c + " / " + parentMap.size());
 
             Integer childId = row.getKey();
             generateClosure(childId);
         }
-        System.out.println();
+        System.out.println(counter+" rows so far");
     }
 
 
@@ -158,6 +153,7 @@ public class ClosureGenerator {
         // Get the parents
         List<Closure> closures = new ArrayList<>();
         closureMap.put(childId, closures);
+        counter++;
 
         // Add self
         closures.add(new Closure()
@@ -184,6 +180,7 @@ public class ClosureGenerator {
                             .setParent(parentClosure.getParent())
                             .setLevel(parentClosure.getLevel() + 1)
                         );
+                        counter++;
                     }
                 }
             }

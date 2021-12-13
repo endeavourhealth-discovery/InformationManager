@@ -86,7 +86,7 @@ public class ComplexMapImporter {
             for (ComplexMapTarget sourceTarget:targetGroup.getTargetMaps()) {
                TTEntity legacy= legacyCodeToEntity.get(sourceTarget.getTarget());
                if (legacy!=null){
-               legacy.addObject(RDFS.SUBCLASSOF,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+               legacy.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
                addMapTarget(ttTargetGroup, sourceTarget);}
             }
          } else{

@@ -85,7 +85,7 @@ public class WinPathKingsImport implements TTImport {
 				document.addEntity(entity);
 				if (readToSnomed.get(readCode) != null) {
 					for (String snomed : readToSnomed.get(readCode)) {
-						entity.addObject(RDFS.SUBCLASSOF,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+						entity.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 					}
 				}
 

@@ -45,9 +45,7 @@ public class OPCS4Importer implements TTImport {
         importChapters(config.folder,document);
         importEntities(config.folder,document);
 
-
         mapDocument= manager.createDocument(IM.GRAPH_OPCS4.getIri());
-
         mapDocument.setCrud(IM.UPDATE);
         importMaps(config.folder);
         //Important to file after maps set
@@ -55,7 +53,7 @@ public class OPCS4Importer implements TTImport {
             filer.fileDocument(document);
         }
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
+            filer.fileDocument(mapDocument);
         }
         return this;
     }

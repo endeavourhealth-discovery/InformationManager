@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.*;
+import org.endeavourhealth.informationmanager.jdbc.ClosureGeneratorJDBC;
 
 import java.util.Date;
 
@@ -150,6 +151,10 @@ public class ImportApp {
                 importer = new Importer().validateByType(IM.GRAPH_ODS, cfg.folder);
                 importer.importByType(IM.GRAPH_ODS, cfg);
                 break;
+            case "encounters":
+                importer = new Importer().validateByType(IM.GRAPH_ENCOUNTERS, cfg.folder);
+                importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
+                break;
             case "tct":
                 cfg.skipsearch = true;
                 break;
@@ -161,7 +166,10 @@ public class ImportApp {
 
         }
 
-        if (!cfg.skiptct) ClosureGenerator.generateClosure(cfg.folder, cfg.secure);
+        if (!cfg.skiptct) {
+            TCGenerator closureGenerator= TTFilerFactory.getClosureGenerator();
+            closureGenerator.generateClosure(cfg.folder, cfg.secure);
+        }
         if (!cfg.skipsearch) SearchTermGenerator.generateSearchTerms(cfg.folder, cfg.secure);
 
         System.out.println("Finished - " + (new Date()));

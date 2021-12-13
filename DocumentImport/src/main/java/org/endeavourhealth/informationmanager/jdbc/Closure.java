@@ -1,4 +1,4 @@
-package org.endeavourhealth.informationmanager;
+package org.endeavourhealth.informationmanager.jdbc;
 
 public class Closure {
     private Integer parent;
