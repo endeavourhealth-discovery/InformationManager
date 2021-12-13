@@ -181,7 +181,8 @@ public class EMISImport implements TTImport {
                       .addType(IM.CONCEPT)
                       .setScheme(IM.CODE_SCHEME_EMIS)
                       .setName(name)
-                      .setCode(emis);
+                      .setCode(emis)
+                      .set(IM.CODE_ID,TTLiteral.literal(codeid));
                     document.addEntity(emisConcept);
                     emisToEntity.put(emis,emisConcept);
                 }
