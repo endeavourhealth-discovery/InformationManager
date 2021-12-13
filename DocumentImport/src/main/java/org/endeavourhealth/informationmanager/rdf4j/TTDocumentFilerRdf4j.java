@@ -17,10 +17,18 @@ public class TTDocumentFilerRdf4j extends TTDocumentFiler {
     private RepositoryConnection conn;
 
     public TTDocumentFilerRdf4j() throws TTFilerException {
+        String server = System.getenv("GRAPH_SERVER");
+        String repoid = System.getenv("GRAPH_REPO");
+
+        if (server == null || server.isEmpty() || repoid == null || repoid.isEmpty()) {
+            LOG.error("For graph db connections, GRAPH_SERVER and GRAPH_REPO environment variables must be set");
+            System.exit(-1);
+        }
+
         LOG.info("Connecting");
 
         try {
-            repo = new HTTPRepository("http://dev-im-test1.cluster-cwwwbkhdusnw.eu-west-2.neptune.amazonaws.com:8182/", "im");
+            repo = new HTTPRepository(server, repoid);
             repo.initialize();
             conn = repo.getConnection();
             LOG.info("Connected");

@@ -397,12 +397,12 @@ public class ImportUtils {
       return snomedCodes;
    }
 
-   private static boolean isMacOs() {
-      return (System.getProperty("os.name").toLowerCase().contains("mac"));
+   private static boolean isWindows() {
+      return (System.getProperty("os.name").toLowerCase().contains("win"));
    }
 
    private static String getFilePath(String path) {
-       return isMacOs() ? path.replace("/", "\\") : path;
+       return isWindows() ? path : path.replace("/", "\\");
    }
 
 }
