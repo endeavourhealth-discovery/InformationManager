@@ -88,7 +88,7 @@ public class TTEntityFilerRdf4j implements TTEntityFiler {
         try {
             ModelBuilder builder = new ModelBuilder();
             builder = builder.namedGraph(graph.getIri());
-            for (Map.Entry<TTIriRef, TTValue> entry : entity.getPredicateMap().entrySet()) {
+            for (Map.Entry<TTIriRef, TTArray> entry : entity.getPredicateMap().entrySet()) {
                 addTriple(builder, toIri(entity.getIri()), toIri(entry.getKey().getIri()), entry.getValue());
             }
             conn.add(builder.build());
@@ -112,8 +112,8 @@ public class TTEntityFilerRdf4j implements TTEntityFiler {
     private void deletePredicates(TTEntity entity, TTIriRef graph) throws TTFilerException {
         StringBuilder predList= new StringBuilder();
         int i=0;
-        Map<TTIriRef,TTValue> predicates= entity.getPredicateMap();
-        for (Map.Entry<TTIriRef, TTValue> po : predicates.entrySet()) {
+        Map<TTIriRef,TTArray> predicates= entity.getPredicateMap();
+        for (Map.Entry<TTIriRef, TTArray> po : predicates.entrySet()) {
             String predicateIri = po.getKey().getIri();
             i++;
             if (i > 1)
@@ -152,28 +152,27 @@ public class TTEntityFilerRdf4j implements TTEntityFiler {
         fileEntityPredicates(entity,graph);
     }
 
-    private void addTriple(ModelBuilder builder, Resource subject, IRI predicate, TTValue value) throws TTFilerException {
-        if (value.isLiteral()) {
-            builder.add(subject, predicate, value.asLiteral().getType() == null
+    private void addTriple(ModelBuilder builder, Resource subject, IRI predicate, TTArray values) throws TTFilerException {
+        for (TTValue value:values.getElements()){
+            if (value.isLiteral()) {
+                builder.add(subject, predicate, value.asLiteral().getType() == null
                 ? literal(value.asLiteral().getValue())
                 : literal(value.asLiteral().getValue(), toIri(value.asLiteral().getType().getIri())));
-        }
-        else if (value.isIriRef())
-            builder.add(subject, predicate, toIri(value.asIriRef().getIri()));
-        else if (value.isNode()) {
-            TTNode node = value.asNode();
-            BNode bNode = bnode();
-            builder.add(subject, predicate, bNode);
-            for (Map.Entry<TTIriRef, TTValue> entry : node.getPredicateMap().entrySet()) {
-                addTriple(builder, bNode, toIri(entry.getKey().getIri()), entry.getValue());
             }
-        } else if (value.isList()) {
-            TTArray list = value.asArray();
-            for (TTValue element: list.getElements()) {
-                addTriple(builder, subject, predicate, element);
+            else if (value.isIriRef()) {
+                builder.add(subject, predicate, toIri(value.asIriRef().getIri()));
             }
-        } else {
-            throw new TTFilerException("Unknown value type");
+            else if (value.isNode()) {
+                TTNode node = value.asNode();
+                BNode bNode = bnode();
+                builder.add(subject, predicate, bNode);
+                for (Map.Entry<TTIriRef, TTArray> entry : node.getPredicateMap().entrySet()) {
+                    addTriple(builder, bNode, toIri(entry.getKey().getIri()), entry.getValue());
+                }
+            }
+            else {
+                throw new TTFilerException("Arrays of arrays not allowed ");
+            }
         }
     }
 

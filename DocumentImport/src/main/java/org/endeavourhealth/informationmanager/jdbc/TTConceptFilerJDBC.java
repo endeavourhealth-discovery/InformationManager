@@ -111,7 +111,7 @@ public class TTConceptFilerJDBC implements TTEntityFiler {
         fileTermCodes(entity, entityId, graphId);
         if (entity.get(RDF.TYPE) != null)
             fileEntityTypes(entity, entityId, graphId);
-        Map<TTIriRef, TTValue> predicates = entity.getPredicateMap();
+        Map<TTIriRef, TTArray> predicates = entity.getPredicateMap();
         //Creates transactional adds
         TTNode subject = new TTNode();
         subject.setPredicateMap(predicates);
@@ -119,10 +119,10 @@ public class TTConceptFilerJDBC implements TTEntityFiler {
 
     }
 
-    private void deletePredicates(Integer entityId, Map<TTIriRef, TTValue> predicates, int graphId) throws TTFilerException {
+    private void deletePredicates(Integer entityId, Map<TTIriRef, TTArray> predicates, int graphId) throws TTFilerException {
         List<Integer> predList = new ArrayList<>();
         int i = 0;
-        for (Map.Entry<TTIriRef, TTValue> po : predicates.entrySet()) {
+        for (Map.Entry<TTIriRef, TTArray> po : predicates.entrySet()) {
             String predicateIri = po.getKey().getIri();
             Integer predicateId = getEntityId(predicateIri);
             predList.add(predicateId);
@@ -217,7 +217,7 @@ public class TTConceptFilerJDBC implements TTEntityFiler {
     private void fileTermCodes(TTEntity entity, Integer entityId, int graphId) throws TTFilerException {
         boolean nameFiled = false;
         if (entity.get(IM.HAS_TERM_CODE) != null)
-            for (TTValue termCode : entity.get(IM.HAS_TERM_CODE).asArray().getElements()) {
+            for (TTValue termCode : entity.get(IM.HAS_TERM_CODE).getElements()) {
                 fileTermCode(termCode.asNode(), entityId, graphId);
                 if (entity.get(RDFS.LABEL) != null && termCode.asNode().get(RDFS.LABEL).asLiteral().getValue().equals(entity.getName()))
                     nameFiled = true;
@@ -255,18 +255,16 @@ public class TTConceptFilerJDBC implements TTEntityFiler {
 
     public void fileEntityTypes(TTEntity entity, Integer entityId, int graphId) throws TTFilerException {
         try {
-            TTValue typeValue = entity.get(RDF.TYPE);
+            TTArray typeValue = entity.get(RDF.TYPE);
             if (typeValue == null)
                 return;
-            if (typeValue.isList()) {
-                for (TTValue type : typeValue.asArray().getElements()) {
-                    if (!type.isIriRef())
-                        throw new TTFilerException("Entity types must be array of IriRef ");
-                    fileEntityType(entityId, type, graphId);
-                }
-            } else
-                fileEntityType(entityId, typeValue, graphId);
-        } catch (SQLException e) {
+            for (TTValue type : typeValue.getElements()) {
+                if (!type.isIriRef())
+                    throw new TTFilerException("Entity types must be array of IriRef ");
+                fileEntityType(entityId, type, graphId);
+            }
+        }
+         catch (SQLException e) {
             throw new TTFilerException("Failed to file entity types", e);
         }
     }
@@ -298,11 +296,11 @@ public class TTConceptFilerJDBC implements TTEntityFiler {
 
     private void fileNode(Integer entityId, Long parent, TTNode node, int graphId) throws TTFilerException {
         if (node.getPredicateMap() != null && !node.getPredicateMap().isEmpty()) {
-            Set<Map.Entry<TTIriRef, TTValue>> entries = node.getPredicateMap().entrySet();
-            for (Map.Entry<TTIriRef, TTValue> entry : entries) {
+            Set<Map.Entry<TTIriRef, TTArray>> entries = node.getPredicateMap().entrySet();
+            for (Map.Entry<TTIriRef, TTArray> entry : entries) {
                 //Term codes are denormalised into term code table
                 if (!entry.getKey().equals(IM.HAS_TERM_CODE) && (!entry.getKey().equals(IM.HAS_SCHEME)) && (!entry.getKey().equals(IM.GROUP_NUMBER))) {
-                    TTValue object = entry.getValue();
+                    TTArray object = entry.getValue();
                     if (object.isIriRef()) {
                         fileTriple(entityId, parent, entry.getKey(), object.asIriRef(), null, 1, graphId);
                     } else if (object.isLiteral()) {
@@ -314,12 +312,13 @@ public class TTConceptFilerJDBC implements TTEntityFiler {
                         if (data.length() > 1000)
                             data = data.substring(0, 1000) + "...";
                         fileTriple(entityId, parent, entry.getKey(), dataType, data, 1, graphId);
-                    } else if (object.isList()) {
-                        fileArray(entityId, parent, entry.getKey(), entry.getValue().asArray(), graphId);
+
                     } else if (object.isNode()) {
                         Long blankNode = fileTriple(entityId, parent, entry.getKey(), null, null, 1, graphId);
                         fileNode(entityId, blankNode, entry.getValue().asNode(), graphId);
                     }
+                } else {
+                    fileArray(entityId, parent, entry.getKey(), entry.getValue(), graphId);
                 }
             }
         }

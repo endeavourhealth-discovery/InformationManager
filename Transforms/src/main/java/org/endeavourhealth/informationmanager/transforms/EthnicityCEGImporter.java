@@ -168,7 +168,7 @@ public class EthnicityCEGImporter implements TTImport {
 					document.addEntity(cegSubset);
 					cegCatMap.put(cat16,cegSubset);
 				}
-				cegSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).asArray().add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+				cegSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 				if (cegSubset.get(IM.HAS_TERM_CODE)==null)
 					TTManager.addTermCode(cegSubset,catTerm,null);
 				if (!snoNhs.equals("unclassified")){
@@ -187,7 +187,7 @@ public class EthnicityCEGImporter implements TTImport {
 					}
 					if (nhsSubset.get(IM.HAS_TERM_CODE)==null)
 						TTManager.addTermCode(nhsSubset,nhsTerm,null);
-					nhsSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).asArray().add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+					nhsSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 				}
 
 				line=reader.readLine();

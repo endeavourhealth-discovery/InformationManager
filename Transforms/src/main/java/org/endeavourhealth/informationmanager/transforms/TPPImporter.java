@@ -174,7 +174,7 @@ public class TPPImporter implements TTImport{
     private boolean alreadyMapped(TTEntity tpp, String snomed) {
         if (tpp.get(IM.MATCHED_TO)==null)
             return false;
-        for (TTValue superClass:tpp.get(IM.MATCHED_TO).asArray().getElements()){
+        for (TTValue superClass:tpp.get(IM.MATCHED_TO).getElements()){
             if (superClass.asIriRef().getIri().split("#")[1].equals(snomed))
                 return true;
         }
@@ -336,7 +336,7 @@ public class TPPImporter implements TTImport{
           .setScheme(IM.GRAPH_TPP)
           .setCode("TPPCodes");
         c.set(IM.IS_CONTAINED_IN,new TTArray());
-        c.get(IM.IS_CONTAINED_IN).asArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+        c.get(IM.IS_CONTAINED_IN).add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
         document.addEntity(c);
     }
 

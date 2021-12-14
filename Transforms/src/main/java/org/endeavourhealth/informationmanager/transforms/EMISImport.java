@@ -92,7 +92,7 @@ public class EMISImport implements TTImport {
         TTDocument allDoc= allMgr.loadDocument(path.toFile());
         for (TTEntity all:allDoc.getEntities()){
             TTEntity emisEntity= manager.getEntity(all.getIri());
-            for (TTValue superClass:all.get(IM.MATCHED_TO).asArray().getElements()){
+            for (TTValue superClass:all.get(IM.MATCHED_TO).getElements()){
                 emisEntity.addObject(IM.MATCHED_TO,superClass);
             }
         }
@@ -131,7 +131,7 @@ public class EMISImport implements TTImport {
         for (String parentId:parentIds){
             TTEntity parentEntity= codeIdToEntity.get(parentId);
             if (parentEntity.get(IM.MATCHED_TO)!=null){
-                for (TTValue match:parentEntity.get(IM.MATCHED_TO).asArray().getElements()){
+                for (TTValue match:parentEntity.get(IM.MATCHED_TO).getElements()){
                     codeIdToEntity.get(descendant).addObject(IM.MATCHED_TO,match);
                 }
             }
