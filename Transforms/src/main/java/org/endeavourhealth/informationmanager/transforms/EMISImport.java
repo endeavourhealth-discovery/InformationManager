@@ -131,7 +131,7 @@ public class EMISImport implements TTImport {
         for (String parentId:parentIds){
             TTEntity parentEntity= codeIdToEntity.get(parentId);
             if (parentEntity.get(IM.MATCHED_TO)!=null){
-                for (TTValue match:parentEntity.get(IM.MATCHED_TO).asArray().getElements()){
+                for (TTValue match:parentEntity.get(IM.MATCHED_TO).iterator()){
                     codeIdToEntity.get(descendant).addObject(IM.MATCHED_TO,match);
                 }
             }

@@ -75,9 +75,9 @@ public class VisionImport implements TTImport {
 					if (vision.get(IM.MATCHED_TO)==null){
 						vision.set(IM.MATCHED_TO,read.get(IM.MATCHED_TO));
 					} else {
-						for (TTValue snoExtra:read.get(IM.MATCHED_TO).asArray().getElements()) {
-							if (!vision.get(IM.MATCHED_TO).asArray().contains(snoExtra)) {
-								vision.get(IM.MATCHED_TO).asArray().add(snoExtra);
+						for (TTValue snoExtra:read.get(IM.MATCHED_TO).iterator()) {
+							if (!vision.get(IM.MATCHED_TO).contains(snoExtra)) {
+								vision.get(IM.MATCHED_TO).add(snoExtra);
 							}
 						}
 					}
@@ -92,7 +92,7 @@ public class VisionImport implements TTImport {
 			TTEntity vision= entry.getValue();
 			if (vision.get(IM.MATCHED_TO)==null){
 				if (emisRead.get(code)!=null){
-					vision.addObject(IM.MATCHED_TO,emisRead.get(code).get(IM.MATCHED_TO));
+					vision.addObject(IM.MATCHED_TO,emisRead.get(code).get(IM.MATCHED_TO).asIriRef());
 				}
 			}
 
