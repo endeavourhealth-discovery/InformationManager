@@ -139,11 +139,14 @@ public class ImportUtils {
    }
 
    private static FilerType getFilerType() throws TTFilerException {
-      TTDocumentFiler aFiler = TTFilerFactory.getDocumentFiler();
-      if (TTDocumentFilerRdf4j.class.isAssignableFrom(aFiler.getClass()))
-         return FilerType.RDF4J;
-      else
-         return FilerType.JDBC;
+      try (TTDocumentFiler aFiler = TTFilerFactory.getDocumentFiler()) {
+          if (TTDocumentFilerRdf4j.class.isAssignableFrom(aFiler.getClass()))
+              return FilerType.RDF4J;
+          else
+              return FilerType.JDBC;
+      } catch (Exception e) {
+          throw new TTFilerException("Failed to create document filer", e);
+      }
    }
 
    /**

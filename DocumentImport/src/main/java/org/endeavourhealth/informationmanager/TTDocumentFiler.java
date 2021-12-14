@@ -49,27 +49,32 @@ public abstract class TTDocumentFiler implements AutoCloseable {
         LOG.info("Filing entities.... ");
 
         startTransaction();
-        if (document.getEntities() != null) {
-            int i = 0;
-            for (TTEntity entity : document.getEntities()) {
-                //inherit crud
-                if (entity.getCrud() == null) {
-                    if (document.getCrud() == null) {
-                        entity.setCrud(IM.REPLACE);
-                    } else {
-                        entity.setCrud(document.getCrud());
+        try {
+            if (document.getEntities() != null) {
+                int i = 0;
+                for (TTEntity entity : document.getEntities()) {
+                    //inherit crud
+                    if (entity.getCrud() == null) {
+                        if (document.getCrud() == null) {
+                            entity.setCrud(IM.REPLACE);
+                        } else {
+                            entity.setCrud(document.getCrud());
+                        }
+                    }
+                    fileEntity(entity, graph);
+                    i++;
+                    if (i % 1000 == 0) {
+                        LOG.info("Filed {} entities from {} - example {}", i, document.getEntities().size(), entity.getIri());
+                        commit();
+                        startTransaction();
                     }
                 }
-                fileEntity(entity, graph);
-                i++;
-                if (i % 1000 == 0) {
-                    LOG.info("Filed {} entities from {} - example {}", i, document.getEntities().size(), entity.getIri());
-                    commit();
-                    startTransaction();
-                }
             }
+            commit();
+        } catch (Exception e) {
+            rollback();
+            throw e;
         }
-        commit();
     }
 
     private void fileEntity(TTEntity entity, TTIriRef graph) throws TTFilerException {
