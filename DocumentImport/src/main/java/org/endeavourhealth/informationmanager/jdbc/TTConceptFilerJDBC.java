@@ -301,6 +301,23 @@ public class TTConceptFilerJDBC implements TTEntityFiler {
                 //Term codes are denormalised into term code table
                 if (!entry.getKey().equals(IM.HAS_TERM_CODE) && (!entry.getKey().equals(IM.HAS_SCHEME)) && (!entry.getKey().equals(IM.GROUP_NUMBER))) {
                     TTArray object = entry.getValue();
+                    if (object.isIriRef()) {
+                        fileTriple(entityId, parent, entry.getKey(), object.asIriRef(), null, 1, graphId);
+                    } else if (object.isLiteral()) {
+                        TTIriRef dataType = XSD.STRING;
+                        if (object.asLiteral().getType() != null) {
+                            dataType = object.asLiteral().getType();
+                        }
+                        String data = object.asLiteral().getValue();
+                        if (data.length() > 1000)
+                            data = data.substring(0, 1000) + "...";
+                        fileTriple(entityId, parent, entry.getKey(), dataType, data, 1, graphId);
+
+                    } else if (object.isNode()) {
+                        Long blankNode = fileTriple(entityId, parent, entry.getKey(), null, null, 1, graphId);
+                        fileNode(entityId, blankNode, entry.getValue().asNode(), graphId);
+                    }
+                } else {
                     fileArray(entityId, parent, entry.getKey(), entry.getValue(), graphId);
                 }
             }
