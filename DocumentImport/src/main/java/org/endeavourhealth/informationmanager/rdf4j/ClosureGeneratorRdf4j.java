@@ -17,6 +17,7 @@ import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.TCGenerator;
 import org.endeavourhealth.informationmanager.TTFilerException;
+import org.endeavourhealth.informationmanager.jdbc.Closure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,9 +26,11 @@ import java.util.*;
 
 public class ClosureGeneratorRdf4j implements TCGenerator {
 	private static final Logger LOG = LoggerFactory.getLogger(TTDocumentFilerRdf4j.class);
+
 	private Repository repo;
 	private RepositoryConnection conn;
 	private static HashMap<String, Set<String>> parentMap;
+	private static Map<String,Set<String>> replacementMap;
 	private static HashMap<String, Set<String>> closureMap;
 	private int counter;
 
@@ -54,10 +57,10 @@ public class ClosureGeneratorRdf4j implements TCGenerator {
 		List<TTIriRef> relationships = Arrays.asList(
 			RDFS.SUBCLASSOF,
 			RDFS.SUBPROPERTYOF,
-			//IM.HAS_REPLACED,
 			SNOMED.REPLACED_BY);
 
 		parentMap = new HashMap<>(1000000);
+		replacementMap= new HashMap<>();
 
 		for (TTIriRef rel : relationships) {
 
@@ -67,10 +70,23 @@ public class ClosureGeneratorRdf4j implements TCGenerator {
 		String outFile = outpath + "/closure.ttl";
 		try(FileWriter fw = new FileWriter(outFile)) {
 		buildClosure();
+		buildReverseClosure();
 		writeClosureData(fw);
 		importClosure(outpath, secure);
 	}
 
+	}
+
+	private void buildReverseClosure() {
+		if (!replacementMap.isEmpty()) {
+			for (Map.Entry<String, Set<String>> entry : replacementMap.entrySet()) {
+				String replacement = entry.getKey();
+				Set<String> replacementAncestors= closureMap.get(replacement);
+				for (String replacedBy : entry.getValue()) {
+					replacementAncestors.add(replacedBy);
+				}
+			}
+		}
 	}
 
 
@@ -78,13 +94,9 @@ public class ClosureGeneratorRdf4j implements TCGenerator {
 		System.out.println("Extracting " + relationship.getIri());
 		String sql;
 		TupleQuery stmt;
-		if (relationship.equals(IM.HAS_REPLACED)) {
-			stmt = conn.prepareTupleQuery(getDefaultPrefixes() + "\nSelect ?child ?parent\n" +
-				"where {?child ^<" + SNOMED.REPLACED_BY.getIri() + "> ?parent }\n");
-		} else {
-			stmt = conn.prepareTupleQuery(getDefaultPrefixes() + "\nSelect ?child ?parent\n" +
+		stmt = conn.prepareTupleQuery(getDefaultPrefixes() + "\nSelect ?child ?parent\n" +
 				"where {?child <" + relationship.getIri() + "> ?parent }\n");
-		}
+
 		try (TupleQueryResult rs = stmt.evaluate()) {
 			int c = 0;
 			while (rs.hasNext()) {
@@ -93,6 +105,10 @@ public class ClosureGeneratorRdf4j implements TCGenerator {
 				String parent = bs.getValue("parent").stringValue();
 				Set<String> parents = parentMap.computeIfAbsent(child, k -> new HashSet<>());
 				parents.add(parent);
+				if (relationship.equals(SNOMED.REPLACED_BY)){
+				  Set<String> replacements= replacementMap.computeIfAbsent(parent,k-> new HashSet<>());
+					replacements.add(child);
+				}
 			}
 		}
 		System.out.println("Relationships loaded for " + relationship.getIri() + " " + parentMap.size() + " entities");
