@@ -63,7 +63,7 @@ public abstract class TTDocumentFiler implements AutoCloseable {
                     }
                     fileEntity(entity, graph);
                     i++;
-                    if (i % 1000 == 0) {
+                    if (i % 20000 == 0) {
                         LOG.info("Filed {} entities from {} - example {}", i, document.getEntities().size(), entity.getIri());
                         commit();
                         startTransaction();
