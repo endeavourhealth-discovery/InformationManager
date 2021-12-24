@@ -70,6 +70,8 @@ public class Importer implements TTImportByType {
          return new IM1MapImport();
       else if (IM.GRAPH_ODS.equals(importType))
           return new OdsImporter();
+      else if(IM.GRAPH_CEG_QUERY.equals(importType))
+         return new CEGEqdImporter();
       else
          throw new Exception("Unrecognised import type");
    }

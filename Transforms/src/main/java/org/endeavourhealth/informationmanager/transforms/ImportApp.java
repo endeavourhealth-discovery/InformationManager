@@ -143,6 +143,10 @@ public class ImportApp {
                 importer = new Importer().validateByType(IM.GRAPH_CEG16, cfg.folder);
                 importer.importByType(IM.GRAPH_CEG16, cfg);
                 break;
+            case "cegqueries" :
+                importer = new Importer().validateByType(IM.GRAPH_CEG_QUERY, cfg.folder);
+                importer.importByType(IM.GRAPH_CEG_QUERY, cfg);
+                break;
             case "barts":
                 importer = new Importer().validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder);
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);

@@ -34,6 +34,7 @@ public class EthnicityCEGImporter implements TTImport {
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		document = manager.createDocument(IM.GRAPH_CEG16.getIri());
+		addGEGOrg();
 		document.setCrud(IM.UPDATE);
 		document.addEntity(manager.createGraph(IM.GRAPH_CEG16.getIri(),"CEG (QMUL) ethnic category concept sets graph",
 			"The sets used in CEG for for the 16+ ethnic category"));
@@ -54,6 +55,16 @@ public class EthnicityCEGImporter implements TTImport {
 		}
 
 		return this;
+	}
+
+	private void addGEGOrg() {
+		TTEntity ceg= new TTEntity()
+			.setIri("http://org.endhealth.info/im#QMUL/CEG")
+			.addType(TTIriRef.iri(IM.NAMESPACE+"Organisation"))
+			.setName("Clinical effectiveness group of QMUL")
+			.setDescription("The Clinical effectiveness group being a special division of Queen Mary Univertity of London," +
+				"deliverying improvements in clinical outcomes for the population of UK");
+		document.addEntity(ceg);
 	}
 
 	private void spellCorrections() {

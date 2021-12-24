@@ -25,6 +25,28 @@
 
   <dependencies>
     <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.3.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>2.3.1</version>
+    </dependency>
+
+
+
+    <!-- https://mvnrepository.com/artifact/javax.activation/activation -->
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
+      <version>1.1</version>
+    </dependency>
+
+
+    <dependency>
       <groupId>org.endeavourhealth.informationManager</groupId>
       <artifactId>common</artifactId>
       <version>1.0-SNAPSHOT</version>
@@ -187,6 +209,32 @@
           </execution>
         </executions>
       </plugin>
+      <!--
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>jaxb2-maven-plugin</artifactId>
+            <version>2.5.0</version>
+            <executions>
+              <execution>
+                <id>xjc</id>
+                <goals>
+                  <goal>xjc</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <xjbSources>
+                <xjbSource>src/main/resources/global.xjb</xjbSource>
+              </xjbSources>
+              <sources>
+                <source>src/main/resources/EnquiryDocument033.xsd</source>
+              </sources>
+              <packageName>org.endeavourhealth.informationmanager.transforms.eqd</packageName>
+              <outputDirectory>${basedir}/src/main/java</outputDirectory>
+              <clearOutputDir>false</clearOutputDir>
+            </configuration>
+          </plugin>
+          -->
     </plugins>
   </build>
 
