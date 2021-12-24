@@ -18,6 +18,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.zip.DataFormatException;
 
 public class CEGEqdImporter implements TTImport {
@@ -25,6 +26,7 @@ public class CEGEqdImporter implements TTImport {
 	private TTEntity owner;
 
 	private static final String[] queries = {".*\\\\CEG\\\\UCLP-CEG SMI EMIS v5.xml"};
+	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
@@ -43,6 +45,8 @@ public class CEGEqdImporter implements TTImport {
 	}
 
 	public void loadAndConvert(String folder) throws JAXBException, IOException, DataFormatException {
+		Properties dataMap= new Properties();
+		dataMap.load(new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile())));
 		for (File fileEntry : Objects.requireNonNull(new File(folder).listFiles())) {
 			if (!fileEntry.isDirectory()) {
 				String ext = FileNameUtils.getExtension(fileEntry.getName());
@@ -53,7 +57,7 @@ public class CEGEqdImporter implements TTImport {
 					EqdToTT converter= new EqdToTT();
 					List<TTEntity> entities= converter.convertDoc(eqd,
 						IM.DOMAIN+"ceg",
-						TTIriRef.iri(owner.getIri()));
+						TTIriRef.iri(owner.getIri()),dataMap);
 					for (TTEntity entity:entities)
 						document.addEntity(entity);
 				}
