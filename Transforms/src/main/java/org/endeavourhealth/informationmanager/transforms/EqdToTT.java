@@ -71,6 +71,7 @@ public class EqdToTT {
 			if (pattern == StepPattern.SEQUENCE) {
 				for (EQDOCCriteria eqCriteria : eqGroup.getDefinition().getCriteria()) {
 					Step step = qry.addStep();
+					
 				}
 			}
 		}
