@@ -1,91 +1,59 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.compress.utils.FileNameUtils;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
+import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.query.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.informationmanager.TTFilerException;
-import org.endeavourhealth.informationmanager.TTImport;
-import org.endeavourhealth.informationmanager.TTImportConfig;
+import org.endeavourhealth.informationmanager.*;
 import org.endeavourhealth.informationmanager.transforms.eqd.EnquiryDocument;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.zip.DataFormatException;
 
 public class CEGEqdImporter implements TTImport {
 	private TTDocument document;
 	private TTEntity owner;
+	private QueryDocument qDocument;
 
 	private static final String[] queries = {".*\\\\CEGQuery"};
+	private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
+	private static final String[] duplicates = {".*\\\\DuplicateOrs.properties"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
 		document= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 		createOrg();
-		addCurrentReg();
+		qDocument= new QueryDocument();
+		createFolder();
 		loadAndConvert(config.folder);
+		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+			filer.fileDocument(document);
+		}
 		return this;
 	}
 
-	private void addCurrentReg() throws JsonProcessingException {
-		TTEntity entity= new TTEntity()
-			.setIri(IM.NAMESPACE+"Q_RegisteredGMS")
-			.setName("Patients registered for GMS services on the reference date")
-			.setDescription("For any registration period,a registration start date before the reference date and no end date,"+
-				"or an end date after the reference date.")
-			.addType(IM.QUERY);
-		document.addEntity(entity);
-		Query qry= new Query();
-		entity.set(IM.QUERY_DEFINITION,qry);
-		Clause gpReg= new Clause();
-		qry.setOperator(Operator.AND);
-		qry.addClause(gpReg);
-		gpReg.setOperator(Operator.AND);
-		gpReg.addSelect(new Select().setVar("?patient"));
-		gpReg.setOperator(Operator.AND);
-		Where isRegGms= new Where();
-		gpReg.addWhere(isRegGms);
-		isRegGms
-			.addEntity(new IriVar(TTIriRef.iri("im:Patient")).setVar("?patient"))
-			.addEntity(new IriVar(TTIriRef.iri("im:isSubjectOf")))
-			.addEntity(new IriVar(TTIriRef.iri("im:GPRegistration")).setVar("?reg"))
-			.setProperty(IM.NAMESPACE+"patientType")
-			.setValueVar("?patientType")
-			.addFilter(new Filter().addIn(IM.GMS_PATIENT));
-		Where hasRegDate= new Where();
-		gpReg.addWhere(hasRegDate);
-		hasRegDate.addEntityVar("?reg")
-			.setProperty(IM.NAMESPACE+"effectiveDate")
-			.setValueVar("?regDate")
-			.addFilter(new Filter().setValueTest(Comparison.lessThanOrEqual,"$ReferenceDate"));
-
-		Clause notEnded= new Clause();
-		qry.addClause(notEnded);
-		notEnded.setOperator(Operator.OR);
-		notEnded.addWhere(new Where()
-			.addEntityVar("?reg")
-			.setNot(true)
-			.setProperty(IM.NAMESPACE+"endDate"));
-		notEnded.addWhere(new Where()
-			.addEntityVar("?reg")
-			.setProperty(TTIriRef.iri(IM.NAMESPACE+"endDate"))
-			.setValueVar("?endDate")
-			.addFilter(new Filter()
-				.setValueTest(Comparison.greaterThan,"$ReferenceDate")));
-
+	private void createFolder() {
+		TTEntity folder= new TTEntity()
+			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries")
+			.setName("QMUL CEG query library")
+			.addType(IM.FOLDER)
+			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_Queries"));
+		document.addEntity(folder);
 	}
 
 	private void createOrg() {
@@ -98,8 +66,14 @@ public class CEGEqdImporter implements TTImport {
 
 	public void loadAndConvert(String folder) throws JAXBException, IOException, DataFormatException {
 		Properties dataMap= new Properties();
+		Map<String,String> reportNames= new HashMap<>();
+		Properties criteriaLabels= new Properties();
+		Properties duplicateOrs= new Properties();
 		dataMap.load(new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile())));
+		criteriaLabels.load(new FileReader((ImportUtils.findFileForId(folder, annotations[0]).toFile())));
+		duplicateOrs.load(new FileReader((ImportUtils.findFileForId(folder, duplicates[0]).toFile())));
 		Path directory= ImportUtils.findFileForId(folder,queries[0]);
+		TTIriRef mainFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries");
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
 			if (!fileEntry.isDirectory()) {
 				String ext = FileNameUtils.getExtension(fileEntry.getName());
@@ -108,26 +82,36 @@ public class CEGEqdImporter implements TTImport {
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(new FileReader(fileEntry));
 					EqdToTT converter= new EqdToTT();
-					converter.convertDoc(document,eqd,
+					converter.convertDoc(document,qDocument,mainFolder,eqd,
 						IM.GRAPH_CEG_QUERY,
-						TTIriRef.iri(owner.getIri()),dataMap);
-					output(document);
+						TTIriRef.iri(owner.getIri()),dataMap,duplicateOrs,
+						criteriaLabels,reportNames);
+			output(fileEntry);
 				}
 			}
 		}
 
 	}
 
-	private void output(TTDocument document) throws JsonProcessingException {
+	private void output(File fileEntry) throws IOException {
 		TTManager manager= new TTManager();
 		manager.setDocument(document);
-		manager.saveDocument(new File("c:/temp/CEGQueries.json"));
+		manager.saveDocument(new File("c:/temp/"+ fileEntry.getName().replace(".xml","")+"-ld.json"));
+		try (FileWriter writer= new FileWriter("c:/temp/"+ fileEntry.getName().replace(".xml","")+ "-qry.json")) {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
+			String doc = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(qDocument);
+			writer.write(doc);
+		}
+
 	}
 
 
 	@Override
 	public TTImport validateFiles(String inFolder) throws TTFilerException {
-		ImportUtils.validateFiles(inFolder,queries);
+		ImportUtils.validateFiles(inFolder,queries,annotations,duplicates);
 		return this;
 	}
 

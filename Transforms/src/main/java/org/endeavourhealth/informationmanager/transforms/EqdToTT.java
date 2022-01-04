@@ -1,5 +1,8 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.text.CaseUtils;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
@@ -17,6 +20,9 @@ import java.util.zip.DataFormatException;
 public class EqdToTT {
 	private TTIriRef owner;
 	private Properties dataMap;
+	private Properties criteriaLabels;
+	private Properties duplicateOrs;
+	private QueryDocument queryDocument;
 
 	private TTDocument document;
 
@@ -24,21 +30,29 @@ public class EqdToTT {
 
 
 
-	public void convertDoc(TTDocument document,EnquiryDocument eqd,
+	public void convertDoc(TTDocument document,QueryDocument queryDocument,
+												 TTIriRef mainFolder,EnquiryDocument eqd,
 															 TTIriRef graph,
 															 TTIriRef owner,
-															 Properties dataMap) throws DataFormatException {
+															 Properties dataMap, Properties duplicateOrs,
+												 Properties criteriaLabels,
+												 Map<String,String> reportNames) throws DataFormatException, JsonProcessingException {
 		this.owner = owner;
 		this.dataMap = dataMap;
 		this.document= document;
-		convertFolders(eqd);
-		convertReports(eqd);
+		this.queryDocument= queryDocument;
+		this.criteriaLabels= criteriaLabels;
+		this.duplicateOrs= duplicateOrs;
+		convertFolders(mainFolder,eqd);
+		convertReports(eqd,reportNames);
 	}
 
 
 
-	private void convertReports(EnquiryDocument eqd) throws DataFormatException {
+	private void convertReports(EnquiryDocument eqd,Map<String,String> reportNames) throws DataFormatException, JsonProcessingException {
 		for (EQDOCReport eqReport : Objects.requireNonNull(eqd.getReport())) {
+
+
 			if (eqReport.getId() == null)
 				throw new DataFormatException("No report id");
 			if (eqReport.getName() == null)
@@ -58,11 +72,16 @@ public class EqdToTT {
 			setProvenance(eqReport, report);
 
 			if (eqReport.getPopulation() != null) {
-				Query qry = new Query();
-				report.set(IM.QUERY_DEFINITION,qry);
+				EqdToQuery eqdToQuery = new EqdToQuery();
+				Query qry= eqdToQuery.convertReport(eqReport,document,dataMap,duplicateOrs,criteriaLabels,reportNames);
+				queryDocument.addQuery(qry);
+				ObjectMapper objectMapper= new ObjectMapper();
+				objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+				objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+				objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
+				String json=objectMapper.writeValueAsString(qry);
+				report.set(IM.QUERY_DEFINITION,TTLiteral.literal(json));
 
-				EqdToQuery reportConverter= new EqdToQuery();
-				reportConverter.convertPopulation(document,eqReport,qry,dataMap);
 			}
 
 		}
@@ -82,7 +101,7 @@ public class EqdToTT {
 		}
 	}
 
-	private void convertFolders(EnquiryDocument eqd) throws DataFormatException {
+	private void convertFolders(TTIriRef mainFolder,EnquiryDocument eqd) throws DataFormatException {
 		List<EQDOCFolder> eqFolders= eqd.getReportFolder();
 		if (eqFolders!=null){
 			for (EQDOCFolder eqFolder:eqFolders) {
@@ -94,7 +113,8 @@ public class EqdToTT {
 				TTEntity folder = new TTEntity()
 					.setIri(iri)
 						.addType(IM.FOLDER)
-							.setName(eqFolder.getName());
+							.setName(eqFolder.getName())
+					.set(IM.IS_CONTAINED_IN,mainFolder);
 				document.addEntity(folder);
 				if (eqFolder.getAuthor()!=null)
 					if (eqFolder.getAuthor().getAuthorName()!=null)

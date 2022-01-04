@@ -11,6 +11,7 @@ import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
+import org.endeavourhealth.imapi.model.tripletree.TTArray;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -100,6 +101,17 @@ public class ImportUtils {
           (file, attr) -> getFilePath(file.toString())
               .matches(filePattern))
           .collect(Collectors.toList());
+   }
+
+   public static boolean isEmpty(TTArray array){
+      if (array==null)
+         return true;
+      return array.getElements().size()==0;
+   }
+   public static boolean isEmpty(List list){
+      if (list==null)
+         return true;
+      return list.size()==0;
    }
 
    public static RepositoryConnection getGraphConnection(){

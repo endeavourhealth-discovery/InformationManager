@@ -57,6 +57,8 @@ public class CoreImporter implements TTImport {
              filer.fileDocument(document);
          }
       }
+      CoreQueryImporter qryImporter= new CoreQueryImporter();
+      qryImporter.importData(config);
       return this;
    }
 
