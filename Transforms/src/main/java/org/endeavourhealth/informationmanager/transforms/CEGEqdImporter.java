@@ -31,14 +31,12 @@ public class CEGEqdImporter implements TTImport {
 
 	private static final String[] queries = {".*\\\\CEGQuery"};
 	private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
-	private static final String[] duplicates = {".*\\\\DuplicateOrs.properties"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
 		document= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 		createOrg();
-		qDocument= new QueryDocument();
 		createFolder();
 		loadAndConvert(config.folder);
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
@@ -68,25 +66,24 @@ public class CEGEqdImporter implements TTImport {
 		Properties dataMap= new Properties();
 		Map<String,String> reportNames= new HashMap<>();
 		Properties criteriaLabels= new Properties();
-		Properties duplicateOrs= new Properties();
 		dataMap.load(new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile())));
 		criteriaLabels.load(new FileReader((ImportUtils.findFileForId(folder, annotations[0]).toFile())));
-		duplicateOrs.load(new FileReader((ImportUtils.findFileForId(folder, duplicates[0]).toFile())));
 		Path directory= ImportUtils.findFileForId(folder,queries[0]);
 		TTIriRef mainFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries");
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
 			if (!fileEntry.isDirectory()) {
 				String ext = FileNameUtils.getExtension(fileEntry.getName());
 				if (ext.equalsIgnoreCase("xml")) {
+					qDocument= new QueryDocument();
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(new FileReader(fileEntry));
 					EqdToTT converter= new EqdToTT();
 					converter.convertDoc(document,qDocument,mainFolder,eqd,
 						IM.GRAPH_CEG_QUERY,
-						TTIriRef.iri(owner.getIri()),dataMap,duplicateOrs,
+						TTIriRef.iri(owner.getIri()),dataMap,
 						criteriaLabels,reportNames);
-			output(fileEntry);
+					output(fileEntry);
 				}
 			}
 		}
@@ -111,7 +108,7 @@ public class CEGEqdImporter implements TTImport {
 
 	@Override
 	public TTImport validateFiles(String inFolder) throws TTFilerException {
-		ImportUtils.validateFiles(inFolder,queries,annotations,duplicates);
+		ImportUtils.validateFiles(inFolder,queries,annotations);
 		return this;
 	}
 

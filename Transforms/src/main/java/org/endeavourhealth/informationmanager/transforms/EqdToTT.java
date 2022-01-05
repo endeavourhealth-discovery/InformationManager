@@ -21,7 +21,6 @@ public class EqdToTT {
 	private TTIriRef owner;
 	private Properties dataMap;
 	private Properties criteriaLabels;
-	private Properties duplicateOrs;
 	private QueryDocument queryDocument;
 
 	private TTDocument document;
@@ -34,7 +33,7 @@ public class EqdToTT {
 												 TTIriRef mainFolder,EnquiryDocument eqd,
 															 TTIriRef graph,
 															 TTIriRef owner,
-															 Properties dataMap, Properties duplicateOrs,
+															 Properties dataMap,
 												 Properties criteriaLabels,
 												 Map<String,String> reportNames) throws DataFormatException, JsonProcessingException {
 		this.owner = owner;
@@ -42,7 +41,6 @@ public class EqdToTT {
 		this.document= document;
 		this.queryDocument= queryDocument;
 		this.criteriaLabels= criteriaLabels;
-		this.duplicateOrs= duplicateOrs;
 		convertFolders(mainFolder,eqd);
 		convertReports(eqd,reportNames);
 	}
@@ -73,7 +71,7 @@ public class EqdToTT {
 
 			if (eqReport.getPopulation() != null) {
 				EqdToQuery eqdToQuery = new EqdToQuery();
-				Query qry= eqdToQuery.convertReport(eqReport,document,dataMap,duplicateOrs,criteriaLabels,reportNames);
+				Query qry= eqdToQuery.convertReport(eqReport,document,dataMap,criteriaLabels,reportNames);
 				queryDocument.addQuery(qry);
 				ObjectMapper objectMapper= new ObjectMapper();
 				objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);

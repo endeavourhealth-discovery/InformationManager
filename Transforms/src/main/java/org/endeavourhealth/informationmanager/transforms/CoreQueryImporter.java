@@ -52,23 +52,22 @@ public class CoreQueryImporter implements TTImport {
 		Clause gpReg = new Clause();
 		qry.setOperator(Operator.AND);
 		qry.addClause(gpReg);
-		gpReg.setOperator(Operator.AND);
-		gpReg.setOperator(Operator.AND);
-		Where isRegGms = new Where();
-		gpReg.addWhere(isRegGms);
-		isRegGms
-			.addEntity(new IriVar(TTIriRef.iri("im:Patient")).setVar("?patient"))
-			.addEntity(new IriVar(TTIriRef.iri("im:isSubjectOf")))
-			.addEntity(new IriVar(TTIriRef.iri("im:GPRegistration")).setVar("?reg"))
+		gpReg.addWhere(new Where()
+			.setEntity(TTIriRef.iri("im:Patient"))
+			.setEntityVar("?patient")
+			.setProperty(TTIriRef.iri("im:isSubjectOf"))
+			.setValueEntity(TTIriRef.iri("im:GPRegistration"))
+			.setValueVar("?reg"));
+		gpReg.addWhere(new Where()
+				.setEntityVar("?reg")
 			.setProperty(IM.NAMESPACE + "patientType")
 			.setValueVar("?patientType")
-			.addFilter(new Filter().addIn(IM.GMS_PATIENT));
-		Where hasRegDate = new Where();
-		gpReg.addWhere(hasRegDate);
-		hasRegDate.addEntityVar("?reg")
+			.addFilter(new Filter().addIn(IM.GMS_PATIENT)));
+		gpReg.addWhere(new Where()
+		  .setEntityVar("?reg")
 			.setProperty(IM.NAMESPACE + "effectiveDate")
 			.setValueVar("?regDate")
-			.addFilter(new Filter().setValueTest(Comparison.lessThanOrEqual, "$ReferenceDate"));
+			.addFilter(new Filter().setValueTest(Comparison.lessThanOrEqual, "$ReferenceDate")));
 
 		Clause notEnded = new Clause();
 		qry.addClause(notEnded);
@@ -77,12 +76,12 @@ public class CoreQueryImporter implements TTImport {
 		notEnded.addClause(noEndDate);
 		noEndDate.setNotExist(true);
 		noEndDate.addWhere(new Where()
-			.addEntityVar("?reg")
+			.setEntityVar("?reg")
 			.setProperty(IM.NAMESPACE + "endDate"));
 		Clause leftAfter= new Clause();
 		notEnded.addClause(leftAfter);
 		leftAfter.addWhere(new Where()
-			.addEntityVar("?reg")
+			.setEntityVar("?reg")
 			.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate"))
 			.setValueVar("?endDate")
 			.addFilter(new Filter()
@@ -94,7 +93,7 @@ public class CoreQueryImporter implements TTImport {
 		objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 		String json = objectMapper.writeValueAsString(qry);
 		rdf.set(IM.QUERY_DEFINITION, TTLiteral.literal(json));
-		//output(json);
+		output(json);
 
 	}
 
