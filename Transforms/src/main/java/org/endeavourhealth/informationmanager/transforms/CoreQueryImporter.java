@@ -93,7 +93,7 @@ public class CoreQueryImporter implements TTImport {
 		objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 		String json = objectMapper.writeValueAsString(qry);
 		rdf.set(IM.QUERY_DEFINITION, TTLiteral.literal(json));
-		output(json);
+		//output(json);
 
 	}
 

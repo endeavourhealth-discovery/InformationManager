@@ -1,9 +1,9 @@
 package org.endeavourhealth.informationmanager.transforms;
 
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.model.tripletree.TTNode;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.query.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.zip.DataFormatException;
 
 public class EqdToQuery {
+	public static Properties duplicates;
 	private int varCounter;
 	private String activeReport;
 	private Properties dataMap;
@@ -21,13 +22,13 @@ public class EqdToQuery {
 	private String mainSubject;
 	private TTDocument document;
 	private Map<String,String> reportNames;
+	private final Set<String> clauseIris= new HashSet<>();
 	private final Map<Object, Object> vocabMap = new HashMap<>();
 
-	private enum StepPattern {AND, OR, NOTOR,NOTAND}
 
 	public Query convertReport(EQDOCReport eqReport, TTDocument document,
 														 Properties dataMap, Properties criteriaLabels,
-														 Map<String,String> reportNames) throws DataFormatException {
+														 Map<String,String> reportNames) throws DataFormatException, JsonProcessingException {
 		this.dataMap = dataMap;
 		this.document = document;
 		this.criteriaLabels = criteriaLabels;
@@ -60,7 +61,7 @@ public class EqdToQuery {
 		return qry;
 	}
 
-	private void convertPopulation(EQDOCPopulation population, Query qry) throws DataFormatException {
+	private void convertPopulation(EQDOCPopulation population, Query qry) throws DataFormatException, JsonProcessingException {
 		Operator lastGroupOp = null;
 		for (EQDOCCriteriaGroup eqGroup : population.getCriteriaGroup()) {
 			VocRuleAction ifTrue = eqGroup.getActionIfTrue();
@@ -155,7 +156,7 @@ public class EqdToQuery {
 
 
 
-	private void processCriteria(EQDOCCriteria eqCriteria,Clause clause) throws DataFormatException {
+	private void processCriteria(EQDOCCriteria eqCriteria,Clause clause) throws DataFormatException, JsonProcessingException {
 				if ((eqCriteria.getPopulationCriterion() != null)) {
 					EQDOCSearchIdentifier srch = eqCriteria.getPopulationCriterion();
 					clause.addWhere (new Where()
@@ -243,7 +244,17 @@ public class EqdToQuery {
 		return (String) target;
 	}
 
-	private void convertCriterion(EQDOCCriterion eqCriterion, Clause clause) throws DataFormatException {
+	private String deDuplicate(String iri){
+		if (EqdToQuery.duplicates!=null){
+			Object dupl= EqdToQuery.duplicates.get(iri);
+			if (dupl!=null)
+				return dupl.toString();
+		}
+		return iri;
+
+	}
+
+	private void convertCriterion(EQDOCCriterion eqCriterion, Clause clause) throws DataFormatException, JsonProcessingException {
 		Map<String,String> restrictionMap= new HashMap<>();
 		String eqTable = eqCriterion.getTable();
 		Clause superClause=null;
@@ -253,12 +264,14 @@ public class EqdToQuery {
 			superClause = clause;
 			Clause subClause = new Clause();
 			superClause.addClause(subClause);
+			superClause.setIri("urn:uuid:"+ deDuplicate(eqCriterion.getId()));
 			clause = subClause;
 			if (criteriaLabels.get(eqCriterion.getId()) != null) {
 				superClause.setName(criteriaLabels.get(eqCriterion.getId()).toString());
 			}
 		}
 		else {
+			clause.setIri("urn:uuid:"+ deDuplicate(eqCriterion.getId()));
 			if (criteriaLabels.get(eqCriterion.getId())!=null) {
 				clause.setName(criteriaLabels.get(eqCriterion.getId()).toString());
 			}
@@ -268,7 +281,7 @@ public class EqdToQuery {
 		}
 		String entityVar= null;
 		String lastPath=null;
-		clause.setIri("urn:uuid:"+ eqCriterion.getId());
+
 		if (eqCriterion.getDescription()!=null)
 			clause.setDescription(eqCriterion.getDescription());
 		for (EQDOCColumnValue cv : eqAtt.getColumnValue()) {
@@ -279,19 +292,43 @@ public class EqdToQuery {
 			}
 		}
 		if (eqAtt.getRestriction() != null) {
-			addRestriction(eqAtt, clause, entityVar, eqTable,restrictionMap);
+			addRestriction(eqAtt, clause, entityVar, restrictionMap);
 			if (eqAtt.getRestriction().getTestAttribute()!=null){
 				addTest(eqAtt, eqTable,superClause,entityVar,restrictionMap);
 			}
 			else if (eqCriterion.getLinkedCriterion()!=null){
 				convertLinkedCriterion(eqCriterion.getLinkedCriterion(),superClause,restrictionMap);
 			}
+			if (superClause!=null)
+				setNewClauseEntity(superClause);
+			else
+				setNewClauseEntity(clause);
+		}
+		else
+			setNewClauseEntity(clause);
+	}
+
+	private void setNewClauseEntity(Clause clause) throws JsonProcessingException {
+		if (!clauseIris.contains(clause.getIri())){
+			TTEntity ttClause= new TTEntity()
+				.setIri(clause.getIri());
+			if (clause.getName()!=null)
+				ttClause.setName(clause.getName());
+			ttClause.addType(IM.QUERY_CLAUSE);
+			document.addEntity(ttClause);
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
+			String json = objectMapper.writeValueAsString(clause);
+			ttClause.set(IM.QUERY_DEFINITION, TTLiteral.literal(json));
+			clauseIris.add(clause.getIri());
 		}
 	}
 
 	private void addRestriction(EQDOCFilterAttribute eqAtt,
 															Clause clause, String entityVar,
-															String eqTable,Map<String,String> restrictionMap) throws DataFormatException {
+															Map<String,String> restrictionMap) throws DataFormatException {
 
 		for (EQDOCColumnOrder.Columns col:eqAtt.getRestriction().getColumnOrder().getColumns()) {
 			VocOrderDirection direction = col.getDirection();
@@ -337,7 +374,7 @@ public class EqdToQuery {
 		}
 	}
 
-	private void convertLinkedCriterion(EQDOCLinkedCriterion eqLinked, Clause clause, Map<String,String>   restrictionMap) throws DataFormatException {
+	private void convertLinkedCriterion(EQDOCLinkedCriterion eqLinked, Clause clause, Map<String,String>   restrictionMap) throws DataFormatException, JsonProcessingException {
 		convertCriterion(eqLinked.getCriterion(),clause);
 		EQDOCRelationship eqRel= eqLinked.getRelationship();
 		if (!eqRel.getParentColumn().contains("DATE"))

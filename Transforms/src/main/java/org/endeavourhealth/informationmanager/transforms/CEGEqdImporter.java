@@ -32,6 +32,7 @@ public class CEGEqdImporter implements TTImport {
 	private static final String[] queries = {".*\\\\CEGQuery"};
 	private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
+	private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
@@ -67,6 +68,9 @@ public class CEGEqdImporter implements TTImport {
 		Map<String,String> reportNames= new HashMap<>();
 		Properties criteriaLabels= new Properties();
 		dataMap.load(new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile())));
+		Properties duplicateOrs= new Properties();
+		duplicateOrs.load(new FileReader((ImportUtils.findFileForId(folder, duplicates[0]).toFile())));
+		EqdToQuery.duplicates= duplicateOrs;
 		criteriaLabels.load(new FileReader((ImportUtils.findFileForId(folder, annotations[0]).toFile())));
 		Path directory= ImportUtils.findFileForId(folder,queries[0]);
 		TTIriRef mainFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries");
@@ -79,11 +83,12 @@ public class CEGEqdImporter implements TTImport {
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(new FileReader(fileEntry));
 					EqdToTT converter= new EqdToTT();
+
 					converter.convertDoc(document,qDocument,mainFolder,eqd,
 						IM.GRAPH_CEG_QUERY,
 						TTIriRef.iri(owner.getIri()),dataMap,
 						criteriaLabels,reportNames);
-					output(fileEntry);
+				output(fileEntry);
 				}
 			}
 		}
@@ -108,7 +113,7 @@ public class CEGEqdImporter implements TTImport {
 
 	@Override
 	public TTImport validateFiles(String inFolder) throws TTFilerException {
-		ImportUtils.validateFiles(inFolder,queries,annotations);
+		ImportUtils.validateFiles(inFolder,queries,annotations,duplicates);
 		return this;
 	}
 
