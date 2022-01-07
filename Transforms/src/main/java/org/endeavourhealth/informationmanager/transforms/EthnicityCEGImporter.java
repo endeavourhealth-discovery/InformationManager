@@ -6,7 +6,6 @@ import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.informationmanager.*;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,7 +13,6 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class EthnicityCEGImporter implements TTImport {
-
 	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
 	private final TTManager manager = new TTManager();
 	private TTDocument document;
@@ -138,7 +136,6 @@ public class EthnicityCEGImporter implements TTImport {
 		return term;
 	}
 
-
 	private void importEthnicGroups(String folder) throws IOException {
 
 		Path file = ImportUtils.findFileForId(folder, lookups[0]);
@@ -175,6 +172,7 @@ public class EthnicityCEGImporter implements TTImport {
 						.setScheme(IM.CODE_SCHEME_CEG16)
 						.setDescription("QMUL CEG 16+ Ethnic category "+cat16)
 						.set(IM.DEFINITION,new TTNode().set(SHACL.OR, new TTArray()));
+					cegSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(cegSubset.getIri()));
 					cegSubset.addObject(IM.MEMBER_OF_GROUP,TTIriRef.iri(cegSet.getIri()));
 					document.addEntity(cegSubset);
 					cegCatMap.put(cat16,cegSubset);
@@ -193,6 +191,7 @@ public class EthnicityCEGImporter implements TTImport {
 						.setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
 							.set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
 						nhsSubset.addObject(IM.MEMBER_OF_GROUP,TTIriRef.iri(nhsSet.getIri()));
+						nhsSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(nhsSubset.getIri()));
 						nhsDocument.addEntity(nhsSubset);
 						nhsCatmap.put(snoNhs, nhsSubset);
 					}
@@ -213,25 +212,25 @@ public class EthnicityCEGImporter implements TTImport {
 			.setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16")
 			.addType(IM.SET_GROUP)
 			.setName("CEG 16+1 Ethnic category (set group)")
-			.setDescription("QMUL-CEG categorisations of ethnic groups");
+			.setDescription("QMUL-CEG categorisations of ethnic groups")
+			.set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
 		cegSet.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"EthnicitySets")));
 		document.addEntity(cegSet);
 		nhsSet= new TTEntity()
 			.setIri(IM.NAMESPACE+"CSET_EthnicCategory2001")
 			.addType(IM.SET_GROUP)
 			.setName("Concept set - 2001 census Ethnic category (set group")
-			.setDescription("NHS Data Dictionary 2001 census based categorisations of ethnic groups");
+			.setDescription("NHS Data Dictionary 2001 census based categorisations of ethnic groups")
+			.set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
 		nhsSet.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"EthnicitySets")));
 		document.addEntity(nhsSet);
 	}
-
 
 	@Override
 	public TTImport validateFiles(String inFolder) throws TTFilerException {
 		ImportUtils.validateFiles(inFolder,lookups);
 		return this;
 	}
-
 
 }
 
