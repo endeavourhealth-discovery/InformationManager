@@ -41,6 +41,9 @@ public class EqdToQuery {
 		qry.setName(eqReport.getName());
 		reportNames.put(eqReport.getId(), eqReport.getName());
 		qry.setDescription(eqReport.getDescription());
+		qry.setMainEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient"));
+		qry.setMainEntityVar("?patient");
+		mainSubject="?patient";
 		qry.setOperator(Operator.AND);
 		Select select = new Select();
 		qry.addSelect(select);
@@ -656,7 +659,6 @@ public class EqdToQuery {
 			.setProperty(IM.IN_DATASET)
 				.setValueEntity(parent));
 		clause.setName(parentName);
-		mainSubject="?patient";
 	}
 
 

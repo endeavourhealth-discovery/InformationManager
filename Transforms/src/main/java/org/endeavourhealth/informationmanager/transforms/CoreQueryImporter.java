@@ -39,6 +39,8 @@ public class CoreQueryImporter implements TTImport {
 			.setName("Patients registered for GMS services on the reference date")
 			.setDescription("For any registration period,a registration start date before the reference date and no end date," +
 				"or an end date after the reference date.");
+			qry.setMainEntityVar("?patient");
+			qry.setMainEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient"));
 		TTEntity rdf = new TTEntity()
 			.setIri(qry.getIri())
 			.setName(qry.getName())
@@ -53,7 +55,6 @@ public class CoreQueryImporter implements TTImport {
 		qry.setOperator(Operator.AND);
 		qry.addClause(gpReg);
 		gpReg.addWhere(new Where()
-			.setEntity(TTIriRef.iri("im:Patient"))
 			.setEntityVar("?patient")
 			.setProperty(TTIriRef.iri("im:isSubjectOf"))
 			.setValueEntity(TTIriRef.iri("im:GPRegistration"))
