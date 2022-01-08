@@ -88,7 +88,7 @@ public class CEGEqdImporter implements TTImport {
 						IM.GRAPH_CEG_QUERY,
 						TTIriRef.iri(owner.getIri()),dataMap,
 						criteriaLabels,reportNames);
-				output(fileEntry);
+				//output(fileEntry);
 				}
 			}
 		}
