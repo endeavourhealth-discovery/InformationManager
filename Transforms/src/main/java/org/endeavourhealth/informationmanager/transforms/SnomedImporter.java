@@ -236,7 +236,7 @@ public class SnomedImporter implements TTImport {
                String[] fields = line.split("\t");
                TTEntity c= conceptMap.get(fields[4]);
                if (c!=null) {
-                  if (c.get(IM.MEMBERS)==null)
+                  if (c.get(IM.DEFINITION)==null)
                      c.set(IM.MEMBERS,new TTArray());
                   c.get(IM.MEMBERS).add(TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
 
