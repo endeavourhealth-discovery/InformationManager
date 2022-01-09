@@ -1,20 +1,18 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
-import org.endeavourhealth.imapi.query.*;
+import org.endeavourhealth.imapi.query.Query;
+import org.endeavourhealth.imapi.query.QueryDocument;
 import org.endeavourhealth.imapi.transforms.EqdToQuery;
 import org.endeavourhealth.imapi.transforms.EqdToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.model.*;
 import org.endeavourhealth.informationmanager.*;
 
 import javax.xml.bind.JAXBContext;
@@ -24,7 +22,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.zip.DataFormatException;
 
 public class CEGEqdImporter implements TTImport {
