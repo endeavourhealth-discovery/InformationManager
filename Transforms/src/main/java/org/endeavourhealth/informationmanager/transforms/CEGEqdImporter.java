@@ -3,16 +3,19 @@ package org.endeavourhealth.informationmanager.transforms;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.compress.utils.FileNameUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.query.*;
+import org.endeavourhealth.imapi.transforms.EqdToQuery;
+import org.endeavourhealth.imapi.transforms.EqdToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.model.*;
 import org.endeavourhealth.informationmanager.*;
-import org.endeavourhealth.informationmanager.transforms.eqd.EnquiryDocument;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -76,19 +79,17 @@ public class CEGEqdImporter implements TTImport {
 		TTIriRef mainFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries");
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
 			if (!fileEntry.isDirectory()) {
-				String ext = FileNameUtils.getExtension(fileEntry.getName());
+				String ext= FilenameUtils.getExtension(fileEntry.getName());
 				if (ext.equalsIgnoreCase("xml")) {
-					qDocument= new QueryDocument();
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(new FileReader(fileEntry));
 					EqdToTT converter= new EqdToTT();
-
-					converter.convertDoc(document,qDocument,mainFolder,eqd,
+					converter.convertDoc(document,mainFolder,eqd,
 						IM.GRAPH_CEG_QUERY,
 						TTIriRef.iri(owner.getIri()),dataMap,
 						criteriaLabels,reportNames);
-				//output(fileEntry);
+				  output(fileEntry);
 				}
 			}
 		}
@@ -99,6 +100,14 @@ public class CEGEqdImporter implements TTImport {
 		TTManager manager= new TTManager();
 		manager.setDocument(document);
 		manager.saveDocument(new File("c:/temp/"+ fileEntry.getName().replace(".xml","")+"-ld.json"));
+		QueryDocument qdoc= new QueryDocument();
+		for (TTEntity entity:document.getEntities()){
+			if (entity.isType(IM.QUERY)) {
+				Query qry = new Query();
+				qry = qry.fromEntity(entity);
+				qdoc.addQuery(qry);
+			}
+		}
 		try (FileWriter writer= new FileWriter("c:/temp/"+ fileEntry.getName().replace(".xml","")+ "-qry.json")) {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);

@@ -41,14 +41,8 @@ public class CoreQueryImporter implements TTImport {
 				"or an end date after the reference date.");
 			qry.setMainEntityVar("?patient");
 			qry.setMainEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient"));
-		TTEntity rdf = new TTEntity()
-			.setIri(qry.getIri())
-			.setName(qry.getName())
-			.setDescription(qry.getDescription())
-			.addType(IM.QUERY);
-		rdf.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
 
-		document.addEntity(rdf);
+
 
 		qry.addSelect(new Select().setVar("?patient"));
 		Clause gpReg = new Clause();
@@ -61,12 +55,12 @@ public class CoreQueryImporter implements TTImport {
 			.setValueVar("?reg"));
 		gpReg.addWhere(new Where()
 				.setEntityVar("?reg")
-			.setProperty(IM.NAMESPACE + "patientType")
+			.setProperty(TTIriRef.iri(IM.NAMESPACE + "patientType"))
 			.setValueVar("?patientType")
 			.addFilter(new Filter().addIn(IM.GMS_PATIENT)));
 		gpReg.addWhere(new Where()
 		  .setEntityVar("?reg")
-			.setProperty(IM.NAMESPACE + "effectiveDate")
+			.setProperty(TTIriRef.iri(IM.NAMESPACE + "effectiveDate"))
 			.setValueVar("?regDate")
 			.addFilter(new Filter().setValueTest(Comparison.lessThanOrEqual, "$ReferenceDate")));
 
@@ -78,7 +72,7 @@ public class CoreQueryImporter implements TTImport {
 		noEndDate.setNotExist(true);
 		noEndDate.addWhere(new Where()
 			.setEntityVar("?reg")
-			.setProperty(IM.NAMESPACE + "endDate"));
+			.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate")));
 		Clause leftAfter= new Clause();
 		notEnded.addClause(leftAfter);
 		leftAfter.addWhere(new Where()
@@ -87,13 +81,9 @@ public class CoreQueryImporter implements TTImport {
 			.setValueVar("?endDate")
 			.addFilter(new Filter()
 				.setValueTest(Comparison.greaterThan, "$ReferenceDate")));
-
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-		objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-		objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
-		String json = objectMapper.writeValueAsString(qry);
-		rdf.set(IM.QUERY_DEFINITION, TTLiteral.literal(json));
+		TTEntity rdf = qry.asEntity();
+		rdf.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
+		document.addEntity(rdf);
 		//output(json);
 
 	}
