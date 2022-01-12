@@ -1,10 +1,9 @@
-# Clear config
-DROP GRAPH <http://endhealth.info/config#>
-
-# Insert config data
 PREFIX cfg: <http://endhealth.info/config#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX im: <http://endhealth.info/im#>
+
+DROP GRAPH <http://endhealth.info/config#>;
+
 INSERT DATA {
     GRAPH cfg: {
     cfg:definition rdfs:label    'Definition' ;
