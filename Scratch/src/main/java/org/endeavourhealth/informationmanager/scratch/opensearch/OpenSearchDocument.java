@@ -1,11 +1,11 @@
-package org.endeavourhealth.informationmanager.scratch.meili;
+package org.endeavourhealth.informationmanager.scratch.opensearch;
 
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MeiliBlob {
+public class OpenSearchDocument {
     Integer id;
     String iri;
     String name;
@@ -18,7 +18,7 @@ public class MeiliBlob {
         return id;
     }
 
-    public MeiliBlob setId(Integer id) {
+    public OpenSearchDocument setId(Integer id) {
         this.id = id;
         return this;
     }
@@ -27,7 +27,7 @@ public class MeiliBlob {
         return iri;
     }
 
-    public MeiliBlob setIri(String iri) {
+    public OpenSearchDocument setIri(String iri) {
         this.iri = iri;
         return this;
     }
@@ -36,7 +36,7 @@ public class MeiliBlob {
         return name;
     }
 
-    public MeiliBlob setName(String name) {
+    public OpenSearchDocument setName(String name) {
         this.name = name;
         return this;
     }
@@ -45,7 +45,7 @@ public class MeiliBlob {
         return code;
     }
 
-    public MeiliBlob setCode(String code) {
+    public OpenSearchDocument setCode(String code) {
         this.code = code;
         return this;
     }
@@ -54,7 +54,7 @@ public class MeiliBlob {
         return scheme;
     }
 
-    public MeiliBlob setScheme(TTIriRef scheme) {
+    public OpenSearchDocument setScheme(TTIriRef scheme) {
         this.scheme = scheme;
         return this;
     }
@@ -63,7 +63,7 @@ public class MeiliBlob {
         return entityType;
     }
 
-    public MeiliBlob setEntityType(List<TTIriRef> entityType) {
+    public OpenSearchDocument setEntityType(List<TTIriRef> entityType) {
         this.entityType = entityType;
         return this;
     }
@@ -72,12 +72,12 @@ public class MeiliBlob {
         return status;
     }
 
-    public MeiliBlob setStatus(TTIriRef status) {
+    public OpenSearchDocument setStatus(TTIriRef status) {
         this.status = status;
         return this;
     }
 
-    public MeiliBlob addType(TTIriRef type) {
+    public OpenSearchDocument addType(TTIriRef type) {
         this.entityType.add(type);
         return this;
     }

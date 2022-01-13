@@ -1,6 +1,7 @@
-package org.endeavourhealth.informationmanager.scratch.meili;
+package org.endeavourhealth.informationmanager.scratch.opensearch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
@@ -16,6 +17,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -27,17 +29,23 @@ public class OpenSearchSender {
     private final Client client = ClientBuilder.newClient();
     private WebTarget target;
     private final ObjectMapper om = new ObjectMapper();
+    private String OSUrl;
 
-    public void execute() throws JsonProcessingException, InterruptedException {
+    public void execute() throws IOException, InterruptedException {
         checkEnvs("OPENSEARCH_URL", "OPENSEARCH_AUTH", "GRAPH_SERVER", "GRAPH_REPO");
 
-        String OSUrl = System.getenv("OPENSEARCH_URL");
+        OSUrl = System.getenv("OPENSEARCH_URL");
 
+        int maxId = getMaxDocument();
+
+        continueUpload(maxId);
+    }
+
+    private void continueUpload(int maxId) throws JsonProcessingException, InterruptedException {
         target = client.target(OSUrl).path("_bulk");
 
-        List<MeiliBlob> docs = new ArrayList<>(BULKSIZE);
-        MeiliBlob blob = null;
-        int i = 0;
+        List<OpenSearchDocument> docs = new ArrayList<>(BULKSIZE);
+        OpenSearchDocument blob = null;
 
         LOG.info("Connecting to database...");
 
@@ -73,37 +81,37 @@ public class OpenSearchSender {
             try (TupleQueryResult qr = tupleQuery.evaluate()) {
 
                 LOG.info("Processing...");
+                int i = 0;
                 while (qr.hasNext()) {
                     BindingSet rs = qr.next();
-                    if (blob == null) {
-                        blob = new MeiliBlob()
-                            .setId(i)
-                            .setIri(rs.getValue("iri").stringValue())
-                            .setName(rs.getValue("name").stringValue())
-                            .setCode(rs.hasBinding("code") ? rs.getValue("code").stringValue() : null)
-                            .setScheme(iri(rs.getValue("scheme").stringValue(), rs.hasBinding("schemeName") ? rs.getValue("schemeName").stringValue() : null))
-                            .setStatus(iri(rs.getValue("status").stringValue(), rs.hasBinding("statusName") ? rs.getValue("statusName").stringValue() : null));
-                        docs.add(blob);
-                    }
 
-                    if (rs.getValue("iri").stringValue().equals(blob.getIri())) {
-                        blob.addType(iri(rs.getValue("type").stringValue(), rs.getValue("typeName").stringValue()));
-                    } else {
-                        if (((++i) % BULKSIZE) == 0) {
-                            postMeili(docs);
-                            docs.clear();
-                            LOG.info("...processed {} concepts", i);
+                    boolean newConcept = (blob == null) || !blob.getIri().equals(rs.getValue("iri").stringValue());
+
+                    if (newConcept)
+                        i++;
+
+                    if (i > maxId) {
+                        if (newConcept) {
+                            if (docs.size() == BULKSIZE) {
+                                postMeili(docs);
+                                docs.clear();
+                                LOG.info("...processed {} concepts", i);
+                            }
+
+                            blob = new OpenSearchDocument()
+                                .setId(i)
+                                .setIri(rs.getValue("iri").stringValue())
+                                .setName(rs.getValue("name").stringValue())
+                                .setCode(rs.hasBinding("code") ? rs.getValue("code").stringValue() : null)
+                                .setScheme(iri(rs.getValue("scheme").stringValue(), rs.hasBinding("schemeName") ? rs.getValue("schemeName").stringValue() : null))
+                                .setStatus(iri(rs.getValue("status").stringValue(), rs.hasBinding("statusName") ? rs.getValue("statusName").stringValue() : null))
+                                .addType(iri(rs.getValue("type").stringValue(), rs.hasBinding("typeName") ? rs.getValue("typeName").stringValue() : null));
+                            docs.add(blob);
+                        } else {
+                            blob.addType(iri(rs.getValue("type").stringValue(), rs.getValue("typeName").stringValue()));
                         }
-
-                        blob = new MeiliBlob()
-                            .setId(i)
-                            .setIri(rs.getValue("iri").stringValue())
-                            .setName(rs.getValue("name").stringValue())
-                            .setCode(rs.hasBinding("code") ? rs.getValue("code").stringValue() : null)
-                            .setScheme(iri(rs.getValue("scheme").stringValue(), rs.hasBinding("schemeName") ? rs.getValue("schemeName").stringValue() : null))
-                            .setStatus(iri(rs.getValue("status").stringValue(), rs.hasBinding("statusName") ? rs.getValue("statusName").stringValue() : null))
-                            .addType(iri(rs.getValue("type").stringValue(), rs.hasBinding("typeName") ? rs.getValue("typeName").stringValue() : null));
-                        docs.add(blob);
+                    } else if ((i % BULKSIZE) == 0) {
+                        LOG.info("...skipped {} concepts", i);
                     }
                 }
 
@@ -127,10 +135,10 @@ public class OpenSearchSender {
             System.exit(-1);
     }
 
-    private void postMeili(List<MeiliBlob> docs) throws JsonProcessingException, InterruptedException {
+    private void postMeili(List<OpenSearchDocument> docs) throws JsonProcessingException, InterruptedException {
         StringJoiner batch = new StringJoiner("\n");
 
-        for (MeiliBlob doc : docs) {
+        for (OpenSearchDocument doc : docs) {
             batch.add("{ \"index\" : { \"_index\": \"concept\", \"_id\" : \"" + doc.getId() + "\" } }");
             batch.add(om.writeValueAsString(doc));
         }
@@ -149,7 +157,7 @@ public class OpenSearchSender {
 
             if (response.getStatus() == 429) {
                 retry = true;
-                LOG.error("Queue busy, retrying in {}s", retrySleep);
+                LOG.error("Queue full, retrying in {}s", retrySleep);
                 TimeUnit.SECONDS.sleep(retrySleep);
 
                 if (retrySleep < 60)
@@ -165,5 +173,36 @@ public class OpenSearchSender {
 
         } while (retry);
         LOG.info("Done.");
+    }
+
+    private int getMaxDocument() throws IOException {
+        target = client.target(OSUrl).path("_search");
+
+        Response response = target
+            .request()
+            .header("Authorization", "Basic " + System.getenv("OPENSEARCH_AUTH"))
+            .post(Entity.entity("{\n" +
+                "    \"aggs\" : {\n" +
+                "      \"max_id\" : {\n" +
+                "        \"max\" : { \n" +
+                "          \"field\" : \"id\"\n" +
+                "        }\n" +
+                "      }\n" +
+                "    },\n" +
+                "    \"size\":0\n" +
+                "  }", MediaType.APPLICATION_JSON));
+
+        if (response.getStatus() != 200) {
+            String responseData = response.readEntity(String.class);
+            LOG.error(responseData);
+            throw new IllegalStateException("Error getting max document id from OpenSearch");
+        } else {
+            String responseData = response.readEntity(String.class);
+            JsonNode root = om.readTree(responseData);
+            int maxId = root.get("aggregations").get("max_id").get("value").asInt();
+            if (maxId > 0)
+                LOG.info("Continuing from {}", maxId);
+            return maxId;
+        }
     }
 }
