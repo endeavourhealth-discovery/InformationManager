@@ -208,7 +208,7 @@ public class EthnicityCEGImporter implements TTImport {
 	private void setConceptSetGroups() {
 		cegSet= new TTEntity()
 			.setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16")
-			.addType(IM.SET_GROUP)
+			.addType(IM.CONCEPT_SET)
 			.setName("CEG 16+1 Ethnic category (set group)")
 			.setDescription("QMUL-CEG categorisations of ethnic groups")
 			.set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
@@ -216,7 +216,7 @@ public class EthnicityCEGImporter implements TTImport {
 		document.addEntity(cegSet);
 		nhsSet= new TTEntity()
 			.setIri(IM.NAMESPACE+"CSET_EthnicCategory2001")
-			.addType(IM.SET_GROUP)
+			.addType(IM.CONCEPT_SET)
 			.setName("Concept set - 2001 census Ethnic category (set group")
 			.setDescription("NHS Data Dictionary 2001 census based categorisations of ethnic groups")
 			.set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
