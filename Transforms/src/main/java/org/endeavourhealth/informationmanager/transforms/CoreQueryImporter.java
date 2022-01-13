@@ -3,6 +3,8 @@ package org.endeavourhealth.informationmanager.transforms;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.endeavourhealth.imapi.cdm.ProvActivity;
+import org.endeavourhealth.imapi.cdm.ProvAgent;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
@@ -15,6 +17,9 @@ import org.endeavourhealth.informationmanager.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 public class CoreQueryImporter implements TTImport {
 	@Override
@@ -30,6 +35,8 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 
+
+
 	private void addCurrentReg(TTDocument document) throws IOException {
 
 		Query qry = new Query()
@@ -41,6 +48,7 @@ public class CoreQueryImporter implements TTImport {
 				"or an end date after the reference date.");
 			qry.setMainEntityVar("?patient");
 			qry.setMainEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient"));
+			qry.setFolder(new ArrayList<>());
 
 
 
@@ -51,7 +59,7 @@ public class CoreQueryImporter implements TTImport {
 		gpReg.addWhere(new Where()
 			.setEntityVar("?patient")
 			.setProperty(TTIriRef.iri("im:isSubjectOf"))
-			.setValueEntity(TTIriRef.iri("im:GPRegistration"))
+			.setValueEntity(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
 			.setValueVar("?reg"));
 		gpReg.addWhere(new Where()
 				.setEntityVar("?reg")
@@ -85,6 +93,22 @@ public class CoreQueryImporter implements TTImport {
 		rdf.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
 		document.addEntity(rdf);
 		//output(json);
+		setProvenance(rdf,document);
+	}
+
+	private void setProvenance(TTEntity rdf,TTDocument document) {
+		ProvAgent agent= new ProvAgent()
+			.setPersonInRole(TTIriRef.iri("http://uir.endhealth.org#Stables1"))
+			.setParticipationType(IM.AUTHOR_ROLE);
+		agent.setIri("http://agent.endhealth.org#Stables1");
+		document.addEntity(agent);
+		ProvActivity activity= new ProvActivity()
+			.setIri("http://prov.endhealth.info/im#Q_RegisteredGMS")
+			.setActivityType(IM.CREATION)
+			.setEffectiveDate(LocalDateTime.now().toString())
+			.addAgent(TTIriRef.iri(agent.getIri()))
+			.setTargetEntity(TTIriRef.iri(rdf.getIri()));
+		document.addEntity(activity);
 
 	}
 

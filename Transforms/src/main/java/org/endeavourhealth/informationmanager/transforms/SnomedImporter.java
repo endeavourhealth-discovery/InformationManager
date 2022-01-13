@@ -237,9 +237,8 @@ public class SnomedImporter implements TTImport {
                TTEntity c= conceptMap.get(fields[4]);
                if (c!=null) {
                   if (c.get(IM.DEFINITION)==null)
-                     c.set(IM.MEMBERS,new TTArray());
-                  c.get(IM.MEMBERS).add(TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
-
+                     c.set(IM.DEFINITION,new TTNode());
+                  c.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
                }
                i++;
                line = reader.readLine();

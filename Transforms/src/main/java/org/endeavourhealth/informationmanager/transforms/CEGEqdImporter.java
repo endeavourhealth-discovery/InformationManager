@@ -42,20 +42,31 @@ public class CEGEqdImporter implements TTImport {
 		TTManager manager= new TTManager();
 		document= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 		createOrg();
-		createFolder();
+		createFolders();
 		loadAndConvert(config.folder);
+		for (TTEntity entity:document.getEntities()){
+			if (entity.isType(IM.CONCEPT_SET))
+				entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets"));
+		}
+
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}
 		return this;
 	}
 
-	private void createFolder() {
+	private void createFolders() {
 		TTEntity folder= new TTEntity()
 			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries")
 			.setName("QMUL CEG query library")
 			.addType(IM.FOLDER)
-			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_Queries"));
+			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QT_QueryTemplates"));
+		document.addEntity(folder);
+		folder= new TTEntity()
+			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets")
+			.setName("QMUL CEG concept set library")
+			.addType(IM.FOLDER)
+			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Sets"));
 		document.addEntity(folder);
 	}
 
