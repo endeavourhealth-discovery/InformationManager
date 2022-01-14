@@ -52,11 +52,11 @@ public class CoreQueryImporter implements TTImport {
 			qry.setFolder(new ArrayList<>());
 
 
-
 		qry.addSelect(new Select().setVar("?patient"));
+		Step step= new Step().setMandate(Mandate.INCLUDE);
+		qry.addStep(step);
 		Clause gpReg = new Clause();
-		qry.setOperator(Operator.AND);
-		qry.addClause(gpReg);
+		step.addClause(gpReg);
 		gpReg.addWhere(new Where()
 			.setEntityVar("?patient")
 			.setProperty(TTIriRef.iri("im:isSubjectOf"))
@@ -74,7 +74,7 @@ public class CoreQueryImporter implements TTImport {
 			.addFilter(new Filter().setValueTest(Comparison.lessThanOrEqual, "$ReferenceDate")));
 
 		Clause notEnded = new Clause();
-		qry.addClause(notEnded);
+		step.addClause(notEnded);
 		notEnded.setOperator(Operator.OR);
 		Clause noEndDate= new Clause();
 		notEnded.addClause(noEndDate);
@@ -93,7 +93,7 @@ public class CoreQueryImporter implements TTImport {
 		TTEntity rdf = qry.asEntity();
 		rdf.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
 		document.addEntity(rdf);
-		//output(json);
+		output(qry);
 		setProvenance(rdf,document);
 	}
 
@@ -120,9 +120,14 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 
-	private void output(String json) throws IOException {
-		try (FileWriter writer = new FileWriter("c:/temp/Core-qry.json")) {
-			writer.write(json);
+	private void output(Query qry) throws IOException {
+		try (FileWriter writer= new FileWriter("c:/temp/Core-qry.json")) {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
+			String doc = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(qry);
+			writer.write(doc);
 		}
 
 	}
