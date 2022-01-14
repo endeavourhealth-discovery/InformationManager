@@ -1,5 +1,7 @@
 package org.endeavourhealth.informationmanager.jdbc;
 
+import org.endeavourhealth.imapi.filer.TTFilerException;
+import org.endeavourhealth.imapi.filer.TTNamespaceFiler;
 import org.endeavourhealth.imapi.model.tripletree.TTPrefix;
 import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
