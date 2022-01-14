@@ -6,8 +6,6 @@ import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDF;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.XSD;
-import org.endeavourhealth.informationmanager.TTFilerException;
-import org.endeavourhealth.informationmanager.TTEntityFiler;
 import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
 import java.sql.*;

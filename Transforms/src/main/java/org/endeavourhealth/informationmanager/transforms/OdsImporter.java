@@ -1,15 +1,14 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImport;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTFilerFactory;
-import org.endeavourhealth.informationmanager.TTImport;
-import org.endeavourhealth.informationmanager.TTImportConfig;
 
 import java.nio.file.Path;
-import java.sql.Connection;
 
 public class OdsImporter implements TTImport {
    private static final String[] organisationFiles = {

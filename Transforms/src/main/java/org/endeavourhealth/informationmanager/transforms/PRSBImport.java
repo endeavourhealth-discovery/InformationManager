@@ -1,13 +1,13 @@
 package org.endeavourhealth.informationmanager.transforms;
+import org.endeavourhealth.imapi.filer.TTImport;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.endeavourhealth.informationmanager.TTImport;
 
 
 import java.io.File;
@@ -15,8 +15,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.zip.DataFormatException;
 

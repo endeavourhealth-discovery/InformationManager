@@ -1,8 +1,5 @@
 package org.endeavourhealth.informationmanager.jdbc;
 
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTFilerException;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 

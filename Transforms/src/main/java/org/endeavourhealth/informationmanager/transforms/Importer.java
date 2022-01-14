@@ -1,11 +1,11 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import org.endeavourhealth.imapi.filer.TTImport;
+import org.endeavourhealth.imapi.filer.TTImportByType;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.informationmanager.TTImport;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.informationmanager.TTImportByType;
-import org.endeavourhealth.informationmanager.TTImportConfig;
 
 /**
  * Manager Class which imports specialised data from a legacy classification or the core ontology using specialised importers

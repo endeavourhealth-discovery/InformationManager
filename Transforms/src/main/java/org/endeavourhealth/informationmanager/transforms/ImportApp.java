@@ -1,5 +1,9 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import org.endeavourhealth.imapi.filer.TCGenerator;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImportByType;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.*;
