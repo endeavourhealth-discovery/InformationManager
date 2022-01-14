@@ -31,7 +31,6 @@ import java.util.zip.DataFormatException;
 public class CEGEqdImporter implements TTImport {
 	private TTDocument document;
 	private TTEntity owner;
-	private QueryDocument qDocument;
 
 	private static final String[] queries = {".*\\\\CEGQuery"};
 	private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
@@ -44,6 +43,7 @@ public class CEGEqdImporter implements TTImport {
 		createOrg();
 		createFolders();
 		loadAndConvert(config.folder);
+		DeDuplicateClauses();
 		for (TTEntity entity:document.getEntities()){
 			if (entity.isType(IM.CONCEPT_SET))
 				entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets"));
@@ -53,6 +53,12 @@ public class CEGEqdImporter implements TTImport {
 			filer.fileDocument(document);
 		}
 		return this;
+	}
+
+	private void DeDuplicateClauses() {
+	}
+
+	private void Deduplicate() {
 	}
 
 	private void createFolders() {
@@ -120,12 +126,13 @@ public class CEGEqdImporter implements TTImport {
 				qdoc.addQuery(qry);
 			}
 		}
+
 		try (FileWriter writer= new FileWriter("c:/temp/"+ fileEntry.getName().replace(".xml","")+ "-qry.json")) {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
-			String doc = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(qDocument);
+			String doc = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(EqdToTT.qDocument);
 			writer.write(doc);
 		}
 
