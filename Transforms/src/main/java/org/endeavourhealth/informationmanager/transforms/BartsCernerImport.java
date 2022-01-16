@@ -1,16 +1,16 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImport;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTFilerFactory;
-import org.endeavourhealth.informationmanager.TTImport;
-import org.endeavourhealth.informationmanager.TTImportConfig;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

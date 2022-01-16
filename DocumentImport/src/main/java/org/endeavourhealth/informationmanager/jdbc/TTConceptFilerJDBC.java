@@ -1,13 +1,13 @@
 package org.endeavourhealth.informationmanager.jdbc;
 
 import com.google.common.base.Strings;
+import org.endeavourhealth.imapi.filer.TTEntityFiler;
+import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDF;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.XSD;
-import org.endeavourhealth.informationmanager.TTEntityFiler;
-import org.endeavourhealth.informationmanager.TTFilerException;
 import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
 import java.sql.*;

@@ -1,15 +1,14 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImport;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.informationmanager.TTDocumentFiler;
-import org.endeavourhealth.informationmanager.TTFilerFactory;
-import org.endeavourhealth.informationmanager.TTImport;
-import org.endeavourhealth.informationmanager.TTImportConfig;
 import org.endeavourhealth.imapi.transforms.TTManager;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.Connection;
 
 
 public class DiscoveryReportsImporter implements TTImport {

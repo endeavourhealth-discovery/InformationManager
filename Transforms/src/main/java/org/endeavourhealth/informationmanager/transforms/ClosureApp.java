@@ -1,8 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms;
 
-import org.endeavourhealth.informationmanager.TCGenerator;
-import org.endeavourhealth.informationmanager.TTFilerFactory;
-import org.endeavourhealth.informationmanager.jdbc.ClosureGeneratorJDBC;
+import org.endeavourhealth.imapi.filer.TCGenerator;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
 
 public class ClosureApp {
    public static void main(String[] args) throws Exception {

@@ -1,4 +1,8 @@
 package org.endeavourhealth.informationmanager.transforms;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImport;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.ECLToTT;
 import org.endeavourhealth.imapi.transforms.OWLToTT;

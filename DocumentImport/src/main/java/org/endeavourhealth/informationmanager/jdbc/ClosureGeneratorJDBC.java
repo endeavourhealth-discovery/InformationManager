@@ -4,7 +4,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.informationmanager.TCGenerator;
+import org.endeavourhealth.imapi.filer.TCGenerator;
 import org.endeavourhealth.informationmanager.common.dal.DALHelper;
 
 import java.io.FileWriter;

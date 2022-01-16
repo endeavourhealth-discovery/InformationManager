@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import com.opencsv.CSVReader;
+import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -23,7 +24,7 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
  * Creates the term code entity map for TPP codes
  * Creates new entities for TPP local codes that are unmapped
  */
-public class TPPImporter implements TTImport{
+public class TPPImporter implements TTImport {
 
     private static final String[] concepts = {".*\\\\TPP\\\\Concept.v3"};
     private static final String[] dcf = {".*\\\\TPP\\\\Dcf.v3"};
