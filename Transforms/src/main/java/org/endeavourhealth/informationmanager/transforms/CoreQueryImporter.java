@@ -27,7 +27,7 @@ public class CoreQueryImporter implements TTImport {
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager = new TTManager();
 		TTDocument document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
-		addCurrentReg(document);
+		addCurrentReg(config.folder, document);
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}
@@ -38,7 +38,7 @@ public class CoreQueryImporter implements TTImport {
 
 
 
-	private void addCurrentReg(TTDocument document) throws IOException {
+	private void addCurrentReg(String folder, TTDocument document) throws IOException {
 
 		Query qry = new Query()
 			.setType(IM.QUERY);
@@ -93,7 +93,7 @@ public class CoreQueryImporter implements TTImport {
 		TTEntity rdf = qry.asEntity();
 		rdf.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
 		document.addEntity(rdf);
-		output(qry);
+		output(folder, qry);
 		setProvenance(rdf,document);
 	}
 
@@ -120,8 +120,8 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 
-	private void output(Query qry) throws IOException {
-		try (FileWriter writer= new FileWriter("c:/temp/Core-qry.json")) {
+	private void output(String folder, Query qry) throws IOException {
+		try (FileWriter writer= new FileWriter(folder + "/Core-qry.json")) {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);

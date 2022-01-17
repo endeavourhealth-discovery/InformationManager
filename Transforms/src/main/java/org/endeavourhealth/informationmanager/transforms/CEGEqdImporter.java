@@ -100,6 +100,7 @@ public class CEGEqdImporter implements TTImport {
 			if (!fileEntry.isDirectory()) {
 				String ext= FilenameUtils.getExtension(fileEntry.getName());
 				if (ext.equalsIgnoreCase("xml")) {
+                    System.out.println("..." + fileEntry.getName());
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(new FileReader(fileEntry));
@@ -108,17 +109,17 @@ public class CEGEqdImporter implements TTImport {
 						IM.GRAPH_CEG_QUERY,
 						TTIriRef.iri(owner.getIri()),dataMap,
 						criteriaLabels,reportNames);
-				  output(fileEntry);
+				  output(folder, fileEntry);
 				}
 			}
 		}
 
 	}
 
-	private void output(File fileEntry) throws IOException {
+	private void output(String folder, File fileEntry) throws IOException {
 		TTManager manager= new TTManager();
 		manager.setDocument(document);
-		manager.saveDocument(new File("c:/temp/"+ fileEntry.getName().replace(".xml","")+"-ld.json"));
+		manager.saveDocument(new File(folder + "/"+ fileEntry.getName().replace(".xml","")+"-ld.json"));
 		QueryDocument qdoc= new QueryDocument();
 		for (TTEntity entity:document.getEntities()){
 			if (entity.isType(IM.QUERY)) {
@@ -128,7 +129,7 @@ public class CEGEqdImporter implements TTImport {
 			}
 		}
 
-		try (FileWriter writer= new FileWriter("c:/temp/"+ fileEntry.getName().replace(".xml","")+ "-qry.json")) {
+		try (FileWriter writer= new FileWriter(folder + "/"+ fileEntry.getName().replace(".xml","")+ "-qry.json")) {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
