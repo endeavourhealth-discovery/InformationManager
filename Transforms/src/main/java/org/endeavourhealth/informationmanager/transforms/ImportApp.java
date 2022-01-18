@@ -27,7 +27,7 @@ public class ImportApp {
         cfg.folder = args[0];
         cfg.importType = args[1].toLowerCase();
 
-        TTFilerFactory.skipDeletes="all".equals(cfg.importType);
+        TTFilerFactory.skipDeletes = "all".equals(cfg.importType);
 
         // Optional switch args
         if (args.length >= 3) {
@@ -43,7 +43,7 @@ public class ImportApp {
                         cfg.skipsearch = true;
                         break;
                     case "skipdeletes":
-                        TTFilerFactory.skipDeletes=true;
+                        TTFilerFactory.skipDeletes = true;
                         break;
                     default:
                         System.err.println("Unknown parameter " + args[i]);
@@ -60,21 +60,21 @@ public class ImportApp {
         switch (cfg.importType) {
             case "all":
                 TTImportByType importer = new Importer()
-                        .validateByType(IM.GRAPH_DISCOVERY, cfg.folder)
-                        .validateByType(SNOMED.GRAPH_SNOMED, cfg.folder)
-                  .validateByType(IM.GRAPH_ENCOUNTERS,cfg.folder)
-                        .validateByType(IM.GRAPH_EMIS, cfg.folder)
-                        .validateByType(IM.GRAPH_TPP, cfg.folder)
-                        .validateByType(IM.GRAPH_OPCS4, cfg.folder)
-                        .validateByType(IM.GRAPH_ICD10, cfg.folder)
-                        .validateByType(IM.GRAPH_VISION, cfg.folder)
-                        .validateByType(IM.GRAPH_KINGS_APEX, cfg.folder)
-                        .validateByType(IM.GRAPH_KINGS_WINPATH, cfg.folder)
-                        .validateByType(IM.GRAPH_CEG16, cfg.folder)
-                        .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
-                        .validateByType(IM.GRAPH_IM1, cfg.folder)
-                        .validateByType(IM.GRAPH_ODS, cfg.folder)
-                  .validateByType(IM.GRAPH_CEG_QUERY,cfg.folder);
+                    .validateByType(IM.GRAPH_DISCOVERY, cfg.folder)
+                    .validateByType(SNOMED.GRAPH_SNOMED, cfg.folder)
+                    .validateByType(IM.GRAPH_ENCOUNTERS, cfg.folder)
+                    .validateByType(IM.GRAPH_EMIS, cfg.folder)
+                    .validateByType(IM.GRAPH_TPP, cfg.folder)
+                    .validateByType(IM.GRAPH_OPCS4, cfg.folder)
+                    .validateByType(IM.GRAPH_ICD10, cfg.folder)
+                    .validateByType(IM.GRAPH_VISION, cfg.folder)
+                    .validateByType(IM.GRAPH_KINGS_APEX, cfg.folder)
+                    .validateByType(IM.GRAPH_KINGS_WINPATH, cfg.folder)
+                    .validateByType(IM.GRAPH_CEG16, cfg.folder)
+                    .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
+                    .validateByType(IM.GRAPH_IM1, cfg.folder)
+                    .validateByType(IM.GRAPH_ODS, cfg.folder);
+//                    .validateByType(IM.GRAPH_CEG_QUERY, cfg.folder);
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
                 importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
                 importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
@@ -89,7 +89,7 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
                 importer.importByType(IM.GRAPH_IM1, cfg);
                 importer.importByType(IM.GRAPH_ODS, cfg);
-                importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
+//                importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
                 break;
             case "imv1":
                 importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.folder);
@@ -147,10 +147,10 @@ public class ImportApp {
                 importer = new Importer().validateByType(IM.GRAPH_CEG16, cfg.folder);
                 importer.importByType(IM.GRAPH_CEG16, cfg);
                 break;
-            case "cegqueries" :
-                importer = new Importer().validateByType(IM.GRAPH_CEG_QUERY, cfg.folder);
-                importer.importByType(IM.GRAPH_CEG_QUERY, cfg);
-                break;
+//            case "cegqueries" :
+//                importer = new Importer().validateByType(IM.GRAPH_CEG_QUERY, cfg.folder);
+//                importer.importByType(IM.GRAPH_CEG_QUERY, cfg);
+//                break;
             case "barts":
                 importer = new Importer().validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder);
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
@@ -175,7 +175,7 @@ public class ImportApp {
         }
 
         if (!cfg.skiptct) {
-            TCGenerator closureGenerator= TTFilerFactory.getClosureGenerator();
+            TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
             closureGenerator.generateClosure(cfg.folder, cfg.secure);
         }
         if (!cfg.skipsearch) SearchTermGenerator.generateSearchTerms(cfg.folder, cfg.secure);

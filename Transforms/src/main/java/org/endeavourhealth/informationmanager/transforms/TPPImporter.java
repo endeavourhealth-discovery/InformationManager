@@ -25,6 +25,7 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
  * Creates new entities for TPP local codes that are unmapped
  */
 public class TPPImporter implements TTImport {
+    public static final String TPP = "http://endhealth.info/tpp#";
 
     private static final String[] concepts = {".*\\\\TPP\\\\Concept.v3"};
     private static final String[] dcf = {".*\\\\TPP\\\\Dcf.v3"};
@@ -331,7 +332,7 @@ public class TPPImporter implements TTImport {
     }
 
     private void addTPPTopLevel(){
-        TTEntity c= new TTEntity().setIri("tpp:TPPCodes")
+        TTEntity c= new TTEntity().setIri(TPP+"TPPCodes")
           .addType(IM.CONCEPT)
           .setName("TPP TPP and local codes")
           .setScheme(IM.GRAPH_TPP)

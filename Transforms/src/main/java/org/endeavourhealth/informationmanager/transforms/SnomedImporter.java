@@ -78,7 +78,7 @@ public class SnomedImporter implements TTImport {
    public static final String FULLY_SPECIFIED = "900000000000003001";
    public static final String DEFINED= "900000000000073002";
    public static final String IS_A = "116680003";
-   public static final String SN = "sn:";
+   public static final String SN = "http://snomed.info/sct#";
    public static final String ALL_CONTENT = "723596005";
    public static final String ACTIVE = "1";
    public static final String REPLACED_BY = "370124000";

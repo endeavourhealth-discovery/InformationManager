@@ -59,7 +59,7 @@ public class CoreQueryImporter implements TTImport {
 		step.addClause(gpReg);
 		gpReg.addWhere(new Where()
 			.setEntityVar("?patient")
-			.setProperty(TTIriRef.iri("im:isSubjectOf"))
+			.setProperty(TTIriRef.iri(IM.NAMESPACE+"isSubjectOf"))
 			.setValueEntity(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
 			.setValueVar("?reg"));
 		gpReg.addWhere(new Where()

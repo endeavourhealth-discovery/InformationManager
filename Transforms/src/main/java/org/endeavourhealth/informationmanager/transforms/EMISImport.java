@@ -19,6 +19,7 @@ import java.util.*;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class EMISImport implements TTImport {
+    public static final String EMIS = "http://endhealth.info/emis#";
 
     private static final String[] emisEntities = {".*\\\\EMIS\\\\EMISCodes.csv"};
     private static final String[] allergies = {".*\\\\EMIS\\\\Allergies.json"};
@@ -141,8 +142,8 @@ public class EMISImport implements TTImport {
 
 
     private void addEMISUnlinked(){
-        TTEntity c= new TTEntity().setIri("emis:EMISUnlinkedCodes")
-            .set(IM.IS_CHILD_OF,new TTArray().add(iri("emis:"+"EMISNHH2")))
+        TTEntity c= new TTEntity().setIri(EMIS+"EMISUnlinkedCodes")
+            .set(IM.IS_CHILD_OF,new TTArray().add(iri(EMIS+"EMISNHH2")))
             .setName("EMIS unlinked local codes")
             .setCode("EMISUnlinkedCodes");
 
@@ -192,7 +193,7 @@ public class EMISImport implements TTImport {
                         emisConcept.addObject(IM.MATCHED_TO,
                           TTIriRef.iri(SNOMED.NAMESPACE + snomed));
                     } else
-                        emisConcept.addObject(IM.IS_CHILD_OF,iri("emis:EMISUnlinkedCodes"));
+                        emisConcept.addObject(IM.IS_CHILD_OF,iri(EMIS+"EMISUnlinkedCodes"));
                 }
                 else {
                     emisConcept.addObject(IM.ALTERNATIVE_CODE, TTLiteral.literal(snomed));
@@ -206,7 +207,7 @@ public class EMISImport implements TTImport {
                       .add(iri(IM.NAMESPACE + "CodeBasedTaxonomies")));
                 }
                 if (parent == null && !emis.equals("EMISNHH2"))
-                    emisConcept.set(IM.IS_CHILD_OF, new TTArray().add(iri("emis:EMISUnlinkedCodes")));
+                    emisConcept.set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS+"EMISUnlinkedCodes")));
                 if (parent != null) {
                     parentMap.computeIfAbsent(codeid, k -> new ArrayList<>());
                     parentMap.get(codeid).add(parent);
