@@ -7,15 +7,10 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.query.Query;
-import org.endeavourhealth.imapi.query.QueryDocument;
-import org.endeavourhealth.imapi.transforms.EqdToQuery;
 import org.endeavourhealth.imapi.transforms.EqdToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.informationmanager.*;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import java.io.File;
@@ -23,15 +18,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.zip.DataFormatException;
 
 public class CEGEqdImporter implements TTImport {
 	private TTDocument document;
 	private TTEntity owner;
+	private Set<TTEntity> allEntities = new HashSet<>();
 
 	private static final String[] queries = {".*\\\\CEGQuery"};
 	private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
@@ -87,12 +80,10 @@ public class CEGEqdImporter implements TTImport {
 
 	public void loadAndConvert(String folder) throws JAXBException, IOException, DataFormatException {
 		Properties dataMap= new Properties();
-		Map<String,String> reportNames= new HashMap<>();
 		Properties criteriaLabels= new Properties();
 		dataMap.load(new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile())));
 		Properties duplicateOrs= new Properties();
 		duplicateOrs.load(new FileReader((ImportUtils.findFileForId(folder, duplicates[0]).toFile())));
-		EqdToQuery.duplicates= duplicateOrs;
 		criteriaLabels.load(new FileReader((ImportUtils.findFileForId(folder, annotations[0]).toFile())));
 		Path directory= ImportUtils.findFileForId(folder,queries[0]);
 		TTIriRef mainFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries");
@@ -106,37 +97,31 @@ public class CEGEqdImporter implements TTImport {
 						.unmarshal(new FileReader(fileEntry));
 					EqdToTT converter= new EqdToTT();
 					converter.convertDoc(document,mainFolder,eqd,
-						IM.GRAPH_CEG_QUERY,
 						TTIriRef.iri(owner.getIri()),dataMap,
-						criteriaLabels,reportNames);
-				  output(folder, fileEntry);
+						criteriaLabels);
+				 // output(fileEntry);
 				}
 			}
 		}
 
 	}
 
-	private void output(String folder, File fileEntry) throws IOException {
-		TTManager manager= new TTManager();
-		manager.setDocument(document);
-		manager.saveDocument(new File(folder + "/"+ fileEntry.getName().replace(".xml","")+"-ld.json"));
-		QueryDocument qdoc= new QueryDocument();
-		for (TTEntity entity:document.getEntities()){
-			if (entity.isType(IM.QUERY)) {
-				Query qry = new Query();
-				qry = qry.fromEntity(entity);
-				qdoc.addQuery(qry);
-			}
-		}
+	private void output(File fileEntry) throws IOException {
 
-		try (FileWriter writer= new FileWriter(folder + "/"+ fileEntry.getName().replace(".xml","")+ "-qry.json")) {
-			ObjectMapper objectMapper = new ObjectMapper();
-			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
-			String doc = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(EqdToTT.qDocument);
-			writer.write(doc);
+		TTManager manager= new TTManager();
+		TTDocument qDocument= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
+		for (TTEntity entity:document.getEntities()) {
+			if (entity.isType(IM.PROFILE)) {
+				if (!allEntities.contains(entity)) {
+					qDocument.addEntity(entity);
+				}
+			}
+			allEntities.add(entity);
 		}
+		manager.setDocument(qDocument);
+		manager.saveDocument(new File("c:/temp/" + fileEntry.getName().replace(".xml", "") + "-profiles-ld.json"));
+		manager.setDocument(document);
+		manager.saveDocument(new File("c:/temp/CEG-Queries.json"));;
 
 	}
 

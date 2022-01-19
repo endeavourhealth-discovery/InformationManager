@@ -8,7 +8,6 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.ReasonerPlus;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.informationmanager.*;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 import java.io.File;

@@ -4,7 +4,6 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.informationmanager.*;
 
 
 import java.io.BufferedReader;

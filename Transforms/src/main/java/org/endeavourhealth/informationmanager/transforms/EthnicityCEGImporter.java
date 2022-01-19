@@ -6,7 +6,6 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
-import org.endeavourhealth.informationmanager.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
