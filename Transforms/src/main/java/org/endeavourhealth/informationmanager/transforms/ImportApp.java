@@ -77,8 +77,9 @@ public class ImportApp {
                     .validateByType(IM.GRAPH_CEG16, cfg.folder)
                     .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
                     .validateByType(IM.GRAPH_IM1, cfg.folder)
-                    .validateByType(IM.GRAPH_ODS, cfg.folder);
-//                    .validateByType(IM.GRAPH_CEG_QUERY, cfg.folder);
+                    .validateByType(IM.GRAPH_ODS, cfg.folder)
+                  .validateByType(IM.GRAPH_NHS_TFC,cfg.folder)
+                 .validateByType(IM.GRAPH_CEG_QUERY, cfg.folder);
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
                 importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
                 importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
@@ -93,7 +94,8 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
                 importer.importByType(IM.GRAPH_IM1, cfg);
                 importer.importByType(IM.GRAPH_ODS, cfg);
-//                importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
+                importer.importByType(IM.GRAPH_NHS_TFC,cfg);
+                importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
                 break;
             case "imv1":
                 importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.folder);
@@ -166,6 +168,10 @@ public class ImportApp {
             case "encounters":
                 importer = new Importer().validateByType(IM.GRAPH_ENCOUNTERS, cfg.folder);
                 importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
+                break;
+            case "nhstfc":
+                importer = new Importer().validateByType(IM.GRAPH_NHS_TFC, cfg.folder);
+                importer.importByType(IM.GRAPH_NHS_TFC, cfg);
                 break;
             case "tct":
                 cfg.skipsearch = true;

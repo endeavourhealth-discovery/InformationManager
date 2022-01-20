@@ -72,6 +72,8 @@ public class Importer implements TTImportByType {
           return new OdsImporter();
       else if(IM.GRAPH_CEG_QUERY.equals(importType))
          return new CEGEqdImporter();
+      else if (IM.GRAPH_NHS_TFC.equals(importType))
+         return new NHSTfcImport();
       else
          throw new Exception("Unrecognised import type");
    }
