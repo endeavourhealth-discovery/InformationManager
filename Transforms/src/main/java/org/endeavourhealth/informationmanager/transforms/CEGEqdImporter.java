@@ -99,7 +99,7 @@ public class CEGEqdImporter implements TTImport {
 					converter.convertDoc(document,mainFolder,eqd,
 						TTIriRef.iri(owner.getIri()),dataMap,
 						criteriaLabels);
-				 // output(fileEntry);
+				  //output(fileEntry);
 				}
 			}
 		}
@@ -119,9 +119,9 @@ public class CEGEqdImporter implements TTImport {
 			allEntities.add(entity);
 		}
 		manager.setDocument(qDocument);
-		manager.saveDocument(new File("c:/temp/" + fileEntry.getName().replace(".xml", "") + "-profiles-ld.json"));
+		manager.saveDocument(new File("G:\\Shared drives\\Discovery Data Service\\InformationModel\\ImportData\\CEGQuery\\" + fileEntry.getName().replace(".xml", "") + "-profiles-ld.json"));
 		manager.setDocument(document);
-		manager.saveDocument(new File("c:/temp/CEG-Queries.json"));;
+		manager.saveDocument(new File("G:\\Shared drives\\Discovery Data Service\\InformationModel\\ImportData\\CEGQuery\\CEG-Queries.json"));;
 
 	}
 
