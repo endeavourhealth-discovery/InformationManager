@@ -13,6 +13,7 @@ import java.util.Date;
  * Utility app for importing one or all of the various source files for the ontology initial population.
  */
 public class ImportApp {
+    public static String testDirectory;
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
@@ -46,7 +47,10 @@ public class ImportApp {
                         TTFilerFactory.skipDeletes = true;
                         break;
                     default:
-                        System.err.println("Unknown parameter " + args[i]);
+                        if (args[i].contains("test="))
+                            testDirectory= args[i].substring(args[i].lastIndexOf("=")+1);
+                        else
+                         System.err.println("Unknown parameter " + args[i]);
                 }
             }
         }

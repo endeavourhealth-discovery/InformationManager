@@ -99,7 +99,7 @@ public class CEGEqdImporter implements TTImport {
 					converter.convertDoc(document,mainFolder,eqd,
 						TTIriRef.iri(owner.getIri()),dataMap,
 						criteriaLabels);
-				  //output(fileEntry);
+				  output(fileEntry);
 				}
 			}
 		}
@@ -107,21 +107,25 @@ public class CEGEqdImporter implements TTImport {
 	}
 
 	private void output(File fileEntry) throws IOException {
+		if (ImportApp.testDirectory!=null) {
+			String directory= ImportApp.testDirectory.replace("%"," ");
 
-		TTManager manager= new TTManager();
-		TTDocument qDocument= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
-		for (TTEntity entity:document.getEntities()) {
-			if (entity.isType(IM.PROFILE)) {
-				if (!allEntities.contains(entity)) {
-					qDocument.addEntity(entity);
+			TTManager manager = new TTManager();
+			TTDocument qDocument = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
+			for (TTEntity entity : document.getEntities()) {
+				if (entity.isType(IM.PROFILE)) {
+					if (!allEntities.contains(entity)) {
+						qDocument.addEntity(entity);
+					}
 				}
+				allEntities.add(entity);
 			}
-			allEntities.add(entity);
+			manager.setDocument(qDocument);
+			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-profiles-ld.json"));
+			manager.setDocument(document);
+			manager.saveDocument(new File(directory+"\\CEG-Queries.json"));
+
 		}
-		manager.setDocument(qDocument);
-		manager.saveDocument(new File("G:\\Shared drives\\Discovery Data Service\\InformationModel\\ImportData\\CEGQuery\\" + fileEntry.getName().replace(".xml", "") + "-profiles-ld.json"));
-		manager.setDocument(document);
-		manager.saveDocument(new File("G:\\Shared drives\\Discovery Data Service\\InformationModel\\ImportData\\CEGQuery\\CEG-Queries.json"));;
 
 	}
 
