@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
-public class EthnicityCEGImporter implements TTImport {
+public class CEGEthnicityImport implements TTImport {
 	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
 	private final TTManager manager = new TTManager();
 	private TTDocument document;
@@ -31,14 +31,9 @@ public class EthnicityCEGImporter implements TTImport {
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
-		document = manager.createDocument(IM.GRAPH_CEG16.getIri());
-		addGEGOrg();
+		document = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 		document.setCrud(IM.UPDATE);
-		document.addEntity(manager.createGraph(IM.GRAPH_CEG16.getIri(),"CEG (QMUL) ethnic category concept sets graph",
-			"The sets used in CEG for for the 16+ ethnic category"));
 		nhsDocument= nhsManager.createDocument(IM.GRAPH_NHSDD_ETHNIC_2001.getIri());
-		nhsDocument.addEntity(nhsManager.createGraph(IM.GRAPH_NHSDD_ETHNIC_2001.getIri(),"NHS Data Dictionary ethnic category 2001 concept set graph"
-		,"The graph for the sets used in NHS Data Dictionary for ethnic category"));
 
 		retrieveEthnicity(config.secure);
 		spellCorrections();
@@ -55,15 +50,6 @@ public class EthnicityCEGImporter implements TTImport {
 		return this;
 	}
 
-	private void addGEGOrg() {
-		TTEntity ceg= new TTEntity()
-			.setIri("http://org.endhealth.info/im#QMUL/CEG")
-			.addType(TTIriRef.iri(IM.NAMESPACE+"Organisation"))
-			.setName("Clinical effectiveness group of QMUL")
-			.setDescription("The Clinical effectiveness group being a special division of Queen Mary Univertity of London," +
-				"deliverying improvements in clinical outcomes for the population of UK");
-		document.addEntity(ceg);
-	}
 
 	private void spellCorrections() {
 		spellMaps.put("british","british or mixed british");
@@ -169,7 +155,7 @@ public class EthnicityCEGImporter implements TTImport {
 						.addType(IM.CONCEPT_SET)
 						.setName("Concept set - "+ catTerm)
 						.setCode(cat16)
-						.setScheme(IM.CODE_SCHEME_CEG16)
+						.setScheme(IM.GRAPH_CEG_QUERY)
 						.setDescription("QMUL CEG 16+ Ethnic category "+cat16)
 						.set(IM.DEFINITION,new TTNode().set(SHACL.OR, new TTArray()));
 					cegSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(cegSubset.getIri()));

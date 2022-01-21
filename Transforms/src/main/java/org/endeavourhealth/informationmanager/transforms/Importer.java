@@ -64,14 +64,12 @@ public class Importer implements TTImportByType {
          return new ApexKingsImport();
       else if (IM.GRAPH_KINGS_WINPATH.equals(importType))
          return new WinPathKingsImport();
-      else if (IM.GRAPH_CEG16.equals(importType))
-         return new EthnicityCEGImporter();
       else if (IM.GRAPH_IM1.equals(importType))
          return new IM1MapImport();
       else if (IM.GRAPH_ODS.equals(importType))
           return new OdsImporter();
       else if(IM.GRAPH_CEG_QUERY.equals(importType))
-         return new CEGEqdImporter();
+         return new CEGImporter();
       else if (IM.GRAPH_NHS_TFC.equals(importType))
          return new NHSTfcImport();
       else

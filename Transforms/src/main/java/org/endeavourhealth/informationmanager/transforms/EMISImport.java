@@ -8,6 +8,7 @@ import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 
 import java.io.FileReader;
@@ -51,8 +52,8 @@ public class EMISImport implements TTImport {
         System.out.println("Retrieving filed snomed codes");
         snomedCodes= ImportUtils.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_EMIS.getIri());
-        document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(),"EMIS code scheme and graph",
-          "The EMIS local code scheme and graph i.e. local codes with links to codeIds +EMIS snomed extension."));
+        document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(),
+          "EMIS code scheme and graph", "The EMIS local code scheme and graph i.e. local codes with links to codeIds +EMIS snomed extension."));
         System.out.println("importing emis code file");
         populateRemaps();
         addEMISUnlinked();

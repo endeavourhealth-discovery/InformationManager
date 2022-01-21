@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
-public class CEGEqdImporter implements TTImport {
+public class CEGImporter implements TTImport {
 	private TTDocument document;
 	private TTEntity owner;
 	private Set<TTEntity> allEntities = new HashSet<>();
@@ -30,11 +30,16 @@ public class CEGEqdImporter implements TTImport {
 	private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
+	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
 		document= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
+		document.addEntity(manager.createGraph(IM.GRAPH_CEG_QUERY.getIri(),"CEG (QMUL) graph",
+			"CEG library of concept sets queries and profiles"));
 		createOrg();
+		CEGEthnicityImport ethnicImport= new CEGEthnicityImport();
+		ethnicImport.importData(config);
 		createFolders();
 		loadAndConvert(config.folder);
 		DeDuplicateClauses();
@@ -74,7 +79,9 @@ public class CEGEqdImporter implements TTImport {
 		owner= new TTEntity()
 			.setIri("http://org.endhealth.info/im#QMUL_CEG")
 			.addType(TTIriRef.iri(IM.NAMESPACE+"Organisation"))
-			.setName("Clinical Effectiveness Group of Queen Mary Universitly of London - CEG");
+			.setName("Clinical Effectiveness Group of Queen Mary Universitly of London - CEG")
+			.setDescription("The Clinical effectiveness group being a special division of Queen Mary Univertity of London," +
+				"deliverying improvements in clinical outcomes for the population of UK");
 		document.addEntity(owner);
 	}
 
@@ -132,7 +139,7 @@ public class CEGEqdImporter implements TTImport {
 
 	@Override
 	public TTImport validateFiles(String inFolder) throws TTFilerException {
-		ImportUtils.validateFiles(inFolder,queries,annotations,duplicates);
+		ImportUtils.validateFiles(inFolder,queries,annotations,duplicates,lookups);
 		return this;
 	}
 

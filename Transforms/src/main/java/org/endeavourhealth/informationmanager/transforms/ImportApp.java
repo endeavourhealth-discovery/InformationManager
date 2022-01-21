@@ -74,7 +74,6 @@ public class ImportApp {
                     .validateByType(IM.GRAPH_VISION, cfg.folder)
                     .validateByType(IM.GRAPH_KINGS_APEX, cfg.folder)
                     .validateByType(IM.GRAPH_KINGS_WINPATH, cfg.folder)
-                    .validateByType(IM.GRAPH_CEG16, cfg.folder)
                     .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
                     .validateByType(IM.GRAPH_IM1, cfg.folder)
                     .validateByType(IM.GRAPH_ODS, cfg.folder)
@@ -90,7 +89,6 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_VISION, cfg);
                 importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
                 importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
-                importer.importByType(IM.GRAPH_CEG16, cfg);
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
                 importer.importByType(IM.GRAPH_IM1, cfg);
                 importer.importByType(IM.GRAPH_ODS, cfg);
@@ -149,11 +147,7 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
                 break;
 
-            case "cegethnicity":
-                importer = new Importer().validateByType(IM.GRAPH_CEG16, cfg.folder);
-                importer.importByType(IM.GRAPH_CEG16, cfg);
-                break;
-            case "cegqueries" :
+            case "ceg" :
                 importer = new Importer().validateByType(IM.GRAPH_CEG_QUERY, cfg.folder);
                 importer.importByType(IM.GRAPH_CEG_QUERY, cfg);
                 break;

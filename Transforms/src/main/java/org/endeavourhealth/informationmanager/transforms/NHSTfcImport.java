@@ -24,14 +24,9 @@ public class NHSTfcImport implements TTImport {
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		document = manager.createDocument(IM.GRAPH_NHS_TFC.getIri());
-		TTEntity graph= new TTEntity();
-		graph
-			.setIri(IM.GRAPH_NHS_TFC.getIri())
-			.setName("NHS Data Dictionary")
-				.setDescription("NHS Data dictionary concepts that are not snomed")
-					.addType(IM.GRAPH);
-		graph.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
-		document.addEntity(graph);
+		document.addEntity(manager.createGraph(IM.GRAPH_NHS_TFC.getIri(),
+			"NHS Data Dictionary Speciality and Treatment function codes"
+				,"NHS Data dictionary concepts that are not snomed"));
 		setNHSDD();
 		importFunctionCodes(config.folder);
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
