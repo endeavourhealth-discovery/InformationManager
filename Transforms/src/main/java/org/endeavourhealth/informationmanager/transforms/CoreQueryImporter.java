@@ -33,11 +33,7 @@ public class CoreQueryImporter implements TTImport {
 		return null;
 	}
 
-
-
-
-
-	private void addCurrentReg(TTDocument document) throws IOException {
+	private void addCurrentReg(TTDocument document) {
 		TTEntity qry = new TTEntity().addType(IM.PROFILE)
 			.set(IM.ENTITY_TYPE,TTIriRef.iri(IM.NAMESPACE+"Person"));
 		qry
@@ -54,14 +50,14 @@ public class CoreQueryImporter implements TTImport {
 			.setValueIn(IM.GMS_PATIENT));
 		prof.addAnd(new Match()
 			.setProperty(TTIriRef.iri(IM.NAMESPACE + "effectiveDate"))
-			.setValueTest(Comparison.lessThanOrEqual, "$ReferenceDate"));
+			.setValueTest(Comparison.LESS_THAN_OR_EQUAL, "$ReferenceDate"));
 		prof.addAnd(new Match()
 			.addOr(new Match()
 				.setNotExist(true)
 					.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate")))
 			.addOr(new Match()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate"))
-				.setValueTest(Comparison.greaterThan, "$ReferenceDate")));
+				.setValueTest(Comparison.GREATER_THAN, "$ReferenceDate")));
 		document.addEntity(qry);
 		document.setContext(TTUtil.getDefaultContext());
 
