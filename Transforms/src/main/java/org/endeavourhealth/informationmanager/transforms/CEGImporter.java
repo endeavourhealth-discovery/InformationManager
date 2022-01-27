@@ -62,6 +62,7 @@ public class CEGImporter implements TTImport {
 			if (entity.isType(IM.PROFILE))
 				if (entity.get(IM.DEFINITION)!=null)
 					TTManager.wrapRDFAsJson(entity,IM.DEFINITION);
+				
 		}
 	}
 
