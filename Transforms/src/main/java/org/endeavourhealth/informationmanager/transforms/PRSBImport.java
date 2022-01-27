@@ -102,7 +102,7 @@ public class PRSBImport implements TTImport {
 
 	private void parseRecordType(JSONObject c) throws DataFormatException {
 		String prsbId= (String) c.get("iddisplay");
-		TTEntity rt= newEntity(c,IM.RECORD,SHACL.NODESHAPE);
+		TTEntity rt= newEntity(c,SHACL.NODESHAPE);
 		TTArray axioms= axiomMap.get(prsbId);
 
 	}

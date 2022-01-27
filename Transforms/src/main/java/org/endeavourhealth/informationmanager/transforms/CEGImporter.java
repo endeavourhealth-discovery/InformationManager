@@ -1,12 +1,14 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
+import org.endeavourhealth.imapi.model.tripletree.TTUtil;
 import org.endeavourhealth.imapi.transforms.EqdToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
@@ -42,11 +44,12 @@ public class CEGImporter implements TTImport {
 		ethnicImport.importData(config);
 		createFolders();
 		loadAndConvert(config.folder);
-		DeDuplicateClauses();
+		WrapAsJson();
 		for (TTEntity entity:document.getEntities()){
 			if (entity.isType(IM.CONCEPT_SET))
 				entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets"));
 		}
+
 
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
@@ -54,11 +57,14 @@ public class CEGImporter implements TTImport {
 		return this;
 	}
 
-	private void DeDuplicateClauses() {
+	private void WrapAsJson() throws JsonProcessingException {
+		for (TTEntity entity:document.getEntities()){
+			if (entity.isType(IM.PROFILE))
+				if (entity.get(IM.DEFINITION)!=null)
+					TTManager.wrapRDFAsJson(entity,IM.DEFINITION);
+		}
 	}
 
-	private void Deduplicate() {
-	}
 
 	private void createFolders() {
 		TTEntity folder= new TTEntity()

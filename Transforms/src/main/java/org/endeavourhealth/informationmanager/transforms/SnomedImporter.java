@@ -30,9 +30,13 @@ public class SnomedImporter implements TTImport {
        ".*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKCLSnapshot_.*\\.txt",
        ".*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKDGSnapshot_.*\\.txt",
      ".*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKEDSnapshot_.*\\.txt",
-     ".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKCRSnapshot_.*\\.txt"
+     ".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKCRSnapshot_.*\\.txt",
+     ".*\\\\ukpc_sct2_.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_Snapshot_.*\\.txt"
    };
-   public static final String[] refsets= {	".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleUKCRSnapshot_.*\\.txt"};
+   public static final String[] refsets= {
+     ".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleUKCRSnapshot_.*\\.txt",
+     ".*\\\\ukpc_sct2_.*\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleSnapshot_.*\\.txt"
+     };
 
    public static final String[] descriptions = {
 
@@ -40,7 +44,8 @@ public class SnomedImporter implements TTImport {
        ".*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKCLSnapshot-en_.*\\.txt",
        ".*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKDGSnapshot-en_.*\\.txt",
      ".*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKEDSnapshot-en_.*\\.txt",
-     ".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKCRSnapshot-en_.*\\.txt"
+     ".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKCRSnapshot-en_.*\\.txt",
+     ".*\\\\ukpc_sct2_.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_Snapshot-en_.*\\.txt"
    };
 
 
@@ -49,7 +54,8 @@ public class SnomedImporter implements TTImport {
        ".*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKCLSnapshot_.*\\.txt",
        ".*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKDGSnapshot_.*\\.txt",
      ".*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKEDSnapshot_.*\\.txt",
-     ".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKCRSnapshot_.*\\.txt"
+     ".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKCRSnapshot_.*\\.txt",
+     ".*\\\\ukpc_sct2_.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_Snapshot_.*\\.txt"
    };
 
    public static final String[] substitutions = {
@@ -175,9 +181,9 @@ public class SnomedImporter implements TTImport {
    }
 
    private boolean conceptNeeded(String conceptFile, String conceptId){
-      if (conceptFile.contains("Refset")) {
-         return Arrays.asList(importList).contains(conceptId);
-      }
+     // if (conceptFile.contains("Refset")) {
+       //  return Arrays.asList(importList).contains(conceptId);
+      //}
       return true;
    }
 
@@ -201,7 +207,7 @@ public class SnomedImporter implements TTImport {
                         c.setIri(SN + fields[0]);
                         c.setCode(fields[0]);
                         c.setScheme(SNOMED.GRAPH_SNOMED);
-                        if (conceptFile.contains("Refset"))
+                        if (conceptFile.contains("Refset")|conceptFile.contains("UKPrimaryCare"))
                            c.addType(IM.CONCEPT_SET);
                         else
                            c.addType(IM.CONCEPT);
@@ -235,7 +241,10 @@ public class SnomedImporter implements TTImport {
             while (line != null && !line.isEmpty()) {
                String[] fields = line.split("\t");
                TTEntity c= conceptMap.get(fields[4]);
+
                if (c!=null) {
+                  if (!c.isType(IM.CONCEPT_SET))
+                     c.set(RDF.TYPE,new TTArray().add(IM.CONCEPT_SET));
                   if (c.get(IM.DEFINITION)==null)
                      c.set(IM.DEFINITION,new TTNode());
                   c.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));

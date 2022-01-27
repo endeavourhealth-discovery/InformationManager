@@ -39,7 +39,7 @@ public class CoreQueryImporter implements TTImport {
 
 	private void addCurrentReg(TTDocument document) throws IOException {
 		TTEntity qry = new TTEntity().addType(IM.PROFILE)
-			.set(IM.ENTITY_TYPE,TTIriRef.iri(IM.NAMESPACE+"Patient"));
+			.set(IM.ENTITY_TYPE,TTIriRef.iri(IM.NAMESPACE+"Person"));
 		qry
 			.setIri(IM.NAMESPACE + "Q_RegisteredGMS")
 			.setName("Patients registered for GMS services on the reference date")
