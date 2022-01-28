@@ -77,8 +77,9 @@ public class ImportApp {
                     .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
                     .validateByType(IM.GRAPH_IM1, cfg.folder)
                     .validateByType(IM.GRAPH_ODS, cfg.folder)
-                  .validateByType(IM.GRAPH_NHS_TFC,cfg.folder)
-                 .validateByType(IM.GRAPH_CEG_QUERY, cfg.folder);
+                    .validateByType(IM.GRAPH_NHS_TFC,cfg.folder)
+                    .validateByType(IM.GRAPH_CEG_QUERY, cfg.folder)
+                    .validateByType(IM.GRAPH_CONFIG, cfg.folder);
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
                 importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
                 importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
@@ -94,6 +95,7 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_ODS, cfg);
                 importer.importByType(IM.GRAPH_NHS_TFC,cfg);
                 importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
+                importer.importByType(IM.GRAPH_CONFIG,cfg);
                 break;
             case "imv1":
                 importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.folder);
@@ -130,6 +132,7 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_ICD10, cfg);
                 break;
             case "discoverymaps":
+            case "encounters":
                 importer = new Importer().validateByType(IM.GRAPH_ENCOUNTERS, cfg.folder);
                 importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
                 break;
@@ -159,10 +162,6 @@ public class ImportApp {
                 importer = new Importer().validateByType(IM.GRAPH_ODS, cfg.folder);
                 importer.importByType(IM.GRAPH_ODS, cfg);
                 break;
-            case "encounters":
-                importer = new Importer().validateByType(IM.GRAPH_ENCOUNTERS, cfg.folder);
-                importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
-                break;
             case "nhstfc":
                 importer = new Importer().validateByType(IM.GRAPH_NHS_TFC, cfg.folder);
                 importer.importByType(IM.GRAPH_NHS_TFC, cfg);
@@ -173,6 +172,9 @@ public class ImportApp {
             case "search":
                 cfg.skiptct = true;
                 break;
+            case "config":
+                importer = new Importer().validateByType(IM.GRAPH_CONFIG, cfg.folder);
+                importer.importByType(IM.GRAPH_CONFIG, cfg);
             default:
                 throw new Exception("Unknown import type");
 
