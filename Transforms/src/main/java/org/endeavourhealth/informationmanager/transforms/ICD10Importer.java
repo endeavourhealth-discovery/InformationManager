@@ -50,7 +50,7 @@ public class ICD10Importer implements TTImport {
 
 
         mapDocument= manager.createDocument(IM.GRAPH_ICD10.getIri());
-        mapDocument.setCrud(IM.ADD);
+        mapDocument.setCrud(IM.UPDATE);
         importMaps(config.folder);
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);

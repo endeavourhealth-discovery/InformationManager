@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -61,7 +62,7 @@ public class ComplexMapImporter {
       return document;
    }
 
-   private void createEntityMaps() {
+   private void createEntityMaps() throws JsonProcessingException {
       Set<Map.Entry<String, List<ComplexMap>>> entries = snomedMap.entrySet();
       for (Map.Entry<String, List<ComplexMap>> entry : entries) {
          String snomed = entry.getKey();
@@ -73,7 +74,7 @@ public class ComplexMapImporter {
       }
    }
 
-   private void setMapsForEntity(String snomed, List<ComplexMap> mapList)  {
+   private void setMapsForEntity(String snomed, List<ComplexMap> mapList) throws JsonProcessingException {
       TTEntity entity = new TTEntity().setIri((SNOMED.NAMESPACE + snomed));  // snomed entity reference
       document.addEntity(entity);
       for (ComplexMap sourceMap : mapList) {
@@ -104,6 +105,7 @@ public class ComplexMapImporter {
                }
             }
          }
+      TTManager.wrapRDFAsJson(entity);
    }
    public void addMapTarget(TTArray targetGroup,ComplexMapTarget sourceTarget){
       TTNode mapNode= new TTNode();

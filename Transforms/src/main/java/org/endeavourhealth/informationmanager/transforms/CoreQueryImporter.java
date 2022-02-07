@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.model.cdm.ProvActivity;
 import org.endeavourhealth.imapi.model.cdm.ProvAgent;
@@ -33,7 +34,7 @@ public class CoreQueryImporter implements TTImport {
 		return null;
 	}
 
-	private void addCurrentReg(TTDocument document) {
+	private void addCurrentReg(TTDocument document) throws JsonProcessingException {
 		TTEntity qry = new TTEntity().addType(IM.PROFILE)
 			.set(IM.ENTITY_TYPE,TTIriRef.iri(IM.NAMESPACE+"Person"));
 		qry
@@ -60,7 +61,7 @@ public class CoreQueryImporter implements TTImport {
 				.setValueTest(Comparison.GREATER_THAN, "$ReferenceDate")));
 		document.addEntity(qry);
 		document.setContext(TTUtil.getDefaultContext());
-
+		TTManager.wrapRDFAsJson(qry);
 //		output(document);
 		setProvenance(qry,document);
 	}
