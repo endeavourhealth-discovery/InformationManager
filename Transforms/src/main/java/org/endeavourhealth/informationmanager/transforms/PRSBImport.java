@@ -34,7 +34,7 @@ public class PRSBImport implements TTImport {
 		,"The professional records standards board code scheme and graph"));
 		importEntityFiles(config.folder);
 		//TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());
-		dmanager.saveDocument(new File("c:\\temp\\prsb.json"));
+		dmanager.saveDocument(new File(config.folder + "prsb.json"));
 		//filer.fileDocument(document);
 		return this;
 	}

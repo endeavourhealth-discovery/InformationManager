@@ -2,17 +2,17 @@ package org.endeavourhealth.informationmanager.transforms;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.endeavourhealth.imapi.cdm.ProvActivity;
-import org.endeavourhealth.imapi.cdm.ProvAgent;
+import org.endeavourhealth.imapi.model.cdm.ProvActivity;
+import org.endeavourhealth.imapi.model.cdm.ProvAgent;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
-import org.endeavourhealth.imapi.query.*;
+import org.endeavourhealth.imapi.model.query.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.query.Comparison;
-import org.endeavourhealth.imapi.query.Match;
+import org.endeavourhealth.imapi.model.query.Comparison;
+import org.endeavourhealth.imapi.model.query.Match;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 
@@ -88,8 +88,8 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 
-	private void output(TTDocument document) throws IOException {
-		try (FileWriter writer= new FileWriter("c:/temp/Core-qry.json")) {
+	private void output(TTDocument document, String infolder) throws IOException {
+		try (FileWriter writer= new FileWriter(infolder + "Core-qry.json")) {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);

@@ -61,7 +61,7 @@ public class CEGImporter implements TTImport {
 		for (TTEntity entity:document.getEntities()){
 			if (entity.isType(IM.PROFILE))
 				if (entity.get(IM.DEFINITION)!=null)
-					TTManager.wrapRDFAsJson(entity,IM.DEFINITION);
+					TTManager.wrapRDFAsJson(entity);
 
 		}
 	}
