@@ -1,0 +1,72 @@
+plugins {
+    // Support convention plugins written in Groovy. Convention plugins are build scripts in 'src/main' that automatically become available as plugins in the main build.
+    id 'groovy-gradle-plugin'
+    id "org.sonarqube" version "3.3"
+}
+
+repositories {
+    // Use the plugin portal to apply community plugins in convention plugins.
+    gradlePluginPortal()
+}
+
+apply from: "gradle/dependencies.gradle"
+
+def sonarLogin= System.getenv('SONAR_LOGIN')
+
+sonarqube {
+    properties {
+        property 'sonar.projectKey', 'endeavourhealth-discovery_informationManager'
+        property 'sonar.organization', 'endeavourhealth-discovery'
+        property 'sonar.login', sonarLogin
+        property 'sonar.host.url', 'https://sonarcloud.io'
+        property 'sonar.junit.reportPaths', 'build/test-results/test/binary'
+        property 'sonar.coverage.exclusions', '**/api/**/*, **/dal/**/*, **/models/**/*'
+    }
+}
+
+build.finalizedBy 'sonarqube'
+
+allprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    apply plugin: 'jacoco'
+
+    group = 'org.endeavourhealth.informationManager'
+    version = '1.0-SNAPSHOT'
+
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.enabled true
+        }
+    }
+
+    build.finalizedBy 'publish'
+    test.finalizedBy jacocoTestReport
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url = uri('https://maven.discoverydataservice.net/artifactory/libs-release')
+        }
+        maven {
+            url = uri('https://maven.discoverydataservice.net/artifactory/libs-snapshot')
+        }
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from(components.java)
+            }
+        }
+    }
+}
+

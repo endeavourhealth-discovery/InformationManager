@@ -3,9 +3,12 @@ package org.endeavourhealth.informationmanager.common.transform;
 import org.endeavourhealth.informationmanager.transforms.EMISImport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@RunWith(JUnitPlatform.class)
 class EMISReadMainImportTest {
 
     private EMISImport transform;
@@ -67,25 +70,4 @@ class EMISReadMainImportTest {
         String actual = transform.getNameSpace("654011000001109");
         assertEquals(expected, actual);
     }
-
-    @Test
-    void isSnomed_True() {
-        Boolean actual = transform.isSnomed("654011000001109");
-        assertTrue(actual);
-    }
-
-    @Test
-    void isSnomed_false() {
-
-        Boolean actual = transform.isSnomed("6188311000006116");
-        assertFalse(actual);
-    }
-
-    @Test
-    void isSnomed_short() {
-
-        Boolean actual = transform.isSnomed("735858008");
-        assertTrue(actual);
-    }
-
 }

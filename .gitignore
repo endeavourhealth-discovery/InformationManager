@@ -3,6 +3,6 @@ target
 *.iml
 DiscoveryConverter/DiscoveryConverter.cfg
 DiscoveryConverter.cfg
-DiscoveryConverter.cfg
 *.cfg
-*.cfg
+.gradle
+build

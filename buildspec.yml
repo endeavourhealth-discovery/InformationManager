@@ -12,14 +12,9 @@ phases:
     commands:
       - echo Build started on `date`
       - chmod +x aws_scripts/build.sh
-      - aws_scripts/build.sh mvn -B package
+      - aws_scripts/build.sh
   post_build:
     commands:
       - IP=$(curl http://checkip.amazonaws.com)/32
       - echo $IP of CodeBuild Instance
       - echo Build completed on `date`
-artifacts:
-  files:
-    - appspec.yml
-    - aws_scripts/**/*
-    - API/target/api/**/*
