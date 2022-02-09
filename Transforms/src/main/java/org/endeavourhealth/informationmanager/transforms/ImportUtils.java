@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class ImportUtils {
@@ -70,21 +71,21 @@ public class ImportUtils {
     * @throws IOException if the file cannot be found or is invalid
     */
    public static Path findFileForId(String path, String filePattern) throws IOException {
-      List<Path> paths = Files.find(Paths.get(path), 16,
-          (file, attr) -> file.toString().replace("/", "\\").matches(filePattern))
-          .collect(Collectors.toList());
+       try (Stream<Path> stream = Files.find(Paths.get(path), 16, (file, attr) -> file.toString().replace("/", "\\").matches(filePattern))) {
+           List<Path> paths = stream.collect(Collectors.toList());
 
-      if (paths.size() == 1)
-         return paths.get(0);
+           if (paths.size() == 1)
+               return paths.get(0);
 
-      if (paths.isEmpty())
-         throw new IOException("No files found in [" + path + "] for expression [" + filePattern + "]");
-      else {
-          for(Path p : paths) {
-              System.err.println("Found match : " + p.toString());
-          }
-          throw new IOException("Multiple files found in [" + path + "] for expression [" + filePattern + "]");
-      }
+           if (paths.isEmpty())
+               throw new IOException("No files found in [" + path + "] for expression [" + filePattern + "]");
+           else {
+               for (Path p : paths) {
+                   System.err.println("Found match : " + p.toString());
+               }
+               throw new IOException("Multiple files found in [" + path + "] for expression [" + filePattern + "]");
+           }
+       }
    }
 
    /**
@@ -95,10 +96,9 @@ public class ImportUtils {
     * @throws IOException if the files cannot be found or are invalid
     */
    public static List<Path> findFilesForId(String path, String filePattern) throws IOException {
-      return Files.find(Paths.get(path), 16,
-          (file, attr) -> getFilePath(file.toString())
-              .matches(filePattern))
-          .collect(Collectors.toList());
+       try (Stream<Path> stream = Files.find(Paths.get(path), 16, (file, attr) -> getFilePath(file.toString()).matches(filePattern))) {
+           return stream.collect(Collectors.toList());
+       }
    }
 
    public static boolean isEmpty(TTArray array){
@@ -370,45 +370,44 @@ public class ImportUtils {
    }
 
    private static Map<String,Set<String>> importEmisToSnomedJDBC() throws SQLException, ClassNotFoundException {
-      Connection conn= getConnection();
       Map<String,Set<String>> emisToSnomed= new HashMap<>();
 
-   PreparedStatement getEMIS= conn.prepareStatement("SELECT entity.code as code,snomed.code as snomed,entity.name as name\n" +
-        "from entity\n" +
-        "join tpl on tpl.subject= entity.dbid\n" +
-        "join entity snomed on tpl.object= snomed.dbid\n" +
-        "join entity matchTo on tpl.predicate=matchTo.dbid\n" +
-        "where entity.scheme='http://endhealth.info/emis#'\n" +
-        "and snomed.scheme='http://snomed.info/sct#'"+
-        "and matchTo.iri='http://endhealth.info/im#matchedTo'");
-      ResultSet rs= getEMIS.executeQuery();
-      while (rs.next()){
-         String emis= rs.getString("code");
-         String snomed=rs.getString("snomed");
-         emisToSnomed.computeIfAbsent(emis, k -> new HashSet<>());
-         emisToSnomed.get(emis).add(snomed);
+      String sql = "SELECT entity.code as code,snomed.code as snomed,entity.name as name\n" +
+          "from entity\n" +
+          "join tpl on tpl.subject= entity.dbid\n" +
+          "join entity snomed on tpl.object= snomed.dbid\n" +
+          "join entity matchTo on tpl.predicate=matchTo.dbid\n" +
+          "where entity.scheme='http://endhealth.info/emis#'\n" +
+          "and snomed.scheme='http://snomed.info/sct#'"+
+          "and matchTo.iri='http://endhealth.info/im#matchedTo'";
+
+      try (Connection conn = getConnection();
+         PreparedStatement getEMIS= conn.prepareStatement(sql)) {
+          ResultSet rs = getEMIS.executeQuery();
+          while (rs.next()) {
+              String emis = rs.getString("code");
+              String snomed = rs.getString("snomed");
+              emisToSnomed.computeIfAbsent(emis, k -> new HashSet<>());
+              emisToSnomed.get(emis).add(snomed);
+          }
       }
-      conn.close();
       return emisToSnomed;
    }
 
    private static Set<String> importSnomedJDBC(Set<String> snomedCodes) throws  SQLException, ClassNotFoundException {
-      try (Connection conn = getConnection()) {
-         PreparedStatement getSnomed = conn.prepareStatement("SELECT code from entity "
-           + "where iri like 'http://snomed.info/sct%'");
-         ResultSet rs = getSnomed.executeQuery();
-         while (rs.next())
-            snomedCodes.add(rs.getString("code"));
-         if (snomedCodes.isEmpty()) {
-            System.err.println("Snomed must be loaded first");
-            System.exit(-1);
-         }
-
-
-      } catch (SQLException e) {
-         throw new RepositoryException("unable to retrieve snomed codes");
-      }
-      return snomedCodes;
+       try (Connection conn = getConnection();
+            PreparedStatement getSnomed = conn.prepareStatement("SELECT code from entity where iri like 'http://snomed.info/sct%'")) {
+           ResultSet rs = getSnomed.executeQuery();
+           while (rs.next())
+               snomedCodes.add(rs.getString("code"));
+           if (snomedCodes.isEmpty()) {
+               System.err.println("Snomed must be loaded first");
+               System.exit(-1);
+           }
+       } catch (SQLException e) {
+           throw new RepositoryException("unable to retrieve snomed codes");
+       }
+       return snomedCodes;
    }
 
    private static boolean isWindows() {

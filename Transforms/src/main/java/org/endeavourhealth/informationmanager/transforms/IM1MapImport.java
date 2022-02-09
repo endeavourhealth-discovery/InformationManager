@@ -124,7 +124,7 @@ public class IM1MapImport implements TTImport {
         Path file = ImportUtils.findFileForId(inFolder, conceptCounts[0]);
         int i = 0;
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();
+            reader.readLine();  // NOSONAR - Skipping header
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
                 String[] fields = line.split("\t");
@@ -146,16 +146,17 @@ public class IM1MapImport implements TTImport {
                 .add("JOIN im1_scheme_map s ON s.scheme = sc.scheme")
                 .add("JOIN entity e ON s.namespace = e.scheme AND sc.code = e.code")
                 .add("where sc.dbid = ?");
-        PreparedStatement statement = conn.prepareStatement(sql.toString());
-        statement.setString(1, dbid);
-        ResultSet rs = statement.executeQuery();
-        while (rs.next()) {
-            TTEntity entity = new TTEntity()
+        try (PreparedStatement statement = conn.prepareStatement(sql.toString())) {
+            statement.setString(1, dbid);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                TTEntity entity = new TTEntity()
                     .setIri(rs.getString("iri"))
                     .set(IM.USAGE_STATS, new TTArray()
-                            .add(new TTNode()
-                                    .set(IM.USAGE_TOTAL , new TTLiteral().setValue(count))));
-            document.addEntity(entity);
+                        .add(new TTNode()
+                            .set(IM.USAGE_TOTAL, new TTLiteral().setValue(count))));
+                document.addEntity(entity);
+            }
         }
     }
 

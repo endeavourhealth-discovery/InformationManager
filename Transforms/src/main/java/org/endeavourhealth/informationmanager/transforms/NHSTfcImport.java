@@ -50,7 +50,7 @@ public class NHSTfcImport implements TTImport {
 
 		Path file = ImportUtils.findFileForId(folder, treatmentCodes[0]);
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-			reader.readLine();
+			reader.readLine();  // NOSONAR - Skipping header
 			String line = reader.readLine();
 			int count = 0;
 			while (line != null && !line.isEmpty()) {

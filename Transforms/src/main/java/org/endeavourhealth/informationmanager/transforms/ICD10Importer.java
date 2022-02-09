@@ -114,7 +114,7 @@ public class ICD10Importer implements TTImport {
 
         Path file = ImportUtils.findFileForId(folder, chapters[0]);
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();
+            reader.readLine();  // NOSONAR - Skipping header
             String line = reader.readLine();
             int count = 0;
             while (line != null && !line.isEmpty()) {
@@ -147,7 +147,7 @@ public class ICD10Importer implements TTImport {
 
         Path file = ImportUtils.findFileForId(folder, entities[0]);
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();
+            reader.readLine();  // NOSONAR - Skipping header
             String line = reader.readLine();
             int count = 0;
             while (line != null && !line.isEmpty()) {

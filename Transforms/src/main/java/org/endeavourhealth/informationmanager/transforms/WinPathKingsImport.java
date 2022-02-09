@@ -70,7 +70,7 @@ public class WinPathKingsImport implements TTImport {
 
 		Path file = ImportUtils.findFileForId(folder, kingsWinPath[0]);
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-			reader.readLine();
+			reader.readLine(); // NOSONAR - Skip header
 			String line = reader.readLine();
 			int count = 0;
 			while (line != null && !line.isEmpty()) {

@@ -124,7 +124,7 @@ public class ComplexMapImporter {
 
    private void importFile(File file) throws IOException {
       try(BufferedReader reader = new BufferedReader(new FileReader(file))){
-         reader.readLine();
+         reader.readLine(); // NOSONAR - Skipping header
          String line;
          line = reader.readLine();
          int count=0;

@@ -155,7 +155,7 @@ public class SnomedImporter implements TTImport {
          Path file = ImportUtils.findFilesForId(path, relationshipFile).get(0);
             System.out.println("Processing substitutions in " + file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-               reader.readLine(); // Skip header
+               reader.readLine(); // NOSONAR - Skip header
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
                   String[] fields = line.split("\t");
@@ -197,7 +197,7 @@ public class SnomedImporter implements TTImport {
          Path file = ImportUtils.findFilesForId(path, conceptFile).get(0);
             System.out.println("Processing concepts in " + file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-               reader.readLine();    // Skip header
+               reader.readLine();     // NOSONAR - Skip header
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
                   String[] fields = line.split("\t");
@@ -236,7 +236,7 @@ public class SnomedImporter implements TTImport {
          Path file = paths.get(0);
          System.out.println("Processing refsets in " + file.getFileName().toString());
          try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();    // Skip header
+            reader.readLine();     // NOSONAR - Skip header
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
                String[] fields = line.split("\t");
@@ -266,7 +266,7 @@ public class SnomedImporter implements TTImport {
 
             System.out.println("Processing  descriptions in " + file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-               reader.readLine(); // Skip header
+               reader.readLine();  // NOSONAR - Skip header
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
                   String[] fields = line.split("\t");
@@ -302,7 +302,7 @@ public class SnomedImporter implements TTImport {
          Path file = ImportUtils.findFilesForId(path, relationshipFile).get(0);
             System.out.println("Processing owl expressions in " + file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-               reader.readLine(); // Skip header
+               reader.readLine();  // NOSONAR - Skip header
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
                    String[] fields = line.split("\t");
@@ -338,7 +338,7 @@ public class SnomedImporter implements TTImport {
          Path file = ImportUtils.findFilesForId(path, domainFile).get(0);
          System.out.println("Processing property domains in " + file.getFileName().toString());
          try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();    // Skip header
+            reader.readLine();     // NOSONAR - Skip header
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
                String[] fields = line.split("\t");
@@ -362,7 +362,7 @@ public class SnomedImporter implements TTImport {
          Path file = ImportUtils.findFilesForId(path, rangeFile).get(0);
          System.out.println("Processing property ranges in " + file.getFileName().toString());
          try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();    // Skip header
+            reader.readLine();     // NOSONAR - Skip header
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
                String[] fields = line.split("\t");
@@ -413,7 +413,7 @@ public class SnomedImporter implements TTImport {
          Path file = ImportUtils.findFilesForId(path, relationshipFile).get(0);
             System.out.println("Processing relationships in " + file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-               reader.readLine(); // Skip header
+               reader.readLine();  // NOSONAR - Skip header
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
                   String[] fields = line.split("\t");

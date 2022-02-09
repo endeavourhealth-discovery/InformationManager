@@ -16,8 +16,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
@@ -102,7 +100,7 @@ public class BartsCernerImport implements TTImport {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
 			System.out.println("Processing  Snomed maps " + file.getFileName().toString());
 			try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-				reader.readLine();
+				reader.readLine();  // NOSONAR - Skipping CSV header line
 				String line = reader.readLine();
 				while (line != null && !line.isEmpty()) {
 					count++;
@@ -114,7 +112,7 @@ public class BartsCernerImport implements TTImport {
 					if (snomed.contains("1000252"))
 						barts.addObject(IM.MATCHED_TO,TTIriRef.iri(IM.NAMESPACE+snomed));
 					else
-						barts.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE+snomed));;
+						barts.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 					line = reader.readLine();
 					}
 				}
@@ -152,7 +150,7 @@ public class BartsCernerImport implements TTImport {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
 			System.out.println("Processing  cerner event set V500 canon in " + file.getFileName().toString());
 			try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-				reader.readLine();
+				reader.readLine();  // NOSONAR - Skipping CSV header line
 				String line = reader.readLine();
 				while (line != null && !line.isEmpty()) {
 					count++;
@@ -194,7 +192,7 @@ public class BartsCernerImport implements TTImport {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
 			System.out.println("Processing  cerner event codes in " + file.getFileName().toString());
 			try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-				reader.readLine();
+				reader.readLine();  // NOSONAR - Skipping CSV header line
 				String line = reader.readLine();
 				while (line != null && !line.isEmpty()) {
 					count++;
@@ -231,7 +229,7 @@ public class BartsCernerImport implements TTImport {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
 			System.out.println("Processing  cerner event set codes in " + file.getFileName().toString());
 			try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-				reader.readLine();
+				reader.readLine();  // NOSONAR - Skipping CSV header line
 				String line = reader.readLine();
 				while (line != null && !line.isEmpty()) {
 					count++;
@@ -263,7 +261,7 @@ public class BartsCernerImport implements TTImport {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
 			System.out.println("Processing  cerner event codes in " + file.getFileName().toString());
 			try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-				reader.readLine();
+				reader.readLine();  // NOSONAR - Skipping CSV header line
 				String line = reader.readLine();
 				while (line != null && !line.isEmpty()) {
 					count++;

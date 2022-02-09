@@ -94,11 +94,20 @@ public class CEGImporter implements TTImport {
 
 	public void loadAndConvert(String folder) throws JAXBException, IOException, DataFormatException {
 		Properties dataMap= new Properties();
-		Properties criteriaLabels= new Properties();
-		dataMap.load(new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile())));
-		Properties duplicateOrs= new Properties();
-		duplicateOrs.load(new FileReader((ImportUtils.findFileForId(folder, duplicates[0]).toFile())));
-		criteriaLabels.load(new FileReader((ImportUtils.findFileForId(folder, annotations[0]).toFile())));
+		try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile()))) {
+            dataMap.load(reader);
+        }
+
+//		Properties duplicateOrs= new Properties();
+//		try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, duplicates[0]).toFile()))) {
+//            duplicateOrs.load(reader);
+//        }
+
+        Properties criteriaLabels= new Properties();
+		try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, annotations[0]).toFile()))) {
+            criteriaLabels.load(reader);
+        }
+
 		Path directory= ImportUtils.findFileForId(folder,queries[0]);
 		TTIriRef mainFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries");
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {

@@ -129,7 +129,7 @@ public class CEGEthnicityImport implements TTImport {
 		setConceptSetGroups();
 
 		try( BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))){
-			reader.readLine();
+			reader.readLine();  // NOSONAR - Skipping CSV header line
 			int count=0;
 			String[] fields;
 			String line = reader.readLine();
@@ -165,7 +165,7 @@ public class CEGEthnicityImport implements TTImport {
 				cegSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 				if (cegSubset.get(IM.HAS_TERM_CODE)==null)
 					TTManager.addTermCode(cegSubset,catTerm,null);
-				if (!snoNhs.equals("unclassified")){
+				if (!"unclassified".equals(snoNhs)){
 					TTEntity nhsSubset= nhsCatmap.get(snoNhs);
 					if (nhsSubset==null) {
 						nhsSubset = new TTEntity()

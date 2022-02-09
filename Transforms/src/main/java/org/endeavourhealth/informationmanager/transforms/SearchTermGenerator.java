@@ -47,7 +47,7 @@ public class SearchTermGenerator {
             while (rs.next()) {
                 fw.write(rs.getString("entity") + "\t" + rs.getString("term") + "\r\n");
 
-                if ((++row % batch) == 0 || rs.isLast()) {
+                if ((++row % batch) == 0 || !rs.isLast()) {
                     fw.flush();
                     fw.close();
 
@@ -61,6 +61,8 @@ public class SearchTermGenerator {
                     }
                 }
             }
+        } finally {
+            fw.close();
         }
         System.out.println("Done");
     }

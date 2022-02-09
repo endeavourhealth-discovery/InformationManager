@@ -147,7 +147,7 @@ public class TPPImporter implements TTImport {
             Path file = ImportUtils.findFileForId(folder, nhsMap[0]);
             System.out.println("Retrieving terms from tpp_TPP+lookup2");
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-                reader.readLine();
+                reader.readLine(); // NOSONAR - Skip header
                 String line = reader.readLine();
                 int count = 0;
                 while (line != null && !line.isEmpty()) {
@@ -216,7 +216,7 @@ public class TPPImporter implements TTImport {
             Path file = ImportUtils.findFilesForId(path, termFile).get(0);
             System.out.println("Processing  terms    in " + file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-                reader.readLine(); // Skip header
+                reader.readLine();  // NOSONAR - Skip header
                 String line = reader.readLine();
                 while (line != null && !line.isEmpty()) {
                     String[] fields = line.split("\\|");

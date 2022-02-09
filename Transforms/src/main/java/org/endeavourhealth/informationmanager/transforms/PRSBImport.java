@@ -40,15 +40,10 @@ public class PRSBImport implements TTImport {
 	}
 
 	private void initializeMaps() {
-		List<TTArray> axioms = new ArrayList();
-		axiomMap= new HashMap<>();
-		axiomMap= new HashMap<String,TTArray>()  {
-			{
-				put("prsb03-dataelement-10868", getAxioms(IM.NAMESPACE+"Person"));
+        axiomMap = new HashMap<>();
+        axiomMap.put("prsb03-dataelement-10868", getAxioms(IM.NAMESPACE + "Person"));
 
-			}
-		};
-	}
+    }
 
 	private TTArray getAxioms(String prsb) {
 		return null;

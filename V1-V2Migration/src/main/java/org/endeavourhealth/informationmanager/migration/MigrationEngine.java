@@ -141,7 +141,7 @@ public class MigrationEngine {
         try (ResultSet rs = imv1CPO.executeQuery()) {
             while (rs.next()) {
                 if (!"has_parent".equals(rs.getString("propertyId"))) {
-                    if (group != rs.getInt("group") || propertyId != rs.getString("propertyId")) {
+                    if (group != rs.getInt("group") || !propertyId.equals(rs.getString("propertyId"))) {
                         group = rs.getInt("group");
                         propertyId = rs.getString("propertyId");
                         ax = new DBAxiom();

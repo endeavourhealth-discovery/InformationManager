@@ -142,7 +142,7 @@ public class VisionImport implements TTImport {
 		System.out.println("Importing R2 entities");
 
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-			reader.readLine();
+			reader.readLine(); // NOSONAR - Skip header
 			String line = reader.readLine();
 
 			int count = 0;
@@ -221,7 +221,7 @@ public class VisionImport implements TTImport {
 		Path file = ImportUtils.findFileForId(folder, visionRead2Code[0]);
 		System.out.println("Retrieving terms from vision read+lookup2");
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-			reader.readLine();
+			reader.readLine(); // NOSONAR - Skip header
 			String line = reader.readLine();
 			int count = 0;
 			while (line != null && !line.isEmpty()) {
@@ -270,7 +270,7 @@ public class VisionImport implements TTImport {
 		Path file = ImportUtils.findFileForId(folder, visionRead2toSnomed[0]);
 		System.out.println("Retrieving Vision snomed maps");
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-			reader.readLine();
+			reader.readLine(); // NOSONAR - Skip header
 			String line = reader.readLine();
 			int count = 0;
 			while (line != null && !line.isEmpty()) {

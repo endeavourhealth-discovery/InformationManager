@@ -171,39 +171,38 @@ public class TrudUpdater {
     private static void unzipArchive(String zipFile, String destination) throws IOException {
         File destDir = new File(destination);
         byte[] buffer = new byte[1024];
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile));
-        ZipEntry zipEntry = zis.getNextEntry();
-        while (zipEntry != null) {
-            File newFile = newFile(destDir, zipEntry);
-            if (zipEntry.isDirectory()) {
-                if (!newFile.isDirectory() && !newFile.mkdirs()) {
-                    throw new IOException("Failed to create directory " + newFile);
-                }
-            } else {
-                // fix for Windows-created archives
-                File parent = newFile.getParentFile();
-                if (!parent.isDirectory() && !parent.mkdirs()) {
-                    throw new IOException("Failed to create directory " + parent);
-                }
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                File newFile = newFile(destDir, zipEntry);
+                if (zipEntry.isDirectory()) {
+                    if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                        throw new IOException("Failed to create directory " + newFile);
+                    }
+                } else {
+                    // fix for Windows-created archives
+                    File parent = newFile.getParentFile();
+                    if (!parent.isDirectory() && !parent.mkdirs()) {
+                        throw new IOException("Failed to create directory " + parent);
+                    }
 
-                // write file content
-                FileOutputStream fos = new FileOutputStream(newFile);
-                int len;
-                long read = 0;
-                System.out.print("Extracting " + zipEntry.getName() + " - 0%\r");
-                while ((len = zis.read(buffer)) > 0) {
-                    read += len;
-                    fos.write(buffer, 0, len);
-                    if (read % 1024 == 0)
-                        System.out.print("Extracting " + zipEntry.getName() + " - " + (read * 100 / zipEntry.getSize()) + "%\r");
+                    // write file content
+                    try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                        int len;
+                        long read = 0;
+                        System.out.print("Extracting " + zipEntry.getName() + " - 0%\r");
+                        while ((len = zis.read(buffer)) > 0) {
+                            read += len;
+                            fos.write(buffer, 0, len);
+                            if (read % 1024 == 0)
+                                System.out.print("Extracting " + zipEntry.getName() + " - " + (read * 100 / zipEntry.getSize()) + "%\r");
+                        }
+                    }
+                    System.out.println("Extracted " + zipEntry.getName() + " - 100%\r");
                 }
-                fos.close();
-                System.out.println("Extracted " + zipEntry.getName() + " - 100%\r");
+                zipEntry = zis.getNextEntry();
             }
-            zipEntry = zis.getNextEntry();
         }
-        zis.closeEntry();
-        zis.close();
     }
 
     private static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {

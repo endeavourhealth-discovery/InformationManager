@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 public class ApexKingsImport implements TTImport {
 
@@ -64,10 +66,10 @@ public class ApexKingsImport implements TTImport {
 
 		Path file = ImportUtils.findFileForId(folder, kingsPath[0]);
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-			reader.readLine();
-			String line = reader.readLine();
-			int count = 0;
-			while (line != null && !line.isEmpty()) {
+            Stream<String> lines = reader.lines().skip(1);
+
+			AtomicInteger count = new AtomicInteger();
+            lines.forEachOrdered(line -> {
 				String[] fields = line.split("\t");
 				String readCode= fields[0];
 				String code= fields[1]+"-"+(fields[2].toLowerCase());
@@ -87,13 +89,11 @@ public class ApexKingsImport implements TTImport {
 						entity.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 					}
 				}
-				count++;
-				if (count % 500 == 0) {
+				count.getAndIncrement();
+				if (count.get() % 500 == 0) {
 					System.out.println("Processed " + count + " records");
 				}
-
-				line = reader.readLine();
-			}
+            });
 			System.out.println("Process ended with " + count + " records");
 		}
 
