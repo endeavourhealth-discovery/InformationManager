@@ -323,14 +323,16 @@ public class ImportUtils {
 
    private static Map<String, List<String>> importReadToSnomedJdbc(Map<String, List<String>> readToSnomed) throws SQLException, ClassNotFoundException {
       Connection conn= getConnection();
-      try (PreparedStatement getR2Matches= conn.prepareStatement("select vis.code as code,snomed.code as snomed \n"+
-        "from entity snomed \n" +
-        "join tpl maps on maps.object= snomed.dbid\n" +
-        "join entity p on maps.predicate=p.dbid\n" +
-        "join entity vis on maps.subject=vis.dbid\n" +
-        "where snomed.iri like '"+ SNOMED.NAMESPACE+"%'\n"+
-        "and p.iri='"+ RDFS.SUBCLASSOF.getIri()+"'\n" +
-        "and vis.iri like 'http://endhealth.info/VISION#'")) {
+      String sql = "select vis.code as code,snomed.code as snomed \n"+
+          "from entity snomed \n" +
+          "join tpl maps on maps.object= snomed.dbid\n" +
+          "join entity p on maps.predicate=p.dbid\n" +
+          "join entity vis on maps.subject=vis.dbid\n" +
+          "where snomed.iri like '"+ SNOMED.NAMESPACE+"%'\n"+
+          "and p.iri=?\n" +
+          "and vis.iri like 'http://endhealth.info/VISION#%'";
+      try (PreparedStatement getR2Matches= conn.prepareStatement(sql)) {
+          getR2Matches.setString(1, RDFS.SUBCLASSOF.getIri());
          ResultSet rs = getR2Matches.executeQuery();
          while (rs.next()) {
             String snomed = rs.getString("snomed");
