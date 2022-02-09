@@ -24,6 +24,7 @@ public class CEGEthnicityImport implements TTImport {
 	private final Map<String,TTEntity> cegCatMap= new HashMap<>();
 	private final Map<String,String> spellMaps= new HashMap<>();
 	private final Set<String> dropWords= new HashSet<>();
+	private final String UNCLASSIFIED = "unclassified";
 	private TTEntity nhsSet;
 	private TTEntity cegSet;
 	Map<String,List<String>> census2001;
@@ -94,8 +95,8 @@ public class CEGEthnicityImport implements TTImport {
 		String term=oterm.toLowerCase().replace("\"","");
 		term=term.replace(","," ");
 		term=term.replace("  "," ");
-		if (term.equals("unclassified"))
-			return "unclassified";
+		if (UNCLASSIFIED.equals(term))
+			return UNCLASSIFIED;
 		if (spellMaps.get(term)!=null)
 			term=spellMaps.get(term);
 
@@ -135,63 +136,68 @@ public class CEGEthnicityImport implements TTImport {
 			String line = reader.readLine();
 			while (line != null && !line.isEmpty()) {
 				count++;
-				if(count%50000 == 0){
-					System.out.println("Processed " + count +" terms");
-				}
-				fields= line.split("\t");
-				String snomed=fields[1];
-				String cat16=fields[11];
-				String catTerm=fields[12].replace("\"","");
-				String nhs16=fields[19];
-				String nhsTerm= fields[20].replace("\"","");
-				String pdsTerm=fields[22];
-				String snoNhs= matchEthnicity(nhsTerm);
-				if (snoNhs==null)
-					snoNhs= matchEthnicity(pdsTerm);
-				TTEntity cegSubset= cegCatMap.get(cat16);
-				if (cegSubset==null){
-					cegSubset= new TTEntity()
-						.setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16_"+cat16)
-						.addType(IM.CONCEPT_SET)
-						.setName("Concept set - "+ catTerm)
-						.setCode(cat16)
-						.setScheme(IM.GRAPH_CEG_QUERY)
-						.setDescription("QMUL CEG 16+ Ethnic category "+cat16)
-						.set(IM.DEFINITION,new TTNode().set(SHACL.OR, new TTArray()));
-					cegSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(cegSubset.getIri()));
-					document.addEntity(cegSubset);
-					cegCatMap.put(cat16,cegSubset);
-				}
-				cegSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
-				if (cegSubset.get(IM.HAS_TERM_CODE)==null)
-					TTManager.addTermCode(cegSubset,catTerm,null);
-				if (!"unclassified".equals(snoNhs)){
-					TTEntity nhsSubset= nhsCatmap.get(snoNhs);
-					if (nhsSubset==null) {
-						nhsSubset = new TTEntity()
-						.setIri(IM.NAMESPACE + "CSET_EthnicCategoryNHS2001_"+nhs16)
-							.setCode(nhs16)
-						.addType(IM.CONCEPT_SET)
-							.setName("Concept set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
-						.setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
-							.set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
-						nhsSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(nhsSubset.getIri()));
-						nhsDocument.addEntity(nhsSubset);
-						nhsCatmap.put(snoNhs, nhsSubset);
-					}
-					if (nhsSubset.get(IM.HAS_TERM_CODE)==null)
-						TTManager.addTermCode(nhsSubset,nhsTerm,null);
-					nhsSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
-				}
+                processEthnicGroupLine(count, line);
 
-				line=reader.readLine();
+                line=reader.readLine();
 
 			}
 			System.out.println("Process ended with " + count +" terms");
 		}
 	}
 
-	private void setConceptSetGroups() {
+    private void processEthnicGroupLine(int count, String line) {
+        String[] fields;
+        if(count %50000 == 0){
+            System.out.println("Processed " + count +" terms");
+        }
+        fields= line.split("\t");
+        String snomed=fields[1];
+        String cat16=fields[11];
+        String catTerm=fields[12].replace("\"","");
+        String nhs16=fields[19];
+        String nhsTerm= fields[20].replace("\"","");
+        String pdsTerm=fields[22];
+        String snoNhs= matchEthnicity(nhsTerm);
+        if (snoNhs==null)
+            snoNhs= matchEthnicity(pdsTerm);
+        TTEntity cegSubset= cegCatMap.get(cat16);
+        if (cegSubset==null){
+            cegSubset= new TTEntity()
+                .setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16_"+cat16)
+                .addType(IM.CONCEPT_SET)
+                .setName("Concept set - "+ catTerm)
+                .setCode(cat16)
+                .setScheme(IM.GRAPH_CEG_QUERY)
+                .setDescription("QMUL CEG 16+ Ethnic category "+cat16)
+                .set(IM.DEFINITION,new TTNode().set(SHACL.OR, new TTArray()));
+            cegSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(cegSubset.getIri()));
+            document.addEntity(cegSubset);
+            cegCatMap.put(cat16,cegSubset);
+        }
+        cegSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+        if (cegSubset.get(IM.HAS_TERM_CODE)==null)
+            TTManager.addTermCode(cegSubset,catTerm,null);
+        if (!UNCLASSIFIED.equals(snoNhs)){
+            TTEntity nhsSubset= nhsCatmap.get(snoNhs);
+            if (nhsSubset==null) {
+                nhsSubset = new TTEntity()
+                .setIri(IM.NAMESPACE + "CSET_EthnicCategoryNHS2001_"+nhs16)
+                    .setCode(nhs16)
+                .addType(IM.CONCEPT_SET)
+                    .setName("Concept set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
+                .setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
+                    .set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
+                nhsSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(nhsSubset.getIri()));
+                nhsDocument.addEntity(nhsSubset);
+                nhsCatmap.put(snoNhs, nhsSubset);
+            }
+            if (nhsSubset.get(IM.HAS_TERM_CODE)==null)
+                TTManager.addTermCode(nhsSubset,nhsTerm,null);
+            nhsSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+        }
+    }
+
+    private void setConceptSetGroups() {
 		cegSet= new TTEntity()
 			.setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16")
 			.addType(IM.CONCEPT_SET)

@@ -186,23 +186,27 @@ public class TrudUpdater {
                         throw new IOException("Failed to create directory " + parent);
                     }
 
-                    // write file content
-                    try (FileOutputStream fos = new FileOutputStream(newFile)) {
-                        int len;
-                        long read = 0;
-                        System.out.print("Extracting " + zipEntry.getName() + " - 0%\r");
-                        while ((len = zis.read(buffer)) > 0) {
-                            read += len;
-                            fos.write(buffer, 0, len);
-                            if (read % 1024 == 0)
-                                System.out.print("Extracting " + zipEntry.getName() + " - " + (read * 100 / zipEntry.getSize()) + "%\r");
-                        }
-                    }
-                    System.out.println("Extracted " + zipEntry.getName() + " - 100%\r");
+                    writeFileContent(buffer, zis, zipEntry, newFile);
                 }
                 zipEntry = zis.getNextEntry();
             }
         }
+    }
+
+    private static void writeFileContent(byte[] buffer, ZipInputStream zis, ZipEntry zipEntry, File newFile) throws IOException {
+        // write file content
+        try (FileOutputStream fos = new FileOutputStream(newFile)) {
+            int len;
+            long read = 0;
+            System.out.print("Extracting " + zipEntry.getName() + " - 0%\r");
+            while ((len = zis.read(buffer)) > 0) {
+                read += len;
+                fos.write(buffer, 0, len);
+                if (read % 1024 == 0)
+                    System.out.print("Extracting " + zipEntry.getName() + " - " + (read * 100 / zipEntry.getSize()) + "%\r");
+            }
+        }
+        System.out.println("Extracted " + zipEntry.getName() + " - 100%\r");
     }
 
     private static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {

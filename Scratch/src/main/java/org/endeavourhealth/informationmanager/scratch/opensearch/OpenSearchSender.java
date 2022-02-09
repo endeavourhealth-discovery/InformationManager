@@ -29,12 +29,14 @@ public class OpenSearchSender {
     private final Client client = ClientBuilder.newClient();
     private WebTarget target;
     private final ObjectMapper om = new ObjectMapper();
-    private String OSUrl;
+    // Env vars
+    private final String osUrl = System.getenv("OPENSEARCH_URL");
+    private final String osAuth = System.getenv("OPENSEARCH_AUTH");
+    private final String server = System.getenv("GRAPH_SERVER");
+    private final String repoId = System.getenv("GRAPH_REPO");
 
     public void execute() throws IOException, InterruptedException {
-        checkEnvs("OPENSEARCH_URL", "OPENSEARCH_AUTH", "GRAPH_SERVER", "GRAPH_REPO");
-
-        OSUrl = System.getenv("OPENSEARCH_URL");
+        checkEnvs();
 
         int maxId = getMaxDocument();
 
@@ -42,10 +44,9 @@ public class OpenSearchSender {
     }
 
     private void continueUpload(int maxId) throws JsonProcessingException, InterruptedException {
-        target = client.target(OSUrl).path("_bulk");
+        target = client.target(osUrl).path("_bulk");
 
         List<OpenSearchDocument> docs = new ArrayList<>(BULKSIZE);
-        OpenSearchDocument blob = null;
 
         LOG.info("Connecting to database...");
 
@@ -69,10 +70,7 @@ public class OpenSearchSender {
 
         LOG.info("Connecting");
 
-        String server = System.getenv("GRAPH_SERVER");
-        String repoid = System.getenv("GRAPH_REPO");
-
-        HTTPRepository repo = new HTTPRepository(server, repoid);
+        HTTPRepository repo = new HTTPRepository(server, repoId);
         repo.initialize();
         try (RepositoryConnection conn = repo.getConnection()) {
             LOG.info("Fetching...");
@@ -81,39 +79,7 @@ public class OpenSearchSender {
             try (TupleQueryResult qr = tupleQuery.evaluate()) {
 
                 LOG.info("Processing...");
-                int i = 0;
-                while (qr.hasNext()) {
-                    BindingSet rs = qr.next();
-
-                    boolean newConcept = (blob == null) || !blob.getIri().equals(rs.getValue("iri").stringValue());
-
-                    if (newConcept)
-                        i++;
-
-                    if (i > maxId) {
-                        if (newConcept) {
-                            if (docs.size() == BULKSIZE) {
-                                postMeili(docs);
-                                docs.clear();
-                                LOG.info("...processed {} concepts", i);
-                            }
-
-                            blob = new OpenSearchDocument()
-                                .setId(i)
-                                .setIri(rs.getValue("iri").stringValue())
-                                .setName(rs.getValue("name").stringValue())
-                                .setCode(rs.hasBinding("code") ? rs.getValue("code").stringValue() : null)
-                                .setScheme(iri(rs.getValue("scheme").stringValue(), rs.hasBinding("schemeName") ? rs.getValue("schemeName").stringValue() : null))
-                                .setStatus(iri(rs.getValue("status").stringValue(), rs.hasBinding("statusName") ? rs.getValue("statusName").stringValue() : null))
-                                .addType(iri(rs.getValue("type").stringValue(), rs.hasBinding("typeName") ? rs.getValue("typeName").stringValue() : null));
-                            docs.add(blob);
-                        } else {
-                            blob.addType(iri(rs.getValue("type").stringValue(), rs.getValue("typeName").stringValue()));
-                        }
-                    } else if ((i % BULKSIZE) == 0) {
-                        LOG.info("...skipped {} concepts", i);
-                    }
-                }
+                processResults(maxId, docs, qr);
 
                 if (!docs.isEmpty())
                     postMeili(docs);
@@ -121,9 +87,52 @@ public class OpenSearchSender {
         }
     }
 
-    private void checkEnvs(String... envs) {
+    private void processResults(int maxId, List<OpenSearchDocument> docs, TupleQueryResult qr) throws JsonProcessingException, InterruptedException {
+        int i = 0;
+        OpenSearchDocument blob = null;
+        while (qr.hasNext()) {
+            BindingSet rs = qr.next();
+
+            boolean newConcept = (blob == null) || !blob.getIri().equals(rs.getValue("iri").stringValue());
+
+            if (newConcept)
+                i++;
+
+            if (i > maxId) {
+                blob = processDocument(docs, blob, i, rs, newConcept);
+            } else if ((i % BULKSIZE) == 0) {
+                LOG.info("...skipped {} concepts", i);
+            }
+        }
+    }
+
+    private OpenSearchDocument processDocument(List<OpenSearchDocument> docs, OpenSearchDocument blob, int i, BindingSet rs, boolean newConcept) throws JsonProcessingException, InterruptedException {
+        if (newConcept) {
+            if (docs.size() == BULKSIZE) {
+                postMeili(docs);
+                docs.clear();
+                LOG.info("...processed {} concepts", i);
+            }
+
+            blob = new OpenSearchDocument()
+                .setId(i)
+                .setIri(rs.getValue("iri").stringValue())
+                .setName(rs.getValue("name").stringValue())
+                .setCode(rs.hasBinding("code") ? rs.getValue("code").stringValue() : null)
+                .setScheme(iri(rs.getValue("scheme").stringValue(), rs.hasBinding("schemeName") ? rs.getValue("schemeName").stringValue() : null))
+                .setStatus(iri(rs.getValue("status").stringValue(), rs.hasBinding("statusName") ? rs.getValue("statusName").stringValue() : null))
+                .addType(iri(rs.getValue("type").stringValue(), rs.hasBinding("typeName") ? rs.getValue("typeName").stringValue() : null));
+            docs.add(blob);
+        } else {
+            blob.addType(iri(rs.getValue("type").stringValue(), rs.getValue("typeName").stringValue()));
+        }
+        return blob;
+    }
+
+    private void checkEnvs() {
         boolean missingEnvs = false;
-        for(String env : envs) {
+
+        for(String env : Arrays.asList("OPENSEARCH_AUTH", "OPENSEARCH_URL", "GRAPH_SERVER", "GRAPH_REPO")) {
             String envData = System.getenv(env);
             if (envData == null || envData.isEmpty()) {
                 LOG.error("Environment variable {} not set", env);
@@ -152,7 +161,7 @@ public class OpenSearchSender {
             retry = false;
             Response response = target
                 .request()
-                .header("Authorization", "Basic " + System.getenv("OPENSEARCH_AUTH"))
+                .header("Authorization", "Basic " + osAuth)
                 .post(Entity.entity(batch.toString(), MediaType.APPLICATION_JSON));
 
             if (response.getStatus() == 429) {
@@ -176,11 +185,11 @@ public class OpenSearchSender {
     }
 
     private int getMaxDocument() throws IOException {
-        target = client.target(OSUrl).path("_search");
+        target = client.target(osUrl).path("_search");
 
         Response response = target
             .request()
-            .header("Authorization", "Basic " + System.getenv("OPENSEARCH_AUTH"))
+            .header("Authorization", "Basic " + osAuth)
             .post(Entity.entity("{\n" +
                 "    \"aggs\" : {\n" +
                 "      \"max_id\" : {\n" +

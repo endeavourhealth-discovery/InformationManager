@@ -180,15 +180,6 @@ public class SnomedImporter implements TTImport {
       System.out.println("isas added "+ counter);
    }
 
-   private boolean conceptNeeded(String conceptFile, String conceptId){
-     // if (conceptFile.contains("Refset")) {
-       //  return Arrays.asList(importList).contains(conceptId);
-      //}
-      return true;
-   }
-
-
-
    //=================private methods========================
 
    private void importConceptFiles(String path) throws IOException {
@@ -200,28 +191,9 @@ public class SnomedImporter implements TTImport {
                reader.readLine();     // NOSONAR - Skip header
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
-                  String[] fields = line.split("\t");
-                  if (conceptNeeded(conceptFile,fields[0])) {
-                     if (!conceptMap.containsKey(fields[0])) {
-                        TTEntity c = new TTEntity();
-                        c.setIri(SN + fields[0]);
-                        c.setCode(fields[0]);
-                        c.setScheme(SNOMED.GRAPH_SNOMED);
-                        if (conceptFile.contains("Refset")|conceptFile.contains("UKPrimaryCare"))
-                           c.addType(IM.CONCEPT_SET);
-                        else
-                           c.addType(IM.CONCEPT);
-                        if (fields[4].equals(DEFINED))
-                           c.set(IM.DEFINITIONAL_STATUS,IM.SUFFICIENTLY_DEFINED);
-                        c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
-                        if (fields[0].equals("138875005")) { // snomed root
-                            c.set(RDFS.SUBCLASSOF, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "Concept")));
-                        }
-                        document.addEntity(c);
-                        conceptMap.put(fields[0], c);
-                     }
-                  }
-                  i++;
+                   processConceptLine(conceptFile, line);
+
+                   i++;
                   line = reader.readLine();
                }
          }
@@ -229,7 +201,29 @@ public class SnomedImporter implements TTImport {
       System.out.println("Imported " + i + " concepts");
    }
 
-   private void importRefsetFiles(String path) throws IOException {
+    private void processConceptLine(String conceptFile, String line) {
+        String[] fields = line.split("\t");
+        if (!conceptMap.containsKey(fields[0])) {
+           TTEntity c = new TTEntity();
+           c.setIri(SN + fields[0]);
+           c.setCode(fields[0]);
+           c.setScheme(SNOMED.GRAPH_SNOMED);
+           if (conceptFile.contains("Refset") || conceptFile.contains("UKPrimaryCare"))
+              c.addType(IM.CONCEPT_SET);
+           else
+              c.addType(IM.CONCEPT);
+           if (fields[4].equals(DEFINED))
+              c.set(IM.DEFINITIONAL_STATUS,IM.SUFFICIENTLY_DEFINED);
+           c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
+           if (fields[0].equals("138875005")) { // snomed root
+               c.set(RDFS.SUBCLASSOF, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "Concept")));
+           }
+           document.addEntity(c);
+           conceptMap.put(fields[0], c);
+        }
+    }
+
+    private void importRefsetFiles(String path) throws IOException {
       int i = 0;
       for (String refsetFile : refsets) {
          List<Path> paths = ImportUtils.findFilesForId(path, refsetFile);
@@ -239,17 +233,8 @@ public class SnomedImporter implements TTImport {
             reader.readLine();     // NOSONAR - Skip header
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
-               String[] fields = line.split("\t");
-               TTEntity c= conceptMap.get(fields[4]);
-
-               if (c!=null) {
-                  if (!c.isType(IM.CONCEPT_SET))
-                     c.set(RDF.TYPE,new TTArray().add(IM.CONCEPT_SET));
-                  if (c.get(IM.DEFINITION)==null)
-                     c.set(IM.DEFINITION,new TTNode());
-                  c.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
-               }
-               i++;
+                processRefsetLine(line);
+                i++;
                line = reader.readLine();
             }
 
@@ -258,7 +243,21 @@ public class SnomedImporter implements TTImport {
       }
       System.out.println("Imported " + i + " refset");
    }
-   private void importDescriptionFiles(String path) throws IOException {
+
+    private void processRefsetLine(String line) {
+        String[] fields = line.split("\t");
+        TTEntity c= conceptMap.get(fields[4]);
+
+        if (c!=null) {
+           if (!c.isType(IM.CONCEPT_SET))
+              c.set(RDF.TYPE,new TTArray().add(IM.CONCEPT_SET));
+           if (c.get(IM.DEFINITION)==null)
+              c.set(IM.DEFINITION,new TTNode());
+           c.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
+        }
+    }
+
+    private void importDescriptionFiles(String path) throws IOException {
       int i = 0;
       for (String descriptionFile : descriptions) {
 
@@ -269,22 +268,8 @@ public class SnomedImporter implements TTImport {
                reader.readLine();  // NOSONAR - Skip header
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
-                  String[] fields = line.split("\t");
-                // if (fields[4].equals("900000000000455006"))
-                  // System.out.println(fields[7]);
-                  TTEntity c = conceptMap.get(fields[4]);
-                  if (c!=null) {
-                     if (fields[7].contains("(attribute)")) {
-                        c.addType(RDF.PROPERTY);
-                     }
-                     if (ACTIVE.equals(fields[2])) {
-                        if (FULLY_SPECIFIED.equals(fields[6]) || c.getName()==null) {
-                              c.setName(fields[7]);
-                        }
-                        TTManager.addTermCode(c, fields[7],fields[0]);
-                     }
-                  }
-                  i++;
+                   processDescriptionLine(line);
+                   i++;
                   line = reader.readLine();
                }
             }
@@ -292,7 +277,26 @@ public class SnomedImporter implements TTImport {
       }
       System.out.println("Imported " + i + " descriptions");
    }
-   private void importStatedFiles(String path) throws IOException {
+
+    private void processDescriptionLine(String line) {
+        String[] fields = line.split("\t");
+        // if (fields[4].equals("900000000000455006"))
+        // System.out.println(fields[7]);
+        TTEntity c = conceptMap.get(fields[4]);
+        if (c!=null) {
+           if (fields[7].contains("(attribute)")) {
+              c.addType(RDF.PROPERTY);
+           }
+           if (ACTIVE.equals(fields[2])) {
+              if (FULLY_SPECIFIED.equals(fields[6]) || c.getName()==null) {
+                    c.setName(fields[7]);
+              }
+              TTManager.addTermCode(c, fields[7],fields[0]);
+           }
+        }
+    }
+
+    private void importStatedFiles(String path) throws IOException {
       int i = 0;
       OWLToTT owlConverter= new OWLToTT();
       TTContext statedContext= new TTContext();
@@ -305,18 +309,7 @@ public class SnomedImporter implements TTImport {
                reader.readLine();  // NOSONAR - Skip header
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
-                   String[] fields = line.split("\t");
-                   TTEntity c = conceptMap.get(fields[5]);
-                   String axiom = fields[6];
-                   if (!axiom.startsWith("Prefix") && ACTIVE.equals(fields[2]) && !axiom.startsWith("Ontology"))
-                       try {
-                           //System.out.println(c.getIri());
-                           axiom = axiom.replace(":609096000", "im:roleGroup");
-                           owlConverter.convertAxiom(c, axiom, statedContext);
-                       } catch (Exception e) {
-                           System.err.println(Arrays.toString(e.getStackTrace()));
-                           throw new IOException("owl parser error");
-                       }
+                   processStatedLine(owlConverter, statedContext, line);
                    i++;
                    line = reader.readLine();
                }
@@ -330,7 +323,22 @@ public class SnomedImporter implements TTImport {
       System.out.println("Imported " + i + " OWL Axioms");
    }
 
-   private void importMRCMDomainFiles(String path) throws IOException {
+    private void processStatedLine(OWLToTT owlConverter, TTContext statedContext, String line) throws IOException {
+        String[] fields = line.split("\t");
+        TTEntity c = conceptMap.get(fields[5]);
+        String axiom = fields[6];
+        if (!axiom.startsWith("Prefix") && ACTIVE.equals(fields[2]) && !axiom.startsWith("Ontology"))
+            try {
+                //System.out.println(c.getIri());
+                axiom = axiom.replace(":609096000", "im:roleGroup");
+                owlConverter.convertAxiom(c, axiom, statedContext);
+            } catch (Exception e) {
+                System.err.println(Arrays.toString(e.getStackTrace()));
+                throw new IOException("owl parser error");
+            }
+    }
+
+    private void importMRCMDomainFiles(String path) throws IOException {
       int i = 0;
 
       //gets attribute domain files (usually only 1)
@@ -416,26 +424,8 @@ public class SnomedImporter implements TTImport {
                reader.readLine();  // NOSONAR - Skip header
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
-                  String[] fields = line.split("\t");
-                  if (fields[4].equals("158743007")) {
-                     System.out.println(line);
-                  }
-                  TTEntity c = conceptMap.get(fields[4]);
-                  if (c!=null) {
-                     int group = Integer.parseInt(fields[6]);
-                     String relationship = fields[7];
-                     String target = fields[5];
-                     if (target.equals("900000000000455006"))
-                        System.out.println(c.getName()+" "+fields[4]+" is a ref set");
-
-                     if (conceptMap.get(target) == null) {
-                        System.err.println("Missing target entity in relationship" + target);
-                     }
-                     if (ACTIVE.equals(fields[2]) || (relationship.equals(REPLACED_BY))) {
-                        addRelationship(c, group, relationship, target);
-                     }
-                  }
-                  i++;
+                   processRelationshipLine(line);
+                   i++;
                   line = reader.readLine();
                }
             }
@@ -445,7 +435,29 @@ public class SnomedImporter implements TTImport {
       System.out.println("isas added "+ counter);
    }
 
-   private void addIsa(TTEntity entity,String parent){
+    private void processRelationshipLine(String line) {
+        String[] fields = line.split("\t");
+        if (fields[4].equals("158743007")) {
+           System.out.println(line);
+        }
+        TTEntity c = conceptMap.get(fields[4]);
+        if (c!=null) {
+           int group = Integer.parseInt(fields[6]);
+           String relationship = fields[7];
+           String target = fields[5];
+           if (target.equals("900000000000455006"))
+              System.out.println(c.getName()+" "+fields[4]+" is a ref set");
+
+           if (conceptMap.get(target) == null) {
+              System.err.println("Missing target entity in relationship" + target);
+           }
+           if (ACTIVE.equals(fields[2]) || (relationship.equals(REPLACED_BY))) {
+              addRelationship(c, group, relationship, target);
+           }
+        }
+    }
+
+    private void addIsa(TTEntity entity,String parent){
       TTIriRef isa= entity.isType(RDF.PROPERTY) ? RDFS.SUBPROPERTYOF : RDFS.SUBCLASSOF;
       if (entity.get(isa)==null) {
          TTArray isas = new TTArray();

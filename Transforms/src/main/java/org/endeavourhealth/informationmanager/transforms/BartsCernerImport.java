@@ -29,6 +29,8 @@ public class BartsCernerImport implements TTImport {
 	private static final String[] hierarchy = {".*\\\\Barts\\\\V500_event_set_canon.txt"};
 	private static final String[] maps = {".*\\\\Barts\\\\Snomed-Barts-Cerner.txt"};
 
+    private static final String BARTS_CERNER_CODES = IM.CODE_SCHEME_BARTS_CERNER.getIri()+"BartsCernerCodes";
+    private static final String UNCLASSIFIED = IM.CODE_SCHEME_BARTS_CERNER.getIri()+"UnClassifiedBartsCernerCode";
 
 	private final Map<String, TTEntity> codeToConcept= new HashMap<>();
 	private final Map<String,TTEntity> codeToSet= new HashMap<>();
@@ -39,7 +41,6 @@ public class BartsCernerImport implements TTImport {
 
 	private RepositoryConnection conn;
 	private final TTManager manager= new TTManager();
-	private static final String unclassified= IM.CODE_SCHEME_BARTS_CERNER.getIri()+"UnClassifiedBartsCernerCode";
 
 	private final Map<String,TTEntity> entityMap = new HashMap<>();
 
@@ -124,7 +125,7 @@ public class BartsCernerImport implements TTImport {
 	private void setTopLevel() {
 		TTEntity topConcept= new TTEntity()
 			.setCrud(IM.REPLACE)
-			.setIri(IM.CODE_SCHEME_BARTS_CERNER.getIri()+"BartsCernerCodes")
+			.setIri(BARTS_CERNER_CODES)
 			.addType(IM.CONCEPT)
 			.setName("Barts Cerner codes")
 			.setCode("BartsCernerCodes")
@@ -134,7 +135,7 @@ public class BartsCernerImport implements TTImport {
 		document.addEntity(topConcept);
 		TTEntity unmatchedConcept= new TTEntity()
 			.setCrud(IM.REPLACE)
-			.setIri(unclassified)
+			.setIri(UNCLASSIFIED)
 			.addType(IM.CONCEPT)
 			.setName("Unclassified Barts Cerner codes")
 			.setDescription("The Cerner codes used in Barts NHS Trust Millennium system"
@@ -154,21 +155,8 @@ public class BartsCernerImport implements TTImport {
 				String line = reader.readLine();
 				while (line != null && !line.isEmpty()) {
 					count++;
-					String[] fields= line.split("\t");
-					String parent= fields[0];
-					String child= fields[2];
-					if (parent.equals(child))
-						System.out.println("? top level "+ parent+" "+ fields[1]);
-					if (codeToSet.get(parent)==null)
-						System.out.println("missing event set cd "+ parent +" "+ fields[1]);
-					Integer order= Integer.parseInt(fields[4]);
-					TTEntity eventSet= codeToSet.get(child);
-					eventSet.addObject(IM.IS_CHILD_OF,iri(IM.CODE_SCHEME_BARTS_CERNER.getIri()+parent));
-					eventSet.set(IM.DISPLAY_ORDER, TTLiteral.literal(order));
-					if (childToParent.get(child)==null)
-						childToParent.put(child,new HashSet<>());
-					childToParent.get(child).add(parent);
-					line = reader.readLine();
+                    processHierarchyLine(line);
+                    line = reader.readLine();
 				}
 			}
 		}
@@ -176,7 +164,7 @@ public class BartsCernerImport implements TTImport {
 		for (Map.Entry<String,TTEntity> entry:codeToSet.entrySet()){
 			String code=entry.getKey();
 			if (childToParent.get(code)==null)
-				entry.getValue().addObject(IM.IS_CHILD_OF,iri(IM.CODE_SCHEME_BARTS_CERNER.getIri()+"BartsCernerCodes"));
+				entry.getValue().addObject(IM.IS_CHILD_OF,iri(BARTS_CERNER_CODES));
 
 		}
 
@@ -186,7 +174,24 @@ public class BartsCernerImport implements TTImport {
 
 	}
 
-	private void importUsed(String inFolder) throws Exception {
+    private void processHierarchyLine(String line) {
+        String[] fields= line.split("\t");
+        String parent= fields[0];
+        String child= fields[2];
+        if (parent.equals(child))
+            System.out.println("? top level "+ parent+" "+ fields[1]);
+        if (codeToSet.get(parent)==null)
+            System.out.println("missing event set cd "+ parent +" "+ fields[1]);
+        Integer order= Integer.parseInt(fields[4]);
+        TTEntity eventSet= codeToSet.get(child);
+        eventSet.addObject(IM.IS_CHILD_OF,iri(IM.CODE_SCHEME_BARTS_CERNER.getIri()+parent));
+        eventSet.set(IM.DISPLAY_ORDER, TTLiteral.literal(order));
+        if (childToParent.get(child)==null)
+            childToParent.put(child,new HashSet<>());
+        childToParent.get(child).add(parent);
+    }
+
+    private void importUsed(String inFolder) throws Exception {
 		int count = 0;
 		for (String conceptFile : used) {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
@@ -196,25 +201,8 @@ public class BartsCernerImport implements TTImport {
 				String line = reader.readLine();
 				while (line != null && !line.isEmpty()) {
 					count++;
-					String[] fields= line.split("\t");
-					String code= fields[7];
-					if (codeToSet.get(code)!=null)
-						throw new Exception("duplicate event code and set code");
-					String iri=IM.CODE_SCHEME_BARTS_CERNER.getIri()+fields[7];
-					String term= fields[4].replace("\"","");
-					TTEntity usedConcept= codeToConcept.get(code);
-					if (usedConcept==null) {
-						usedConcept = new TTEntity()
-							.setIri(iri)
-							.addType(IM.CONCEPT)
-							.setCode(code)
-							.setScheme(IM.CODE_SCHEME_BARTS_CERNER);
-						usedConcept.addObject(IM.IS_CHILD_OF,iri(unclassified));
-						document.addEntity(usedConcept);
-						codeToConcept.put(code,usedConcept);
-					}
-					usedConcept.setName(term);
-					line = reader.readLine();
+                    importUsedLine(line);
+                    line = reader.readLine();
 				}
 			}
 		}
@@ -222,8 +210,29 @@ public class BartsCernerImport implements TTImport {
 
 	}
 
+    private void importUsedLine(String line) throws Exception {
+        String[] fields= line.split("\t");
+        String code= fields[7];
+        if (codeToSet.get(code)!=null)
+            throw new Exception("duplicate event code and set code");
+        String iri=IM.CODE_SCHEME_BARTS_CERNER.getIri()+fields[7];
+        String term= fields[4].replace("\"","");
+        TTEntity usedConcept= codeToConcept.get(code);
+        if (usedConcept==null) {
+            usedConcept = new TTEntity()
+                .setIri(iri)
+                .addType(IM.CONCEPT)
+                .setCode(code)
+                .setScheme(IM.CODE_SCHEME_BARTS_CERNER);
+            usedConcept.addObject(IM.IS_CHILD_OF,iri(UNCLASSIFIED));
+            document.addEntity(usedConcept);
+            codeToConcept.put(code,usedConcept);
+        }
+        usedConcept.setName(term);
+    }
 
-	private void importSets(String inFolder) throws IOException {
+
+    private void importSets(String inFolder) throws IOException {
 		int count = 0;
 		for (String conceptFile : sets) {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
@@ -233,20 +242,8 @@ public class BartsCernerImport implements TTImport {
 				String line = reader.readLine();
 				while (line != null && !line.isEmpty()) {
 					count++;
-					String[] fields= line.split("\t");
-					String code= fields[7];
-					String term= fields[11].replace("\"","");
-					String xterm= term.toLowerCase();
-					String iri=IM.CODE_SCHEME_BARTS_CERNER.getIri()+code;
-					TTEntity eventSet = new TTEntity()
-							.setIri(iri)
-							.addType(IM.CONCEPT)
-							.setName(term)
-							.setCode(code)
-							.setScheme(IM.CODE_SCHEME_BARTS_CERNER);
-						codeToSet.put(code, eventSet);
-					termToSet.put(xterm,eventSet);
-					line = reader.readLine();
+                    importSetLine(line);
+                    line = reader.readLine();
 				}
 			}
 		}
@@ -255,7 +252,23 @@ public class BartsCernerImport implements TTImport {
 
 	}
 
-	private void importCodes(String inFolder) throws Exception {
+    private void importSetLine(String line) {
+        String[] fields= line.split("\t");
+        String code= fields[7];
+        String term= fields[11].replace("\"","");
+        String xterm= term.toLowerCase();
+        String iri=IM.CODE_SCHEME_BARTS_CERNER.getIri()+code;
+        TTEntity eventSet = new TTEntity()
+                .setIri(iri)
+                .addType(IM.CONCEPT)
+                .setName(term)
+                .setCode(code)
+                .setScheme(IM.CODE_SCHEME_BARTS_CERNER);
+        codeToSet.put(code, eventSet);
+        termToSet.put(xterm,eventSet);
+    }
+
+    private void importCodes(String inFolder) throws Exception {
 		int count = 0;
 		for (String conceptFile : codes) {
 			Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
@@ -265,38 +278,8 @@ public class BartsCernerImport implements TTImport {
 				String line = reader.readLine();
 				while (line != null && !line.isEmpty()) {
 					count++;
-					String[] fields= line.split("\t");
-					String code= fields[0];
-					if (codeToSet.get(code)!=null)
-						throw new Exception("duplicate code used for code and set");
-					String term= fields[3].replace("\"","");
-					String xterm= term.toLowerCase();
-					String setTerm = fields[15].toLowerCase().replace("\"","");
-					TTEntity eventSet=termToSet.get(setTerm);
-					String iri=IM.CODE_SCHEME_BARTS_CERNER.getIri()+code;
-					TTEntity codeConcept= new TTEntity()
-						.setIri(iri)
-						.addType(IM.CONCEPT)
-						.setName(term)
-						.setCode(code)
-						.setScheme(IM.CODE_SCHEME_BARTS_CERNER);
-					TTEntity parentSet=null;
-					if (eventSet!=null) {
-						Set<String> parents = childToParent.get(eventSet.getCode());
-						if (parents != null) {
-							for (String parent:parents) {
-								parentSet = codeToSet.get(parent);
-								codeConcept.addObject(IM.IS_CHILD_OF, iri(parentSet.getIri()));
-								usedSets.add(parentSet);
-							}
-						} else
-							codeConcept.addObject(IM.IS_CHILD_OF,iri(unclassified));
-					}
-					else
-						codeConcept.addObject(IM.IS_CHILD_OF,iri(unclassified));
-					document.addEntity(codeConcept);
-					codeToConcept.put(code,codeConcept);
-					line = reader.readLine();
+                    importCodeLine(line);
+                    line = reader.readLine();
 				}
 			}
 		}
@@ -305,9 +288,42 @@ public class BartsCernerImport implements TTImport {
 
 	}
 
+    private void importCodeLine(String line) throws Exception {
+        String[] fields= line.split("\t");
+        String code= fields[0];
+        if (codeToSet.get(code)!=null)
+            throw new Exception("duplicate code used for code and set");
+        String term= fields[3].replace("\"","");
+        String xterm= term.toLowerCase();
+        String setTerm = fields[15].toLowerCase().replace("\"","");
+        TTEntity eventSet=termToSet.get(setTerm);
+        String iri=IM.CODE_SCHEME_BARTS_CERNER.getIri()+code;
+        TTEntity codeConcept= new TTEntity()
+            .setIri(iri)
+            .addType(IM.CONCEPT)
+            .setName(term)
+            .setCode(code)
+            .setScheme(IM.CODE_SCHEME_BARTS_CERNER);
+        TTEntity parentSet=null;
+        if (eventSet!=null) {
+            Set<String> parents = childToParent.get(eventSet.getCode());
+            if (parents != null) {
+                for (String parent:parents) {
+                    parentSet = codeToSet.get(parent);
+                    codeConcept.addObject(IM.IS_CHILD_OF, iri(parentSet.getIri()));
+                    usedSets.add(parentSet);
+                }
+            } else
+                codeConcept.addObject(IM.IS_CHILD_OF,iri(UNCLASSIFIED));
+        }
+        else
+            codeConcept.addObject(IM.IS_CHILD_OF,iri(UNCLASSIFIED));
+        document.addEntity(codeConcept);
+        codeToConcept.put(code,codeConcept);
+    }
 
 
-	@Override
+    @Override
 	public TTImport validateFiles(String inFolder) {
 
 		ImportUtils.validateFiles(inFolder, maps,used);

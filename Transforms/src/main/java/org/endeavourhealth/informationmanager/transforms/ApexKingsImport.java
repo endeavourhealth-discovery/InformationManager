@@ -19,6 +19,7 @@ public class ApexKingsImport implements TTImport {
 
 
 	private static final String[] kingsPath = {".*\\\\Kings\\\\KingsPathMap.txt"};
+	private static final String KINGS_APEX_CODES = IM.GRAPH_KINGS_APEX.getIri()+"KingsApexCodes";
 	private TTDocument document;
 	private Map<String, List<String>> readToSnomed = new HashMap<>();
 	private final Map<String, String> apexToRead = new HashMap<>();
@@ -44,7 +45,7 @@ public class ApexKingsImport implements TTImport {
 
 	private void setTopLevel() {
 		TTEntity kings= new TTEntity()
-			.setIri(IM.GRAPH_KINGS_APEX.getIri()+"KingsApexCodes")
+			.setIri(KINGS_APEX_CODES)
 			.addType(IM.CONCEPT)
 			.setName("Kings College Hospital Apex path codes")
 			.setCode("KingsApexCodes")
@@ -81,7 +82,7 @@ public class ApexKingsImport implements TTImport {
 					.setDescription("Local apex Kings trust pathology system entity ")
 					.setCode(code)
 					.setScheme(IM.CODE_SCHEME_KINGS_APEX)
-					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(IM.GRAPH_KINGS_APEX.getIri()+"KingsApexCodes")));
+					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(KINGS_APEX_CODES)));
 				document.addEntity(entity);
 				apexToRead.put(code,readCode);
 				if (readToSnomed.get(readCode)!=null){

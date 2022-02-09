@@ -80,34 +80,40 @@ public class ComplexMapImporter {
       for (ComplexMap sourceMap : mapList) {
          TTNode ttComplexMap= new TTNode();
          entity.addObject(IM.HAS_MAP,ttComplexMap);
-         if (sourceMap.getMapGroups().size() == 1) {
-            ComplexMapGroup targetGroup= sourceMap.getMapGroups().get(0);
-            TTArray ttTargetGroup = new TTArray();
-            ttComplexMap.set(IM.SOME_OF, ttTargetGroup);
-            for (ComplexMapTarget sourceTarget:targetGroup.getTargetMaps()) {
-               TTEntity legacy= legacyCodeToEntity.get(sourceTarget.getTarget());
-               if (legacy!=null){
-               legacy.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
-               addMapTarget(ttTargetGroup, sourceTarget);}
-            }
-         } else{
-            TTArray targetGroups = new TTArray();
-            ttComplexMap.set(IM.COMBINATION_OF,targetGroups);
-            for (ComplexMapGroup targetGroup : sourceMap.getMapGroups()) {
-               TTNode ttTargetGroup= new TTNode();
-               targetGroups.add(ttTargetGroup);
-               TTArray ttTargetChoice= new TTArray();
-               ttTargetGroup.set(IM.ONE_OF,ttTargetChoice);
-               for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
-                     if (legacyCodeToEntity.get(sourceTarget.getTarget())!=null)
-                     addMapTarget(ttTargetChoice, sourceTarget);
-                  }
-               }
-            }
-         }
+          processMap(snomed, sourceMap, ttComplexMap);
+      }
       TTManager.wrapRDFAsJson(entity);
    }
-   public void addMapTarget(TTArray targetGroup,ComplexMapTarget sourceTarget){
+
+    private void processMap(String snomed, ComplexMap sourceMap, TTNode ttComplexMap) {
+        if (sourceMap.getMapGroups().size() == 1) {
+            ComplexMapGroup targetGroup = sourceMap.getMapGroups().get(0);
+            TTArray ttTargetGroup = new TTArray();
+            ttComplexMap.set(IM.SOME_OF, ttTargetGroup);
+            for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
+                TTEntity legacy = legacyCodeToEntity.get(sourceTarget.getTarget());
+                if (legacy != null) {
+                    legacy.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+                    addMapTarget(ttTargetGroup, sourceTarget);
+                }
+            }
+        } else {
+            TTArray targetGroups = new TTArray();
+            ttComplexMap.set(IM.COMBINATION_OF, targetGroups);
+            for (ComplexMapGroup targetGroup : sourceMap.getMapGroups()) {
+                TTNode ttTargetGroup = new TTNode();
+                targetGroups.add(ttTargetGroup);
+                TTArray ttTargetChoice = new TTArray();
+                ttTargetGroup.set(IM.ONE_OF, ttTargetChoice);
+                for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
+                    if (legacyCodeToEntity.get(sourceTarget.getTarget()) != null)
+                        addMapTarget(ttTargetChoice, sourceTarget);
+                }
+            }
+        }
+    }
+
+    public void addMapTarget(TTArray targetGroup,ComplexMapTarget sourceTarget){
       TTNode mapNode= new TTNode();
       targetGroup.add(mapNode);
       mapNode.set(IM.MAPPED_TO,TTIriRef.iri( namespace +sourceTarget.getTarget()));

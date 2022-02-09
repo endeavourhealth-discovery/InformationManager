@@ -13,7 +13,6 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.Connection;
 import java.util.zip.DataFormatException;
 
 public class CoreImporter implements TTImport {
@@ -26,6 +25,8 @@ public class CoreImporter implements TTImport {
      ".*\\\\DiscoveryCore\\\\CoreOntology-more-inferred.json",
   ".*\\\\DiscoveryCore\\\\StatsReports.json"
    };
+
+   private static final String INFERRED_SUFFIX = "-inferred.json";
 
 
 
@@ -48,8 +49,8 @@ public class CoreImporter implements TTImport {
      importNamespaces();
      System.out.println("Importing Core entities");
       for (String coreFile : coreEntities) {
-        if (!coreFile.contains("-inferred.json"))
-          coreFile = coreFile.substring(0, coreFile.indexOf(".json")) + "-inferred.json";
+        if (!coreFile.contains(INFERRED_SUFFIX))
+          coreFile = coreFile.substring(0, coreFile.indexOf(".json")) + INFERRED_SUFFIX;
         TTManager manager = new TTManager();
          Path path = ImportUtils.findFileForId(config.folder, coreFile);
          manager.loadDocument(path.toFile());
@@ -67,7 +68,7 @@ public class CoreImporter implements TTImport {
   private static void generateInferred(TTImportConfig config) throws IOException, DataFormatException, OWLOntologyCreationException {
 
     for(String coreFile:coreEntities) {
-      if (!coreFile.contains("-inferred.json")) {
+      if (!coreFile.contains(INFERRED_SUFFIX)) {
         TTManager manager = new TTManager();
         Path path = ImportUtils.findFileForId(config.folder, coreFile);
         TTDocument document = manager.loadDocument(path.toFile());
@@ -75,7 +76,7 @@ public class CoreImporter implements TTImport {
         TTDocument inferred = reasoner.generateInferred(document);
         manager = new TTManager();
         manager.setDocument(inferred);
-        String inferredFile = path.toString().substring(0, path.toString().indexOf(".json")) + "-inferred.json";
+        String inferredFile = path.toString().substring(0, path.toString().indexOf(".json")) + INFERRED_SUFFIX;
         manager.saveDocument(new File(inferredFile));
       }
 
@@ -88,11 +89,6 @@ public class CoreImporter implements TTImport {
       try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
           filer.fileDocument(manager.getDocument());
       }
-   }
-
-   public void fileDocument(TTDocument document) throws Exception {
-
-
    }
 
    /**

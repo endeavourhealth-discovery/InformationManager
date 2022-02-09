@@ -316,7 +316,7 @@ public class ImportUtils {
    }
    public static Boolean isRead(String s){
       if (s.length()<6)
-         return !s.contains("DRG") & !s.contains("SHAPT") & !s.contains("EMIS") & !s.contains("-");
+         return !s.contains("DRG") && !s.contains("SHAPT") && !s.contains("EMIS") && !s.contains("-");
       else
          return false;
    }

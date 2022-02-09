@@ -235,7 +235,7 @@ public class EMISImport implements TTImport {
     public Boolean isEMIS(String s){
      if (s.length()>5)
             return true;
-     else if (s.contains("DRG")|s.contains("SHAPT")|s.contains("EMIS"))
+     else if (s.contains("DRG") || s.contains("SHAPT") || s.contains("EMIS"))
          return true;
      else
         return false;
