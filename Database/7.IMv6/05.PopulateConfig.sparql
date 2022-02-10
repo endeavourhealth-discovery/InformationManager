@@ -52,7 +52,7 @@ INSERT DATA {
     <http://endhealth.info/config#im1Publish>
         <http://www.w3.org/2000/01/rdf-schema#label>    'IMv1 publishing config' ;
         <http://www.w3.org/2000/01/rdf-schema#comment>  'Configuration details for publishing data to IMv1 via S3' ;
-        <http://endhealth.info/im#hasConfig>            '{"bucket":"arn:aws:s3:::imv1sender"}' .
+        <http://endhealth.info/im#hasConfig>            '{"bucket":"imv1sender", "region":"eu-west-2"}' .
 
     # Opensearch config
 
