@@ -23,11 +23,11 @@ public class IM1MapImport implements TTImport {
 
     private TTDocument document;
 
-	private Connection conn;
+	// private Connection conn;
 
 
 	public IM1MapImport() throws SQLException, ClassNotFoundException {
-		conn= ImportUtils.getConnection();
+		// conn= ImportUtils.getConnection();
 	}
 
 	@Override
@@ -36,17 +36,18 @@ public class IM1MapImport implements TTImport {
     }
 
     public TTImport importData(String inFolder, boolean secure, Integer lastDbid) throws Exception {
-        importv1SchemeCodeTable(inFolder, secure);
-        populateMapTable(lastDbid);
-        TTManager manager = new TTManager();
-        document = manager.createDocument(IM.GRAPH_IM1.getIri());
-        System.out.println("Importing Concept counts");
-        importStats(inFolder, document);
-        try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
-        }
+//        importv1SchemeCodeTable(inFolder, secure);
+//        populateMapTable(lastDbid);
+//        TTManager manager = new TTManager();
+//        document = manager.createDocument(IM.GRAPH_IM1.getIri());
+//        System.out.println("Importing Concept counts");
+//        importStats(inFolder, document);
+//        try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
+//            filer.fileDocument(document);
+//        }
         return this;
     }
+/*
 
     private void importv1SchemeCodeTable(String inFolder, boolean secure) throws SQLException {
         System.out.println("Importing IMv1");
@@ -159,6 +160,7 @@ public class IM1MapImport implements TTImport {
             }
         }
     }
+*/
 
 	@Override
 	public TTImport validateFiles(String inFolder)  {

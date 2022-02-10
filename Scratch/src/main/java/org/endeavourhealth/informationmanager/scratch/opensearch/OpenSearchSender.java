@@ -34,6 +34,7 @@ public class OpenSearchSender {
     private final String osAuth = System.getenv("OPENSEARCH_AUTH");
     private final String server = System.getenv("GRAPH_SERVER");
     private final String repoId = System.getenv("GRAPH_REPO");
+    private final String index = "staging";
 
     public void execute() throws IOException, InterruptedException {
         checkEnvs();
@@ -148,7 +149,7 @@ public class OpenSearchSender {
         StringJoiner batch = new StringJoiner("\n");
 
         for (OpenSearchDocument doc : docs) {
-            batch.add("{ \"index\" : { \"_index\": \"concept\", \"_id\" : \"" + doc.getId() + "\" } }");
+            batch.add("{ \"index\" : { \"_index\": \"" + index + "\", \"_id\" : \"" + doc.getId() + "\" } }");
             batch.add(om.writeValueAsString(doc));
         }
         batch.add("");
@@ -185,7 +186,7 @@ public class OpenSearchSender {
     }
 
     private int getMaxDocument() throws IOException {
-        target = client.target(osUrl).path("_search");
+        target = client.target(osUrl).path(index + "/_search");
 
         Response response = target
             .request()
@@ -203,8 +204,13 @@ public class OpenSearchSender {
 
         if (response.getStatus() != 200) {
             String responseData = response.readEntity(String.class);
-            LOG.error(responseData);
-            throw new IllegalStateException("Error getting max document id from OpenSearch");
+            if (responseData.contains("index_not_found_exception")) {
+                LOG.info("Index not found, starting from zero");
+                return 0;
+            } else {
+                LOG.error(responseData);
+                throw new IllegalStateException("Error getting max document id from OpenSearch");
+            }
         } else {
             String responseData = response.readEntity(String.class);
             JsonNode root = om.readTree(responseData);

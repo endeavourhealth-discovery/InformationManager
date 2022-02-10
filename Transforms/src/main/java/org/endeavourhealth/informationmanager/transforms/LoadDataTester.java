@@ -5,8 +5,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.StringJoiner;
 
-import static org.endeavourhealth.informationmanager.transforms.ImportUtils.getConnection;
-
 public class LoadDataTester {
     public static void testLoadData(String outpath, boolean secure) throws Exception {
         /*

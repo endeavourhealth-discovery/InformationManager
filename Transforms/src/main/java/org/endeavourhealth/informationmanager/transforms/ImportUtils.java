@@ -124,40 +124,40 @@ public class ImportUtils {
     * @throws SQLException in the event of an SQL failure
     * @throws ClassNotFoundException if the JDBC connection driver cannot be found
     */
-   public static Connection getConnection() throws ClassNotFoundException, SQLException {
-      Map<String, String> envVars = System.getenv();
+//   public static Connection getConnection() throws ClassNotFoundException, SQLException {
+//      Map<String, String> envVars = System.getenv();
+//
+//      String url = envVars.get("CONFIG_JDBC_URL");
+//      String user = envVars.get("CONFIG_JDBC_USERNAME");
+//      String pass = envVars.get("CONFIG_JDBC_PASSWORD");
+//      String driver = envVars.get("CONFIG_JDBC_CLASS");
+//
+//      if (url == null || url.isEmpty()
+//          || user == null || user.isEmpty()
+//          || pass == null || pass.isEmpty())
+//         throw new IllegalStateException("You need to set the CONFIG_JDBC_ environment variables!");
+//
+//      if (driver != null && !driver.isEmpty())
+//         Class.forName(driver);
+//
+//      Properties props = new Properties();
+//
+//      props.setProperty("user", user);
+//      props.setProperty("password", pass);
+//
+//      return DriverManager.getConnection(url, props);
+//   }
 
-      String url = envVars.get("CONFIG_JDBC_URL");
-      String user = envVars.get("CONFIG_JDBC_USERNAME");
-      String pass = envVars.get("CONFIG_JDBC_PASSWORD");
-      String driver = envVars.get("CONFIG_JDBC_CLASS");
-
-      if (url == null || url.isEmpty()
-          || user == null || user.isEmpty()
-          || pass == null || pass.isEmpty())
-         throw new IllegalStateException("You need to set the CONFIG_JDBC_ environment variables!");
-
-      if (driver != null && !driver.isEmpty())
-         Class.forName(driver);
-
-      Properties props = new Properties();
-
-      props.setProperty("user", user);
-      props.setProperty("password", pass);
-
-      return DriverManager.getConnection(url, props);
-   }
-
-   private static FilerType getFilerType() throws TTFilerException {
-      try (TTDocumentFiler aFiler = TTFilerFactory.getDocumentFiler()) {
-          if (TTDocumentFilerRdf4j.class.isAssignableFrom(aFiler.getClass()))
-              return FilerType.RDF4J;
-          else
-              return FilerType.JDBC;
-      } catch (Exception e) {
-          throw new TTFilerException("Failed to create document filer", e);
-      }
-   }
+//   private static FilerType getFilerType() throws TTFilerException {
+//      try (TTDocumentFiler aFiler = TTFilerFactory.getDocumentFiler()) {
+//          if (TTDocumentFilerRdf4j.class.isAssignableFrom(aFiler.getClass()))
+//              return FilerType.RDF4J;
+//          else
+//              return FilerType.JDBC;
+//      } catch (Exception e) {
+//          throw new TTFilerException("Failed to create document filer", e);
+//      }
+//   }
 
    /**
     * Retrieves EMIS to Snomed code maps
@@ -166,9 +166,9 @@ public class ImportUtils {
     * @throws TTFilerException
     */
    public static Map<String,Set<String>> importEmisToSnomed() throws SQLException, ClassNotFoundException, TTFilerException {
-      if (getFilerType()==FilerType.JDBC)
-         return importEmisToSnomedJDBC();
-      else
+//      if (getFilerType()==FilerType.JDBC)
+//         return importEmisToSnomedJDBC();
+//      else
          return importEmisToSnomedRdf4j();
    }
 
@@ -181,9 +181,9 @@ public class ImportUtils {
     */
    public  static Set<String> importSnomedCodes() throws TTFilerException, SQLException, ClassNotFoundException {
       Set<String> snomedCodes = new HashSet<>();
-      if (getFilerType() == FilerType.JDBC)
-         return importSnomedJDBC(snomedCodes);
-      else
+//      if (getFilerType() == FilerType.JDBC)
+//         return importSnomedJDBC(snomedCodes);
+//      else
          return importSnomedRDF4J(snomedCodes);
    }
 
@@ -196,9 +196,9 @@ public class ImportUtils {
     */
    public static Map<String,List<String>> importReadToSnomed() throws SQLException, ClassNotFoundException, TTFilerException {
       Map<String,List<String>> readToSnomed= new HashMap<>();
-      if (getFilerType()==FilerType.JDBC)
-         return importReadToSnomedJdbc(readToSnomed);
-      else
+//      if (getFilerType()==FilerType.JDBC)
+//         return importReadToSnomedJdbc(readToSnomed);
+//      else
          return importReadToSnomedRdf4j(readToSnomed);
    }
 
@@ -277,11 +277,11 @@ public class ImportUtils {
    }
 
    public static Map<String,TTEntity> getEMISReadAsVision() throws TTFilerException {
-      if (getFilerType()== FilerType.JDBC) {
-         throw new TTFilerException("No JDBC version for get emis entities");
-      }else {
+//      if (getFilerType()== FilerType.JDBC) {
+//         throw new TTFilerException("No JDBC version for get emis entities");
+//      }else {
          return getEMISReadAsVisionRdf4j();
-      }
+//      }
 
    }
 
@@ -321,29 +321,29 @@ public class ImportUtils {
          return false;
    }
 
-   private static Map<String, List<String>> importReadToSnomedJdbc(Map<String, List<String>> readToSnomed) throws SQLException, ClassNotFoundException {
-      Connection conn= getConnection();
-      String sql = "select vis.code as code,snomed.code as snomed \n"+
-          "from entity snomed \n" +
-          "join tpl maps on maps.object= snomed.dbid\n" +
-          "join entity p on maps.predicate=p.dbid\n" +
-          "join entity vis on maps.subject=vis.dbid\n" +
-          "where snomed.iri like '"+ SNOMED.NAMESPACE+"%'\n"+
-          "and p.iri=?\n" +
-          "and vis.iri like 'http://endhealth.info/VISION#%'";
-      try (PreparedStatement getR2Matches= conn.prepareStatement(sql)) {
-          getR2Matches.setString(1, RDFS.SUBCLASSOF.getIri());
-         ResultSet rs = getR2Matches.executeQuery();
-         while (rs.next()) {
-            String snomed = rs.getString("snomed");
-            String read = rs.getString("code");
-            List<String> maps = readToSnomed.computeIfAbsent(read, k -> new ArrayList<>());
-            maps.add(snomed);
-
-         }
-      }
-      return readToSnomed;
-   }
+//   private static Map<String, List<String>> importReadToSnomedJdbc(Map<String, List<String>> readToSnomed) throws SQLException, ClassNotFoundException {
+//      Connection conn= getConnection();
+//      String sql = "select vis.code as code,snomed.code as snomed \n"+
+//          "from entity snomed \n" +
+//          "join tpl maps on maps.object= snomed.dbid\n" +
+//          "join entity p on maps.predicate=p.dbid\n" +
+//          "join entity vis on maps.subject=vis.dbid\n" +
+//          "where snomed.iri like '"+ SNOMED.NAMESPACE+"%'\n"+
+//          "and p.iri=?\n" +
+//          "and vis.iri like 'http://endhealth.info/VISION#%'";
+//      try (PreparedStatement getR2Matches= conn.prepareStatement(sql)) {
+//          getR2Matches.setString(1, RDFS.SUBCLASSOF.getIri());
+//         ResultSet rs = getR2Matches.executeQuery();
+//         while (rs.next()) {
+//            String snomed = rs.getString("snomed");
+//            String read = rs.getString("code");
+//            List<String> maps = readToSnomed.computeIfAbsent(read, k -> new ArrayList<>());
+//            maps.add(snomed);
+//
+//         }
+//      }
+//      return readToSnomed;
+//   }
 
    private static Map<String,Set<String>> importEmisToSnomedRdf4j() throws TTFilerException {
       Map<String,Set<String>> emisToSnomed= new HashMap<>();
@@ -371,46 +371,46 @@ public class ImportUtils {
       }
    }
 
-   private static Map<String,Set<String>> importEmisToSnomedJDBC() throws SQLException, ClassNotFoundException {
-      Map<String,Set<String>> emisToSnomed= new HashMap<>();
+//   private static Map<String,Set<String>> importEmisToSnomedJDBC() throws SQLException, ClassNotFoundException {
+//      Map<String,Set<String>> emisToSnomed= new HashMap<>();
+//
+//      String sql = "SELECT entity.code as code,snomed.code as snomed,entity.name as name\n" +
+//          "from entity\n" +
+//          "join tpl on tpl.subject= entity.dbid\n" +
+//          "join entity snomed on tpl.object= snomed.dbid\n" +
+//          "join entity matchTo on tpl.predicate=matchTo.dbid\n" +
+//          "where entity.scheme='http://endhealth.info/emis#'\n" +
+//          "and snomed.scheme='http://snomed.info/sct#'"+
+//          "and matchTo.iri='http://endhealth.info/im#matchedTo'";
+//
+//      try (Connection conn = getConnection();
+//         PreparedStatement getEMIS= conn.prepareStatement(sql)) {
+//          ResultSet rs = getEMIS.executeQuery();
+//          while (rs.next()) {
+//              String emis = rs.getString("code");
+//              String snomed = rs.getString("snomed");
+//              emisToSnomed.computeIfAbsent(emis, k -> new HashSet<>());
+//              emisToSnomed.get(emis).add(snomed);
+//          }
+//      }
+//      return emisToSnomed;
+//   }
 
-      String sql = "SELECT entity.code as code,snomed.code as snomed,entity.name as name\n" +
-          "from entity\n" +
-          "join tpl on tpl.subject= entity.dbid\n" +
-          "join entity snomed on tpl.object= snomed.dbid\n" +
-          "join entity matchTo on tpl.predicate=matchTo.dbid\n" +
-          "where entity.scheme='http://endhealth.info/emis#'\n" +
-          "and snomed.scheme='http://snomed.info/sct#'"+
-          "and matchTo.iri='http://endhealth.info/im#matchedTo'";
-
-      try (Connection conn = getConnection();
-         PreparedStatement getEMIS= conn.prepareStatement(sql)) {
-          ResultSet rs = getEMIS.executeQuery();
-          while (rs.next()) {
-              String emis = rs.getString("code");
-              String snomed = rs.getString("snomed");
-              emisToSnomed.computeIfAbsent(emis, k -> new HashSet<>());
-              emisToSnomed.get(emis).add(snomed);
-          }
-      }
-      return emisToSnomed;
-   }
-
-   private static Set<String> importSnomedJDBC(Set<String> snomedCodes) throws  SQLException, ClassNotFoundException {
-       try (Connection conn = getConnection();
-            PreparedStatement getSnomed = conn.prepareStatement("SELECT code from entity where iri like 'http://snomed.info/sct%'")) {
-           ResultSet rs = getSnomed.executeQuery();
-           while (rs.next())
-               snomedCodes.add(rs.getString("code"));
-           if (snomedCodes.isEmpty()) {
-               System.err.println("Snomed must be loaded first");
-               System.exit(-1);
-           }
-       } catch (SQLException e) {
-           throw new RepositoryException("unable to retrieve snomed codes");
-       }
-       return snomedCodes;
-   }
+//   private static Set<String> importSnomedJDBC(Set<String> snomedCodes) throws  SQLException, ClassNotFoundException {
+//       try (Connection conn = getConnection();
+//            PreparedStatement getSnomed = conn.prepareStatement("SELECT code from entity where iri like 'http://snomed.info/sct%'")) {
+//           ResultSet rs = getSnomed.executeQuery();
+//           while (rs.next())
+//               snomedCodes.add(rs.getString("code"));
+//           if (snomedCodes.isEmpty()) {
+//               System.err.println("Snomed must be loaded first");
+//               System.exit(-1);
+//           }
+//       } catch (SQLException e) {
+//           throw new RepositoryException("unable to retrieve snomed codes");
+//       }
+//       return snomedCodes;
+//   }
 
    private static boolean isWindows() {
       return (System.getProperty("os.name").toLowerCase().contains("win"));

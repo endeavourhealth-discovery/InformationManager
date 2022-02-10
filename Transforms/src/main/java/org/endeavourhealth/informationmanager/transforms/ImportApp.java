@@ -75,7 +75,7 @@ public class ImportApp {
                     .validateByType(IM.GRAPH_KINGS_APEX, cfg.folder)
                     .validateByType(IM.GRAPH_KINGS_WINPATH, cfg.folder)
                     .validateByType(IM.GRAPH_BARTS_CERNER, cfg.folder)
-                    .validateByType(IM.GRAPH_IM1, cfg.folder)
+//                    .validateByType(IM.GRAPH_IM1, cfg.folder)
                     .validateByType(IM.GRAPH_ODS, cfg.folder)
                   .validateByType(IM.GRAPH_NHS_TFC,cfg.folder)
                  .validateByType(IM.GRAPH_CEG_QUERY, cfg.folder);
@@ -90,15 +90,15 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
                 importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
-                importer.importByType(IM.GRAPH_IM1, cfg);
+//                importer.importByType(IM.GRAPH_IM1, cfg);
                 importer.importByType(IM.GRAPH_ODS, cfg);
                 importer.importByType(IM.GRAPH_NHS_TFC,cfg);
                 importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
                 break;
-            case "imv1":
-                importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.folder);
-                importer.importByType(IM.GRAPH_IM1, cfg);
-                break;
+//            case "imv1":
+//                importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.folder);
+//                importer.importByType(IM.GRAPH_IM1, cfg);
+//                break;
             case "prsb":
                 importer = new Importer().validateByType(IM.GRAPH_PRSB, cfg.folder);
                 importer.importByType(IM.GRAPH_PRSB, cfg);
@@ -182,7 +182,6 @@ public class ImportApp {
             TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
             closureGenerator.generateClosure(cfg.folder, cfg.secure);
         }
-        if (!cfg.skipsearch) SearchTermGenerator.generateSearchTerms(cfg.folder, cfg.secure);
 
         System.out.println("Finished - " + (new Date()));
     }

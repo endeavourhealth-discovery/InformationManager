@@ -26,7 +26,6 @@ public class WinPathKingsImport implements TTImport {
 	private TTDocument document;
 	private Map<String, List<String>> readToSnomed = new HashMap<>();
 	private final Map<String, List<String>> snomedToWinpath = new HashMap<>();
-	private Connection conn;
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
@@ -37,7 +36,6 @@ public class WinPathKingsImport implements TTImport {
 		TTManager backManager = new TTManager();
 		TTManager vsetManager = new TTManager();
 		setTopLevel();
-		conn = ImportUtils.getConnection();
 		importR2Matches();
 		importWinPathKings(config.folder);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
