@@ -50,12 +50,12 @@ public class VisionImport implements TTImport {
 			"The Vision Read 2 scheme and graph including the Vision version of Read 2 and Vision local codes"));
 
 		importEmis();
-		importR2Desc(config.folder);
-		importR2Terms(config.folder);
-		importVisionCodes(config.folder);
+		importR2Desc(config.getFolder());
+		importR2Terms(config.getFolder());
+		importVisionCodes(config.getFolder());
 		addMoreReadCodes();
 		createHierarchy();
-		addVisionMaps(config.folder);
+		addVisionMaps(config.getFolder());
 		addMissingMaps();
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);

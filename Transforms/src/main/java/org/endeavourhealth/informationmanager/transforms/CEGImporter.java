@@ -43,7 +43,7 @@ public class CEGImporter implements TTImport {
 		CEGEthnicityImport ethnicImport= new CEGEthnicityImport();
 		ethnicImport.importData(config);
 		createFolders();
-		loadAndConvert(config.folder);
+		loadAndConvert(config.getFolder());
 		WrapAsJson();
 		for (TTEntity entity:document.getEntities()){
 			if (entity.isType(IM.CONCEPT_SET))

@@ -52,7 +52,7 @@ public class CoreImporter implements TTImport {
         if (!coreFile.contains(INFERRED_SUFFIX))
           coreFile = coreFile.substring(0, coreFile.indexOf(".json")) + INFERRED_SUFFIX;
         TTManager manager = new TTManager();
-         Path path = ImportUtils.findFileForId(config.folder, coreFile);
+         Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
          manager.loadDocument(path.toFile());
          TTDocument document= manager.getDocument();
         System.out.println("Filing  "+ document.getGraph().getIri() + " from " + coreFile);
@@ -70,7 +70,7 @@ public class CoreImporter implements TTImport {
     for(String coreFile:coreEntities) {
       if (!coreFile.contains(INFERRED_SUFFIX)) {
         TTManager manager = new TTManager();
-        Path path = ImportUtils.findFileForId(config.folder, coreFile);
+        Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
         TTDocument document = manager.loadDocument(path.toFile());
         ReasonerPlus reasoner = new ReasonerPlus();
         TTDocument inferred = reasoner.generateInferred(document);

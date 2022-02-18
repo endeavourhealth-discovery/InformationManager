@@ -98,7 +98,7 @@ public class SnomedImporter implements TTImport {
 
    @Override
    public TTImport importData(TTImportConfig config) throws Exception {
-      validateFiles(config.folder);
+      validateFiles(config.getFolder());
       conceptMap = new HashMap<>();
       TTManager dmanager= new TTManager();
 
@@ -106,16 +106,16 @@ public class SnomedImporter implements TTImport {
       document.addEntity(dmanager.createGraph(SNOMED.GRAPH_SNOMED.getIri(), "Snomed-CT code scheme and graph",
         "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions"));
 
-      importConceptFiles(config.folder);
-      importDescriptionFiles(config.folder);
+      importConceptFiles(config.getFolder());
+      importDescriptionFiles(config.getFolder());
       removeQualifiers(document);
-      importMRCMRangeFiles(config.folder);
-      importRefsetFiles(config.folder);
-      importMRCMDomainFiles(config.folder);
+      importMRCMRangeFiles(config.getFolder());
+      importRefsetFiles(config.getFolder());
+      importMRCMDomainFiles(config.getFolder());
      // importStatedFiles(config.folder); No longer bothers with OWL axioms;
-      importRelationshipFiles(config.folder);
+      importRelationshipFiles(config.getFolder());
       setRefSetRoot();
-      importSubstitution(config.folder);
+      importSubstitution(config.getFolder());
       conceptMap.clear();
 
        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {

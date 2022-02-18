@@ -57,23 +57,23 @@ public class TPPImporter implements TTImport {
         importEMISMaps();
 
         addTPPTopLevel();
-        inportTPPConcepts(config.folder);
-        importTPPTerms(config.folder);
-        importTPPDescriptions(config.folder);
-        importTPPDcf(config.folder);
-        importLocals(config.folder);
+        inportTPPConcepts(config.getFolder());
+        importTPPTerms(config.getFolder());
+        importTPPDescriptions(config.getFolder());
+        importTPPDcf(config.getFolder());
+        importLocals(config.getFolder());
 
-        importCV3Hierarchy(config.folder);
+        importCV3Hierarchy(config.getFolder());
 
         //Imports the tpp terms from the tpp look up table
-        importTppCtv3ToSnomed(config.folder);
-        importnhsMaps(config.folder);
+        importTppCtv3ToSnomed(config.getFolder());
+        importnhsMaps(config.getFolder());
         addEmisMaps();
 
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
-        importVaccineMaps(config.folder);
+        importVaccineMaps(config.getFolder());
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(vDocument);
         }

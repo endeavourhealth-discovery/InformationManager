@@ -42,12 +42,12 @@ public class OPCS4Importer implements TTImport {
         snomedCodes= ImportUtils.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_OPCS4.getIri());
         document.addEntity(manager.createGraph(IM.GRAPH_OPCS4.getIri(),"OPCS4 code scheme and graph","OPCS4-9 official code scheme and graph"));
-        importChapters(config.folder,document);
-        importEntities(config.folder,document);
+        importChapters(config.getFolder(),document);
+        importEntities(config.getFolder(),document);
 
         mapDocument= manager.createDocument(IM.GRAPH_OPCS4.getIri());
         mapDocument.setCrud(IM.UPDATE);
-        importMaps(config.folder);
+        importMaps(config.getFolder());
         //Important to file after maps set
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);

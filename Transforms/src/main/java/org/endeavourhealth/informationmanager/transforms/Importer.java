@@ -24,7 +24,7 @@ public class Importer implements TTImportByType {
    public TTImportByType importByType(TTIriRef importType, TTImportConfig config) throws Exception {
       System.out.println("Importing "+ importType.getIri());
       TTImport importer= getImporter(importType);
-      importer.validateFiles(config.folder);
+      importer.validateFiles(config.getFolder());
       importer.importData(config);
       return this;
    }

@@ -57,11 +57,11 @@ public class EMISImport implements TTImport {
         System.out.println("importing emis code file");
         populateRemaps();
         addEMISUnlinked();
-        importEMISCodes(config.folder);
-        allergyMaps(config.folder);
+        importEMISCodes(config.getFolder());
+        allergyMaps(config.getFolder());
         setEmisHierarchy();
         manager.createIndex();
-        supplementary(config.folder);
+        supplementary(config.getFolder());
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }

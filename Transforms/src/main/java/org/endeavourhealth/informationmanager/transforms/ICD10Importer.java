@@ -37,21 +37,21 @@ public class ICD10Importer implements TTImport {
 
     @Override
     public TTImport importData(TTImportConfig config) throws Exception {
-        validateFiles(config.folder);
+        validateFiles(config.getFolder());
         System.out.println("Importing ICD10....");
         System.out.println("Getting snomed codes");
         snomedCodes= ImportUtils.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_ICD10.getIri());
         document.addEntity(manager.createGraph(IM.GRAPH_ICD10.getIri(),"ICD10  code scheme and graph","The ICD10 code scheme and graph including links to core"));
         createTaxonomy();
-        importChapters(config.folder,document);
-        importEntities(config.folder, document);
+        importChapters(config.getFolder(),document);
+        importEntities(config.getFolder(), document);
         createHierarchy();
 
 
         mapDocument= manager.createDocument(IM.GRAPH_ICD10.getIri());
         mapDocument.setCrud(IM.UPDATE);
-        importMaps(config.folder);
+        importMaps(config.getFolder());
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }

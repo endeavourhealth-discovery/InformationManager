@@ -37,7 +37,7 @@ public class WinPathKingsImport implements TTImport {
 		TTManager vsetManager = new TTManager();
 		setTopLevel();
 		importR2Matches();
-		importWinPathKings(config.folder);
+		importWinPathKings(config.getFolder());
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }

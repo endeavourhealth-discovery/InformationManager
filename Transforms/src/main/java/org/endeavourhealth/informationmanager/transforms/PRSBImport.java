@@ -27,14 +27,14 @@ public class PRSBImport implements TTImport {
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
-		validateFiles(config.folder);
+		validateFiles(config.getFolder());
 		TTManager dmanager= new TTManager();
 		document= dmanager.createDocument(IM.GRAPH_PRSB.getIri());
 		document.addEntity(dmanager.createGraph(IM.GRAPH_PRSB.getIri(),"PRSB code scheme and graph"
 		,"The professional records standards board code scheme and graph"));
-		importEntityFiles(config.folder);
+		importEntityFiles(config.getFolder());
 		//TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());
-		dmanager.saveDocument(new File(config.folder + "prsb.json"));
+		dmanager.saveDocument(new File(config.getFolder() + "prsb.json"));
 		//filer.fileDocument(document);
 		return this;
 	}

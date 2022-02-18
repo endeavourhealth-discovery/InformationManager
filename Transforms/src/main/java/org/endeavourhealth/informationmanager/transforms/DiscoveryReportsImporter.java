@@ -31,7 +31,7 @@ public class DiscoveryReportsImporter implements TTImport {
     */
    public TTImport importData(TTImportConfig config) throws Exception {
       System.out.println("Importing Reports concepts");
-      TTDocument document= loadFile(config.folder);
+      TTDocument document= loadFile(config.getFolder());
        try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
            filer.fileDocument(document);
        }

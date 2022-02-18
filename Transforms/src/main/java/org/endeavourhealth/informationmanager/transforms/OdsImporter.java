@@ -34,7 +34,7 @@ public class OdsImporter implements TTImport {
      Boolean hasGraph=false;
       for (String orgFile : organisationFiles) {
         TTManager manager = new TTManager();
-         Path path = ImportUtils.findFileForId(config.folder, orgFile);
+         Path path = ImportUtils.findFileForId(config.getFolder(), orgFile);
          manager.loadDocument(path.toFile());
          TTDocument document= manager.getDocument();
          if (!hasGraph)

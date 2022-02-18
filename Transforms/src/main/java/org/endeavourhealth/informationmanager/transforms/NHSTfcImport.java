@@ -28,7 +28,7 @@ public class NHSTfcImport implements TTImport {
 			"NHS Data Dictionary Speciality and Treatment function codes"
 				,"NHS Data dictionary concepts that are not snomed"));
 		setNHSDD();
-		importFunctionCodes(config.folder);
+		importFunctionCodes(config.getFolder());
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}

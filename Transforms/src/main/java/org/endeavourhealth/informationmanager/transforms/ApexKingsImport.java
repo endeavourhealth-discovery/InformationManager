@@ -35,7 +35,7 @@ public class ApexKingsImport implements TTImport {
 
         importR2Matches();
         setTopLevel();
-        importApexKings(config.folder);
+        importApexKings(config.getFolder());
 
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);

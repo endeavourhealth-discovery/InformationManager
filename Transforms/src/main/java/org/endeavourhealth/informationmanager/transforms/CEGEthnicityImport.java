@@ -36,9 +36,9 @@ public class CEGEthnicityImport implements TTImport {
 		document.setCrud(IM.UPDATE);
 		nhsDocument= nhsManager.createDocument(IM.GRAPH_NHSDD_ETHNIC_2001.getIri());
 
-		retrieveEthnicity(config.secure);
+		retrieveEthnicity(config.isSecure());
 		spellCorrections();
-		importEthnicGroups(config.folder);
+		importEthnicGroups(config.getFolder());
 
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);

@@ -55,13 +55,13 @@ public class BartsCernerImport implements TTImport {
 		document.setCrud(IM.UPDATE);
 		document.addEntity(manager.createGraph(IM.GRAPH_BARTS_CERNER.getIri(),"Barts Cerner code scheme and graph"
 		,"The Barts Cerner local code scheme and graph i.e. local codes with links to cor"));
-		importSets(config.folder);
-		importHierarchy(config.folder);
-		importCodes(config.folder);
-		importUsed(config.folder);
+		importSets(config.getFolder());
+		importHierarchy(config.getFolder());
+		importCodes(config.getFolder());
+		importUsed(config.getFolder());
 		setUsedEventSets();
 		setTopLevel();
-		importMaps(config.folder);
+		importMaps(config.getFolder());
 
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);

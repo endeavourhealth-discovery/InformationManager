@@ -32,7 +32,7 @@ public class IM1MapImport implements TTImport {
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
-        return importData(config.folder, config.secure, null);
+        return importData(config.getFolder(), config.isSecure(), null);
     }
 
     public TTImport importData(String inFolder, boolean secure, Integer lastDbid) throws Exception {
