@@ -11,6 +11,7 @@ import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
+import org.endeavourhealth.imapi.dataaccess.helpers.ConnectionManager;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
@@ -57,6 +58,30 @@ public class ImportUtils {
       }
           )
       );
+   }
+
+   /**
+    * Extracts term codes from Snomed entities
+    * @return Map of description code to entity
+    */
+
+   public static Map<String, String> getDescriptionIds() throws TTFilerException {
+      Map<String,String> termMap= new HashMap<>();
+      try (RepositoryConnection conn= ConnectionManager.getIMConnection();){
+         TupleQuery qry= conn.prepareTupleQuery("PREFIX im: <http://endhealth.info/im#>\n" +
+           "select ?snomed ?descid\n" +
+           "where { graph <http://snomed.info/sct#> {\n" +
+           "    ?snomed im:hasTermCode ?node.\n" +
+           "    ?node im:code ?descid. }}");
+         TupleQueryResult rs= qry.evaluate();
+         while (rs.hasNext()){
+            BindingSet bs=rs.next();
+            termMap.put(bs.getValue("descid").stringValue(),bs.getValue("snomed").stringValue());
+         }
+      }catch (RepositoryException e){
+         throw new TTFilerException("Unable to retrieve snomed term codes");
+      }
+      return termMap;
    }
 
    private enum FilerType {
@@ -112,11 +137,7 @@ public class ImportUtils {
       return list.size()==0;
    }
 
-   public static RepositoryConnection getGraphConnection(){
-      //repo = new SailRepository(new NativeStore(new File("Z:\\rdf4j")));
-      Repository repo = new HTTPRepository("http://localhost:7200/", "im");
-      return repo.getConnection();
-   }
+
 
    /**
     * Creates a JDBC connection given a set of environment varables
@@ -187,6 +208,20 @@ public class ImportUtils {
          return importSnomedRDF4J(snomedCodes);
    }
 
+
+
+   /**
+    * Retrieves entities from IM
+    * @return a set of snomed codes
+    * @throws TTFilerException if using rdf4j
+    * @throws SQLException if using jdbc
+    * @throws ClassNotFoundException if using jdbc
+    */
+   public  static Set<String> importEntities() throws TTFilerException, SQLException, ClassNotFoundException {
+      Set<String> entities = new HashSet<>();
+      return importAllRDF4J(entities);
+   }
+
    /**
     * Retieves read to Snomed maps, using the Vision code scheme as a proxy for read
     * @return the code to Snomed code one to many map
@@ -211,7 +246,7 @@ public class ImportUtils {
     */
    public static Map<String,List<String>> getDescendants(String concept,String scheme) throws TTFilerException {
       Map<String, List<String>> codeToTerm = new HashMap<>();
-      RepositoryConnection conn = getGraphConnection();
+      RepositoryConnection conn = ConnectionManager.getIMConnection();
       TupleQuery qry = conn.prepareTupleQuery("select ?child ?name\n" +
         "where {GRAPH <"+SNOMED.GRAPH_SNOMED.getIri()+"> { ?child <" + RDFS.SUBCLASSOF.getIri() + ">+ ?concept.\n" +
         "?child <" + RDFS.LABEL.getIri() + "> ?name.}}");
@@ -236,10 +271,30 @@ public class ImportUtils {
 
 
 
+   private static Set<String> importAllRDF4J(Set<String> entities) throws TTFilerException {
+
+      try (RepositoryConnection conn= ConnectionManager.getIMConnection();){
+         TupleQuery qry= conn.prepareTupleQuery("select distinct ?entity\n"+
+           "where {?entity  <http://www.w3.org/2000/01/rdf-schema#label> ?label." +
+           " filter (isIri(?entity))}");
+         TupleQueryResult rs= qry.evaluate();
+         while (rs.hasNext()){
+            BindingSet bs=rs.next();
+            entities.add(bs.getValue("entity").stringValue());
+         }
+      }catch (RepositoryException e){
+         throw new TTFilerException("Unable to retrieve entities");
+      }
+      return entities;
+   }
+
+
+
+
 
    private static Set<String> importSnomedRDF4J(Set<String> snomedCodes) throws TTFilerException {
 
-      try (RepositoryConnection conn= getGraphConnection();){
+      try (RepositoryConnection conn= ConnectionManager.getIMConnection();){
          TupleQuery qry= conn.prepareTupleQuery("select ?snomed\n"+
            "where {?concept <"+ IM.HAS_SCHEME.getIri()+"> <"+SNOMED.GRAPH_SNOMED.getIri()+">.\n"+
            "?concept <"+IM.CODE.getIri()+"> ?snomed}");
@@ -258,7 +313,7 @@ public class ImportUtils {
 
    private static Map<String, List<String>> importReadToSnomedRdf4j(Map<String, List<String>> readToSnomed) throws TTFilerException {
 
-      try (RepositoryConnection conn= getGraphConnection()){
+      try (RepositoryConnection conn= ConnectionManager.getIMConnection()){
      TupleQuery qry= conn.prepareTupleQuery("select ?code ?snomed\n"+
        "where {GRAPH <"+IM.GRAPH_VISION.getIri()+"> {?concept <"+IM.CODE.getIri()+"> ?code. \n"+
    "?concept <"+IM.MATCHED_TO.getIri()+"> ?snomed.}}");
@@ -287,7 +342,7 @@ public class ImportUtils {
 
    private static Map<String, TTEntity> getEMISReadAsVisionRdf4j() {
       Map<String,TTEntity> emisRead2= new HashMap<>();
-      try (RepositoryConnection conn= getGraphConnection()) {
+      try (RepositoryConnection conn= ConnectionManager.getIMConnection()) {
          StringJoiner sql = new StringJoiner("\n");
          sql.add("SELECT ?code ?name ?snomed");
          sql.add("WHERE {");
@@ -347,7 +402,7 @@ public class ImportUtils {
 
    private static Map<String,Set<String>> importEmisToSnomedRdf4j() throws TTFilerException {
       Map<String,Set<String>> emisToSnomed= new HashMap<>();
-      RepositoryConnection conn= getGraphConnection();
+      RepositoryConnection conn= ConnectionManager.getIMConnection();
       TupleQuery qry= conn.prepareTupleQuery("select ?code ?snomed  ?name\n"+
         "where {GRAPH <"+IM.GRAPH_EMIS.getIri()+"> \n"+
           "{?concept <"+IM.CODE.getIri()+"> ?code. \n"+

@@ -78,7 +78,8 @@ public class ImportApp {
 //                    .validateByType(IM.GRAPH_IM1, cfg.folder)
                     .validateByType(IM.GRAPH_ODS, cfg.getFolder())
                   .validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
-                 .validateByType(IM.GRAPH_CEG_QUERY, cfg.getFolder());
+                 .validateByType(IM.GRAPH_CEG_QUERY, cfg.getFolder())
+                  .validateByType(IM.GRAPH_IM1, cfg.getFolder());
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
                 importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
                 importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
@@ -90,15 +91,15 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
                 importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
                 importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
-//                importer.importByType(IM.GRAPH_IM1, cfg);
                 importer.importByType(IM.GRAPH_ODS, cfg);
                 importer.importByType(IM.GRAPH_NHS_TFC,cfg);
                 importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
+                importer.importByType(IM.GRAPH_IM1, cfg);
                 break;
-//            case "imv1":
-//                importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.folder);
-//                importer.importByType(IM.GRAPH_IM1, cfg);
-//                break;
+            case "imv1":
+                importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.getFolder());
+                importer.importByType(IM.GRAPH_IM1, cfg);
+                break;
             case "prsb":
                 importer = new Importer().validateByType(IM.GRAPH_PRSB, cfg.getFolder());
                 importer.importByType(IM.GRAPH_PRSB, cfg);

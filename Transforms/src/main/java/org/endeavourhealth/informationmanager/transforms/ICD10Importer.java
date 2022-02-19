@@ -33,7 +33,7 @@ public class ICD10Importer implements TTImport {
     private TTDocument document;
     private TTDocument mapDocument;
     private final Map<String,TTEntity> codeToEntity= new HashMap<>();
-    private final Map<String,TTEntity> noDotCodeToEntity= new HashMap<>();
+    private final Map<String,TTEntity> altCodeToEntity= new HashMap<>();
 
     @Override
     public TTImport importData(TTImportConfig config) throws Exception {
@@ -106,7 +106,7 @@ public class ICD10Importer implements TTImport {
         validateFiles(folder);
         Path file = ImportUtils.findFileForId(folder,maps[0]);
         ComplexMapImporter mapImport= new ComplexMapImporter();
-        mapImport.importMap(file.toFile(),mapDocument,noDotCodeToEntity,"999002271000000101",snomedCodes);
+        mapImport.importMap(file.toFile(),mapDocument,altCodeToEntity,"999002271000000101",snomedCodes);
     }
 
 
@@ -159,7 +159,7 @@ public class ICD10Importer implements TTImport {
                 TTEntity c = new TTEntity()
                   .setCode(fields[0])
                   .setScheme(IM.CODE_SCHEME_ICD10)
-                  .setIri(IM.CODE_SCHEME_ICD10.getIri() + fields[1])
+                  .setIri(IM.CODE_SCHEME_ICD10.getIri() + (fields[0].replace(".","_")))
                   .addType(IM.CONCEPT);
                 if(fields[4].length()>250){
                     c.setName(fields[4].substring(0,200));
@@ -170,7 +170,7 @@ public class ICD10Importer implements TTImport {
 
 
                 codeToEntity.put(fields[0],c);
-                noDotCodeToEntity.put(fields[0].replace(".",""),c);
+                altCodeToEntity.put(fields[1],c);
                 document.addEntity(c);
                 line = reader.readLine();
             }

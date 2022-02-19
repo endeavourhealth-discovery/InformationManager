@@ -33,10 +33,15 @@ public class SnomedImporter implements TTImport {
      ".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKCRSnapshot_.*\\.txt",
      ".*\\\\ukpc_sct2_.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_Snapshot_.*\\.txt"
    };
+
    public static final String[] refsets= {
      ".*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleUKCRSnapshot_.*\\.txt",
      ".*\\\\ukpc_sct2_.*\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleSnapshot_.*\\.txt"
      };
+
+
+  public static final String[] qofClusters= {
+    ".*_PCD_Refset_Content.txt"};
 
    public static final String[] descriptions = {
 
@@ -116,6 +121,7 @@ public class SnomedImporter implements TTImport {
       importRelationshipFiles(config.getFolder());
       setRefSetRoot();
       importSubstitution(config.getFolder());
+      importQof(config.getFolder());
       conceptMap.clear();
 
        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
@@ -147,6 +153,61 @@ public class SnomedImporter implements TTImport {
       TTEntity root= conceptMap.get("900000000000455006");
       root.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets")));
    }
+
+  private void importQof(String path) throws IOException {
+    int i = 0;
+    counter = 0;
+    for (String clusterFile : qofClusters) {
+      Path file = ImportUtils.findFilesForId(path, clusterFile).get(0);
+      System.out.println("Processing qof cluster synonyms in " + file.getFileName().toString());
+      String qofFile= file.toFile().getName();
+      String version= qofFile.split("_")[0];
+      TTEntity clusters= new TTEntity()
+        .setIri(IM.NAMESPACE+"QofClusters")
+        .setName("QOF Code clusters")
+        .setDescription("QOF code cluster reference sets issued on "+version)
+        .addType(IM.FOLDER);
+      clusters
+        .addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets"));
+      document.addEntity(clusters);
+      TTEntity clusterFolder= new TTEntity()
+        .setIri(IM.NAMESPACE+"QofClusters"+version)
+        .setName("QOF Code clusters - "+ version)
+        .setDescription("QOF code cluster reference sets issued on "+version)
+        .addType(IM.FOLDER);
+        clusterFolder
+        .addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QofClusters"));
+      document.addEntity(clusterFolder);
+
+      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        reader.readLine(); // NOSONAR - Skip header
+        String line = reader.readLine();
+        while (line != null && !line.isEmpty()) {
+          String[] fields = line.split("\t");
+          String refset= fields[4];
+          String clusterTerm=fields[0];
+          String imTerm = clusterTerm +" code cluster";
+          TTEntity c= conceptMap.get(refset);
+          if (!hasTermCode(c,imTerm)) {
+            c.addObject(IM.HAS_TERM_CODE, new TTNode().set(RDFS.LABEL, TTLiteral.literal(imTerm)));
+            c.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(clusterFolder.getIri()));
+          }
+          line= reader.readLine();
+        }
+      }
+    }
+  }
+  private boolean hasTermCode(TTEntity entity,String term){
+     if (entity.get(IM.HAS_TERM_CODE)==null)
+       return false;
+     for  (TTValue tc:entity.get(IM.HAS_TERM_CODE).getElements()) {
+       if (tc.asNode().get(RDFS.LABEL).asLiteral().getValue()
+         .equals(term))
+         return true;
+     }
+     return false;
+
+  }
 
    private void importSubstitution(String path) throws IOException {
       int i = 0;
@@ -251,9 +312,7 @@ public class SnomedImporter implements TTImport {
         if (c!=null) {
            if (!c.isType(IM.CONCEPT_SET))
               c.set(RDF.TYPE,new TTArray().add(IM.CONCEPT_SET));
-           if (c.get(IM.DEFINITION)==null)
-              c.set(IM.DEFINITION,new TTNode());
-           c.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
+           c.addObject(IM.HAS_MEMBER,TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
         }
     }
 
@@ -293,6 +352,8 @@ public class SnomedImporter implements TTImport {
               }
               TTManager.addTermCode(c, fields[7],fields[0]);
            }
+           else
+             TTManager.addTermCode(c,fields[7],fields[0],IM.INACTIVE);
         }
     }
 
@@ -506,7 +567,7 @@ public class SnomedImporter implements TTImport {
 
    public SnomedImporter validateFiles(String inFolder){
       ImportUtils.validateFiles(inFolder,concepts, descriptions,
-          relationships, refsets, attributeRanges, attributeDomains,substitutions);
+          relationships, refsets, attributeRanges, attributeDomains,substitutions,qofClusters);
       return this;
 
    }

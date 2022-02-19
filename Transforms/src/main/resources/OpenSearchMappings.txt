@@ -1,0 +1,13 @@
+PUT {index}/_mapping
+ {"properties": {
+    "scheme.@id": {
+      "type": "keyword"
+    },
+    "entityType.@id":{
+      "type": "keyword"
+    },
+    "status.@id" : {
+      "type" : "keyword"
+    }
+  }
+ }

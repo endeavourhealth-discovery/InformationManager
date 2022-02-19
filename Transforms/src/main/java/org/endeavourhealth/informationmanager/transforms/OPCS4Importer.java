@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +36,7 @@ public class OPCS4Importer implements TTImport {
 
     private Set<String> snomedCodes;
     private final Map<String,TTEntity> codeToEntity= new HashMap<>();
+    private final Map<String,TTEntity> altCodeToEntity= new HashMap<>();
 
     public TTImport importData(TTImportConfig config) throws Exception {
         System.out.println("Importing OPCS4.....");
@@ -61,7 +63,7 @@ public class OPCS4Importer implements TTImport {
     public TTDocument importMaps(String folder) throws IOException, DataFormatException {
         Path file = ImportUtils.findFileForId(folder,maps[0]);
         ComplexMapImporter mapImport= new ComplexMapImporter();
-        mapImport.importMap(file.toFile(),mapDocument,codeToEntity,"1126441000000105",snomedCodes);
+        mapImport.importMap(file.toFile(),mapDocument,altCodeToEntity,"1126441000000105",snomedCodes);
         return document;
     }
 
@@ -89,11 +91,20 @@ public class OPCS4Importer implements TTImport {
                     .setCode(chapter)
                   .addType(IM.CONCEPT)
                     .set(IM.IS_CHILD_OF,new TTArray().add(iri(opcs.getIri())));
+                codeToEntity.put(chapter,c);
                 TTManager.addTermCode(c,term,chapter);
                 document.addEntity(c);
                 line= reader.readLine();
             }
         }
+        TTEntity c= new TTEntity()
+        .setIri(IM.CODE_SCHEME_OPCS4.getIri()+"O")
+          .setName("Overflow codes (chapter "+"O"+")")
+          .setCode("O")
+          .addType(IM.CONCEPT)
+          .set(IM.IS_CHILD_OF,new TTArray().add(iri(opcs.getIri())));
+        codeToEntity.put("O",c);
+        document.addEntity(c);
     }
 
     private void importEntities(String folder, TTDocument document) throws IOException {
@@ -110,13 +121,24 @@ public class OPCS4Importer implements TTImport {
                     System.out.println("Processed " + count + " records");
                 }
                 String[] fields = line.split("\t");
+                String code=fields[0];
+                String altCode= fields[1];
                 TTEntity c = new TTEntity()
                         .setCode(fields[0])
                   .setScheme(IM.CODE_SCHEME_OPCS4)
-                        .setIri(IM.CODE_SCHEME_OPCS4.getIri() + (fields[0].replace(".","")))
-                        .addType(IM.CONCEPT)
-                    .set(IM.IS_CHILD_OF,new TTArray().add(iri(IM.CODE_SCHEME_OPCS4.getIri()+fields[0].substring(0,1))));
-                codeToEntity.put(fields[0].replace(".",""),c);
+                        .setIri(IM.CODE_SCHEME_OPCS4.getIri() + (fields[0].replace(".","_")))
+                        .addType(IM.CONCEPT);
+                if (code.contains(".")){
+                    String qParent= code.substring(0, code.indexOf("."));
+                    TTEntity parent=codeToEntity.get(qParent);
+                    c.addObject(IM.IS_CHILD_OF,TTIriRef.iri(parent.getIri()));
+                } else {
+                    String qParent= code.substring(0,1);
+                    TTEntity parent=codeToEntity.get(qParent);
+                    c.addObject(IM.IS_CHILD_OF,TTIriRef.iri(parent.getIri()));
+                }
+                codeToEntity.put(fields[0],c);
+                altCodeToEntity.put(fields[1],c);
                     if(fields[1].length()>250){
                         c.setName(fields[1].substring(0,150));
                     }else {

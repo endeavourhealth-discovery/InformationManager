@@ -5,10 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.model.tripletree.TTUtil;
+import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.EqdToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
@@ -26,7 +23,7 @@ import java.util.zip.DataFormatException;
 public class CEGImporter implements TTImport {
 	private TTDocument document;
 	private TTEntity owner;
-	private Set<TTEntity> allEntities = new HashSet<>();
+	private final Set<TTEntity> allEntities = new HashSet<>();
 
 	private static final String[] queries = {".*\\\\CEGQuery"};
 	private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
@@ -45,17 +42,40 @@ public class CEGImporter implements TTImport {
 		createFolders();
 		loadAndConvert(config.getFolder());
 		WrapAsJson();
+		Map<String,TTEntity> vsetFolderMap= new HashMap<>();
+		Set<TTEntity> vsetFolders= new HashSet<>();
 		for (TTEntity entity:document.getEntities()){
-			if (entity.isType(IM.CONCEPT_SET))
-				entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets"));
-		}
+			if (entity.isType(IM.CONCEPT_SET)) {
+				for (TTValue usedIn:entity.get(IM.USED_IN).getElements()){
+					TTEntity report =manager.getEntity(usedIn.asIriRef().getIri());
+					TTEntity vsetFolder= vsetFolderMap.get(usedIn.asIriRef().getIri());
+					if (vsetFolder==null) {
+						String reportName = report.getName();
+						String vsetFolderIri = IM.GRAPH_CEG_QUERY.getIri() + "FOLDER_" + report.getIri();
+						vsetFolder = new TTEntity()
+							.setIri(vsetFolderIri)
+							.addType(IM.FOLDER)
+							.setName("Value sets used in " + reportName);
+						vsetFolder.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri() + "CSET_CEGConceptSets"));
+						vsetFolders.add(vsetFolder);
+					}
+					entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(vsetFolder.getIri()));
+				}
 
+			}
+		}
+		for (TTEntity folder:vsetFolders){
+			document.addEntity(folder);
+		}
 
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}
 		return this;
 	}
+
+
+
 
 	private void WrapAsJson() throws JsonProcessingException {
 		for (TTEntity entity:document.getEntities()){
@@ -78,7 +98,7 @@ public class CEGImporter implements TTImport {
 			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets")
 			.setName("QMUL CEG concept set library")
 			.addType(IM.FOLDER)
-			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Sets"));
+			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets"));
 		document.addEntity(folder);
 	}
 

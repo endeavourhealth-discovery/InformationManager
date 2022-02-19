@@ -34,7 +34,8 @@ public class OpenSearchSender {
     private final String osAuth = System.getenv("OPENSEARCH_AUTH");
     private final String server = System.getenv("GRAPH_SERVER");
     private final String repoId = System.getenv("GRAPH_REPO");
-    private final String index = "staging";
+    private final String index = System.getenv("OPENSEARCH_INDEX");
+    private final Map<String,OpenSearchDocument> osMap= new HashMap<>();
 
     public void execute() throws IOException, InterruptedException {
         checkEnvs();
@@ -47,26 +48,28 @@ public class OpenSearchSender {
     private void continueUpload(int maxId) throws JsonProcessingException, InterruptedException {
         target = client.target(osUrl).path("_bulk");
 
-        List<OpenSearchDocument> docs = new ArrayList<>(BULKSIZE);
-
         LOG.info("Connecting to database...");
 
         String sql = new StringJoiner(System.lineSeparator())
             .add("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>")
             .add("PREFIX im: <http://endhealth.info/im#>")
             .add("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>")
-            .add("select ?iri ?name ?code ?scheme ?schemeName ?type ?typeName ?status ?statusName")
+            .add("select ?iri ?name ?code ?scheme ?schemeName ?type ?typeName ?status ?statusName ?synonym ?weighting")
             .add("where {")
-            .add("  ?iri im:status ?status;")
-            .add("       rdf:type ?type .")
-            .add("  GRAPH ?scheme { ?iri rdfs:label ?name }")
+            .add("  ?iri im:status ?status.")
+            .add("  ?iri rdf:type ?type.")
+            .add("  ?iri im:scheme ?scheme.")
+            .add("  ?iri rdfs:label ?name. }")
+            .add("     filter(isIri(?iri))")
             .add("  OPTIONAL { ?iri im:code ?code }")
             .add("  OPTIONAL { ?status rdfs:label ?statusName }")
             .add("  OPTIONAL { ?scheme rdfs:label ?schemeName }")
             .add("  OPTIONAL { ?type rdfs:label ?typeName }")
+            .add("  OPTIONAL { ?iri im:hasTermCode ?tc.")
+            .add("             ?tc rdfs:label ?synonym}")
+             .add(" OPTIONAL { ?iri im:weighting ?weighting} ")
             .add("}")
             .add("ORDER BY ?iri")
-            // limit 100
             .toString();
 
         LOG.info("Connecting");
@@ -80,60 +83,46 @@ public class OpenSearchSender {
             try (TupleQueryResult qr = tupleQuery.evaluate()) {
 
                 LOG.info("Processing...");
+                List<OpenSearchDocument> docs = new ArrayList<>(BULKSIZE);
                 processResults(maxId, docs, qr);
 
                 if (!docs.isEmpty())
-                    postMeili(docs);
+                    index(docs);
             }
         }
     }
 
     private void processResults(int maxId, List<OpenSearchDocument> docs, TupleQueryResult qr) throws JsonProcessingException, InterruptedException {
         int i = 0;
-        OpenSearchDocument blob = null;
         while (qr.hasNext()) {
             BindingSet rs = qr.next();
-
-            boolean newConcept = (blob == null) || !blob.getIri().equals(rs.getValue("iri").stringValue());
-
-            if (newConcept)
-                i++;
-
-            if (i > maxId) {
-                blob = processDocument(docs, blob, i, rs, newConcept);
-            } else if ((i % BULKSIZE) == 0) {
-                LOG.info("...skipped {} concepts", i);
+            String iri= rs.getValue("iri").stringValue();
+            OpenSearchDocument blob= osMap.get(iri);
+            if (blob==null){
+                blob = new OpenSearchDocument()
+                  .setId(i)
+                  .setIri(rs.getValue("iri").stringValue())
+                  .setName(rs.getValue("name").stringValue())
+                  .setCode(rs.hasBinding("code") ? rs.getValue("code").stringValue() : null)
+                  .setScheme(iri(rs.getValue("scheme").stringValue(), rs.hasBinding("schemeName") ? rs.getValue("schemeName").stringValue() : null))
+                  .setStatus(iri(rs.getValue("status").stringValue(), rs.hasBinding("statusName") ? rs.getValue("statusName").stringValue() : null));
+                osMap.put(iri,blob);
+                docs.add(blob);
             }
+            blob.addType(iri(rs.getValue("type").stringValue(), rs.hasBinding("typeName") ? rs.getValue("typeName").stringValue() : null));
+            if (rs.getValue("synonym")!=null)
+                blob.addSynonym(rs.getValue("synonym").stringValue());
+            if (rs.getValue("weighting")!=null)
+                blob.setWeighting(Integer.parseInt(rs.getValue("weighting").stringValue()));
+
         }
     }
 
-    private OpenSearchDocument processDocument(List<OpenSearchDocument> docs, OpenSearchDocument blob, int i, BindingSet rs, boolean newConcept) throws JsonProcessingException, InterruptedException {
-        if (newConcept) {
-            if (docs.size() == BULKSIZE) {
-                postMeili(docs);
-                docs.clear();
-                LOG.info("...processed {} concepts", i);
-            }
-
-            blob = new OpenSearchDocument()
-                .setId(i)
-                .setIri(rs.getValue("iri").stringValue())
-                .setName(rs.getValue("name").stringValue())
-                .setCode(rs.hasBinding("code") ? rs.getValue("code").stringValue() : null)
-                .setScheme(iri(rs.getValue("scheme").stringValue(), rs.hasBinding("schemeName") ? rs.getValue("schemeName").stringValue() : null))
-                .setStatus(iri(rs.getValue("status").stringValue(), rs.hasBinding("statusName") ? rs.getValue("statusName").stringValue() : null))
-                .addType(iri(rs.getValue("type").stringValue(), rs.hasBinding("typeName") ? rs.getValue("typeName").stringValue() : null));
-            docs.add(blob);
-        } else {
-            blob.addType(iri(rs.getValue("type").stringValue(), rs.getValue("typeName").stringValue()));
-        }
-        return blob;
-    }
 
     private void checkEnvs() {
         boolean missingEnvs = false;
 
-        for(String env : Arrays.asList("OPENSEARCH_AUTH", "OPENSEARCH_URL", "GRAPH_SERVER", "GRAPH_REPO")) {
+        for(String env : Arrays.asList("OPENSEARCH_AUTH", "OPENSEARCH_URL","OPENSEARCH_INDEX","GRAPH_SERVER", "GRAPH_REPO")) {
             String envData = System.getenv(env);
             if (envData == null || envData.isEmpty()) {
                 LOG.error("Environment variable {} not set", env);
@@ -145,7 +134,7 @@ public class OpenSearchSender {
             System.exit(-1);
     }
 
-    private void postMeili(List<OpenSearchDocument> docs) throws JsonProcessingException, InterruptedException {
+    private void index(List<OpenSearchDocument> docs) throws JsonProcessingException, InterruptedException {
         StringJoiner batch = new StringJoiner("\n");
 
         for (OpenSearchDocument doc : docs) {
@@ -172,6 +161,7 @@ public class OpenSearchSender {
 
                 if (retrySleep < 60)
                     retrySleep = retrySleep * 2;
+
 
             } else if (response.getStatus() != 200 && response.getStatus() != 201) {
                 String responseData = response.readEntity(String.class);

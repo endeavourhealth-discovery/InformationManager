@@ -1,9 +1,12 @@
 package org.endeavourhealth.informationmanager.scratch.opensearch;
 
+import org.endeavourhealth.imapi.model.tripletree.TTArray;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class OpenSearchDocument {
     Integer id;
@@ -11,8 +14,10 @@ public class OpenSearchDocument {
     String name;
     String code;
     TTIriRef scheme;
-    List<TTIriRef> entityType = new ArrayList<>();
+    Set<TTIriRef> entityType = new HashSet<>();
     TTIriRef status;
+    Set<String> synonyms = new HashSet<>();
+    Integer weighting;
 
     public Integer getId() {
         return id;
@@ -59,11 +64,11 @@ public class OpenSearchDocument {
         return this;
     }
 
-    public List<TTIriRef> getEntityType() {
+    public Set<TTIriRef> getEntityType() {
         return entityType;
     }
 
-    public OpenSearchDocument setEntityType(List<TTIriRef> entityType) {
+    public OpenSearchDocument setEntityType(Set<TTIriRef> entityType) {
         this.entityType = entityType;
         return this;
     }
@@ -79,6 +84,29 @@ public class OpenSearchDocument {
 
     public OpenSearchDocument addType(TTIriRef type) {
         this.entityType.add(type);
+        return this;
+    }
+
+    public Set<String> getSynonyms(){
+        return this.synonyms;
+    }
+
+    public OpenSearchDocument addSynonym(String synonym){
+        synonyms.add(synonym);
+        return this;
+    }
+
+    public OpenSearchDocument setSynonyms(Set<String> synonyms) {
+        this.synonyms = synonyms;
+        return this;
+    }
+
+    public Integer getWeighting() {
+        return weighting;
+    }
+
+    public OpenSearchDocument setWeighting(Integer weighting) {
+        this.weighting = weighting;
         return this;
     }
 }
