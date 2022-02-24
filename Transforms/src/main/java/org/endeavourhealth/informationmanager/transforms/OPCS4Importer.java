@@ -89,10 +89,10 @@ public class OPCS4Importer implements TTImport {
                 c.setIri(IM.CODE_SCHEME_OPCS4.getIri()+chapter)
                     .setName(term+" (chapter "+chapter+")")
                     .setCode(chapter)
+                  .setScheme(IM.CODE_SCHEME_OPCS4)
                   .addType(IM.CONCEPT)
                     .set(IM.IS_CHILD_OF,new TTArray().add(iri(opcs.getIri())));
                 codeToEntity.put(chapter,c);
-                TTManager.addTermCode(c,term,chapter);
                 document.addEntity(c);
                 line= reader.readLine();
             }

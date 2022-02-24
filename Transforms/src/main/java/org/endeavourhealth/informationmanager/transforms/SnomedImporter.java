@@ -342,18 +342,18 @@ public class SnomedImporter implements TTImport {
         // if (fields[4].equals("900000000000455006"))
         // System.out.println(fields[7]);
         TTEntity c = conceptMap.get(fields[4]);
+
         if (c!=null) {
            if (fields[7].contains("(attribute)")) {
               c.addType(RDF.PROPERTY);
            }
-           if (ACTIVE.equals(fields[2])) {
-              if (FULLY_SPECIFIED.equals(fields[6]) || c.getName()==null) {
-                    c.setName(fields[7]);
-              }
-              TTManager.addTermCode(c, fields[7],fields[0]);
-           }
-           else
-             TTManager.addTermCode(c,fields[7],fields[0],IM.INACTIVE);
+          if (FULLY_SPECIFIED.equals(fields[6]) || c.getName()==null) {
+            c.setName(fields[7]);
+          }
+            if (ACTIVE.equals(fields[2]))
+              TTManager.addTermCode(c, fields[7], fields[0],IM.ACTIVE);
+            else
+              TTManager.addTermCode(c, fields[7], fields[0], IM.INACTIVE);
         }
     }
 

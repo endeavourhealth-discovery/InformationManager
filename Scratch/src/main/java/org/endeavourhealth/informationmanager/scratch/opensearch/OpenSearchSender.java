@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.scratch.opensearch;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +9,11 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
+import org.endeavourhealth.imapi.model.search.EntityDocument;
+import org.endeavourhealth.imapi.model.search.SearchTermCode;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
+import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +31,7 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class OpenSearchSender {
     private static final Logger LOG = LoggerFactory.getLogger(OpenSearchSender.class);
-    private static final int BULKSIZE = 10000;
+    private static final int BULKSIZE = 500000;
     private final Client client = ClientBuilder.newClient();
     private WebTarget target;
     private final ObjectMapper om = new ObjectMapper();
@@ -35,87 +41,210 @@ public class OpenSearchSender {
     private final String server = System.getenv("GRAPH_SERVER");
     private final String repoId = System.getenv("GRAPH_REPO");
     private final String index = System.getenv("OPENSEARCH_INDEX");
-    private final Map<String,OpenSearchDocument> osMap= new HashMap<>();
+    private final HTTPRepository repo = new HTTPRepository(server, repoId);
+    private Map<String,EntityDocument> docs;
 
-    public void execute() throws IOException, InterruptedException {
+    public void execute(boolean update) throws IOException, InterruptedException {
+        om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        om.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        om.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
         checkEnvs();
-
-        int maxId = getMaxDocument();
+        int maxId=0;
+        if (!update)
+            maxId = getMaxDocument();
 
         continueUpload(maxId);
     }
 
+
     private void continueUpload(int maxId) throws JsonProcessingException, InterruptedException {
         target = client.target(osUrl).path("_bulk");
-
-        LOG.info("Connecting to database...");
-
+        docs= new HashMap<>();
         String sql = new StringJoiner(System.lineSeparator())
-            .add("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>")
-            .add("PREFIX im: <http://endhealth.info/im#>")
-            .add("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>")
-            .add("select ?iri ?name ?code ?scheme ?schemeName ?type ?typeName ?status ?statusName ?synonym ?weighting")
-            .add("where {")
-            .add("  ?iri im:status ?status.")
-            .add("  ?iri rdf:type ?type.")
-            .add("  ?iri im:scheme ?scheme.")
-            .add("  ?iri rdfs:label ?name. }")
-            .add("     filter(isIri(?iri))")
-            .add("  OPTIONAL { ?iri im:code ?code }")
-            .add("  OPTIONAL { ?status rdfs:label ?statusName }")
-            .add("  OPTIONAL { ?scheme rdfs:label ?schemeName }")
-            .add("  OPTIONAL { ?type rdfs:label ?typeName }")
-            .add("  OPTIONAL { ?iri im:hasTermCode ?tc.")
-            .add("             ?tc rdfs:label ?synonym}")
-             .add(" OPTIONAL { ?iri im:weighting ?weighting} ")
-            .add("}")
-            .add("ORDER BY ?iri")
-            .toString();
-
-        LOG.info("Connecting");
-
-        HTTPRepository repo = new HTTPRepository(server, repoId);
-        repo.initialize();
+          .add("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>")
+          .add("PREFIX im: <http://endhealth.info/im#>")
+          .add("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>")
+          .add("select ?iri")
+          .add("where {")
+          .add("  ?iri rdfs:label ?name.")
+          .add("  filter(isIri(?iri))")
+          .add("}")
+          .add("order by ?iri").toString();
         try (RepositoryConnection conn = repo.getConnection()) {
-            LOG.info("Fetching...");
-
+            LOG.info("Fetching entity iris  ...");
             TupleQuery tupleQuery = conn.prepareTupleQuery(sql);
+            EntityDocument blob = null;
+            String lastIri = null;
             try (TupleQueryResult qr = tupleQuery.evaluate()) {
-
-                LOG.info("Processing...");
-                List<OpenSearchDocument> docs = new ArrayList<>(BULKSIZE);
-                processResults(maxId, docs, qr);
-
-                if (!docs.isEmpty())
-                    index(docs);
+                while (qr.hasNext()) {
+                    BindingSet rs = qr.next();
+                    String iri = rs.getValue("iri").stringValue();
+                    if (!iri.equals(lastIri)) {
+                        blob = new EntityDocument();
+                        blob.setIri(iri);
+                        docs.put(iri, blob);
+                        lastIri = iri;
+                    }
+                }
+            }
+        }
+        //assign docids in order of keys
+        int docid=0;
+        for (Map.Entry<String,EntityDocument> entry:docs.entrySet()) {
+            docid++;
+            entry.getValue().setId(docid);
+        }
+        int mapNumber = 0;
+        int member = 0;
+        int batchSize = 10000;
+        Iterator<Map.Entry<String, EntityDocument>> mapIterator = docs.entrySet().iterator();
+        while (mapIterator.hasNext()) {
+            Map.Entry<String, EntityDocument> entry = mapIterator.next();
+            mapNumber++;
+            if (mapNumber > maxId) {
+                List<String> iriBatch = new ArrayList<>();
+                iriBatch.add("<"+ entry.getKey()+">");
+                while (member < batchSize) {
+                    member++;
+                    mapNumber++;
+                    if (mapIterator.hasNext()) {
+                        entry = mapIterator.next();
+                        iriBatch.add("<" + entry.getKey() + ">");
+                    }
+                }
+                if (!iriBatch.isEmpty()) {
+                    String inList = String.join(",", iriBatch);
+                    Set<EntityDocument> batch= getEntityBatch(inList,mapNumber);
+                    index(batch);
+                    member=0;
+                }
             }
         }
     }
 
-    private void processResults(int maxId, List<OpenSearchDocument> docs, TupleQueryResult qr) throws JsonProcessingException, InterruptedException {
-        int i = 0;
-        while (qr.hasNext()) {
-            BindingSet rs = qr.next();
-            String iri= rs.getValue("iri").stringValue();
-            OpenSearchDocument blob= osMap.get(iri);
-            if (blob==null){
-                blob = new OpenSearchDocument()
-                  .setId(i)
-                  .setIri(rs.getValue("iri").stringValue())
-                  .setName(rs.getValue("name").stringValue())
-                  .setCode(rs.hasBinding("code") ? rs.getValue("code").stringValue() : null)
-                  .setScheme(iri(rs.getValue("scheme").stringValue(), rs.hasBinding("schemeName") ? rs.getValue("schemeName").stringValue() : null))
-                  .setStatus(iri(rs.getValue("status").stringValue(), rs.hasBinding("statusName") ? rs.getValue("statusName").stringValue() : null));
-                osMap.put(iri,blob);
-                docs.add(blob);
-            }
-            blob.addType(iri(rs.getValue("type").stringValue(), rs.hasBinding("typeName") ? rs.getValue("typeName").stringValue() : null));
-            if (rs.getValue("synonym")!=null)
-                blob.addSynonym(rs.getValue("synonym").stringValue());
-            if (rs.getValue("weighting")!=null)
-                blob.setWeighting(Integer.parseInt(rs.getValue("weighting").stringValue()));
+    private Set<EntityDocument> getEntityBatch(String inList, int mapNumber) {
+        Set<EntityDocument> batch= new HashSet<>();
+        String sql = new StringJoiner(System.lineSeparator())
+          .add("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>")
+          .add("PREFIX im: <http://endhealth.info/im#>")
+          .add("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>")
+          .add("select ?iri ?name ?status ?statusName ?code ?scheme ?schemeName ?type ?typeName ?weighting ?termCode ?synonym ?termCodeStatus")
+          .add("where {")
+          .add("  graph ?scheme {")
+          .add("    ?iri rdf:type ?type.")
+          .add("      filter (?iri in ("+ inList+") )")
+          .add("    ?iri rdfs:label ?name.")
+          .add("    Optional {graph ?w {?type rdfs:label ?typeName}}")
+          .add("    Optional {?iri im:status ?status.")
+          .add("    Optional {graph ?x {?status rdfs:label ?statusName} } }")
+          .add("    Optional {graph ?y {?scheme rdfs:label ?schemeName } }")
+          .add("    Optional {?iri im:code ?code.}")
+          .add("    Optional {?iri im:weighting ?weighting.}")
+          .add("    Optional {?iri im:hasTermCode ?tc.")
+          .add("       Optional {?tc im:code ?termCode}")
+          .add("       Optional  {?tc rdfs:label ?synonym}")
+          .add("       Optional  {?tc im:status ?termCodeStatus} }")
+          .add("} }").toString();
+        try (RepositoryConnection conn = repo.getConnection()) {
+            LOG.info(" Fetching  iris up to  entity number " + mapNumber + " ...");
+            TupleQuery tupleQuery = conn.prepareTupleQuery(sql);
+            try (TupleQueryResult qr = tupleQuery.evaluate()) {
+                while (qr.hasNext()) {
+                    BindingSet rs = qr.next();
+                    String iri = rs.getValue("iri").stringValue();
+                    EntityDocument blob= docs.get(iri);
+                    batch.add(blob);
+                    String name = rs.getValue("name").stringValue();
+                    blob.setName(name);
+                    if (name.contains(" "))
+                      if (name.split(" ")[0].length()<3)
+                        blob.addKey(name.substring(0,name.indexOf(" ")).toLowerCase());
+                    String code=null;
+                    if (rs.getValue("code")!=null) {
+                        code = rs.getValue("code").stringValue();
+                        blob.setCode(code);
+                    }
 
+                    TTIriRef scheme = TTIriRef.iri(rs.getValue("scheme").stringValue());;
+                    if (rs.getValue("schemeName")!=null)
+                            scheme.setName(rs.getValue("schemeName").stringValue());
+                    blob.setScheme(scheme);
+
+                    if (rs.getValue("status") != null) {
+                        TTIriRef status = TTIriRef.iri(rs.getValue("status").stringValue());
+                        if (rs.getValue("statusName")!=null)
+                            status.setName(rs.getValue("statusName").stringValue());
+                        blob.setStatus(status);
+                    }
+                    TTIriRef type = TTIriRef.iri(rs.getValue("type").stringValue());
+                        if (rs.getValue("typeName")!=null)
+                            type.setName(rs.getValue("statusName").stringValue());
+                        blob.addType(type);
+                    if (rs.getValue("weighting") != null) {
+                        blob.setWeighting(Integer.parseInt(rs.getValue("weighting").stringValue()));
+                    }
+                    if (type.equals(SHACL.NODESHAPE))
+                        blob.setWeighting(10000000);
+                    String termCode = null;
+                    String synonym = null;
+                    TTIriRef status = null;
+                    if (rs.getValue("synonym") != null)
+                        synonym = rs.getValue("synonym").stringValue();
+                    if (rs.getValue("termCode") != null)
+                        termCode = rs.getValue("termCode").stringValue();
+                    if (rs.getValue("termCodeStatus") != null)
+                        status = TTIriRef.iri(rs.getValue("termCodeStatus").stringValue());
+                    if (synonym != null) {
+                        SearchTermCode tc = getTermCode(blob, synonym);
+                        if (tc == null) {
+                            blob.addTermCode(synonym, termCode, status);
+                        } else if (termCode != null) {
+                            tc.setCode(termCode);
+                        }
+                        if (synonym.contains(" "))
+                            if (synonym.split(" ")[0].length()<3)
+                            blob.addKey(synonym.substring(0,synonym.indexOf(" ")).toLowerCase());
+                    }
+                    else if (termCode != null) {
+                        SearchTermCode tc= getTermCodeFromCode(blob,termCode);
+                         if (tc==null)
+                             blob.addTermCode(null,termCode,status);
+                        }
+
+                    if (!hasTerm(blob, name)) {
+                        blob.addTermCode(name, null, null);
+                    }
+                }
+            }
         }
+        return batch;
+    }
+
+    private boolean hasTerm(EntityDocument blob,String term){
+        for (SearchTermCode tc:blob.getTermCode()){
+            if (tc.getTerm()!=null)
+             if (tc.getTerm().equals(term))
+                return true;
+        }
+        return false;
+    }
+
+    private SearchTermCode getTermCode(EntityDocument blob,String term){
+        for (SearchTermCode tc:blob.getTermCode()){
+            if (tc.getTerm()!=null)
+                if (tc.getTerm().equals(term))
+                    return tc;
+        }
+        return null;
+    }
+
+    private SearchTermCode getTermCodeFromCode(EntityDocument blob,String code){
+        for (SearchTermCode tc:blob.getTermCode()){
+            if (tc.getCode()!=null)
+                if (tc.getCode().equals(code))
+                    return tc;
+        }
+        return null;
     }
 
 
@@ -134,20 +263,22 @@ public class OpenSearchSender {
             System.exit(-1);
     }
 
-    private void index(List<OpenSearchDocument> docs) throws JsonProcessingException, InterruptedException {
+    private void index(Set<EntityDocument> docs) throws JsonProcessingException, InterruptedException {
         StringJoiner batch = new StringJoiner("\n");
-
-        for (OpenSearchDocument doc : docs) {
+        for (EntityDocument doc : docs) {
             batch.add("{ \"index\" : { \"_index\": \"" + index + "\", \"_id\" : \"" + doc.getId() + "\" } }");
             batch.add(om.writeValueAsString(doc));
         }
-        batch.add("");
+        batch.add("\n");
+       upload(batch);
+    }
 
-        boolean retry;
+    private void upload(StringJoiner batch) throws InterruptedException {
+         boolean retry;
         int retrySleep = 5;
 
         do {
-            LOG.info("Sending...");
+            LOG.info("Sending batch to Open search ...");
             retry = false;
             Response response = target
                 .request()

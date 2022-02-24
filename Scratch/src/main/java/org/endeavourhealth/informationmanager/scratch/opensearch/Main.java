@@ -4,6 +4,12 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] argv) throws IOException, InterruptedException {
-        new OpenSearchSender().execute();
+        boolean update=false;
+        if (argv.length>0){
+            for (String arg:argv)
+                if (arg.toLowerCase().equals("update"))
+                    update= true;
+        }
+        new OpenSearchSender().execute(update);
     }
 }

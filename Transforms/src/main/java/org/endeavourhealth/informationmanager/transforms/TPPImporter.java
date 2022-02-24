@@ -158,10 +158,12 @@ public class TPPImporter implements TTImport {
                     }
                     String code = fields[0];
                     String snomed= fields[2];
-                    TTEntity tpp= codeToEntity.get(code);
-                    if (tpp!=null) {
-                        if (!alreadyMapped(tpp, snomed))
-                            tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + snomed));
+                    if (!snomed.equals("_DRUG")) {
+                        TTEntity tpp = codeToEntity.get(code);
+                        if (tpp != null) {
+                            if (!alreadyMapped(tpp, snomed))
+                                tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + snomed));
+                        }
                     }
 
                     line = reader.readLine();

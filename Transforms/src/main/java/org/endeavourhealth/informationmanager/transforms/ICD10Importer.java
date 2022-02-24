@@ -130,6 +130,8 @@ public class ICD10Importer implements TTImport {
                   .setCode(code)
                   .setName(label)
                   .setIri(iri)
+                  .setScheme(IM.CODE_SCHEME_ICD10)
+                  .setStatus(IM.ACTIVE)
                   .addType(IM.CONCEPT);
                 c.addObject(IM.IS_CHILD_OF,icd10Codes);
                 startChapterMap.put(code.substring(0,code.indexOf("-")),c);
