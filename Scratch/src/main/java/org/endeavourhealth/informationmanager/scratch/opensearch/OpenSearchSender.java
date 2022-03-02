@@ -128,13 +128,14 @@ public class OpenSearchSender {
           .add("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>")
           .add("PREFIX im: <http://endhealth.info/im#>")
           .add("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>")
-          .add("select ?iri ?name ?status ?statusName ?code ?scheme ?schemeName ?type ?typeName ?weighting ?termCode ?synonym ?termCodeStatus ?extraType")
+          .add("select ?iri ?name ?status ?statusName ?code ?scheme ?schemeName ?type ?typeName ?weighting ?termCode ?synonym ?termCodeStatus ?extraType ?extraTypeName")
           .add("where {")
           .add("  graph ?scheme {")
           .add("    ?iri rdf:type ?type.")
           .add("      filter (?iri in ("+ inList+") )")
           .add("    ?iri rdfs:label ?name.")
           .add("    Optional { graph ?a {?iri im:isA ?extraType.")
+          .add("                         ?extraType rdfs:label ?extraTypeName.")
           .add("            filter (?extraType in (im:dataModelProperty, im:DataModelEntity))}}")
           .add("    Optional {graph ?w {?type rdfs:label ?typeName}}")
           .add("    Optional {?iri im:status ?status.")
@@ -186,18 +187,24 @@ public class OpenSearchSender {
                     }
                     TTIriRef type = TTIriRef.iri(rs.getValue("type").stringValue());
                         if (rs.getValue("typeName")!=null)
-                            type.setName(rs.getValue("statusName").stringValue());
+                            type.setName(rs.getValue("typeName").stringValue());
                         blob.addType(type);
                     TTIriRef extraType=null;
                     if (rs.getValue("extraType")!=null){
                         extraType= TTIriRef.iri(rs.getValue("extraType").stringValue());
+                        extraType.setName(rs.getValue("extraTypeName").stringValue());
                         blob.addType(extraType);
+                        int weighting;
+                        if (extraType.getIri().equals(IM.NAMESPACE+"dataModelProperty"))
+                            weighting=1000000;
+                        else
+                            weighting=2000000;
+                        blob.setWeighting(weighting);
                     }
                     if (rs.getValue("weighting") != null) {
                         blob.setWeighting(Integer.parseInt(rs.getValue("weighting").stringValue()));
                     }
-                    if (type.equals(SHACL.NODESHAPE))
-                        blob.setWeighting(10000000);
+
                     String termCode = null;
                     String synonym = null;
                     TTIriRef status = null;

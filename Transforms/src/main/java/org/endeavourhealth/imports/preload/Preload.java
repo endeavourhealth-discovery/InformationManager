@@ -27,10 +27,10 @@ public class Preload {
 
 			for (int i = 0; i < args.length; i++) {
 				String arg=args[i].toLowerCase();
-				if (arg.startsWith("source="))
+				if (arg.startsWith("source=")) {
 					cfg.setFolder(arg.split("=")[1]);
-				else 	if (arg.startsWith("config="))
 					TTBulkFiler.setConfigTTl(arg.split("=")[1]);
+				}
 				else if (arg.startsWith("preload"))
 					TTBulkFiler.setPreload(arg.split("=")[1]);
 				else if (arg.startsWith("temp="))

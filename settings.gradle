@@ -3,7 +3,6 @@
  */
 
 rootProject.name = 'InformationManager'
-include(':DocumentImport')
 include(':V1-V2Migration')
 include(':common')
 include(':Feeds')

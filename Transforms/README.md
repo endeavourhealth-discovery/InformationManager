@@ -22,7 +22,7 @@ To remove specific source files from the import if they cannot be found, comment
 1. Place source files in the various folders under a single root folder.
 2. If not already Install and configure a Graph DB im repository with literal index, context index bur NO inference.
 3. If not already Install and configure Open Search with basic authentication
-4. Take a copy of the GRAPH DB configuration Config.ttl file and place in any folder except the temporary data folder
+4. Take a copy of the GRAPH DB configuration Config.ttl file and place in the root of the import data folder
 5. Create a directory for the temporary import data. I should not contain anything else as it will be cleared at the end
 6. Configure the run time parameters  for the 'ImportApp' as follows:
 7. Make sure graph DB is NOT running
@@ -30,7 +30,8 @@ To remove specific source files from the import if they cannot be found, comment
 8. run imports.Preload. This will throw errors if the source files are not present e.g. the unzipped Snomed RF2
 
 Program arguments  
-source={folder for importData}  config={folder for Config.ttl} preload {folder containing the preload tool}
+source={folder for importData}  
+preload {folder containing the preload tool and the config.ttl}
 temp= {folder to hold the temporary data}
 Environment variables
 none needed

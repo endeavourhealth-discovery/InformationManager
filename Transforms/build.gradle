@@ -10,9 +10,7 @@ sonarqube {
 
 dependencies {
     api project(':common')
-    api project(':DocumentImport')
     implementation libs.imapi
-
     implementation libs.activation
     implementation libs.antlr
     implementation libs.commonsIO

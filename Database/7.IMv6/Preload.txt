@@ -1,1 +1,0 @@
-preload --configFile C:\temp\config.ttl  --force c:\temp\im.nq
