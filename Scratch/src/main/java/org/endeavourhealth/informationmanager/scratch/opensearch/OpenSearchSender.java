@@ -49,6 +49,7 @@ public class OpenSearchSender {
         om.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         om.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
         checkEnvs();
+        String batchSql= getBatchSql("<"+IM.NAMESPACE+"effectiveDate>");
         int maxId=0;
         if (!update)
             maxId = getMaxDocument();
@@ -122,18 +123,19 @@ public class OpenSearchSender {
         }
     }
 
-    private Set<EntityDocument> getEntityBatch(String inList, int mapNumber) {
-        Set<EntityDocument> batch= new HashSet<>();
-        String sql = new StringJoiner(System.lineSeparator())
+    private String getBatchSql(String inList){
+        return new StringJoiner(System.lineSeparator())
           .add("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>")
           .add("PREFIX im: <http://endhealth.info/im#>")
           .add("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>")
-          .add("select ?iri ?name ?status ?statusName ?code ?scheme ?schemeName ?type ?typeName ?weighting ?termCode ?synonym ?termCodeStatus")
+          .add("select ?iri ?name ?status ?statusName ?code ?scheme ?schemeName ?type ?typeName ?weighting ?termCode ?synonym ?termCodeStatus ?extraType")
           .add("where {")
           .add("  graph ?scheme {")
           .add("    ?iri rdf:type ?type.")
           .add("      filter (?iri in ("+ inList+") )")
           .add("    ?iri rdfs:label ?name.")
+          .add("    Optional { graph ?a {?iri im:isA ?extraType.")
+          .add("            filter (?extraType in (im:dataModelProperty, im:DataModelEntity))}}")
           .add("    Optional {graph ?w {?type rdfs:label ?typeName}}")
           .add("    Optional {?iri im:status ?status.")
           .add("    Optional {graph ?x {?status rdfs:label ?statusName} } }")
@@ -145,6 +147,12 @@ public class OpenSearchSender {
           .add("       Optional  {?tc rdfs:label ?synonym}")
           .add("       Optional  {?tc im:status ?termCodeStatus} }")
           .add("} }").toString();
+    }
+
+    private Set<EntityDocument> getEntityBatch(String inList, int mapNumber) {
+        Set<EntityDocument> batch= new HashSet<>();
+        String sql= getBatchSql(inList);
+
         try (RepositoryConnection conn = repo.getConnection()) {
             LOG.info(" Fetching  iris up to  entity number " + mapNumber + " ...");
             TupleQuery tupleQuery = conn.prepareTupleQuery(sql);
@@ -180,6 +188,11 @@ public class OpenSearchSender {
                         if (rs.getValue("typeName")!=null)
                             type.setName(rs.getValue("statusName").stringValue());
                         blob.addType(type);
+                    TTIriRef extraType=null;
+                    if (rs.getValue("extraType")!=null){
+                        extraType= TTIriRef.iri(rs.getValue("extraType").stringValue());
+                        blob.addType(extraType);
+                    }
                     if (rs.getValue("weighting") != null) {
                         blob.setWeighting(Integer.parseInt(rs.getValue("weighting").stringValue()));
                     }
