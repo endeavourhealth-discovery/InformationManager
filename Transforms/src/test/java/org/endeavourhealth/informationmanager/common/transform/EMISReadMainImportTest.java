@@ -1,6 +1,6 @@
 package org.endeavourhealth.informationmanager.common.transform;
 
-import org.endeavourhealth.informationmanager.transforms.EMISImport;
+import org.endeavourhealth.imports.sources.EMISImport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
