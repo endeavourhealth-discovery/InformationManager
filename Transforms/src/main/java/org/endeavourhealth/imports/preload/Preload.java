@@ -15,9 +15,9 @@ public class Preload {
 	public static String testDirectory;
 
 	public static void main(String[] args) throws Exception {
-		if (args.length < 4) {
+		if (args.length < 3) {
 			System.err.println("Insufficient parameters supplied:");
-			System.err.println("source={sourcefolder} config={configfolder} preload={foldercontaing preload} "+
+			System.err.println("source={sourcefolder} preload={foldercontaing preload} "+
 				"temp= {folder for temporary data}");
 			System.exit(-1);
 		}

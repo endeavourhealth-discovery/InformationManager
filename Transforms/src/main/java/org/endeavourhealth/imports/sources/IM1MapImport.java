@@ -179,12 +179,12 @@ public class IM1MapImport implements TTImport {
                         if (scheme.equals(IM.CODE_SCHEME_TPP.getIri()))
                             lname = lname.replace(".", "_");
                         if (scheme.equals(IM.CODE_SCHEME_EMIS.getIri())) {
-                            lname=lname.replaceAll("[&/' |()^]","_");
-                            lname=lname.replace("[","_").replace("]","_");
+                            lname = lname.replaceAll("[&/' |()^]", "_");
+                            lname = lname.replace("[", "_").replace("]", "_");
                             if (im1Scheme.equals("READ2"))
-                                lname=lname.replace(".","");
+                                lname = lname.replace(".", "");
                             else
-                                lname=lname.replace(".","_");
+                                lname = lname.replace(".", "_");
                         }
                         if (scheme.equals(IM.CODE_SCHEME_ENCOUNTERS.getIri()))
                             lname = "LE_" + lname;
@@ -193,30 +193,36 @@ public class IM1MapImport implements TTImport {
                         if (scheme.equals(IM.CODE_SCHEME_OPCS4.getIri()))
                             lname = lname.replace(".", "_");
 
-                        if (scheme.equals(IM.CODE_SCHEME_DISCOVERY.getIri())){
+                        if (scheme.equals(IM.CODE_SCHEME_DISCOVERY.getIri())) {
                             if (lname.contains("_"))
-                                lname=lname.substring(lname.indexOf("_")+1);
-                            if (!entities.contains(scheme+lname)) {
+                                lname = lname.substring(lname.indexOf("_") + 1);
+                            if (!entities.contains(scheme + lname)) {
                                 List<String> schemes = Arrays.asList(IM.NAMESPACE);
                                 TTIriRef core = importMaps.getReferenceFromCoreTerm(term, schemes);
-                                if (core != null)
+                                if (core != null) {
                                     lname = core.getIri().split("#")[1];
+                                } else {
+                                    writer.write(line + "\n");
+                                    lname = null;
+                                }
                             }
                         }
-                        TTEntity im1 = new TTEntity()
-                          .setIri(scheme + lname);
-
-                        if (!entities.contains(im1.getIri())) {
-                            writer.write(line+"\n");
-                        }
-                        else {
+                        if (lname != null) {
+                            TTEntity im1 = new TTEntity().setIri(scheme + lname);
+                            if (!entities.contains(im1.getIri())) {
+                                writer.write(line + "\n");
+                            } else {
+                                im1.set(IM.DBID, TTLiteral.literal(dbid));
+                            /*
                             TTNode im1Map = new TTNode();
                             im1.addObject(IM.IM1MAP, im1Map);
                             im1Map.set(IM.IM1SCHEME, TTLiteral.literal(im1Scheme));
                             im1Map.set(IM.IM1CODE, TTLiteral.literal(code));
                             im1Map.set(IM.DBID, TTLiteral.literal(dbid));
-                            dbidMap.put(dbid, im1);
-                            document.addEntity(im1);
+                             */
+                                dbidMap.put(dbid, im1);
+                                document.addEntity(im1);
+                            }
                         }
                     }
                 }

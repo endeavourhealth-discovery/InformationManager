@@ -113,7 +113,7 @@ public class SnomedImporter implements TTImport {
 
       importConceptFiles(config.getFolder());
       importDescriptionFiles(config.getFolder());
-      removeQualifiers(document);
+     // removeQualifiers(document);
       importMRCMRangeFiles(config.getFolder());
       importMRCMDomainFiles(config.getFolder());
      // importStatedFiles(config.folder); No longer bothers with OWL axioms;
