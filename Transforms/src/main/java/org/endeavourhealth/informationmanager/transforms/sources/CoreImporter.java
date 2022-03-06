@@ -4,8 +4,8 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.transforms.ReasonerPlus;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -73,8 +73,10 @@ public class CoreImporter implements TTImport {
         TTManager manager = new TTManager();
         Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
         TTDocument document = manager.loadDocument(path.toFile());
-        ReasonerPlus reasoner = new ReasonerPlus();
+        Reasoner reasoner = new Reasoner();
         TTDocument inferred = reasoner.generateInferred(document);
+        inferred= reasoner.inheritShapeProperties(inferred);
+
         manager = new TTManager();
         manager.setDocument(inferred);
         String inferredFile = path.toString().substring(0, path.toString().indexOf(".json")) + INFERRED_SUFFIX;
