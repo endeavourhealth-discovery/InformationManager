@@ -76,7 +76,6 @@ public class CoreImporter implements TTImport {
         Reasoner reasoner = new Reasoner();
         TTDocument inferred = reasoner.generateInferred(document);
         inferred= reasoner.inheritShapeProperties(inferred);
-
         manager = new TTManager();
         manager.setDocument(inferred);
         String inferredFile = path.toString().substring(0, path.toString().indexOf(".json")) + INFERRED_SUFFIX;
