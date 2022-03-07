@@ -141,6 +141,7 @@ public class CEGImporter implements TTImport {
 					converter.convertDoc(document,mainFolder,eqd,
 						TTIriRef.iri(owner.getIri()),dataMap,
 						criteriaLabels);
+					
 				  output(fileEntry);
 				}
 			}
