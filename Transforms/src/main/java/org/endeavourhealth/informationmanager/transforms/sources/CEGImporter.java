@@ -1,8 +1,13 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.model.hql.HqlDocument;
+import org.endeavourhealth.imapi.model.hql.HqlFactory;
+import org.endeavourhealth.imapi.model.hql.Profile;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.EqdToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -14,6 +19,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -141,7 +147,7 @@ public class CEGImporter implements TTImport {
 					converter.convertDoc(document,mainFolder,eqd,
 						TTIriRef.iri(owner.getIri()),dataMap,
 						criteriaLabels);
-					
+
 				  output(fileEntry);
 				}
 			}
@@ -152,21 +158,28 @@ public class CEGImporter implements TTImport {
 	private void output(File fileEntry) throws IOException {
 		if ( ImportApp.testDirectory!=null) {
 			String directory=  ImportApp.testDirectory.replace("%"," ");
-
 			TTManager manager = new TTManager();
+			HqlDocument hql= HqlFactory.createHqlDocument();
 			TTDocument qDocument = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 			for (TTEntity entity : document.getEntities()) {
 				if (entity.isType(IM.PROFILE)) {
 					if (!allEntities.contains(entity)) {
 						qDocument.addEntity(entity);
+						hql.addProfile(HqlFactory.createProfileFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
 					}
 				}
 				allEntities.add(entity);
 			}
 			manager.setDocument(qDocument);
 			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-profiles-ld.json"));
-			manager.setDocument(document);
-			manager.saveDocument(new File(directory+"\\CEG-Queries.json"));
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
+			String json= objectMapper.writeValueAsString(hql);
+			try (FileWriter wr= new FileWriter(directory+"\\CEG-Queries.json")){
+				wr.write(json);
+			}
 
 		}
 
