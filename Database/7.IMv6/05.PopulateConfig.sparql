@@ -11,7 +11,7 @@ INSERT DATA {
     <http://endhealth.info/config#filterDefaults>
         <http://www.w3.org/2000/01/rdf-schema#label>    'Filter defaults' ;
         <http://www.w3.org/2000/01/rdf-schema#comment>  'Default filters for search' ;
-        <http://endhealth.info/im#hasConfig>            '{"schemeOptions":["http://endhealth.info/im#","http://snomed.info/sct#"],"statusOptions":["http://endhealth.info/im#Active","http://endhealth.info/im#Draft"],"typeOptions":["http://endhealth.info/im#Concept","http://endhealth.info/im#ConceptSet","http://endhealth.info/im#ConceptSetGroup","http://endhealth.info/im#Folder","http://www.w3.org/ns/shacl#NodeShape","http://www.w3.org/2002/07/owl#ObjectProperty","http://www.w3.org/1999/02/22-rdf-syntax-ns#Property","http://endhealth.info/im#QueryTemplate","http://endhealth.info/im#ValueSet"]}' .
+        <http://endhealth.info/im#hasConfig>            '{"schemeOptions":["http://endhealth.info/im#","http://snomed.info/sct#"],"statusOptions":["http://endhealth.info/im#Active","http://endhealth.info/im#Draft"],"typeOptions":["http://endhealth.info/im#Concept","http://endhealth.info/im#ValueSet","http://endhealth.info/im#ConceptSet","http://endhealth.info/im#DataModelEntity","http://endhealth.info/im#dataModelProperty","http://endhealth.info/im#Query"]}' .
 
     <http://endhealth.info/config#inferredPredicates>
         <http://www.w3.org/2000/01/rdf-schema#label>    'Inferred predicates' ;
