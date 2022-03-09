@@ -81,7 +81,7 @@ public class ImportApp {
                   .validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
                  .validateByType(IM.GRAPH_CEG_QUERY, cfg.getFolder())
                   .validateByType(IM.GRAPH_IM1, cfg.getFolder())
-                    .validateByType(IM.GRAPH_CONFIG, cfg.folder);
+                    .validateByType(IM.GRAPH_CONFIG, cfg.getFolder());
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
                 importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
                 importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
@@ -164,10 +164,6 @@ public class ImportApp {
                 importer = new Importer().validateByType(IM.GRAPH_ODS, cfg.getFolder());
                 importer.importByType(IM.GRAPH_ODS, cfg);
                 break;
-            case "encounters":
-                importer = new Importer().validateByType(IM.GRAPH_ENCOUNTERS, cfg.getFolder());
-                importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
-                break;
             case "nhstfc":
                 importer = new Importer().validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder());
                 importer.importByType(IM.GRAPH_NHS_TFC, cfg);
@@ -179,7 +175,7 @@ public class ImportApp {
                 cfg.setSkiptct(true);
                 break;
             case "config":
-                importer = new Importer().validateByType(IM.GRAPH_CONFIG, cfg.folder);
+                importer = new Importer().validateByType(IM.GRAPH_CONFIG, cfg.getFolder());
                 importer.importByType(IM.GRAPH_CONFIG, cfg);
             default:
                 throw new Exception("Unknown import type");
