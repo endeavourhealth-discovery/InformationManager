@@ -289,10 +289,7 @@ public class IM1MapImport implements TTImport {
 
     @Override
 	public TTImport validateFiles(String inFolder)  {
-         ImportUtils.validateFiles(".*\\\\IMv1\\\\IMv1DbidSchemeCode.txt");
          ImportUtils.validateFiles(inFolder,conceptCounts,im1Codes);
          return this;
 	}
-
-
 }
