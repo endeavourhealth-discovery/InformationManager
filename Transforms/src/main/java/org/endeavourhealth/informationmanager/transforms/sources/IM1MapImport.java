@@ -443,7 +443,6 @@ public class IM1MapImport implements TTImport {
                         oldIri= oldIri.substring(1);
                     String snomed= fields[1];
                     String term= fields[3];
-                    String description= fields[4];
                     if (oldIri.startsWith(":CM"))
                         oldIriSnomed.put(oldIri,snomed);
                     oldIriTerm.put(oldIri,term);
