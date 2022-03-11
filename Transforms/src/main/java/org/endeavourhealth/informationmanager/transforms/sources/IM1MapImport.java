@@ -20,8 +20,8 @@ import java.util.*;
 
 public class IM1MapImport implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(IM1MapImport.class);
-    private static final String[] im1Codes = {".*\\\\IMv1\\\\concepts\\.txt"};
-    private static final String[] oldIris= {  ".*\\\\IMv1\\\\OldIris\\.txt"};
+    private static final String[] im1Codes = {".*\\\\IMv1\\\\concepts.txt"};
+    private static final String[] oldIris= {  ".*\\\\IMv1\\\\oldiris.txt"};
     private static final String[] conceptCounts = {".*\\\\DiscoveryLive\\\\concept_counts.txt",
       ".*\\\\DiscoveryLive\\\\nwlencounter_counts.txt"};
     private static final Map<String,TTEntity> dbidMap= new HashMap<>();
