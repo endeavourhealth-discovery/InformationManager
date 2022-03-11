@@ -91,6 +91,22 @@ public class ImportMaps {
 	}
 
 	/**
+	 * Gets all entities and includes their legacy map if they have one
+	 * @return A Map of all entites and the set of iris they match to
+	 * @throws IOException if using the file repository
+	 * @throws TTFilerException if using the graph repository
+	 */
+	public Map<String,Set<String>> getAllPlusMatches() throws IOException, TTFilerException {
+		Set<String> all= importEntities();
+		Map<String,Set<String>> legacyCore= getAllMatchedLegacy();
+		Map<String,Set<String>> allAndMatched= new HashMap<>();
+		for (String iri:all){
+			allAndMatched.put(iri,allAndMatched.get(iri));
+		}
+		return allAndMatched;
+	}
+
+	/**
 	 * Retieves read to Snomed maps, using the Vision code scheme as a proxy for read
 	 * @return the code to Snomed code one to many map
 	 * @throws TTFilerException when code maps are missing
