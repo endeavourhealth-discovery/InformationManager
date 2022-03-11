@@ -177,7 +177,7 @@ public class CEGImporter implements TTImport {
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 			String json= objectMapper.writeValueAsString(hql);
-			try (FileWriter wr= new FileWriter(directory+"\\CEG-Queries.json")){
+			try (FileWriter wr= new FileWriter(directory+"\\"+ fileEntry.getName().replace(".xml","") + ".json")){
 				wr.write(json);
 			}
 
