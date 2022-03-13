@@ -101,7 +101,7 @@ public class ImportMaps {
 		Map<String,Set<String>> legacyCore= getAllMatchedLegacy();
 		Map<String,Set<String>> allAndMatched= new HashMap<>();
 		for (String iri:all){
-			allAndMatched.put(iri,allAndMatched.get(iri));
+			allAndMatched.put(iri,legacyCore.get(iri));
 		}
 		return allAndMatched;
 	}
