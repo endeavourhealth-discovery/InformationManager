@@ -12,7 +12,6 @@ import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.XSD;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -414,7 +413,7 @@ public class IM1MapImport implements TTImport {
         im1.setGraph(graph);
         im1.addObject(IM.IM1ID,TTLiteral.literal(oldIri));
         if (used.containsKey(oldIri))
-            im1.set(IM.USAGE_TOTAL,TTLiteral.literal(used.get(oldIri), XSD.INTEGER));
+            im1.set(IM.USAGE_TOTAL,TTLiteral.literal(used.get(oldIri)));
         oldIriEntity.put(oldIri,im1);
         document.addEntity(im1);
     }
