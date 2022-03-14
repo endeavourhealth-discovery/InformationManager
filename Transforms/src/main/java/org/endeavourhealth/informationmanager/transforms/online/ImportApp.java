@@ -18,9 +18,9 @@ public class ImportApp {
     public static String testDirectory;
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 2) {
+        if (args.length < 3) {
             System.err.println("Insufficient parameters supplied:");
-            System.err.println("<folder> <import type> [secure|skiptct|skipsearch]");
+            System.err.println("<folder> <import type> <privacy={0 public 1 private publication 2 private authoring}> [secure|skiptct|skipsearch]");
             System.exit(-1);
         }
 
@@ -35,7 +35,7 @@ public class ImportApp {
         // Optional switch args
         if (args.length >= 3) {
             for (int i = 2; i < args.length; i++) {
-                switch (args[i].toLowerCase()) {
+                switch (args[i].toLowerCase().split("=")[0]) {
                     case "secure":
                         cfg.setSecure(true);
                         break;
@@ -47,6 +47,9 @@ public class ImportApp {
                         break;
                     case "skipdeletes":
                         TTFilerFactory.setSkipDeletes(true);
+                        break;
+                    case "privacy":
+                        TTFilerFactory.setPrivacyLevel(Integer.parseInt(args[i].split("=")[1]));
                         break;
                     default:
                         if (args[i].contains("test="))

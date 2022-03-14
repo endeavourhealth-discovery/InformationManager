@@ -15,10 +15,10 @@ public class Preload {
 	public static String testDirectory;
 
 	public static void main(String[] args) throws Exception {
-		if (args.length < 3) {
+		if (args.length < 4) {
 			System.err.println("Insufficient parameters supplied:");
 			System.err.println("source={sourcefolder} preload={foldercontaing preload} "+
-				"temp= {folder for temporary data}");
+				"temp= {folder for temporary data} and privacy= {0 public, 1 private publisher 2 private for authoring");
 			System.exit(-1);
 		}
 		TTFilerFactory.setBulk(true);
@@ -35,6 +35,8 @@ public class Preload {
 					TTBulkFiler.setPreload(arg.split("=")[1]);
 				else if (arg.startsWith("temp="))
 					TTBulkFiler.setDataPath(arg.split("=")[1]);
+				else if (arg.startsWith("privacy"))
+					TTBulkFiler.setPrivacyLevel(Integer.parseInt(arg.split("=")[1]));
 				else
 							System.err.println("Unknown parameter " + args[i]);
 			}

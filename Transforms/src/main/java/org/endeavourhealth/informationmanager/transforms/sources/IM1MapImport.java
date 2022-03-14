@@ -12,6 +12,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.XSD;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +68,9 @@ public class IM1MapImport implements TTImport {
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(statsDocument);
         }
+
+        ImportUnmapped unm= new ImportUnmapped();
+        unm.importUnmapped(inFolder);
 
         return this;
 
@@ -385,7 +389,9 @@ public class IM1MapImport implements TTImport {
 
     private void addNewEntity(String newIri, String matchedIri, String term, String code,String scheme,String oldIri,
                               String description) {
+        TTIriRef graph=TTIriRef.iri(newIri.substring(0,newIri.lastIndexOf("#")+1));
         TTEntity entity= new TTEntity()
+          .setGraph(graph)
           .setIri(newIri)
           .setName(term)
           .setScheme(TTIriRef.iri(scheme))
@@ -404,9 +410,11 @@ public class IM1MapImport implements TTImport {
     }
     private void addIM1id(String iri,String oldIri){
         TTEntity im1= new TTEntity().setIri(iri);
+        TTIriRef graph=TTIriRef.iri(iri.substring(0,iri.lastIndexOf("#")+1));
+        im1.setGraph(graph);
         im1.addObject(IM.IM1ID,TTLiteral.literal(oldIri));
         if (used.containsKey(oldIri))
-            im1.set(IM.USAGE_TOTAL,TTLiteral.literal(used.get(oldIri)));
+            im1.set(IM.USAGE_TOTAL,TTLiteral.literal(used.get(oldIri), XSD.INTEGER));
         oldIriEntity.put(oldIri,im1);
         document.addEntity(im1);
     }
