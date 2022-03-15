@@ -52,8 +52,6 @@ public class BartsCernerImport implements TTImport {
 		conn= ConnectionManager.getIMConnection();
 		System.out.println("retrieving snomed codes from IM");
 		document= manager.createDocument(IM.GRAPH_BARTS_CERNER.getIri());
-		document.setCrud(IM.REPLACE);
-		document.setCrud(IM.UPDATE);
 		document.addEntity(manager.createGraph(IM.GRAPH_BARTS_CERNER.getIri(),"Barts Cerner code scheme and graph"
 		,"The Barts Cerner local code scheme and graph i.e. local codes with links to cor"));
 		importSets(config.getFolder());
@@ -125,7 +123,6 @@ public class BartsCernerImport implements TTImport {
 
 	private void setTopLevel() {
 		TTEntity topConcept= new TTEntity()
-			.setCrud(IM.REPLACE)
 			.setIri(BARTS_CERNER_CODES)
 			.addType(IM.CONCEPT)
 			.setName("Barts Cerner codes")
@@ -135,7 +132,6 @@ public class BartsCernerImport implements TTImport {
 		topConcept.addObject(IM.IS_CHILD_OF,iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
 		document.addEntity(topConcept);
 		TTEntity unmatchedConcept= new TTEntity()
-			.setCrud(IM.REPLACE)
 			.setIri(UNCLASSIFIED)
 			.addType(IM.CONCEPT)
 			.setName("Unclassified Barts Cerner codes")

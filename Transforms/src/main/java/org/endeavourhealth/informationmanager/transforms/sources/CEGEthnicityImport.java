@@ -35,7 +35,6 @@ public class CEGEthnicityImport implements TTImport {
 	public TTImport importData(TTImportConfig config) throws Exception {
 
 		document = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
-		document.setCrud(IM.UPDATE);
 		nhsDocument= nhsManager.createDocument(IM.GRAPH_NHSDD_ETHNIC_2001.getIri());
 
 		retrieveEthnicity(config.isSecure());

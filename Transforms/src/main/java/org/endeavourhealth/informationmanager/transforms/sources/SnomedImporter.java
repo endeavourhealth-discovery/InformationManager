@@ -127,7 +127,6 @@ public class SnomedImporter implements TTImport {
        }
 
      document= dmanager.createDocument(SNOMED.GRAPH_SNOMED.getIri());
-     document.setCrud(IM.UPDATE);
      setRefSetRoot();
      importRefsetFiles(config.getFolder());
      importQof(config.getFolder());

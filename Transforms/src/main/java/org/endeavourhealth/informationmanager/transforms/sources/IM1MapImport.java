@@ -56,7 +56,6 @@ public class IM1MapImport implements TTImport {
         TTManager manager = new TTManager();
         document = manager.createDocument(IM.GRAPH_IM1.getIri());
         statsDocument= manager.createDocument(IM.GRAPH_STATS.getIri());
-        statsDocument.setCrud(IM.UPDATE);
         importv1Codes(inFolder);
         calculateWeightings();
        TTFilerFactory.setSkipDeletes(true);
