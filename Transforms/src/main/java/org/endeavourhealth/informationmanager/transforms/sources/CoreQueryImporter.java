@@ -32,7 +32,6 @@ public class CoreQueryImporter implements TTImport {
 
 	private void addCurrentReg(TTDocument document) throws JsonProcessingException {
 		TTEntity qry = new TTEntity().addType(IM.PROFILE);
-
 		qry
 			.setIri(IM.NAMESPACE + "Q_RegisteredGMS")
 			.setName("Patients registered for GMS services on the reference date")

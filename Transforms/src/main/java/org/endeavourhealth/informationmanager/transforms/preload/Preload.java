@@ -59,6 +59,7 @@ public class Preload {
 					.validateByType(IM.GRAPH_BARTS_CERNER, cfg.getFolder())
 					.validateByType(IM.GRAPH_ODS, cfg.getFolder())
 					.validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
+					.validateByType(IM.GRAPH_CEG_QUERY,cfg.getFolder())
 					.validateByType(IM.GRAPH_IM1,cfg.getFolder());
 				importer.importByType(IM.GRAPH_DISCOVERY, cfg);
 				importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
@@ -73,6 +74,7 @@ public class Preload {
 				importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
 				importer.importByType(IM.GRAPH_ODS, cfg);
 				importer.importByType(IM.GRAPH_NHS_TFC,cfg);
+		    importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
 				importer.importByType(IM.GRAPH_IM1,cfg);
 
 			TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();

@@ -39,6 +39,7 @@ ext {
             jacksonAnnotations  : "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson",
             jacksonDatabind     : "com.fasterxml.jackson.core:jackson-databind:$versions.jackson",
             jacksonJax          : "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:$versions.jackson",
+            javaxxmlbind        : "javax.xml.bind:jaxb-api:2.3.1",
             jaxbApi             : "javax.xml.bind:jaxb-api:$versions.jaxb",
             jaxbRuntime         : "org.glassfish.jaxb:jaxb-runtime:$versions.jaxb",
             jerseyClient        : "org.glassfish.jersey.core:jersey-client:$versions.jersey",

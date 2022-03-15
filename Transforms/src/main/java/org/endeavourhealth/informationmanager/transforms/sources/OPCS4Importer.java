@@ -137,7 +137,7 @@ public class OPCS4Importer implements TTImport {
                     c.addObject(IM.IS_CHILD_OF,TTIriRef.iri(parent.getIri()));
                 }
                 codeToEntity.put(fields[0],c);
-                altCodeToEntity.put(fields[1],c);
+                altCodeToEntity.put(fields[0].replace(".",""),c);
                     if(fields[1].length()>250){
                         c.setName(fields[1].substring(0,150));
                     }else {

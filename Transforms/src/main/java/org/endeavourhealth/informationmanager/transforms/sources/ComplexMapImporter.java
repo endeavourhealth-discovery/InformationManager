@@ -115,7 +115,7 @@ public class ComplexMapImporter {
     public void addMapTarget(TTArray targetGroup,ComplexMapTarget sourceTarget){
       TTNode mapNode= new TTNode();
       targetGroup.add(mapNode);
-      mapNode.set(IM.MAPPED_TO,TTIriRef.iri( namespace +sourceTarget.getTarget()));
+      mapNode.set(IM.MAPPED_TO,TTIriRef.iri( legacyCodeToEntity.get(sourceTarget.getTarget()).getIri()));
       if (sourceTarget.getAdvice()!=null)
          mapNode.set(IM.MAP_ADVICE,TTLiteral.literal(sourceTarget.getAdvice()));
       if (sourceTarget.getPriority()!=null)
