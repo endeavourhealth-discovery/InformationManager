@@ -13,6 +13,7 @@ import org.endeavourhealth.imapi.transforms.EqdToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 
 import javax.xml.bind.JAXBContext;
@@ -39,8 +40,13 @@ public class CEGImporter implements TTImport {
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
 		document= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
-		document.addEntity(manager.createGraph(IM.GRAPH_CEG_QUERY.getIri(),"CEG (QMUL) graph",
-			"CEG library of concept sets queries and profiles"));
+		TTEntity graph= new TTEntity()
+			.setIri(IM.GRAPH_CEG_QUERY.getIri())
+				.setName("CEG (QMUL) graph")
+					.setDescription("CEG library of concept sets queries and profiles")
+						.addType(IM.GRAPH);
+			graph.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
+		document.addEntity(graph);
 		createOrg();
 		 CEGEthnicityImport ethnicImport= new CEGEthnicityImport();
 		ethnicImport.importData(config);
