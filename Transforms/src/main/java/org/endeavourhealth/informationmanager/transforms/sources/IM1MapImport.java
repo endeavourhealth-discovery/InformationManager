@@ -257,20 +257,20 @@ public class IM1MapImport implements TTImport {
                         }
 
                         else if (scheme.equals(IM.CODE_SCHEME_ICD10.getIri())) {
-                            lname = lname.replace(".", "_");
-                            if (entities.containsKey(scheme + lname)){
-                                checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
+                            String icd10 = lname.replace(".", "");
+                            if (entities.containsKey(scheme + icd10)){
+                                checkEntity(scheme,icd10,im1Scheme,term,code,oldIri,description);
                             }
                             else if (lname.endsWith("X")) {
-                                    String realName = lname.split("_")[0];
+                                    String realName = lname.split("\\.")[0];
                                     if (entities.containsKey(scheme + realName)) {
-                                        addNewEntity(scheme + lname, scheme + realName, term, code, scheme,oldIri,description);
+                                        addNewEntity(scheme + icd10, scheme + realName, term, code, scheme,oldIri,description);
                                     }
                                 }
                         }
 
                         else if (scheme.equals(IM.CODE_SCHEME_OPCS4.getIri())) {
-                            lname = lname.replace(".", "_");
+                            lname = lname.replace(".", "");
                             checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
                         }
 

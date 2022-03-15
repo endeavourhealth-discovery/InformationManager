@@ -125,7 +125,7 @@ public class OPCS4Importer implements TTImport {
                 TTEntity c = new TTEntity()
                         .setCode(fields[0])
                   .setScheme(IM.CODE_SCHEME_OPCS4)
-                        .setIri(IM.CODE_SCHEME_OPCS4.getIri() + (fields[0].replace(".","_")))
+                        .setIri(IM.CODE_SCHEME_OPCS4.getIri() + (fields[0].replace(".","")))
                         .addType(IM.CONCEPT);
                 if (code.contains(".")){
                     String qParent= code.substring(0, code.indexOf("."));
