@@ -240,8 +240,9 @@ public class EMISImport implements TTImport {
               .addType(IM.CONCEPT)
               .setScheme(IM.CODE_SCHEME_EMIS)
               .setName(name)
-              .setCode(code)
-              .set(IM.CODE_ID, TTLiteral.literal(codeId));
+              .setCode(code);
+
+            emisConcept.set(IM.CODE_ID, TTLiteral.literal(codeId));
             document.addEntity(emisConcept);
             emisToEntity.put(code, emisConcept);
 

@@ -161,7 +161,7 @@ public class ICD10Importer implements TTImport {
                 TTEntity c = new TTEntity()
                   .setCode(fields[0])
                   .setScheme(IM.CODE_SCHEME_ICD10)
-                  .setIri(IM.CODE_SCHEME_ICD10.getIri() + (fields[0].replace(".","_")))
+                  .setIri(IM.CODE_SCHEME_ICD10.getIri() + (fields[0].replace(".","")))
                   .addType(IM.CONCEPT);
                 if(fields[4].length()>250){
                     c.setName(fields[4].substring(0,200));

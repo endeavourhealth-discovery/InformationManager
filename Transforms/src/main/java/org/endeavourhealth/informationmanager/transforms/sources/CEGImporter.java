@@ -9,12 +9,11 @@ import org.endeavourhealth.imapi.model.hql.HqlDocument;
 import org.endeavourhealth.imapi.model.hql.HqlFactory;
 import org.endeavourhealth.imapi.model.hql.Profile;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.EqdToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
+import org.endeavourhealth.informationmanager.transforms.sources.eqd.EnquiryDocument;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;

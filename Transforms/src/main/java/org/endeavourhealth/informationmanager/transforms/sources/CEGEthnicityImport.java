@@ -36,10 +36,11 @@ public class CEGEthnicityImport implements TTImport {
 
 		document = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 		nhsDocument= nhsManager.createDocument(IM.GRAPH_NHSDD_ETHNIC_2001.getIri());
-
+		setConceptSetGroups();
 		retrieveEthnicity(config.isSecure());
 		spellCorrections();
 		importEthnicGroups(config.getFolder());
+
 
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
@@ -129,7 +130,7 @@ public class CEGEthnicityImport implements TTImport {
 
 		Path file = ImportUtils.findFileForId(folder, lookups[0]);
 		System.out.println("Importing Categories");
-		setConceptSetGroups();
+
 
 		try( BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))){
 			reader.readLine();  // NOSONAR - Skipping CSV header line
@@ -200,7 +201,7 @@ public class CEGEthnicityImport implements TTImport {
 
     private void setConceptSetGroups() {
 		cegSet= new TTEntity()
-			.setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16")
+			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_EthnicCategoryCEG16")
 			.addType(IM.CONCEPT_SET)
 			.setName("CEG 16+1 Ethnic category (set group)")
 			.setDescription("QMUL-CEG categorisations of ethnic groups")

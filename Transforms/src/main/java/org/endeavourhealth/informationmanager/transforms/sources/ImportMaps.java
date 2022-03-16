@@ -21,6 +21,7 @@ import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class ImportMaps {
@@ -66,12 +67,43 @@ public class ImportMaps {
 			return new EntityRepository2().getReferenceFromCoreTerm(term, schemes);
 	}
 
+	public Set<TTIriRef> getCoreFromCode(String code, List<String> schemes) {
+		if (TTFilerFactory.isBulk())
+			return fileRepo.getCoreFromCode(code,schemes);
+		else
+			return new EntityRepository2().getCoreFromCode(code,schemes);
+	}
+
 	public Map<String, Set<String>> getAllMatchedLegacy() throws IOException {
 		if (TTFilerFactory.isBulk())
 			return fileRepo.getAllMatchedLegacy();
 		else
 			return new EntityRepository2().getAllMatchedLegacy();
 	}
+
+	public Set<TTIriRef> getCoreFromLegacyTerm(String term, String scheme) throws IOException {
+		if (TTFilerFactory.isBulk()) {
+			return fileRepo.getCoreFromLegacyTerm(term, scheme);
+		} else {
+			return new EntityRepository2().getCoreFromLegacyTerm(term, scheme);
+		}
+	}
+
+	/**
+	 * Gets the matched core concept from an emis code ide
+	 * @param codeId the emis code id
+	 * @param scheme the scheme
+	 * @return the set of core entities
+	 * @throws IOException
+	 */
+	public Set<TTIriRef> getCoreFromCodeId(String codeId, String scheme) throws IOException {
+		if (TTFilerFactory.isBulk()) {
+			return fileRepo.getCoreFromCodeId(codeId, List.of(scheme));
+		} else {
+			return new EntityRepository2().getCoreFromCodeId(codeId, List.of(scheme));
+		}
+	}
+
 
 
 
@@ -89,6 +121,8 @@ public class ImportMaps {
 			return importAllRDF4J(entities);
 		}
 	}
+
+
 
 	/**
 	 * Gets all entities and includes their legacy map if they have one
@@ -329,4 +363,11 @@ public class ImportMaps {
 	}
 
 
+	public Set<TTIriRef> getLegacyFromTermCode(String originalCode, String iri) throws IOException {
+		if (TTFilerFactory.isBulk()){
+			return fileRepo.getReferenceFromTermCode(originalCode,iri);
+		}
+		else
+			return new EntityRepository2().getReferenceFromTermCode(originalCode,iri);
+	}
 }
