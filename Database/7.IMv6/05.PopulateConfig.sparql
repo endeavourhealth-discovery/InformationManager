@@ -28,7 +28,7 @@ INSERT DATA {
     <http://endhealth.info/config#inferredExcludePredicates>
         <http://www.w3.org/2000/01/rdf-schema#label>    'Inferred exclude predicates' ;
         <http://www.w3.org/2000/01/rdf-schema#comment>  'Inferred predicates exclusion list' ;
-        <http://endhealth.info/im#hasConfig>            '["http://www.w3.org/2000/01/rdf-schema#label","http://endhealth.info/im#status","http://endhealth.info/im#Status","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","http://www.w3.org/2000/01/rdf-schema#comment","http://endhealth.info/im#isChildOf","http://endhealth.info/im#hasChildren","http://endhealth.info/im#isContainedIn","http://endhealth.info/im#code"]' .
+        <http://endhealth.info/im#hasConfig>            '["http://www.w3.org/2000/01/rdf-schema#label","http://endhealth.info/im#status","http://endhealth.info/im#Status","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","http://www.w3.org/2000/01/rdf-schema#comment","http://endhealth.info/im#isChildOf","http://endhealth.info/im#hasChildren","http://endhealth.info/im#isContainedIn","http://endhealth.info/im#code","http://endhealth.info/im#scheme"]' .
 
     <http://endhealth.info/config#graphExcludePredicates>
         <http://www.w3.org/2000/01/rdf-schema#label>    'Graph exclude predicates' ;
