@@ -84,7 +84,8 @@ public class ImportApp {
                   .validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
                  .validateByType(IM.GRAPH_CEG_QUERY, cfg.getFolder())
                   .validateByType(IM.GRAPH_IM1, cfg.getFolder())
-                    .validateByType(IM.GRAPH_CONFIG, cfg.getFolder());
+                    .validateByType(IM.GRAPH_CONFIG, cfg.getFolder())
+                      .validateByType(IM.GRAPH_DELTAS,cfg.getFolder());
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
                 importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
                 importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
@@ -101,6 +102,7 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
                 importer.importByType(IM.GRAPH_CONFIG,cfg);
                 importer.importByType(IM.GRAPH_IM1, cfg);
+                importer.importByType(IM.GRAPH_DELTAS,cfg);
                 break;
             case "imv1":
                 importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.getFolder());
@@ -180,6 +182,10 @@ public class ImportApp {
             case "config":
                 importer = new Importer().validateByType(IM.GRAPH_CONFIG, cfg.getFolder());
                 importer.importByType(IM.GRAPH_CONFIG, cfg);
+            case "deltas":
+                importer = new Importer().validateByType(IM.GRAPH_DELTAS, cfg.getFolder());
+                importer.importByType(IM.GRAPH_DELTAS, cfg);
+                break;
             default:
                 throw new Exception("Unknown import type");
 

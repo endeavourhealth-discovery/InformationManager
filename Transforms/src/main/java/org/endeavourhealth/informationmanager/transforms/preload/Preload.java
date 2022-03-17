@@ -1,27 +1,27 @@
 package org.endeavourhealth.informationmanager.transforms.preload;
 
-import org.endeavourhealth.imapi.filer.TCGenerator;
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImportByType;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 
+import java.io.IOException;
 import java.util.Date;
 
 public class Preload {
 	public static String testDirectory;
 
 	public static void main(String[] args) throws Exception {
-		if (args.length < 4) {
+		if (args.length < 5) {
 			System.err.println("Insufficient parameters supplied:");
 			System.err.println("source={sourcefolder} preload={foldercontaing preload} "+
-				"temp= {folder for temporary data} and privacy= {0 public, 1 private publisher 2 private for authoring");
+				"temp= {folder for temporary data} and privacy= {0 public, 1 private publisher 2 private for authoring} cmd={graphdbExecutable}");
 			System.exit(-1);
 		}
 		TTFilerFactory.setBulk(true);
+		String graphdbCommand=null;
 
 		TTImportConfig cfg = new TTImportConfig();
 
@@ -37,14 +37,20 @@ public class Preload {
 					TTBulkFiler.setDataPath(arg.split("=")[1]);
 				else if (arg.startsWith("privacy"))
 					TTBulkFiler.setPrivacyLevel(Integer.parseInt(arg.split("=")[1]));
+				else if (arg.startsWith("cmd"))
+					graphdbCommand= arg.split("=")[1];
 				else
 							System.err.println("Unknown parameter " + args[i]);
 			}
+			if (graphdbCommand==null){
+				System.err.println("Must set cmd={graphexecutable} argument to start graph db at the end of the process before processing deltas");
+				System.exit(-1);
+			}
 
-		importData(cfg);
+		importData(cfg,graphdbCommand);
 	}
 
-	private static void importData(TTImportConfig cfg) throws Exception {
+	private static void importData(TTImportConfig cfg,String graphdb) throws Exception {
 				TTImportByType importer = new Importer()
 					.validateByType(IM.GRAPH_DISCOVERY, cfg.getFolder())
 					.validateByType(SNOMED.GRAPH_SNOMED, cfg.getFolder())
@@ -62,6 +68,7 @@ public class Preload {
 					.validateByType(IM.GRAPH_CEG_QUERY,cfg.getFolder())
 					.validateByType(IM.GRAPH_IM1,cfg.getFolder());
 				importer.importByType(IM.GRAPH_DISCOVERY, cfg);
+
 				importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
 				importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
 				importer.importByType(IM.GRAPH_EMIS, cfg);
@@ -80,6 +87,17 @@ public class Preload {
 			TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
 			closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
 			TTBulkFiler.createRepository();
+			startGraph(graphdb);
+			TTImport deltaImporter= new DeltaImporter();
+			deltaImporter.importData(cfg);
+
 		System.out.println("Finished - " + (new Date()));
 	}
+
+	private static void startGraph(String graphdb) throws IOException, InterruptedException {
+		Process process = Runtime.getRuntime()
+			.exec("cmd /c \"cd /d "+TTBulkFiler.getPreload() +" && start cmd.exe /k "+ graphdb+"\"");
+		Thread.sleep(10000);
+	}
+
 }

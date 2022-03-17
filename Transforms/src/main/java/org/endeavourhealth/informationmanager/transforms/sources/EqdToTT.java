@@ -95,7 +95,7 @@ public class EqdToTT {
 	private void setProvenance(String iri,String authorName) {
 		ProvActivity activity= new ProvActivity()
 			.setIri("urn:uuid:"+ UUID.randomUUID())
-			.setActivityType(IM.CREATION)
+			.setActivityType(IM.PROV_CREATION)
 			.setEffectiveDate(LocalDateTime.now().toString());
 		document.addEntity(activity);
 		if (authorName!=null) {
@@ -163,6 +163,7 @@ public class EqdToTT {
 
 	private void convertPopulation(EQDOCPopulation population, Profile main) throws DataFormatException, IOException {
 		Match parentOr=null;
+		Match andNotClause=null;
 		for (EQDOCCriteriaGroup eqGroup : population.getCriteriaGroup()) {
 			VocRuleAction ifTrue = eqGroup.getActionIfTrue();
 			VocRuleAction ifFalse = eqGroup.getActionIfFalse();
@@ -170,6 +171,7 @@ public class EqdToTT {
 			Operator groupOp;
 
 			if (ifTrue == VocRuleAction.SELECT && ifFalse == VocRuleAction.NEXT) {
+				andNotClause=null;
 				thisMatch = new Match();
 				if (parentOr==null) {
 					parentOr = new Match();
@@ -179,6 +181,7 @@ public class EqdToTT {
 				groupOp= Operator.OR;
 			}
 			else if (ifTrue== VocRuleAction.SELECT && ifFalse == VocRuleAction.REJECT){
+				andNotClause=null;
 				if (getLastActionIfFalse(population,eqGroup)==VocRuleAction.NEXT && parentOr!=null){
 					thisMatch= new Match();
 					parentOr.addOr(thisMatch);
@@ -192,14 +195,17 @@ public class EqdToTT {
 				}
 			}
 			else if (ifTrue== VocRuleAction.NEXT && ifFalse == VocRuleAction.REJECT){
+				andNotClause=null;
 				thisMatch = new Match();
 				main.addAnd(thisMatch);
 				groupOp= Operator.AND;
 				parentOr=null;
 			}
 			else if ((ifTrue == VocRuleAction.REJECT && ifFalse == VocRuleAction.NEXT) || (ifTrue == VocRuleAction.REJECT && ifFalse == VocRuleAction.SELECT)) {
+				if (andNotClause==null)
+					andNotClause= main.addAnd();
 				thisMatch= new Match();
-				main.addAnd(new Match().addNot(thisMatch));
+				andNotClause.addNot(thisMatch);
 				groupOp= Operator.NOT;
 				parentOr=null;
 			}

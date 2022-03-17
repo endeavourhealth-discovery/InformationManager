@@ -102,7 +102,7 @@ public class CEGImporter implements TTImport {
 			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries")
 			.setName("QMUL CEG query library")
 			.addType(IM.FOLDER)
-			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QT_QueryTemplates"));
+			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_Queries"));
 		document.addEntity(folder);
 		folder= new TTEntity()
 			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets")

@@ -22,6 +22,7 @@ public class CoreQueryImporter implements TTImport {
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager = new TTManager();
 		TTDocument document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
+
 		addCurrentReg(document);
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
@@ -31,7 +32,7 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 	private void addCurrentReg(TTDocument document) throws JsonProcessingException {
-		TTEntity qry = new TTEntity().addType(IM.PROFILE);
+		TTEntity qry = new TTEntity().addType(IM.QUERY);
 		qry
 			.setIri(IM.NAMESPACE + "Q_RegisteredGMS")
 			.setName("Patients registered for GMS services on the reference date")
@@ -61,6 +62,7 @@ public class CoreQueryImporter implements TTImport {
 				.setValueCompare(Comparison.GREATER_THAN, "$ReferenceDate"));
 
 		qry.set(IM.DEFINITION,TTLiteral.literal(prof.getasJson()));
+		qry.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_StandardCohorts"));
 		document.addEntity(qry);
 		document.setContext(TTUtil.getDefaultContext());
 		setProvenance(qry,document);
@@ -74,7 +76,7 @@ public class CoreQueryImporter implements TTImport {
 		document.addEntity(agent);
 		ProvActivity activity= new ProvActivity()
 			.setIri("http://prov.endhealth.info/im#Q_RegisteredGMS")
-			.setActivityType(IM.CREATION)
+			.setActivityType(IM.PROV_CREATION)
 			.setEffectiveDate(LocalDateTime.now().toString())
 			.addAgent(TTIriRef.iri(agent.getIri()))
 			.setTargetEntity(TTIriRef.iri(rdf.getIri()));

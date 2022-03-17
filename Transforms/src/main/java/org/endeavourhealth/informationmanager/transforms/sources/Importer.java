@@ -72,6 +72,8 @@ public class Importer implements TTImportByType {
          return new CEGImporter();
       else if (IM.GRAPH_NHS_TFC.equals(importType))
          return new NHSTfcImport();
+      else if (IM.GRAPH_DELTAS.equals(importType))
+         return new DeltaImporter();
       else
          throw new Exception("Unrecognised import type");
    }

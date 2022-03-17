@@ -45,7 +45,7 @@ public class ComplexMapImporter {
       this.refset = refset;
       this.sourceCodes = sourceCodes;
       this.legacyCodeToEntity= legacyCodeToEntity;
-      document.setCrud(IM.REPLACE_VALUES);
+      document.setCrud(IM.UPDATE_PREDICATES);
       if (refset.equals(OPCS4_REFERENCE_SET))
          namespace=IM.CODE_SCHEME_OPCS4.getIri();
       else if (refset.equals(ICD10_REFERENCE_SET))
