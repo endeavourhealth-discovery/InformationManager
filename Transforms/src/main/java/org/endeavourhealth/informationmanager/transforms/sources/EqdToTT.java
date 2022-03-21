@@ -131,7 +131,7 @@ public class EqdToTT {
 
 		setVocabMaps();
 		activeReport = eqReport.getId();
-		TTEntity entity= new TTEntity().addType(IM.PROFILE);
+		TTEntity entity= new TTEntity().addType(IM.QUERY);
 		reportMap.put(activeReport,entity);
 		entity.setIri("urn:uuid:" + eqReport.getId());
 		entity.setName(eqReport.getName());

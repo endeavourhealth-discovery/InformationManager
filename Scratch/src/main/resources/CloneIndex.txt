@@ -1,0 +1,3 @@
+PUT /<source-index>/_block/write
+DELETE <target-index>
+PUT /<source-index>/_clone/<target-index>
