@@ -433,7 +433,7 @@ public class IM1MapImport implements TTImport {
           .setGraph(graph)
           .setIri(newIri)
           .setName(term)
-          .setScheme(TTIriRef.iri(newIri.substring(0,newIri.lastIndexOf("#"+1))))
+          .setScheme(TTIriRef.iri(newIri.substring(0,newIri.lastIndexOf("#")+1)))
           .setCode(code)
           .setStatus(IM.DRAFT)
           .setDescription(description)
