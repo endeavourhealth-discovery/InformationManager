@@ -295,8 +295,6 @@ public class IM1MapImport implements TTImport {
                                      else {
                                             checkEntity(scheme, lname, im1Scheme, term, code, oldIri, description);
                                         }
-
-
                                 }
                             }
                         }
@@ -435,11 +433,12 @@ public class IM1MapImport implements TTImport {
           .setGraph(graph)
           .setIri(newIri)
           .setName(term)
-          .setScheme(TTIriRef.iri(scheme))
+          .setScheme(TTIriRef.iri(newIri.substring(0,newIri.lastIndexOf("#"+1))))
           .setCode(code)
           .setStatus(IM.DRAFT)
           .setDescription(description)
           .set(IM.IM1ID,TTLiteral.literal(oldIri));
+        entity.set(IM.IM1SCHEME,TTLiteral.literal(scheme));
         if (matchedIri!=null) {
             entity.addObject(IM.MATCHED_TO, TTIriRef.iri(matchedIri));
             Set<String> matches = entities.get(matchedIri);
