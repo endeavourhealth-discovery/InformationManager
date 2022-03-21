@@ -7,8 +7,11 @@ import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Preload {
 	public static String testDirectory;
@@ -95,9 +98,19 @@ public class Preload {
 	}
 
 	private static void startGraph(String graphdb) throws IOException, InterruptedException {
-		Process process = Runtime.getRuntime()
-			.exec("cmd /c \"cd /d "+TTBulkFiler.getPreload() +" && start cmd.exe /k "+ graphdb+"\"");
-		Thread.sleep(10000);
-	}
+        List<String> cmds = new ArrayList();
+        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+            cmds.add("cmd");
+            cmds.add("/k");
+        }
+        cmds.add(graphdb);
+
+        Process process = new ProcessBuilder()
+            .directory(new File(TTBulkFiler.getPreload()))
+            .command(cmds)
+            .start();
+
+        Thread.sleep(10000);
+    }
 
 }
