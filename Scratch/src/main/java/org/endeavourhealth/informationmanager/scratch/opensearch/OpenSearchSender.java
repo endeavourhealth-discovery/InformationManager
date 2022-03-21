@@ -235,6 +235,8 @@ public class OpenSearchSender {
                         blob.addTermCode(name, null, null);
                     }
                 }
+            }catch (Exception e){
+                System.err.println("Bad Query \n"+sql);
             }
         }
         return batch;

@@ -76,8 +76,8 @@ public class Preload {
 				importer.importByType(IM.GRAPH_OPCS4, cfg);
 				importer.importByType(IM.GRAPH_ICD10, cfg);
 				importer.importByType(IM.GRAPH_VISION, cfg);
-				importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
-				importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
+			//	importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
+				//importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
 				importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
 				importer.importByType(IM.GRAPH_ODS, cfg);
 				importer.importByType(IM.GRAPH_NHS_TFC,cfg);

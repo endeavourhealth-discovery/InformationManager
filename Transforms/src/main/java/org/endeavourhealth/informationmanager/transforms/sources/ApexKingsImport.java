@@ -74,8 +74,8 @@ public class ApexKingsImport implements TTImport {
             lines.forEachOrdered(line -> {
 				String[] fields = line.split("\t");
 				String readCode= fields[0];
-				String code= fields[1]+"-"+(fields[2].toLowerCase());
-				String iri = IM.CODE_SCHEME_KINGS_APEX.getIri()+ fields[1]+ "-"+(editField(fields[2]));
+				String code= fields[1];
+				String iri = IM.CODE_SCHEME_KINGS_APEX.getIri()+ (fields[1].replace(" .,\"%",""));
 				TTEntity entity= new TTEntity()
 					.setIri(iri)
 					.addType(IM.CONCEPT)

@@ -60,11 +60,11 @@ public class ImportMaps {
 	 * @param term the code or description id or term code
 	 * @return iri and name of entity
 	 */
-	public TTIriRef getReferenceFromCoreTerm(String term, List<String> schemes) throws IOException {
+	public TTIriRef getReferenceFromCoreTerm(String term) throws IOException {
 		if (TTFilerFactory.isBulk())
-			return fileRepo.getReferenceFromCoreTerm(term,schemes);
+			return fileRepo.getReferenceFromCoreTerm(term);
 		else
-			return new EntityRepository2().getReferenceFromCoreTerm(term, schemes);
+			return new EntityRepository2().getReferenceFromCoreTerm(term);
 	}
 
 	public Set<TTIriRef> getCoreFromCode(String code, List<String> schemes) {

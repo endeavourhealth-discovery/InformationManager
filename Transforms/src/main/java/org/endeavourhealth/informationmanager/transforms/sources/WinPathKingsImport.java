@@ -74,8 +74,8 @@ public class WinPathKingsImport implements TTImport {
 			while (line != null && !line.isEmpty()) {
 				String[] fields = line.split("\t");
 				String readCode = fields[2];
-				String code = fields[0] + "-" + (fields[1].toLowerCase());
-				String iri = IM.CODE_SCHEME_KINGS_WINPATH.getIri() + fields[0].replace(" ", "") + "-" + (fields[1].replace(" ", ""));
+				String code = fields[0];
+				String iri = IM.CODE_SCHEME_KINGS_WINPATH.getIri() + (fields[0].replace(" %,.\"", ""));
 				TTEntity entity = new TTEntity()
 					.setIri(iri)
 					.addType(IM.CONCEPT)

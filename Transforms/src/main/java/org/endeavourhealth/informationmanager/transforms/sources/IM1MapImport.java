@@ -11,6 +11,8 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.OWL;
+import org.endeavourhealth.imapi.vocabulary.RDF;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,8 +69,7 @@ public class IM1MapImport implements TTImport {
             filer.fileDocument(statsDocument);
         }
 
-        ImportUnmapped unm= new ImportUnmapped();
-        unm.importUnmapped(inFolder);
+
 
         return this;
 
@@ -174,6 +175,8 @@ public class IM1MapImport implements TTImport {
                             break;
                         case "CM_DiscoveryCode":
                             scheme = IM.CODE_SCHEME_DISCOVERY.getIri();
+                            if (code.startsWith("LPV_Imp_Crn"))
+                                scheme= IM.GRAPH_IMPERIAL_CERNER.getIri();
                             break;
                         case "FHIR_FPR":
                             scheme = "X";
@@ -202,8 +205,7 @@ public class IM1MapImport implements TTImport {
                                 checkEntity(scheme, lname, im1Scheme, term, code, oldIri,description);
                             }
                             else {
-                                List<String> schemes = Arrays.asList(IM.NAMESPACE,SNOMED.NAMESPACE);
-                                TTIriRef core = importMaps.getReferenceFromCoreTerm(term, schemes);
+                                TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
                                 if (core != null) {
                                     addNewEntity(scheme+lname,core.getIri(),term,code,scheme,oldIri,description);
                                 }
@@ -228,11 +230,12 @@ public class IM1MapImport implements TTImport {
                                     String suffix = term.substring(1, term.indexOf("]"));
                                     String realName = lname.replace("_", "") + "-" + suffix;
                                     if (entities.containsKey(scheme + realName)) {
-                                        addNewEntity(scheme + lname, scheme + realName, term, code,scheme,oldIri,description);
+                                        addIM1id(scheme+realName,oldIri);
+
                                     }
                                     else if (entities.containsKey(scheme + code.replace(".", ""))) {
                                         realName = code.replace(".", "");
-                                        addNewEntity(scheme+lname,scheme+realName,term,code,scheme,oldIri,description);
+                                        addIM1id(scheme+realName,oldIri);
                                     }
                                     else
                                         checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
@@ -245,9 +248,9 @@ public class IM1MapImport implements TTImport {
                                 checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
                             else {
                                 List<String> schemes = List.of(IM.CODE_SCHEME_ENCOUNTERS.getIri());
-                                TTIriRef core = importMaps.getReferenceFromCoreTerm(term, schemes);
+                                TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
                                 if (core != null) {
-                                    addNewEntity(scheme+lname,core.getIri(),term,code,scheme,oldIri,description);
+                                    addIM1id(core.getIri(),oldIri);
                                 }
                                 else {
                                     checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
@@ -264,7 +267,7 @@ public class IM1MapImport implements TTImport {
                             else if (lname.endsWith("X")) {
                                     String realName = lname.split("\\.")[0];
                                     if (entities.containsKey(scheme + realName)) {
-                                        addNewEntity(scheme + icd10, scheme + realName, term, code, scheme,oldIri,description);
+                                        addIM1id(scheme+realName,oldIri);
                                     }
                                 }
                         }
@@ -285,12 +288,11 @@ public class IM1MapImport implements TTImport {
                                 if (entities.containsKey(scheme + lname)) {
                                     checkEntity(scheme, lname, im1Scheme, term, code, oldIri, description);
                                 } else {
-                                    List<String> schemes = List.of(IM.NAMESPACE);
-                                    TTIriRef core = importMaps.getReferenceFromCoreTerm(term, schemes);
+                                    TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
                                     if (core != null) {
-                                        lname = core.getIri().split("#")[1];
-                                        checkEntity(scheme, lname, im1Scheme, term, code, oldIri, description);
-                                    } else {
+                                            addIM1id(core.getIri(), oldIri);
+                                    }
+                                     else {
                                             checkEntity(scheme, lname, im1Scheme, term, code, oldIri, description);
                                         }
 
@@ -301,6 +303,7 @@ public class IM1MapImport implements TTImport {
                         else if (scheme.equals(SNOMED.NAMESPACE)){
                             if (getNameSpace(code).equals(visionNamespace)){
                                 scheme= IM.CODE_SCHEME_VISION.getIri();
+                                addNewEntity(scheme+code,null,term,code,im1Scheme,oldIri,description);
                             }
                             checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
                         }
@@ -310,8 +313,7 @@ public class IM1MapImport implements TTImport {
                                 checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
                             }
                             else {
-                                List<String> schemes = Arrays.asList(IM.NAMESPACE,SNOMED.NAMESPACE);
-                                TTIriRef core = importMaps.getReferenceFromCoreTerm(term, schemes);
+                                TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
                                 if (core != null) {
                                     addNewEntity(scheme+lname,core.getIri(),term,code,scheme,oldIri,description);
                                 }
@@ -321,6 +323,22 @@ public class IM1MapImport implements TTImport {
 
                             }
                         }
+                        else if (scheme.equals(IM.GRAPH_IMPERIAL_CERNER.getIri())){
+                            if (entities.containsKey(scheme+lname)){
+                                checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
+                            }
+                            else {
+                                TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
+                                if (core != null) {
+                                    addNewEntity(scheme+lname,core.getIri(),term,code,scheme,oldIri,description);
+                                }
+                                else {
+                                    checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
+                                }
+
+                            }
+                        }
+
                         else {
                             checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
                         }
@@ -354,7 +372,7 @@ public class IM1MapImport implements TTImport {
             else {
                 List<String> schemes = List.of(IM.NAMESPACE);
                 String oldTerm = oldIriTerm.get(lname);
-                TTIriRef core = importMaps.getReferenceFromCoreTerm(oldTerm, schemes);
+                TTIriRef core = importMaps.getReferenceFromCoreTerm(oldTerm);
                 if (core != null) {
                     lname = core.getIri().split("#")[1];
                     checkEntity(scheme, lname, im1Scheme, term, code, oldIri, description);
@@ -378,6 +396,31 @@ public class IM1MapImport implements TTImport {
             addIM1id(scheme + lname, oldIri);
         }
         else {
+            TTEntity unassigned= new TTEntity();
+            unassigned.setGraph(TTIriRef.iri(scheme));
+            unassigned.setIri(scheme+lname);
+            unassigned.setStatus(IM.UNASSIGNED);
+            unassigned.set(IM.IM1ID,TTLiteral.literal(oldIri));
+            unassigned.setName(term);
+            if (description!=null)
+                unassigned.setDescription(description);
+            if (code!=null)
+                unassigned.set(IM.CODE,TTLiteral.literal(code));
+            unassigned.set(IM.IM1SCHEME,TTLiteral.literal(im1Scheme));
+            if (scheme.equals(IM.CODE_SCHEME_ENCOUNTERS.getIri()))
+                unassigned.set(IM.PRIVACY_LEVEL,TTLiteral.literal(1));
+            if (used.get(oldIri)!=null)
+                if (used.get(oldIri)>0)
+                    unassigned.set(IM.USAGE_TOTAL,TTLiteral.literal(used.get(oldIri)));
+            if (scheme.equals(IM.NAMESPACE)){
+                if (oldIri.startsWith("DM_"))
+                    unassigned.set(RDF.TYPE, RDF.PROPERTY);
+                else
+                    unassigned.set(RDF.TYPE,IM.CONCEPT);
+            }
+            else
+                unassigned.set(RDF.TYPE,IM.CONCEPT);
+            document.addEntity(unassigned);
 					writer.write(oldIri+ "\t" + term + "\t" + im1Scheme + "\t" + code + "\t" + description + "\t" + (used.getOrDefault(oldIri, 0)) + "\n");
 				}
 
@@ -394,13 +437,16 @@ public class IM1MapImport implements TTImport {
           .setName(term)
           .setScheme(TTIriRef.iri(scheme))
           .setCode(code)
-          .setStatus(IM.INACTIVE)
+          .setStatus(IM.DRAFT)
           .setDescription(description)
           .set(IM.IM1ID,TTLiteral.literal(oldIri));
-        Set<String> matches= entities.get(matchedIri);
-        if (matches!=null) {
-            for (String iri : matches)
-                entity.addObject(IM.MATCHED_TO, TTIriRef.iri(iri));
+        if (matchedIri!=null) {
+            entity.addObject(IM.MATCHED_TO, TTIriRef.iri(matchedIri));
+            Set<String> matches = entities.get(matchedIri);
+            if (matches != null) {
+                for (String iri : matches)
+                    entity.addObject(IM.MATCHED_TO, TTIriRef.iri(iri));
+            }
         }
         if (used.containsKey(oldIri))
             entity.set(IM.USAGE_TOTAL,TTLiteral.literal(used.get(oldIri)));
