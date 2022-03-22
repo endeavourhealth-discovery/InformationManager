@@ -5,6 +5,9 @@ PUT /{}
     "scheme.@id": {
       "type": "keyword"
     },
+    "iri" : {
+    "type" : "keyword"
+    },
     "entityType.@id":{
       "type": "keyword"
     },
