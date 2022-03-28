@@ -39,7 +39,9 @@ public class NHSTfcImport implements TTImport {
 			.setIri(nhsTfc.getIri())
 			.setName("Main Specialty and Treatment Function Codes")
 			.setScheme(IM.GRAPH_NHS_TFC)
-			.setCode("0");
+			.setCode("0")
+			.addType(IM.CONCEPT)
+			.setStatus(IM.ACTIVE);
 		nhs.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
 		document.addEntity(nhs);
 	}
@@ -60,8 +62,10 @@ public class NHSTfcImport implements TTImport {
 				TTEntity tfc= new TTEntity()
 					.setIri(IM.GRAPH_NHS_TFC.getIri()+code)
 					.setName(term)
-						.setScheme(IM.GRAPH_NHS_TFC)
-							.setCode(code);
+					.setScheme(IM.GRAPH_NHS_TFC)
+					.setCode(code)
+					.addType(IM.CONCEPT)
+					.setStatus(IM.ACTIVE);
 				tfc.addObject(IM.IS_CHILD_OF,nhsTfc);
 				tfc.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 				document.addEntity(tfc);
