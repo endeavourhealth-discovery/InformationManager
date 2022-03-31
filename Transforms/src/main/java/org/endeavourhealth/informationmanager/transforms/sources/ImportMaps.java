@@ -298,7 +298,7 @@ public class ImportMaps {
 					entity.setName(name);
 					entity.setCode(code);
 					entity.setIri(IM.GRAPH_VISION.getIri() + code.replace(".", ""));
-					entity.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+					entity.addObject(IM.MATCHED_TO, TTIriRef.iri(snomed));
 				}
 			}
 		}
