@@ -5,9 +5,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.model.hql.HqlDocument;
-import org.endeavourhealth.imapi.model.hql.HqlFactory;
-import org.endeavourhealth.imapi.model.hql.Profile;
+
+import org.endeavourhealth.imapi.model.query.IMQLDocument;
+import org.endeavourhealth.imapi.model.query.IMQLFactory;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -51,7 +51,6 @@ public class CEGImporter implements TTImport {
 		ethnicImport.importData(config);
 		createFolders();
 		loadAndConvert(config.getFolder());
-		WrapAsJson();
 		Map<String,TTEntity> vsetFolderMap= new HashMap<>();
 		Set<TTEntity> vsetFolders= new HashSet<>();
 		for (TTEntity entity:document.getEntities()){
@@ -87,15 +86,6 @@ public class CEGImporter implements TTImport {
 
 
 
-	private void WrapAsJson() throws JsonProcessingException {
-		for (TTEntity entity:document.getEntities()){
-			if (entity.isType(IM.PROFILE))
-				if (entity.get(IM.DEFINITION)!=null)
-					TTManager.wrapRDFAsJson(entity);
-
-		}
-	}
-
 
 	private void createFolders() {
 		TTEntity folder= new TTEntity()
@@ -127,13 +117,7 @@ public class CEGImporter implements TTImport {
 		try (FileReader reader = new FileReader(( ImportUtils.findFileForId(folder, dataMapFile[0]).toFile()))) {
             dataMap.load(reader);
         }
-
-//		Properties duplicateOrs= new Properties();
-//		try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, duplicates[0]).toFile()))) {
-//            duplicateOrs.load(reader);
-//        }
-
-        Properties criteriaLabels= new Properties();
+		Properties criteriaLabels= new Properties();
 		try (FileReader reader = new FileReader(( ImportUtils.findFileForId(folder, annotations[0]).toFile()))) {
             criteriaLabels.load(reader);
         }
@@ -164,25 +148,25 @@ public class CEGImporter implements TTImport {
 		if ( ImportApp.testDirectory!=null) {
 			String directory=  ImportApp.testDirectory.replace("%"," ");
 			TTManager manager = new TTManager();
-			HqlDocument hql= HqlFactory.createHqlDocument();
+			IMQLDocument hql= IMQLFactory.createIMQLDocument();
 			TTDocument qDocument = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 			for (TTEntity entity : document.getEntities()) {
-				if (entity.isType(IM.PROFILE)) {
+				if (entity.isType(IM.QUERY)) {
 					if (!allEntities.contains(entity)) {
 						qDocument.addEntity(entity);
-						hql.addProfile(HqlFactory.createProfileFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
+						hql.addQuery(IMQLFactory.createQueryFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
 					}
 				}
 				allEntities.add(entity);
 			}
 			manager.setDocument(qDocument);
-			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-profiles-ld.json"));
+			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-profiles-V2-ld.json"));
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 			String json= objectMapper.writeValueAsString(hql);
-			try (FileWriter wr= new FileWriter(directory+"\\"+ fileEntry.getName().replace(".xml","") + ".json")){
+			try (FileWriter wr= new FileWriter(directory+"\\"+ fileEntry.getName().replace(".xml","") + "-V2.json")){
 				wr.write(json);
 			}
 
