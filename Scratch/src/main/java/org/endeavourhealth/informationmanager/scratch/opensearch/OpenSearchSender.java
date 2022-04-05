@@ -49,6 +49,7 @@ public class OpenSearchSender {
         om.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         om.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
         checkEnvs();
+        checkIndexExists();
         String batchSql= getBatchSql("<"+IM.NAMESPACE+"effectiveDate>");
         int maxId=0;
         if (!update)
@@ -194,12 +195,10 @@ public class OpenSearchSender {
                         extraType= TTIriRef.iri(rs.getValue("extraType").stringValue());
                         extraType.setName(rs.getValue("extraTypeName").stringValue());
                         blob.addType(extraType);
-                        int weighting;
-                        if (extraType.getIri().equals(IM.NAMESPACE+"dataModelProperty"))
-                            weighting=1000000;
-                        else
-                            weighting=2000000;
-                        blob.setWeighting(weighting);
+                        if (extraType.equals(TTIriRef.iri(IM.NAMESPACE+"DataModelEntity"))) {
+                            int weighting = 2000000;
+                            blob.setWeighting(weighting);
+                        }
                     }
                     if (rs.getValue("weighting") != null) {
                         blob.setWeighting(Integer.parseInt(rs.getValue("weighting").stringValue()));
@@ -361,6 +360,40 @@ public class OpenSearchSender {
             if (maxId > 0)
                 LOG.info("Continuing from {}", maxId);
             return maxId;
+        }
+    }
+
+    private void checkIndexExists() throws IOException {
+
+        target = client.target(osUrl).path(index);
+
+        Response response = target
+          .request()
+          .header("Authorization", "Basic " + osAuth)
+          .head();
+
+        if (response.getStatus() != 200) {
+            LOG.info(index + " does not exist - creating index and default mappings");
+            target = client.target(osUrl).path(index);
+            response = target
+              .request()
+              .header("Authorization", "Basic " + osAuth)
+              .put(Entity.entity("{\n" +
+                "  \n" +
+                "  \"mappings\":  {\"properties\": {\n" +
+                "    \"scheme.@id\": {\n" +
+                "      \"type\": \"keyword\"\n" +
+                "    },\n" +
+                "    \"entityType.@id\":{\n" +
+                "      \"type\": \"keyword\"\n" +
+                "    },\n" +
+                "    \"status.@id\" : {\n" +
+                "      \"type\" : \"keyword\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "  }\n" +
+                "}", MediaType.APPLICATION_JSON));
+            System.out.println(response.getStatus());
         }
     }
 }
