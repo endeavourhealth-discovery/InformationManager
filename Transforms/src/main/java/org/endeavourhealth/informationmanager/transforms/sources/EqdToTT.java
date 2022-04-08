@@ -3,7 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.apache.commons.collections4.CollectionUtils;
 import org.endeavourhealth.imapi.model.cdm.ProvActivity;
 import org.endeavourhealth.imapi.model.cdm.ProvAgent;
-import org.endeavourhealth.imapi.model.hql.*;
+import org.endeavourhealth.imapi.model.query.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTCompare;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -538,7 +538,7 @@ public class EqdToTT {
 				Function function = new Function();
 				match.setValueFunction(function);
 				function.setId(TTIriRef.iri(IM.NAMESPACE+"AgeFunction"));
-				function.addArgument(new Argument().setParameter("units").setValueData(units));
+				function.addArgument(new Argument().setParameter("units").setValue(units));
 			}
 	}
 
@@ -546,9 +546,9 @@ public class EqdToTT {
 		Function function=null;
 		if (compareAgainst!=null) {
 			function = new Function().setId(TTIriRef.iri(IM.NAMESPACE + "TimeDifference"));
-			function.addArgument(new Argument().setParameter("units").setValueData(units));
-			function.addArgument(new Argument().setParameter("firstDate").setValueData(firstDate));
-			function.addArgument(new Argument().setParameter("secondDate").setValueData(compareAgainst));
+			function.addArgument(new Argument().setParameter("units").setValue(units));
+			function.addArgument(new Argument().setParameter("firstDate").setValue(firstDate));
+			function.addArgument(new Argument().setParameter("secondDate").setValue(compareAgainst));
 		}
 		return function;
 	}
