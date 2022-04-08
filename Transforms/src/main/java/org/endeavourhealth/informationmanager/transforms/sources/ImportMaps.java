@@ -21,7 +21,6 @@ import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class ImportMaps {
@@ -235,9 +234,16 @@ public class ImportMaps {
 	private Map<String, Set<String>> importReadToSnomedRdf4j(Map<String, Set<String>> readToSnomed) throws TTFilerException {
 
 		try (RepositoryConnection conn= ConnectionManager.getIMConnection()){
-			TupleQuery qry= conn.prepareTupleQuery("select ?code ?snomed\n"+
-				"where {GRAPH <"+IM.GRAPH_VISION.getIri()+"> {?concept <"+IM.CODE.getIri()+"> ?code. \n"+
-				"?concept <"+IM.MATCHED_TO.getIri()+"> ?snomed.}}");
+			TupleQuery qry= conn.prepareTupleQuery(
+				"SELECT ?code ?snomed\n" +
+				"WHERE {" +
+					"GRAPH <"+IM.GRAPH_VISION.getIri()+"> {" +
+					"?concept <"+IM.CODE.getIri()+"> ?code . \n" +
+					"?concept <"+IM.MATCHED_TO.getIri()+"> ?snomedIri .}" +
+					"GRAPH <"+SNOMED.GRAPH_SNOMED.getIri()+"> {" +
+					"?snomedIri <"+IM.CODE.getIri()+"> ?snomed .}" +
+				"}"
+			);
 			TupleQueryResult rs= qry.evaluate();
 			while (rs.hasNext()){
 				BindingSet bs= rs.next();
@@ -279,26 +285,26 @@ public class ImportMaps {
 		Map<String,TTEntity> emisRead2= new HashMap<>();
 		try (RepositoryConnection conn= ConnectionManager.getIMConnection()) {
 			StringJoiner sql = new StringJoiner("\n");
-			sql.add("SELECT ?code ?name ?snomed");
+			sql.add("SELECT ?code ?name ?snomedIri");
 			sql.add("WHERE {");
 			sql.add("Graph <" + IM.GRAPH_EMIS.getIri() + "> {");
 			sql.add("?concept <" + IM.CODE.getIri() + "> ?code.");
 			sql.add("?concept <" + RDFS.LABEL.getIri() + "> ?name.");
-			sql.add("?concept <" + IM.MATCHED_TO.getIri() + "> ?snomed. } }");
+			sql.add("?concept <" + IM.MATCHED_TO.getIri() + "> ?snomedIri . } }");
 			TupleQuery qry = conn.prepareTupleQuery(sql.toString());
 			TupleQueryResult rs = qry.evaluate();
 			while (rs.hasNext()) {
 				BindingSet bs = rs.next();
 				String code = bs.getValue("code").stringValue();
 				String name = bs.getValue("name").stringValue();
-				String snomed = bs.getValue("snomed").stringValue();
+				String snomedIri = bs.getValue("snomedIri").stringValue();
 				if (isRead(code)) {
 					code = (code + ".....").substring(0, 5);
 					TTEntity entity = emisRead2.computeIfAbsent(code, k -> new TTEntity());
 					entity.setName(name);
 					entity.setCode(code);
 					entity.setIri(IM.GRAPH_VISION.getIri() + code.replace(".", ""));
-					entity.addObject(IM.MATCHED_TO, TTIriRef.iri(snomed));
+					entity.addObject(IM.MATCHED_TO, TTIriRef.iri(snomedIri));
 				}
 			}
 		}
