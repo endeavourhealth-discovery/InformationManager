@@ -8,6 +8,7 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
+import org.endeavourhealth.imapi.dataaccess.EntityRepository;
 import org.endeavourhealth.imapi.dataaccess.EntityRepository2;
 import org.endeavourhealth.imapi.dataaccess.FileRepository;
 import org.endeavourhealth.imapi.dataaccess.helpers.ConnectionManager;
@@ -36,6 +37,16 @@ public class ImportMaps {
 		if (TTFilerFactory.isBulk())
 			return fileRepo.getCodeCoreMap(IM.CODE_SCHEME_EMIS.getIri());
 		return importEmisToSnomedRdf4j();
+	}
+
+	public String getCoreName(String iri) throws IOException {
+		if (TTFilerFactory.isBulk()) {
+			return fileRepo.getCoreName(iri);
+		}
+		else {
+			return new EntityRepository().getEntityReferenceByIri(iri).getName();
+		}
+
 	}
 
 	/**

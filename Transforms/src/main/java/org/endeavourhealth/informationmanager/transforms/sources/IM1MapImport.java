@@ -402,8 +402,10 @@ public class IM1MapImport implements TTImport {
             unassigned.setName(term);
             if (description!=null)
                 unassigned.setDescription(description);
-            if (code!=null)
-                unassigned.set(IM.CODE,TTLiteral.literal(code));
+            if (code!=null) {
+                unassigned.set(IM.CODE, TTLiteral.literal(code));
+                unassigned.setScheme(TTIriRef.iri(scheme));
+            }
             unassigned.set(IM.IM1SCHEME,TTLiteral.literal(im1Scheme));
             if (scheme.equals(IM.CODE_SCHEME_ENCOUNTERS.getIri()))
                 unassigned.set(IM.PRIVACY_LEVEL,TTLiteral.literal(1));

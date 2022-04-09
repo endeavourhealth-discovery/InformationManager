@@ -22,8 +22,10 @@ public class CoreQueryImporter implements TTImport {
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager = new TTManager();
 		TTDocument document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
+		output(document, config.getFolder());
 
-		addCurrentReg(document);
+		addCurrentReg(document,config.getFolder());
+		output(document,config.getFolder());
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}
@@ -31,7 +33,7 @@ public class CoreQueryImporter implements TTImport {
 		return null;
 	}
 
-	private void addCurrentReg(TTDocument document) throws JsonProcessingException {
+	private void addCurrentReg(TTDocument document,String outFolder) throws IOException {
 		TTEntity qry = new TTEntity().addType(IM.QUERY);
 		qry
 			.setIri(IM.NAMESPACE + "Q_RegisteredGMS")
@@ -39,6 +41,9 @@ public class CoreQueryImporter implements TTImport {
 			.setDescription("For any registration period,a registration start date before the reference date and no end date," +
 				"or an end date after the reference date.");
 		Profile prof= new Profile();
+		prof.setId(TTIriRef.iri(qry.getIri()));
+		prof.setName(qry.getName());
+		prof.setDescription(qry.getDescription());
 		prof.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person"));
 		Match match= prof.setMatch();
 		match.setPathTo(TTIriRef.iri(IM.NAMESPACE+"isSubjectOf"));
@@ -66,6 +71,7 @@ public class CoreQueryImporter implements TTImport {
 		document.addEntity(qry);
 		document.setContext(TTUtil.getDefaultContext());
 		setProvenance(qry,document);
+		outputQuery(prof,outFolder);
 	}
 
 	private void setProvenance(TTEntity rdf,TTDocument document) {
@@ -92,13 +98,27 @@ public class CoreQueryImporter implements TTImport {
 
 
 	private void output(TTDocument document, String infolder) throws IOException {
-		try (FileWriter writer= new FileWriter(infolder + "Core-qry.json")) {
+		try (FileWriter writer= new FileWriter(infolder + "\\Core-qry-LD.json")) {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 			String doc = objectMapper.writerWithDefaultPrettyPrinter()
 				.withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(document);
+			writer.write(doc);
+		}
+
+	}
+
+
+	private void outputQuery(Profile qry, String infolder) throws IOException {
+		try (FileWriter writer= new FileWriter(infolder + "\\Core-qry.json")) {
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
+			String doc = objectMapper.writerWithDefaultPrettyPrinter()
+				.withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(qry);
 			writer.write(doc);
 		}
 

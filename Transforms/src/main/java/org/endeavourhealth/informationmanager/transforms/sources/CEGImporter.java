@@ -167,7 +167,7 @@ public class CEGImporter implements TTImport {
 			HqlDocument hql= HqlFactory.createHqlDocument();
 			TTDocument qDocument = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 			for (TTEntity entity : document.getEntities()) {
-				if (entity.isType(IM.PROFILE)) {
+				if (entity.isType(IM.QUERY)) {
 					if (!allEntities.contains(entity)) {
 						qDocument.addEntity(entity);
 						hql.addProfile(HqlFactory.createProfileFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));

@@ -256,7 +256,7 @@ public class EqdToTT {
 		if ((eqCriteria.getPopulationCriterion() != null)) {
 			EQDOCSearchIdentifier srch = eqCriteria.getPopulationCriterion();
 			match
-				.setProperty(IM.HAS_PROFILE)
+				.setProperty(IM.IN_RESULT_SET)
 				.addValueIn(TTIriRef.iri("urn:uuid:" + srch.getReportGuid())
 					.setName(reportNames.get(srch.getReportGuid())));
 		}
@@ -451,13 +451,13 @@ public class EqdToTT {
 		if (!cv.getValueSet().isEmpty()){
 			for (EQDOCValueSet vs:cv.getValueSet()) {
 				if (vs.getAllValues()!=null){
-					match.addValueNotIn(getExceptionSet(vs.getAllValues()));
+					match.setValueNotIn(getExceptionSet(vs.getAllValues()));
 				}
 				else {
 					if (!notIn)
-						match.addValueIn(getValueSet(vs));
+						match.setValueIn(getValueSet(vs));
 					else
-						match.addValueNotIn(getValueSet(vs));
+						match.setValueNotIn(getValueSet(vs));
 				}
 			}
 		}
@@ -635,6 +635,7 @@ public class EqdToTT {
 			.setValueData(value));
 	}
 
+	/*
 	private TTIriRef getExceptionSet(EQDOCException set) throws DataFormatException, IOException {
 		TTEntity valueSet = new TTEntity();
 		String iri = "urn:uuid:" + UUID.randomUUID();
@@ -663,6 +664,50 @@ public class EqdToTT {
 		return null;
 	}
 
+	 */
+
+	private List<TTIriRef> getExceptionSet(EQDOCException set) throws DataFormatException, IOException {
+		List<TTIriRef> valueSet = new ArrayList<>();
+		VocCodeSystemEx scheme= set.getCodeSystem();
+		for (EQDOCExceptionValue ev:set.getValues()) {
+			Set<TTIriRef> values = getValue(scheme, ev.getValue(), ev.getDisplayName(), ev.getLegacyValue());
+			if (values != null) {
+				valueSet.addAll(new ArrayList<>(values));
+			} else
+				System.err.println("Missing exception sets\t" + ev.getValue() + "\t " + ev.getDisplayName());
+		}
+
+		return valueSet;
+	}
+
+	private List<TTIriRef> getValueSet(EQDOCValueSet vs) throws DataFormatException, IOException {
+		List<TTIriRef> valueSet = new ArrayList<>();
+		StringBuilder vsetName = new StringBuilder();
+		if (vs.getDescription() != null)
+			vsetName = new StringBuilder(vs.getDescription());
+		VocCodeSystemEx scheme = vs.getCodeSystem();
+		int i = 0;
+		for (EQDOCValueSetValue ev : vs.getValues()) {
+			i++;
+			if (i < 10) {
+				if (ev.getDisplayName() != null) {
+					if (vsetName.length() != 0)
+						vsetName.append(", ");
+					vsetName.append(ev.getDisplayName());
+				}
+			}
+			Set<TTIriRef> concepts = getValue(scheme, ev);
+			if (concepts != null) {
+				valueSet.addAll(new ArrayList<>(concepts));
+			} else
+				System.err.println("Missing \t" + ev.getValue() + "\t " + ev.getDisplayName());
+
+
+		}
+		return valueSet;
+	}
+
+	/*
 	private TTIriRef getValueSet(EQDOCValueSet vs) throws DataFormatException, IOException {
 		TTEntity valueSet = new TTEntity();
 		TTIriRef iri = TTIriRef.iri("urn:uuid:" + UUID.randomUUID());
@@ -713,24 +758,72 @@ public class EqdToTT {
 			iri.setName(vsetName.toString());
 			valueSet.setName(iri.getName());
 		}
-		/*
+
 		TTEntity duplicateOf = getDuplicateSet(valueSet);
 		if (duplicateOf!=null){
 			iri= TTIriRef.iri(duplicateOf.getIri());
 			iri.setName(duplicateOf.getName());
 			return iri;
 		}
-
-		 */
 		valueSet.addObject(IM.USED_IN,TTIriRef.iri(reportMap.get(activeReport).getIri()));
 		document.addEntity(valueSet);
 		valueSets.add(valueSet);
 		return iri;
 	}
+	*/
 	private Set<TTIriRef> getValue(VocCodeSystemEx scheme,EQDOCValueSetValue ev) throws DataFormatException, IOException {
 		return getValue(scheme, ev.getValue(),ev.getDisplayName(),ev.getLegacyValue());
 	}
 
+	private Set<TTIriRef> getValue(VocCodeSystemEx scheme, String originalCode,
+																 String originalTerm,String legacyCode) throws DataFormatException, IOException {
+		if (scheme== VocCodeSystemEx.EMISINTERNAL) {
+			String key = "EMISINTERNAL/" + originalCode;
+			Object mapValue = dataMap.get(key);
+			if (mapValue != null) {
+				TTIriRef iri= TTIriRef.iri(mapValue.toString());
+				String name= importMaps.getCoreName(iri.getIri());
+				if (name!=null)
+					iri.setName(name);
+				Set<TTIriRef> result= new HashSet<>();
+				result.add(iri);
+				return result;
+			}
+			else
+				throw new DataFormatException("unmapped emis internal code : "+key);
+		}
+		else if (scheme== VocCodeSystemEx.SNOMED_CONCEPT || scheme.value().contains("SCT")){
+			List<String> schemes= new ArrayList<>();
+			schemes.add(SNOMED.NAMESPACE);
+			schemes.add(IM.CODE_SCHEME_EMIS.getIri());
+			Set<TTIriRef> snomed= valueMap.get(originalCode);
+			if (snomed==null) {
+				snomed= getCoreFromCode(originalCode,schemes);
+				if (snomed==null)
+					if (legacyCode!=null)
+						snomed=getCoreFromCode(legacyCode,schemes);
+				if (snomed == null)
+					if (originalTerm != null)
+						snomed= getCoreFromLegacyTerm(originalTerm);
+				if (snomed==null)
+					snomed= getCoreFromCodeId(originalCode);
+				if (snomed==null)
+					snomed= getLegacyFromTermCode(originalCode);
+
+
+				if (snomed != null)
+					valueMap.put(originalCode, snomed);
+			}
+			return snomed;
+		}
+		else
+			throw new DataFormatException("code scheme not recognised : "+scheme.value());
+
+	}
+
+
+
+	/*
 	private Set<TTIriRef> getValue(VocCodeSystemEx scheme, String originalCode,
 																 String originalTerm,String legacyCode) throws DataFormatException {
 		if (scheme== VocCodeSystemEx.EMISINTERNAL) {
@@ -773,7 +866,9 @@ public class EqdToTT {
 
 	}
 
+	*/
 	private Set<TTIriRef> getCoreFromCodeId(String originalCode){
+
 		try {
 			return importMaps.getCoreFromCodeId(originalCode, IM.CODE_SCHEME_EMIS.getIri());
 		} catch (Exception e){
@@ -782,6 +877,8 @@ public class EqdToTT {
 			return null;
 		}
 	}
+
+
 
 	private Set<TTIriRef> getLegacyFromTermCode(String originalCode) {
 		try {
@@ -808,12 +905,26 @@ public class EqdToTT {
 		return importMaps.getCoreFromCode(originalCode,schemes);
 	}
 
+
+
+	private void setParent(Match clause, TTIriRef parent, String parentName) {
+		if (parentName!=null) {
+			clause.setName(parentName);
+			parent.setName(parentName);
+		}
+		clause.setProperty(IM.IN_RESULT_SET)
+			.addValueIn(parent);
+	}
+
+	/*
 	private void setParent(Match clause, TTIriRef parent, String parentName) {
 		if (parentName!=null)
 			clause.setName(parentName);
 		clause.setProperty(IM.HAS_PROFILE)
 			.addValueIn(parent);
 	}
+
+	 */
 
 	private void setVocabMaps() {
 		vocabMap.put(VocRangeFromOperator.GTEQ, Comparison.GREATER_THAN_OR_EQUAL);
