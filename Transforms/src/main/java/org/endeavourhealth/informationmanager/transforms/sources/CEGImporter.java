@@ -5,8 +5,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.model.query.HqlDocument;
-import org.endeavourhealth.imapi.model.query.HqlFactory;
+import org.endeavourhealth.imapi.model.query.QueryDocument;
+import org.endeavourhealth.imapi.model.query.QueryFactory;
 import org.endeavourhealth.imapi.model.query.Profile;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -164,13 +164,13 @@ public class CEGImporter implements TTImport {
 		if ( ImportApp.testDirectory!=null) {
 			String directory=  ImportApp.testDirectory.replace("%"," ");
 			TTManager manager = new TTManager();
-			HqlDocument hql= HqlFactory.createHqlDocument();
+			QueryDocument hql= QueryFactory.createQueryDocument();
 			TTDocument qDocument = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 			for (TTEntity entity : document.getEntities()) {
 				if (entity.isType(IM.QUERY)) {
 					if (!allEntities.contains(entity)) {
 						qDocument.addEntity(entity);
-						hql.addProfile(HqlFactory.createProfileFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
+						hql.addProfile(QueryFactory.createProfileFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
 					}
 				}
 				allEntities.add(entity);
