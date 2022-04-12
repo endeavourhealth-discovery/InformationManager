@@ -379,20 +379,33 @@ public class OpenSearchSender {
               .request()
               .header("Authorization", "Basic " + osAuth)
               .put(Entity.entity("{\n" +
-                "  \n" +
-                "  \"mappings\":  {\"properties\": {\n" +
+                "\"mappings\" :{\n" +
+                "  \"properties\": {\n" +
                 "    \"scheme.@id\": {\n" +
                 "      \"type\": \"keyword\"\n" +
+                "    },\n" +
+                "    \"iri\" : {\n" +
+                "    \"type\" : \"keyword\"\n" +
                 "    },\n" +
                 "    \"entityType.@id\":{\n" +
                 "      \"type\": \"keyword\"\n" +
                 "    },\n" +
                 "    \"status.@id\" : {\n" +
                 "      \"type\" : \"keyword\"\n" +
+                "    },\n" +
+                "    \"code\":{\n" +
+                "      \"type\" :\"keyword\"\n" +
+                "    },\n" +
+                "    \"termCode.status.@id\" :{\n" +
+                "      \"type\" :\"keyword\"\n" +
+                "    },\n" +
+                "    \"key\" :{\n" +
+                "     \"type\" :\"keyword\"\n" +
                 "    }\n" +
+                "    }\n" +
+                "\n" +
                 "  }\n" +
-                "  }\n" +
-                "}", MediaType.APPLICATION_JSON));
+                " }", MediaType.APPLICATION_JSON));
             System.out.println(response.getStatus());
         }
     }
