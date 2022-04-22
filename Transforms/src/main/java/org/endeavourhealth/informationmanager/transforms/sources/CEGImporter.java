@@ -5,9 +5,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.model.query.QueryDocument;
-import org.endeavourhealth.imapi.model.query.QueryFactory;
-import org.endeavourhealth.imapi.model.query.Profile;
+import org.endeavourhealth.imapi.model.sets.SetDocument;
+import org.endeavourhealth.imapi.model.sets.SetFactory;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -50,6 +49,7 @@ public class CEGImporter implements TTImport {
 		 CEGEthnicityImport ethnicImport= new CEGEthnicityImport();
 		ethnicImport.importData(config);
 		createFolders();
+
 		loadAndConvert(config.getFolder());
 		WrapAsJson();
 		Map<String,TTEntity> vsetFolderMap= new HashMap<>();
@@ -81,6 +81,8 @@ public class CEGImporter implements TTImport {
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}
+
+
 		return this;
 	}
 
@@ -110,6 +112,13 @@ public class CEGImporter implements TTImport {
 			.addType(IM.FOLDER)
 			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets"));
 		document.addEntity(folder);
+		folder= new TTEntity()
+			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGFieldGroups")
+			.setName("QMUL CEG Field group library")
+			.addType(IM.FOLDER)
+			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_CEGQueries"));
+		document.addEntity(folder);
+
 	}
 
 	private void createOrg() {
@@ -128,18 +137,15 @@ public class CEGImporter implements TTImport {
             dataMap.load(reader);
         }
 
-//		Properties duplicateOrs= new Properties();
-//		try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, duplicates[0]).toFile()))) {
-//            duplicateOrs.load(reader);
-//        }
-
-        Properties criteriaLabels= new Properties();
+        Properties labels= new Properties();
 		try (FileReader reader = new FileReader(( ImportUtils.findFileForId(folder, annotations[0]).toFile()))) {
-            criteriaLabels.load(reader);
+            labels.load(reader);
         }
 
 		Path directory=  ImportUtils.findFileForId(folder,queries[0]);
 		TTIriRef mainFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries");
+		TTIriRef fieldGroupFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGFieldGroups");
+		TTIriRef valueSetFolder= TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets");
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
 			if (!fileEntry.isDirectory()) {
 				String ext= FilenameUtils.getExtension(fileEntry.getName());
@@ -149,9 +155,9 @@ public class CEGImporter implements TTImport {
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(new FileReader(fileEntry));
 					EqdToTT converter= new EqdToTT();
-					converter.convertDoc(document,mainFolder,eqd,
+					converter.convertDoc(document,mainFolder,fieldGroupFolder,valueSetFolder,eqd,
 						TTIriRef.iri(owner.getIri()),dataMap,
-						criteriaLabels);
+						labels);
 
 				  output(fileEntry);
 				}
@@ -162,27 +168,36 @@ public class CEGImporter implements TTImport {
 
 	private void output(File fileEntry) throws IOException {
 		if ( ImportApp.testDirectory!=null) {
-			String directory=  ImportApp.testDirectory.replace("%"," ");
+			String directory = ImportApp.testDirectory.replace("%", " ");
 			TTManager manager = new TTManager();
-			QueryDocument hql= QueryFactory.createQueryDocument();
+			SetDocument hql = new SetDocument();
 			TTDocument qDocument = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 			for (TTEntity entity : document.getEntities()) {
-				if (entity.isType(IM.QUERY)) {
-					if (!allEntities.contains(entity)) {
+				if (!allEntities.contains(entity)) {
+					if (entity.isType(IM.PROFILE)) {
+						hql.addProfile(SetFactory.createSetModelFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
 						qDocument.addEntity(entity);
-						hql.addProfile(QueryFactory.createProfileFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
+						allEntities.add(entity);
+					}
+					if (entity.isType(IM.SETMODEL)){
+						hql.addSetModel(SetFactory.createSetModelFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
+						qDocument.addEntity(entity);
+						allEntities.add(entity);
 					}
 				}
-				allEntities.add(entity);
 			}
+
 			manager.setDocument(qDocument);
-			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-profiles-ld.json"));
+			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-ld.json"));
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 			String json= objectMapper.writeValueAsString(hql);
-			try (FileWriter wr= new FileWriter(directory+"\\"+ fileEntry.getName().replace(".xml","") + ".json")){
+			//try (FileWriter wr= new FileWriter(directory+"\\"+ fileEntry.getName().replace(".xml","") + ".json")){
+			//	wr.write(json);
+			//}
+			try (FileWriter wr= new FileWriter(directory + fileEntry.getName().replace(".xml","") + ".json")){
 				wr.write(json);
 			}
 

@@ -27,6 +27,7 @@ import java.util.*;
 public class ImportMaps {
 	private FileRepository fileRepo= new FileRepository(TTBulkFiler.getDataPath());
 	private ValueFactory valueFactory= new ValidatingValueFactory(SimpleValueFactory.getInstance());
+	private Map<String,String> cachedNames= new HashMap<>();
 
 
 	/**
@@ -40,11 +41,18 @@ public class ImportMaps {
 	}
 
 	public String getCoreName(String iri) throws IOException {
+		if (cachedNames.get(iri)!=null)
+			return cachedNames.get(iri);
+		String name;
 		if (TTFilerFactory.isBulk()) {
-			return fileRepo.getCoreName(iri);
+			name= fileRepo.getCoreName(iri);
+			cachedNames.put(iri,name);
+			return name;
 		}
 		else {
-			return new EntityRepository().getEntityReferenceByIri(iri).getName();
+			name= new EntityRepository().getEntityReferenceByIri(iri).getName();
+			cachedNames.put(iri,name);
+			return name;
 		}
 
 	}
