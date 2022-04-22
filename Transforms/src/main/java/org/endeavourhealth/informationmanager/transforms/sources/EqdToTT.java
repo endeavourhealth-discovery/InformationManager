@@ -40,6 +40,7 @@ public class EqdToTT {
 	private boolean needsDob;
 	private String dobVar;
 	private Map<String,String> propertyVar;
+	private final Map<String,Match> varMatch = new HashMap<>();
 	private final Map<String,Set<TTIriRef>> valueMap= new HashMap<>();
 	private final ImportMaps importMaps = new ImportMaps();
 
@@ -217,12 +218,6 @@ public class EqdToTT {
 		Match mainMatch= new Match();
 		group.setMatch(mainMatch);
 		mainMatch.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient").setName("Patient"));
-		if (!eqTable.equals("PATIENTS")){
-			mainMatch.setProperty(TTIriRef.iri(IM.NAMESPACE+ "isSubjectOf"));
-			mainMatch.setValueObject(new Match());
-			mainMatch= mainMatch.getValueObject();
-		}
-		mainMatch.setEntityType(getIri(IM.NAMESPACE+ entityType));
 
 		if (eqColGroup.getCriteria()!=null){
 			Match criteriaMatch= new Match();
@@ -238,14 +233,32 @@ public class EqdToTT {
 				group.addProperty(propertyMap);
 				propertyMap.setName(eqDisplay);
 				propertyMap.setAlias(CaseUtils.toCamelCase(eqColName, false).replaceAll("[^a-zA-Z0-9_]", ""));
+				String[] path= predicatePath.split("/");
+				Match predicateMatch=null;
+				if (path.length>1) {
+						String subPath = path[0];
+						String var = propertyVar.get(subPath);
+						if (var!=null)
+						 predicateMatch = varMatch.get(var);
+				}
 				String var = propertyVar.get(predicatePath);
 				if (var == null) {
-					Match columnMatch= new Match();
-					mainMatch.addMay(columnMatch);
-					columnMatch.setProperty(getIri(IM.NAMESPACE + predicatePath));
-					varCounter++;
-					var= predicatePath+ varCounter;
-					columnMatch.setValueVar(var);
+					if (predicateMatch != null) {
+						Match subObject= new Match();
+						subObject.setEntityType(getIri(path[1]));
+						predicateMatch.setValueObject(subObject);
+						subObject.setProperty(getIri(path[2]));
+						varCounter++;
+						subObject.setValueVar(path[2]+varCounter);
+						var=(path[2]+varCounter);
+					} else {
+						Match columnMatch = new Match();
+						mainMatch.addMay(columnMatch);
+						columnMatch.setProperty(getIri(IM.NAMESPACE + predicatePath));
+						varCounter++;
+						var = predicatePath + varCounter;
+						columnMatch.setValueVar(var);
+					}
 				}
 				propertyMap.setVar(var);
 			}
@@ -460,6 +473,7 @@ public class EqdToTT {
 				match.addMay(dobMatch);
 				dobMatch.setProperty(getIri(IM.NAMESPACE+"dateOfBirth"));
 				dobMatch.setValueVar(dobVar);
+				varMatch.put(dobVar,dobMatch);
 		}
 
 		if (eqCriterion.getLinkedCriterion()!=null) {
@@ -501,6 +515,7 @@ public class EqdToTT {
 		subMatch.setValueVar(date+varCounter);
 		dateMatch= date+varCounter;
 		propertyVar.put(fieldPath,date+varCounter);
+		varMatch.put(date+varCounter,subMatch);
 
 	}
 
@@ -540,6 +555,7 @@ public class EqdToTT {
 		varCounter++;
 		match.setValueVar(predicate+varCounter);
 		propertyVar.put(predPath,predicate+varCounter);
+		varMatch.put(predicate+varCounter,match);
 		boolean notIn= (in== VocColumnValueInNotIn.NOTIN);
 		if (!cv.getValueSet().isEmpty()){
 			for (EQDOCValueSet vs:cv.getValueSet()) {
