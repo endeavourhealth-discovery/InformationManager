@@ -220,9 +220,7 @@ public class EqdToTT {
 		mainMatch.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient").setName("Patient"));
 
 		if (eqColGroup.getCriteria()!=null){
-			Match criteriaMatch= new Match();
-			mainMatch.addAnd(criteriaMatch);
-			convertCriteria(eqColGroup.getCriteria(),criteriaMatch);
+			convertCriteria(eqColGroup.getCriteria(),mainMatch);
 		}
 		EQDOCListColumns eqCols= eqColGroup.getColumnar();
 		for (EQDOCListColumn eqCol: eqCols.getListColumn()) {
@@ -812,22 +810,19 @@ public class EqdToTT {
 	private TTIriRef getValueSet(EQDOCValueSet vs) throws DataFormatException, IOException {
 		List<TTIriRef> setContent = new ArrayList<>();
 		StringBuilder vsetName = new StringBuilder();
-		if (labels.get(vs.getId())!=null)
-			vsetName.append((String) labels.get(vs.getId()));
-		if (vs.getDescription() != null)
-			vsetName = new StringBuilder(vs.getDescription());
 		VocCodeSystemEx scheme = vs.getCodeSystem();
 		int i = 0;
 		for (EQDOCValueSetValue ev : vs.getValues()) {
 			i++;
-			if (i < 10) {
+			if (i ==1) {
 				if (vsetName.length()<1) {
 					if (ev.getDisplayName() != null) {
-						if (vsetName.length() != 0)
-							vsetName.append(", ");
 						vsetName.append(ev.getDisplayName());
 					}
 				}
+			}
+			else if (i==2){
+				vsetName.append(".. and more ...");
 			}
 			Set<TTIriRef> concepts = getValue(scheme, ev);
 			if (concepts != null) {
@@ -836,6 +831,10 @@ public class EqdToTT {
 				System.err.println("Missing \t" + ev.getValue() + "\t " + ev.getDisplayName());
 
 		}
+		if (labels.get(vs.getId())!=null)
+			vsetName.append((String) labels.get(vs.getId()));
+		if (vs.getDescription() != null)
+			vsetName = new StringBuilder(vs.getDescription());
 		storeValueSet(vs,setContent,vsetName.toString());
 		return TTIriRef.iri("urn:uuid:"+vs.getId()).setName(vsetName.toString());
 	}

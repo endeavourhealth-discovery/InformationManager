@@ -145,7 +145,7 @@ public class CEGImporter implements TTImport {
 		Path directory=  ImportUtils.findFileForId(folder,queries[0]);
 		TTIriRef mainFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries");
 		TTIriRef fieldGroupFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGFieldGroups");
-		TTIriRef valueSetFolder= TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets");
+		TTIriRef valueSetFolder= TTIriRef.iri(IM.NAMESPACE+"CSET_CEGConceptSets");
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
 			if (!fileEntry.isDirectory()) {
 				String ext= FilenameUtils.getExtension(fileEntry.getName());
@@ -173,15 +173,14 @@ public class CEGImporter implements TTImport {
 			SetDocument hql = new SetDocument();
 			TTDocument qDocument = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 			for (TTEntity entity : document.getEntities()) {
+				qDocument.addEntity(entity);
 				if (!allEntities.contains(entity)) {
 					if (entity.isType(IM.PROFILE)) {
 						hql.addProfile(SetFactory.createSetModelFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
-						qDocument.addEntity(entity);
 						allEntities.add(entity);
 					}
 					if (entity.isType(IM.SETMODEL)){
 						hql.addSetModel(SetFactory.createSetModelFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
-						qDocument.addEntity(entity);
 						allEntities.add(entity);
 					}
 				}
