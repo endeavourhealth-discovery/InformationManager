@@ -8,7 +8,7 @@ import org.endeavourhealth.imapi.model.cdm.ProvActivity;
 import org.endeavourhealth.imapi.model.cdm.ProvAgent;
 import org.endeavourhealth.imapi.model.sets.Comparison;
 import org.endeavourhealth.imapi.model.sets.Match;
-import org.endeavourhealth.imapi.model.sets.SetModel;
+import org.endeavourhealth.imapi.model.sets.DataSet;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -35,13 +35,13 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 	private void addCurrentReg(TTDocument document,String outFolder) throws IOException {
-		TTEntity qry = new TTEntity().addType(IM.QUERY);
+		TTEntity qry = new TTEntity().addType(IM.DATASET);
 		qry
 			.setIri(IM.NAMESPACE + "Q_RegisteredGMS")
 			.setName("Patients registered for GMS services on the reference date")
 			.setDescription("For any registration period,a registration start date before the reference date and no end date," +
 				"or an end date after the reference date.");
-		SetModel prof= new SetModel();
+		DataSet prof= new DataSet();
 		prof.setIri(qry.getIri());
 		prof.setName(qry.getName());
 		prof.setDescription(qry.getDescription());
@@ -51,20 +51,20 @@ public class CoreQueryImporter implements TTImport {
 				.setValueObject(new Match()
 			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
 			.addAnd(new Match()
+				.setName("patient type is regular GMS Patient")
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "patientType"))
-				.addValueIn(IM.GMS_PATIENT)
-				.setDescription("be a GMS regular patient"))
+				.addValueIn(TTIriRef.iri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
 			.addAnd(new Match()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "effectiveDate"))
-				.setDescription("start of registration must be before the reference date")
+				.setName("start of registration is before the reference date")
 				.setValueCompare(Comparison.LESS_THAN_OR_EQUAL, "$ReferenceDate"))
 			.addOr(new Match()
 				.setNotExist(true)
-				.setDescription("the registration has not ended ")
+				.setName("the registration has not ended ")
 					.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate")))
 			.addOr(new Match()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate"))
-				.setDescription("the end of registration is after the reference date")
+				.setName("the end of registration is after the reference date")
 				.setValueCompare(Comparison.GREATER_THAN, "$ReferenceDate"))));
 
 		qry.set(IM.DEFINITION,TTLiteral.literal(prof.getasJson()));
@@ -115,7 +115,7 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 
-	private void outputQuery(SetModel qry) throws IOException {
+	private void outputQuery(DataSet qry) throws IOException {
 		if ( ImportApp.testDirectory!=null) {
 			String directory = ImportApp.testDirectory.replace("%", " ");
 			try (FileWriter writer = new FileWriter(directory + "\\Core-qry.json")) {

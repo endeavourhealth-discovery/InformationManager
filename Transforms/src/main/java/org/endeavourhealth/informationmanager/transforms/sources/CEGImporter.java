@@ -179,7 +179,7 @@ public class CEGImporter implements TTImport {
 						hql.addProfile(SetFactory.createSetModelFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
 						allEntities.add(entity);
 					}
-					if (entity.isType(IM.SETMODEL)){
+					if (entity.isType(IM.DATASET)){
 						hql.addSetModel(SetFactory.createSetModelFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
 						allEntities.add(entity);
 					}
