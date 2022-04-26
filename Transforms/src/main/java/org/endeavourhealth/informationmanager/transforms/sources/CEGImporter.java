@@ -55,6 +55,7 @@ public class CEGImporter implements TTImport {
 		Map<String,TTEntity> vsetFolderMap= new HashMap<>();
 		Set<TTEntity> vsetFolders= new HashSet<>();
 		for (TTEntity entity:document.getEntities()){
+			//does not go in
 			if (entity.isType(IM.CONCEPT_SET)) {
 				for (TTValue usedIn:entity.get(IM.USED_IN).getElements()){
 					TTEntity report =manager.getEntity(usedIn.asIriRef().getIri());
