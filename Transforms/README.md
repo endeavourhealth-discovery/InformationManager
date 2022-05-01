@@ -1,8 +1,8 @@
 # Importing Source data
 
-##Offline option 
+## Offline (Preload) option 
 
-Found in pac
+Found in Transforms module
 
 This processes the data and creates the graph repository from scratch
 
@@ -26,17 +26,48 @@ To remove specific source files from the import if they cannot be found, comment
 5. Create a directory for the temporary import data. I should not contain anything else as it will be cleared at the end
 6. Configure the run time parameters  for the 'ImportApp' as follows:
 7. Make sure graph DB is NOT running
-8Delete the {im} graph repository folder (or the bulk import will fail)
-8. run imports.Preload. This will throw errors if the source files are not present e.g. the unzipped Snomed RF2
+8. Delete the {im} graph repository folder (or the bulk import will fail)
+9. run imports.Preload. This will throw errors if the source files are not present e.g. the unzipped Snomed RF2
 
-Program arguments  
-source={folder for importData}  
-preload {folder containing the preload tool and the config.ttl}
-temp= {folder to hold the temporary data}
-Environment variables
+### Program arguments  
+source={folder for importData}\
+preload={folder containing the preload tool and the config.ttl}\
+temp={folder to hold the temporary data}\
+
+### Environment variables
 none needed
 
+### Data files
 
-##Online options
+ICD10 (5th Ed) - icd_df_10.5.0_20151102000001.zip\
+https://isd.digital.nhs.uk/trud/users/authenticated/filters/0/categories/28/items/258/releases
+
+OPCS4 (4.9) - nhs_opcs4df_9.0.0_20191104000001.zip\
+https://isd.digital.nhs.uk/trud/users/authenticated/filters/0/categories/10/items/119/releases
+
+TPP (CTV3) - nhs_readctv3_25.0.0_20180401000001.zip\
+https://isd.digital.nhs.uk/trud/users/authenticated/filters/0/categories/9/items/19/releases
+
+ODS - hscorgrefdataxml_data_4.0.0_20220429000001.zip (Need tool also)\
+https://isd.digital.nhs.uk/trud/users/authenticated/filters/0/categories/5/items/341/releases
+
+SNOMED/UK_SCT2PT - uk_sct2pt_32.12.0_20220413000001Z.zip\
+https://isd.digital.nhs.uk/trud/users/authenticated/filters/0/categories/38/items/559/releases
+
+SNOMED/Mapping Tables - nhs_datamigration_29.0.0_20200401000001.zip\
+https://isd.digital.nhs.uk/trud/users/authenticated/filters/0/categories/9/items/9/releases
+
+SNOMED/UKPC_SCT2 - ukpc_sct2_34.0.0_20220407.zip\
+https://isd.digital.nhs.uk/trud/users/authenticated/filters/0/categories/8/items/659/releases
+
+SNOMED/History Subs - uk_sctqths_32.12.0_20220413000001.zip\
+https://isd.digital.nhs.uk/trud/users/authenticated/filters/0/categories/8/items/276/releases
+
+SNOMED/UK Clinical - uk_sct2cl_32.12.0_20220413000001Z.zip\
+https://isd.digital.nhs.uk/trud/users/authenticated/filters/0/categories/26/items/101/releases
+
+SNOMED/UK Drug - uk_sct2dr_32.12.0_20220413000001Z.zip\
+https://isd.digital.nhs.uk/trud/users/authenticated/filters/0/categories/26/items/105/releases
+
 
 
