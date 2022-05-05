@@ -134,21 +134,21 @@ public class OpenSearchSender {
           .add("  graph ?scheme {")
           .add("    ?iri rdf:type ?type.")
           .add("      filter (?iri in ("+ inList+") )")
-          .add("    ?iri rdfs:label ?name.")
-          .add("    Optional { graph ?a {?iri im:isA ?extraType.")
+          .add("    ?iri rdfs:label ?name.}")
+          .add("    Optional {?iri im:isA ?extraType.")
           .add("                         ?extraType rdfs:label ?extraTypeName.")
-          .add("            filter (?extraType in (im:dataModelProperty, im:DataModelEntity))}}")
-          .add("    Optional {graph ?w {?type rdfs:label ?typeName}}")
+          .add("            filter (?extraType in (im:dataModelProperty, im:DataModelEntity))}")
+          .add("    Optional {?type rdfs:label ?typeName}")
           .add("    Optional {?iri im:status ?status.")
-          .add("    Optional {graph ?x {?status rdfs:label ?statusName} } }")
-          .add("    Optional {graph ?y {?scheme rdfs:label ?schemeName } }")
+          .add("    Optional {?status rdfs:label ?statusName} }")
+          .add("    Optional {?scheme rdfs:label ?schemeName }")
           .add("    Optional {?iri im:code ?code.}")
           .add("    Optional {?iri im:weighting ?weighting.}")
           .add("    Optional {?iri im:hasTermCode ?tc.")
           .add("       Optional {?tc im:code ?termCode}")
           .add("       Optional  {?tc rdfs:label ?synonym}")
           .add("       Optional  {?tc im:status ?termCodeStatus} }")
-          .add("} }").toString();
+          .add("}").toString();
     }
 
     private Set<EntityDocument> getEntityBatch(String inList, int mapNumber) {

@@ -31,7 +31,6 @@ public class EqdToTT {
 	private Properties dataMap;
 	private Properties labels;
 	private int varCounter;
-	private int tableNumber;
 	private String activeReport;
 	private TTDocument document;
 	private final String slash = "/";
@@ -223,10 +222,10 @@ public class EqdToTT {
 		Select select= new Select();
 		set.addGroupBy(select);
 		select.setName("population");
-		select.setVar("resultSet"+varCounter);
+		select.setBinding("resultSet"+varCounter);
 		set.addSelect(select);
 		for (String popId:auditReport.getPopulation()){
-			mainMatch.addValueIn(TTIri.iri("urn:uuid:"+ popId).setName(reportNames.get(popId)));
+			mainMatch.addValueIn(TTIriRef.iri("urn:uuid:"+ popId).setName(reportNames.get(popId)));
 		}
 		Match patientEntity= new Match();
 		mainMatch.setValueObject(patientEntity);
@@ -262,15 +261,16 @@ public class EqdToTT {
 				}
 				Select column= new Select();
 				set.addSelect(column);
-				column.setVar(valueVar);
+				column.setBinding(valueVar);
 				column.setName(group.getDisplayName());
-				set.addGroupBy(new Select().setVar(valueVar));
+				set.addGroupBy(new Select().setBinding(valueVar));
 			}
 		}
 		select= new Select();
 		set.addSelect(select);
+		select.setAlias("id");
 		select.setName("id");
-		select.setVar("id");
+		select.setBinding("id");
 		select.setCount(true);
 
 
@@ -291,7 +291,6 @@ public class EqdToTT {
 		propertyVar= new HashMap<>();
 		group.setName(eqColGroup.getDisplayName());
 		String eqTable= eqColGroup.getLogicalTableName();
-		String entityType= (String) dataMap.get(eqTable);
 		Match mainMatch= new Match();
 		group.setMatch(mainMatch);
 		mainMatch.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient").setName("Patient"));
@@ -328,14 +327,14 @@ public class EqdToTT {
 						var=(path[2]+varCounter);
 					} else {
 						Match columnMatch = new Match();
-						mainMatch.addMay(columnMatch);
+						mainMatch.addOptional(columnMatch);
 						columnMatch.setProperty(getIri(IM.NAMESPACE + predicatePath));
 						varCounter++;
 						var = predicatePath + varCounter;
 						columnMatch.setValueVar(var);
 					}
 				}
-				Select.setVar(var);
+				Select.setBinding(var);
 			}
 		}
 		storeGroup(eqColGroup,group);
@@ -366,7 +365,6 @@ public class EqdToTT {
 		if (token.equals("label"))
 			return RDFS.LABEL.setName("label");
 		else {
-			TTIriRef iri;
 			if (!token.contains(":")) {
 				return TTIriRef.iri(IM.NAMESPACE + token).setName(importMaps.getCoreName(IM.NAMESPACE+ token));
 			}
@@ -379,7 +377,6 @@ public class EqdToTT {
 
 	private void convertPopulation(EQDOCPopulation population, Match main) throws DataFormatException, IOException {
 		Match orMatch= null;
-		Match parentAnd=null;
 		propertyVar= new HashMap<>();
 		for (EQDOCCriteriaGroup eqGroup : population.getCriteriaGroup()) {
 			VocRuleAction ifTrue = eqGroup.getActionIfTrue();
@@ -436,9 +433,7 @@ public class EqdToTT {
 
 	private void addAnd(EQDOCCriteriaGroup eqGroup, Match main) throws DataFormatException, IOException {
 		VocMemberOperator memberOp = eqGroup.getDefinition().getMemberOperator();
-		boolean negation= false;
-		if (eqGroup.getActionIfTrue()== VocRuleAction.REJECT)
-			negation= true;
+		boolean negation= eqGroup.getActionIfTrue() == VocRuleAction.REJECT;
 		if (memberOp== VocMemberOperator.AND) {
 			for (EQDOCCriteria eqCriteria : eqGroup.getDefinition().getCriteria()) {
 				Match andMatch = new Match();
@@ -465,13 +460,18 @@ public class EqdToTT {
 	private void addToOr(EQDOCCriteriaGroup eqGroup, Match orMatch) throws DataFormatException, IOException {
 
 		VocMemberOperator memberOp = eqGroup.getDefinition().getMemberOperator();
+		boolean negation= eqGroup.getActionIfTrue() == VocRuleAction.REJECT;
 		int eqCount= eqGroup.getDefinition().getCriteria().size();
 		if (eqCount==1){
+			if (negation)
+				orMatch.setNotExist(true);
 			convertCriteria(eqGroup.getDefinition().getCriteria().get(0),orMatch);
 		}
 		else if (memberOp== VocMemberOperator.OR) {
 			for (EQDOCCriteria eqCriteria : eqGroup.getDefinition().getCriteria()) {
 				Match subOrMatch = new Match();
+				if (negation)
+					subOrMatch.setNotExist(true);
 				orMatch.addOr(subOrMatch);
 				convertCriteria(eqCriteria, subOrMatch);
 			}
@@ -495,7 +495,7 @@ public class EqdToTT {
 		needsDob=false;
 		if ((eqCriteria.getPopulationCriterion() != null)) {
 			EQDOCSearchIdentifier srch = eqCriteria.getPopulationCriterion();
-			match.addSubsetOf(TTIri.iri("urn:uuid:" + srch.getReportGuid())
+			match.addSubsetOf(TTIriRef.iri("urn:uuid:" + srch.getReportGuid())
 					.setName(reportNames.get(srch.getReportGuid())));
 		}
 		else {
@@ -538,7 +538,7 @@ public class EqdToTT {
 				setMainCriterion(eqTable, cvs.get(0), test);
 				if (linkField != null && dateMatch == null) {
 					Match subMatch = new Match();
-					match.addMay(subMatch);
+					match.addOptional(subMatch);
 					addDateMatch(subMatch, eqTable, linkField);
 				}
 			}
@@ -594,7 +594,7 @@ public class EqdToTT {
 
 	}
 
-	private void setRestriction(EQDOCCriterion eqCriterion,Match matchEntity) throws DataFormatException, IOException {
+	private void setRestriction(EQDOCCriterion eqCriterion,Match matchEntity) throws IOException {
 		String eqTable = eqCriterion.getTable();
 		String linkColumn= eqCriterion.getFilterAttribute().getRestriction()
 				.getColumnOrder().getColumns().get(0).getColumn().get(0);
@@ -663,7 +663,7 @@ public class EqdToTT {
 	}
 
 
-	private void setRangeValue(EQDOCRangeValue rv, Match match) throws InvalidClassException, DataFormatException {
+	private void setRangeValue(EQDOCRangeValue rv, Match match) {
 
 		EQDOCRangeFrom rFrom= rv.getRangeFrom();
 		EQDOCRangeTo rTo= rv.getRangeTo();
@@ -681,7 +681,7 @@ public class EqdToTT {
 
 	}
 
-	private void setCompareFrom(Match match, EQDOCRangeFrom rFrom) throws InvalidClassException {
+	private void setCompareFrom(Match match, EQDOCRangeFrom rFrom) {
 		Comparison comp;
 		if (rFrom.getOperator() != null)
 			comp = (Comparison) vocabMap.get(rFrom.getOperator());
@@ -731,7 +731,7 @@ public class EqdToTT {
 		return function;
 	}
 
-	private void setCompareTo(Match match, EQDOCRangeTo rTo) throws InvalidClassException {
+	private void setCompareTo(Match match, EQDOCRangeTo rTo) {
 		Comparison comp;
 		if (rTo.getOperator() != null)
 			comp = (Comparison) vocabMap.get(rTo.getOperator());
@@ -771,7 +771,7 @@ public class EqdToTT {
 		return function;
 	}
 
-	private void setRangeCompare(Match match, EQDOCRangeFrom rFrom,EQDOCRangeTo rTo) throws DataFormatException {
+	private void setRangeCompare(Match match, EQDOCRangeFrom rFrom,EQDOCRangeTo rTo) {
 		Range range= new Range();
 		match.setValueRange(range);
 		Comparison fromComp;
@@ -952,7 +952,7 @@ public class EqdToTT {
 	private void storeValueSet(EQDOCValueSet vs, List<TTIriRef> valueSet,String vSetName) {
 		if (vs.getId()!=null){
 			TTIriRef iri= TTIriRef.iri("urn:uuid:"+vs.getId()).setName(vSetName);
-			if (!valueSets.keySet().contains(iri)){
+			if (!valueSets.containsKey(iri)){
 				TTEntity conceptSet= new TTEntity()
 					.setIri(iri.getIri())
 					.addType(IM.CONCEPT_SET)
@@ -1172,8 +1172,8 @@ public class EqdToTT {
 
 	private void setFrom(Match match, TTIriRef parent, String parentName) {
 		if (parentName!=null)
-			parent.setName(parentName);
-		match.addSubsetOf(new TTIri(parent).setDescription("Based on the cohort"));
+			parent.setName("Based on the cohort :"+ parentName);
+		match.addSubsetOf(parent);
 	}
 
 	/*
