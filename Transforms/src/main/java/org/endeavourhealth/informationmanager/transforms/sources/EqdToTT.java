@@ -153,14 +153,14 @@ public class EqdToTT {
 			setProvenance(entity.getIri(), null);
 
 		if (eqReport.getPopulation() != null) {
-			entity.addType(IM.PROFILE);
+			entity.addType(IM.QUERY);
 			DataSet profile= new DataSet();
 			profile.setName(entity.getName());
 			profile.setDescription(entity.getDescription());
 			profile.setIri(entity.getIri());
 			Match main= new Match();
 			profile.setMatch(main);
-			main.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient").setName("Patient"));
+			main.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"));
 			if (eqReport.getParent().getParentType() == VocPopulationParentType.ACTIVE) {
 				setFrom(main,TTIriRef.iri(IM.NAMESPACE+"Q_RegisteredGMS"), "Registered with GP for GMS services on the reference date");
 			}
@@ -177,7 +177,7 @@ public class EqdToTT {
 			entity.set(IM.DEFINITION,TTLiteral.literal(json));
 		}
 		if (eqReport.getListReport()!=null){
-			entity.addType(IM.DATASET);
+			entity.addType(IM.QUERY);
 			DataSet set= new DataSet();
 			set.setName(entity.getName());
 			set.setDescription(entity.getDescription());
@@ -195,7 +195,7 @@ public class EqdToTT {
 			entity.set(IM.DEFINITION,TTLiteral.literal(json));
 		}
 		if (eqReport.getAuditReport()!=null){
-			entity.addType(IM.DATASET);
+			entity.addType(IM.QUERY);
 			DataSet set= new DataSet();
 			set.setName(entity.getName());
 			set.setDescription(entity.getDescription());
@@ -215,7 +215,7 @@ public class EqdToTT {
 	private void convertAuditReport(EQDOCAuditReport auditReport, DataSet set) throws IOException {
 		Match mainMatch= new Match();
 		set.setMatch(mainMatch);
-		mainMatch.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient"));
+		mainMatch.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person"));
 		mainMatch.setProperty(getIri(IM.IN_RESULT_SET.getIri()));
 		varCounter++;
 		mainMatch.setValueVar("resultSet"+varCounter);
@@ -225,11 +225,11 @@ public class EqdToTT {
 		select.setBinding("resultSet"+varCounter);
 		set.addSelect(select);
 		for (String popId:auditReport.getPopulation()){
-			mainMatch.addValueIn(TTIriRef.iri("urn:uuid:"+ popId).setName(reportNames.get(popId)));
+			mainMatch.setEntityIn(TTIriRef.iri("urn:uuid:"+ popId).setName(reportNames.get(popId)));
 		}
 		Match patientEntity= new Match();
 		mainMatch.setValueObject(patientEntity);
-		patientEntity.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient").setName("Patient"));
+		patientEntity.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"));
 		Match patientId= new Match();
 		patientId.addAnd(patientId);
 		patientId.setProperty(TTIriRef.iri(IM.NAMESPACE+"id").setName("id"));
@@ -293,7 +293,7 @@ public class EqdToTT {
 		String eqTable= eqColGroup.getLogicalTableName();
 		Match mainMatch= new Match();
 		group.setMatch(mainMatch);
-		mainMatch.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient").setName("Patient"));
+		mainMatch.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"));
 
 		if (eqColGroup.getCriteria()!=null){
 			convertCriteria(eqColGroup.getCriteria(),mainMatch);
@@ -638,10 +638,18 @@ public class EqdToTT {
 					match.setValueNotIn(getExceptionSet(vs.getAllValues()));
 				}
 				else {
-					if (!notIn)
-						match.addValueIn(getValueSet(vs));
-					else
-						match.addValueNotIn(getValueSet(vs));
+					if (!notIn) {
+						if (isValueSet(vs)) {
+							match.addValueIn(getValueSet(vs));
+						} else
+							match.setValueConcept(getInlineValues(vs));
+					}
+					else {
+						if (isValueSet(vs)) {
+							match.addValueNotIn(getValueSet(vs));
+						} else
+							match.setValueConcept(getInlineValues(vs));
+					}
 				}
 			}
 		}
@@ -916,6 +924,38 @@ public class EqdToTT {
 
 		return valueSet;
 	}
+
+	private boolean isValueSet(EQDOCValueSet vs){
+		VocCodeSystemEx scheme = vs.getCodeSystem();
+		if (scheme== VocCodeSystemEx.EMISINTERNAL) {
+			return false;
+		}
+		if (vs.getValues()!=null)
+			if (vs.getValues().size()==1)
+				return false;
+		return true;
+	}
+
+	private List<ConceptRef> getInlineValues(EQDOCValueSet vs) throws DataFormatException, IOException {
+		List<ConceptRef> setContent = new ArrayList<>();
+		VocCodeSystemEx scheme = vs.getCodeSystem();
+		int i = 0;
+		for (EQDOCValueSetValue ev : vs.getValues()) {
+			Set<TTIriRef> concepts = getValue(scheme, ev);
+			if (concepts != null) {
+				for (TTIriRef iri:concepts){
+					ConceptRef conRef= new ConceptRef(iri.getIri(),iri.getName());
+					conRef.setIncludeSubtypes(true);
+					setContent.add(conRef);
+				}
+			} else
+				System.err.println("Missing \t" + ev.getValue() + "\t " + ev.getDisplayName());
+
+		}
+		return setContent;
+	}
+
+
 
 	private TTIriRef getValueSet(EQDOCValueSet vs) throws DataFormatException, IOException {
 		List<TTIriRef> setContent = new ArrayList<>();

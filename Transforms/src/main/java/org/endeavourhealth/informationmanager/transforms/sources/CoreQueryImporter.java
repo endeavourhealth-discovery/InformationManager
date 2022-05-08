@@ -7,6 +7,7 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.cdm.ProvActivity;
 import org.endeavourhealth.imapi.model.cdm.ProvAgent;
 import org.endeavourhealth.imapi.model.sets.Comparison;
+import org.endeavourhealth.imapi.model.sets.ConceptRef;
 import org.endeavourhealth.imapi.model.sets.Match;
 import org.endeavourhealth.imapi.model.sets.DataSet;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -35,7 +36,7 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 	private void addCurrentReg(TTDocument document,String outFolder) throws IOException {
-		TTEntity qry = new TTEntity().addType(IM.DATASET);
+		TTEntity qry = new TTEntity().addType(IM.QUERY);
 		qry
 			.setIri(IM.NAMESPACE + "Q_RegisteredGMS")
 			.setName("Patients registered for GMS services on the reference date")
@@ -46,14 +47,15 @@ public class CoreQueryImporter implements TTImport {
 		prof.setName(qry.getName());
 		prof.setDescription(qry.getDescription());
 		prof.setMatch(new Match()
-			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient").setName("Patient"))
-				.setProperty(TTIriRef.iri(IM.NAMESPACE+"isSubjectOf").setName("has GP registration"))
+			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"))
+				.setProperty(TTIriRef.iri(IM.NAMESPACE+"hasSubject").setName("has GP registration"))
+				.setInverseOf(true)
 				.setValueObject(new Match()
 			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
 			.addAnd(new Match()
 				.setName("patient type is regular GMS Patient")
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "patientType"))
-				.addValueIn(TTIriRef.iri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+				.addValueConcept(ConceptRef.iri(IM.GMS_PATIENT.getIri(),"Regular GMS patient")))
 			.addAnd(new Match()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "effectiveDate"))
 				.setName("start of registration is before the reference date")
