@@ -165,11 +165,11 @@ public class EqdToTT {
 			select.setFilter(main);
 
 			if (eqReport.getParent().getParentType() == VocPopulationParentType.ACTIVE) {
-				setFrom(main,TTIriRef.iri(IM.NAMESPACE+"Q_RegisteredGMS"), "Registered with GP for GMS services on the reference date");
+				setFrom(main,TTIriRef.iri(IM.NAMESPACE+"Q_RegisteredGMS").setName("Registered with GP for GMS services on the reference date"));
 			}
 			if (eqReport.getParent().getParentType() == VocPopulationParentType.POP) {
 				String id = eqReport.getParent().getSearchIdentifier().getReportGuid();
-				setFrom(main,TTIriRef.iri("urn:uuid:" + id), reportNames.get(id));
+				setFrom(main,TTIriRef.iri("urn:uuid:" + id).setName(reportNames.get(id)));
 			}
 			convertPopulation(eqReport.getPopulation(), main);
 			ObjectMapper objectMapper = new ObjectMapper();
@@ -191,7 +191,7 @@ public class EqdToTT {
 			Filter main= new Filter();
 			select.setFilter(main);
 			String id = eqReport.getParent().getSearchIdentifier().getReportGuid();
-			setFrom(main,TTIriRef.iri("urn:uuid:" + id), reportNames.get(id));
+			setFrom(main,TTIriRef.iri("urn:uuid:" + id).setName(reportNames.get(id)));
 			convertListReport(eqReport.getListReport(),set);
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -268,7 +268,7 @@ public class EqdToTT {
 		for (EQDOCListReport.ColumnGroups eqColGroups : eqListReport.getColumnGroups()) {
 			EQDOCListColumnGroup eqColGroup = eqColGroups.getColumnGroup();
 			Select selectGroup = new Select();
-			shape.addSubset(selectGroup);
+			shape.addSubselect(selectGroup);
 			convertListGroup(eqColGroup, selectGroup);
 		}
 	}
@@ -378,10 +378,10 @@ public class EqdToTT {
 			return RDFS.LABEL.setName("label");
 		else {
 			if (!token.contains(":")) {
-				return TTIriRef.iri(IM.NAMESPACE + token).setName(importMaps.getCoreName(IM.NAMESPACE+ token));
+				return (TTIriRef.iri(IM.NAMESPACE + token).setName(importMaps.getCoreName(IM.NAMESPACE+ token)));
 			}
 			else
-				return TTIriRef.iri(token).setName(importMaps.getCoreName(token));
+				return (TTIriRef.iri(token).setName(importMaps.getCoreName(token)));
 		}
 	}
 
@@ -524,7 +524,7 @@ public class EqdToTT {
 		String entityType = (String) dataMap.get(eqTable);
 
 		if (!eqTable.equals("PATIENTS")){
-			match.setProperty(TTIriRef.iri(IM.NAMESPACE+"isSubjectOf"));
+			match.setProperty(getIri(IM.NAMESPACE+"isSubjectOf"));
 			match.setValueObject(new Filter());
 			match= match.getValueObject();
 			match.setEntityType(getIri(IM.NAMESPACE + entityType));
@@ -1220,7 +1220,7 @@ public class EqdToTT {
 
 
 
-	private void setFrom(Filter match, TTIriRef parent, String parentName) {
+	private void setFrom(Filter match, TTIriRef parent) {
 		Filter cohortMatch= new Filter();
 		match.addAnd(cohortMatch);
 		cohortMatch.setProperty(TTIriRef.iri(IM.IN_RESULT_SET.getIri(),"in result set of"));
