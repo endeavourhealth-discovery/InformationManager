@@ -6,10 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.cdm.ProvActivity;
 import org.endeavourhealth.imapi.model.cdm.ProvAgent;
-import org.endeavourhealth.imapi.model.sets.Comparison;
-import org.endeavourhealth.imapi.model.sets.ConceptRef;
-import org.endeavourhealth.imapi.model.sets.Match;
-import org.endeavourhealth.imapi.model.sets.DataSet;
+import org.endeavourhealth.imapi.model.sets.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -46,28 +43,28 @@ public class CoreQueryImporter implements TTImport {
 		prof.setIri(qry.getIri());
 		prof.setName(qry.getName());
 		prof.setDescription(qry.getDescription());
-		prof.setMatch(new Match()
-			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"))
-				.setProperty(TTIriRef.iri(IM.NAMESPACE+"hasSubject").setName("has GP registration"))
-				.setInverseOf(true)
-				.setValueObject(new Match()
+		prof.setSelect(new Select()
+				.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"))
+			.setFilter(new Filter()
+				.setProperty(TTIriRef.iri(IM.NAMESPACE+"isSubjectOf").setName("has GP registration"))
+				.setValueObject(new Filter()
 			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
-			.addAnd(new Match()
+			.addAnd(new Filter()
 				.setName("patient type is regular GMS Patient")
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "patientType"))
 				.addValueConcept(ConceptRef.iri(IM.GMS_PATIENT.getIri(),"Regular GMS patient")))
-			.addAnd(new Match()
+			.addAnd(new Filter()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "effectiveDate"))
 				.setName("start of registration is before the reference date")
 				.setValueCompare(Comparison.LESS_THAN_OR_EQUAL, "$ReferenceDate"))
-			.addOr(new Match()
+			.addOr(new Filter()
 				.setNotExist(true)
 				.setName("the registration has not ended ")
 					.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate")))
-			.addOr(new Match()
+			.addOr(new Filter()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate"))
 				.setName("the end of registration is after the reference date")
-				.setValueCompare(Comparison.GREATER_THAN, "$ReferenceDate"))));
+				.setValueCompare(Comparison.GREATER_THAN, "$ReferenceDate")))));
 
 		qry.set(IM.DEFINITION,TTLiteral.literal(prof.getasJson()));
 		qry.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_StandardCohorts"));
