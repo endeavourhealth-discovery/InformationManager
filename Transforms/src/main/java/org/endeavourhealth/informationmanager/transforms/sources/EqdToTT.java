@@ -507,7 +507,8 @@ public class EqdToTT {
 		needsDob=false;
 		if ((eqCriteria.getPopulationCriterion() != null)) {
 			EQDOCSearchIdentifier srch = eqCriteria.getPopulationCriterion();
-			match.addSubsetOf(TTIriRef.iri("urn:uuid:" + srch.getReportGuid())
+			match.setProperty(ConceptRef.iri(IM.IN_RESULT_SET).setName("subset of"));
+			match.addValueIn(TTIriRef.iri("urn:uuid:" + srch.getReportGuid())
 					.setName(reportNames.get(srch.getReportGuid())));
 		}
 		else {
