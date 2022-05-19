@@ -15,6 +15,7 @@ import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.informationmanager.transforms.sources.eqd.*;
 
+
 import javax.swing.*;
 import java.io.IOException;
 import java.io.InvalidClassException;
@@ -975,15 +976,17 @@ public class EqdToTT {
 		for (EQDOCValueSetValue ev : vs.getValues()) {
 			i++;
 			if (i ==1) {
-				if (vsetName.length()<1) {
+				if (labels.get(vs.getId())!=null)
+					vsetName.append((String) labels.get(vs.getId()));
+				else if (vsetName.length()<1) {
 					if (ev.getDisplayName() != null) {
 						vsetName.append(ev.getDisplayName());
 					}
 				}
 			}
-			else if (i==2){
-				vsetName.append(".. and more ...");
-			}
+//			else if (i==2){
+//				vsetName.append(".. and more ...");
+//			}
 			Set<TTIriRef> concepts = getValue(scheme, ev);
 			if (concepts != null) {
 				setContent.addAll(new ArrayList<>(concepts));
@@ -991,8 +994,7 @@ public class EqdToTT {
 				System.err.println("Missing \t" + ev.getValue() + "\t " + ev.getDisplayName());
 
 		}
-		if (labels.get(vs.getId())!=null)
-			vsetName.append((String) labels.get(vs.getId()));
+
 		if (vs.getDescription() != null)
 			vsetName = new StringBuilder(vs.getDescription());
 		storeValueSet(vs,setContent,vsetName.toString());

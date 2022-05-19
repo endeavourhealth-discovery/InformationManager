@@ -84,7 +84,7 @@ public class Preload {
 				importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
 				importer.importByType(IM.GRAPH_ODS, cfg);
 				importer.importByType(IM.GRAPH_NHS_TFC,cfg);
-		    importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
+				importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
 				importer.importByType(IM.GRAPH_IM1,cfg);
 
 			TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
