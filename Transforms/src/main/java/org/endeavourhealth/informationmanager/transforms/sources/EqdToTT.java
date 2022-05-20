@@ -546,10 +546,19 @@ public class EqdToTT {
 		if (eqCriterion.getFilterAttribute().getRestriction() != null) {
 			setRestriction(eqCriterion, match);
 			if (eqCriterion.getFilterAttribute().getRestriction().getTestAttribute() != null) {
-				List<EQDOCColumnValue> cvs = eqCriterion.getFilterAttribute().getRestriction().getTestAttribute().getColumnValue();
 				Filter test = new Filter();
 				match.getSortLimit().addMust(test);
-				setMainCriterion(eqTable, cvs.get(0), test);
+				List<EQDOCColumnValue> cvs = eqCriterion.getFilterAttribute().getRestriction().getTestAttribute().getColumnValue();
+				if (cvs.size()==1) {
+					setMainCriterion(eqTable, cvs.get(0), test);
+				}
+				else {
+					for (EQDOCColumnValue cv:cvs){
+						Filter subTest= new Filter();
+						test.addAnd(subTest);
+						setMainCriterion(eqTable, cv, subTest);
+					}
+				}
 				if (linkField != null && dateFilter == null) {
 					Filter subFilter = new Filter();
 					match.addOptional(subFilter);
@@ -616,6 +625,7 @@ public class EqdToTT {
 		matchEntity.setSortLimit(sort);
 		String predicatePath= (String) dataMap.get(eqTable+slash+ linkColumn);
 		sort.setOrderBy(getIri(IM.NAMESPACE+predicatePath));
+		sort.setCount(1);
 		EQDOCFilterRestriction restrict = eqCriterion.getFilterAttribute().getRestriction();
 		if (restrict.getColumnOrder().getColumns().get(0).getDirection() == VocOrderDirection.ASC)
 			sort.setDirection(Order.ASCENDING);

@@ -42,6 +42,8 @@ public class Preload {
 					TTBulkFiler.setPrivacyLevel(Integer.parseInt(arg.split("=")[1]));
 				else if (arg.startsWith("cmd"))
 					graphdbCommand= arg.split("=")[1];
+				else 	if (args[i].contains("test="))
+					testDirectory= args[i].substring(args[i].lastIndexOf("=")+1);
 				else
 							System.err.println("Unknown parameter " + args[i]);
 			}
