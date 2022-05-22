@@ -4,6 +4,7 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 
@@ -14,7 +15,7 @@ import java.util.Date;
 import java.util.List;
 
 public class Preload {
-	public static String testDirectory;
+
 
 	public static void main(String[] args) throws Exception {
 		if (args.length < 5) {
@@ -43,7 +44,7 @@ public class Preload {
 				else if (arg.startsWith("cmd"))
 					graphdbCommand= arg.split("=")[1];
 				else 	if (args[i].contains("test="))
-					testDirectory= args[i].substring(args[i].lastIndexOf("=")+1);
+					ImportApp.testDirectory= args[i].substring(args[i].lastIndexOf("=")+1);
 				else
 							System.err.println("Unknown parameter " + args[i]);
 			}
@@ -97,6 +98,7 @@ public class Preload {
 			deltaImporter.importData(cfg);
 
 		System.out.println("Finished - " + (new Date()));
+		System.exit(0);
 	}
 
 	private static void startGraph(String graphdb) throws IOException, InterruptedException {

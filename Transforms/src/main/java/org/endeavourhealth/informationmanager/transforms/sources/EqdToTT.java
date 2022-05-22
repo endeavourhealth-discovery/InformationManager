@@ -157,6 +157,7 @@ public class EqdToTT {
 			entity.addType(IM.QUERY);
 			DataSet profile= new DataSet();
 			profile.setName(entity.getName());
+			profile.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Person"));
 			profile.setDescription(entity.getDescription());
 			profile.setIri(entity.getIri());
 			profile.setSelect(new Select());
@@ -186,6 +187,7 @@ public class EqdToTT {
 			set.setName(entity.getName());
 			set.setDescription(entity.getDescription());
 			set.setIri(entity.getIri());
+			set.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Person"));
 			Select select= new Select();
 			set.setSelect(select);
 			select.setEntityType(TTIriRef.iri(IM.NAMESPACE + "Person").setName("Person"));
@@ -207,6 +209,7 @@ public class EqdToTT {
 			set.setName(entity.getName());
 			set.setDescription(entity.getDescription());
 			set.setIri(entity.getIri());
+			set.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Person"));
 			convertAuditReport(eqReport.getAuditReport(),set);
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
