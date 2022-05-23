@@ -976,14 +976,16 @@ public class EqdToTT {
 		for (EQDOCValueSetValue ev : vs.getValues()) {
 			i++;
 			if (i ==1) {
-				if (vsetName.length()<1) {
-					if (ev.getDisplayName() != null) {
-						vsetName.append(ev.getDisplayName());
-					}
+				if (ev.getDisplayName() != null) {
+					vsetName.append(ev.getDisplayName());
+				}
+				else if (vsetName.length()<1) {
+					if (labels.get(vs.getId())!=null)
+						vsetName.append((String) labels.get(vs.getId()));
 				}
 			}
 			else if (i==2){
-				vsetName.append(".. and more ...");
+				vsetName.append(" (and more)");
 			}
 			Set<TTIriRef> concepts = getValue(scheme, ev);
 			if (concepts != null) {
@@ -992,8 +994,8 @@ public class EqdToTT {
 				System.err.println("Missing \t" + ev.getValue() + "\t " + ev.getDisplayName());
 
 		}
-		if (labels.get(vs.getId())!=null)
-			vsetName.append((String) labels.get(vs.getId()));
+//		if (labels.get(vs.getId())!=null)
+//			vsetName.append((String) labels.get(vs.getId()));
 		if (vs.getDescription() != null)
 			vsetName = new StringBuilder(vs.getDescription());
 		storeValueSet(vs,setContent,vsetName.toString());
