@@ -15,6 +15,7 @@ import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.informationmanager.transforms.sources.eqd.*;
 
+
 import javax.swing.*;
 import java.io.IOException;
 import java.io.InvalidClassException;
@@ -156,6 +157,7 @@ public class EqdToTT {
 			entity.addType(IM.QUERY);
 			DataSet profile= new DataSet();
 			profile.setName(entity.getName());
+			profile.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Person"));
 			profile.setDescription(entity.getDescription());
 			profile.setIri(entity.getIri());
 			profile.setSelect(new Select());
@@ -185,6 +187,7 @@ public class EqdToTT {
 			set.setName(entity.getName());
 			set.setDescription(entity.getDescription());
 			set.setIri(entity.getIri());
+			set.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Person"));
 			Select select= new Select();
 			set.setSelect(select);
 			select.setEntityType(TTIriRef.iri(IM.NAMESPACE + "Person").setName("Person"));
@@ -206,6 +209,7 @@ public class EqdToTT {
 			set.setName(entity.getName());
 			set.setDescription(entity.getDescription());
 			set.setIri(entity.getIri());
+			set.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Person"));
 			convertAuditReport(eqReport.getAuditReport(),set);
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -545,10 +549,19 @@ public class EqdToTT {
 		if (eqCriterion.getFilterAttribute().getRestriction() != null) {
 			setRestriction(eqCriterion, match);
 			if (eqCriterion.getFilterAttribute().getRestriction().getTestAttribute() != null) {
-				List<EQDOCColumnValue> cvs = eqCriterion.getFilterAttribute().getRestriction().getTestAttribute().getColumnValue();
 				Filter test = new Filter();
 				match.getSortLimit().addMust(test);
-				setMainCriterion(eqTable, cvs.get(0), test);
+				List<EQDOCColumnValue> cvs = eqCriterion.getFilterAttribute().getRestriction().getTestAttribute().getColumnValue();
+				if (cvs.size()==1) {
+					setMainCriterion(eqTable, cvs.get(0), test);
+				}
+				else {
+					for (EQDOCColumnValue cv:cvs){
+						Filter subTest= new Filter();
+						test.addAnd(subTest);
+						setMainCriterion(eqTable, cv, subTest);
+					}
+				}
 				if (linkField != null && dateFilter == null) {
 					Filter subFilter = new Filter();
 					match.addOptional(subFilter);
@@ -615,6 +628,7 @@ public class EqdToTT {
 		matchEntity.setSortLimit(sort);
 		String predicatePath= (String) dataMap.get(eqTable+slash+ linkColumn);
 		sort.setOrderBy(getIri(IM.NAMESPACE+predicatePath));
+		sort.setCount(1);
 		EQDOCFilterRestriction restrict = eqCriterion.getFilterAttribute().getRestriction();
 		if (restrict.getColumnOrder().getColumns().get(0).getDirection() == VocOrderDirection.ASC)
 			sort.setDirection(Order.ASCENDING);
@@ -976,17 +990,17 @@ public class EqdToTT {
 		for (EQDOCValueSetValue ev : vs.getValues()) {
 			i++;
 			if (i ==1) {
-				if (ev.getDisplayName() != null) {
-					vsetName.append(ev.getDisplayName());
-				}
+				if (labels.get(vs.getId())!=null)
+					vsetName.append((String) labels.get(vs.getId()));
 				else if (vsetName.length()<1) {
-					if (labels.get(vs.getId())!=null)
-						vsetName.append((String) labels.get(vs.getId()));
+					if (ev.getDisplayName() != null) {
+						vsetName.append(ev.getDisplayName());
+					}
 				}
 			}
-			else if (i==2){
-				vsetName.append(" (and more)");
-			}
+//			else if (i==2){
+//				vsetName.append(".. and more ...");
+//			}
 			Set<TTIriRef> concepts = getValue(scheme, ev);
 			if (concepts != null) {
 				setContent.addAll(new ArrayList<>(concepts));
@@ -994,8 +1008,7 @@ public class EqdToTT {
 				System.err.println("Missing \t" + ev.getValue() + "\t " + ev.getDisplayName());
 
 		}
-//		if (labels.get(vs.getId())!=null)
-//			vsetName.append((String) labels.get(vs.getId()));
+
 		if (vs.getDescription() != null)
 			vsetName = new StringBuilder(vs.getDescription());
 		storeValueSet(vs,setContent,vsetName.toString());

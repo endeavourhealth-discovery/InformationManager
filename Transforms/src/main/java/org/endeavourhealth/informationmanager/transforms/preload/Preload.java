@@ -4,6 +4,7 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 
@@ -14,7 +15,7 @@ import java.util.Date;
 import java.util.List;
 
 public class Preload {
-	public static String testDirectory;
+
 
 	public static void main(String[] args) throws Exception {
 		if (args.length < 5) {
@@ -42,6 +43,8 @@ public class Preload {
 					TTBulkFiler.setPrivacyLevel(Integer.parseInt(arg.split("=")[1]));
 				else if (arg.startsWith("cmd"))
 					graphdbCommand= arg.split("=")[1];
+				else 	if (args[i].contains("test="))
+					ImportApp.testDirectory= args[i].substring(args[i].lastIndexOf("=")+1);
 				else
 							System.err.println("Unknown parameter " + args[i]);
 			}
@@ -84,7 +87,7 @@ public class Preload {
 				importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
 				importer.importByType(IM.GRAPH_ODS, cfg);
 				importer.importByType(IM.GRAPH_NHS_TFC,cfg);
-		    importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
+				importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
 				importer.importByType(IM.GRAPH_IM1,cfg);
 
 			TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
@@ -95,6 +98,7 @@ public class Preload {
 			deltaImporter.importData(cfg);
 
 		System.out.println("Finished - " + (new Date()));
+		System.exit(0);
 	}
 
 	private static void startGraph(String graphdb) throws IOException, InterruptedException {

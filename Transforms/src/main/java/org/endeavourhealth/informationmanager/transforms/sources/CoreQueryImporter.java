@@ -40,6 +40,7 @@ public class CoreQueryImporter implements TTImport {
 			.setDescription("For any registration period,a registration start date before the reference date and no end date," +
 				"or an end date after the reference date.");
 		DataSet prof= new DataSet();
+		prof.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Person"));
 		prof.setIri(qry.getIri());
 		prof.setName(qry.getName());
 		prof.setDescription(qry.getDescription());
