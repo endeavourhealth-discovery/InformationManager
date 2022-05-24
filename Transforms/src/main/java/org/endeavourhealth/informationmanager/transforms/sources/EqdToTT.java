@@ -222,7 +222,7 @@ public class EqdToTT {
 		return entity;
 	}
 
-	private void convertAuditReport(EQDOCAuditReport auditReport, DataSet set) throws IOException {
+	private void convertAuditReport(EQDOCAuditReport auditReport, DataSet set) throws IOException, DataFormatException {
 		Select select= new Select();
 		set.setSelect(select);
 		Filter mainFilter= new Filter();
@@ -248,17 +248,11 @@ public class EqdToTT {
 				for (int part = 0; part < path.length; part++) {
 					property= new PropertyObject();
 					select.addProperty(property);
-					property.setIri(IM.NAMESPACE + path[part]);
-					if (path[part].equals("gpRegisteredPractice")) {
-						property.setFunction(new Function()
-							.setName(IM.NAMESPACE+"GPRegisteredPractice")
-							.addArgument(new Argument()
-								.setParameter(IM.NAMESPACE+"referenceDate")
-								.setValue("$referenceDate")));
+					property.setIri(IM.NAMESPACE + (path[part].split("~")[0]));
+					if (path[part].contains("~")){
+						property.setFunction(setFunction(path[part]));
 					}
-					else if (path[part].equals("age")) {
-						property.setFunction(ageFunction("YEARS"));
-					}
+
 					if (part < (path.length - 1)) {
 						select = new Select();
 						property.setObject(select);
@@ -267,6 +261,28 @@ public class EqdToTT {
 			}
 		}
 	}
+
+	private Function setFunction(String propertyFunction) throws DataFormatException {
+		Function result = new Function();
+		String definition = propertyFunction.split("~")[1];
+		result.setName(definition.split(":")[0]);
+		if (definition.contains(":")) {
+			String[] parts = definition.split(":");
+			for (int i = 1; i < parts.length; i++) {
+				String argument = parts[i];
+				String param = argument.split(";")[0];
+				String value = argument.split(";")[1];
+				result.addArgument(new Argument()
+					.setParameter(param)
+					.setValue(value));
+			}
+			return result;
+		} else if (definition.equals("AgeFunction"))
+			return ageFunction("YEARS");
+		else
+			throw new DataFormatException("unknown function type : " + definition);
+	}
+
 
 	private void convertListReport(EQDOCListReport eqListReport, DataSet shape) throws DataFormatException, IOException {
 		for (EQDOCListReport.ColumnGroups eqColGroups : eqListReport.getColumnGroups()) {
@@ -292,7 +308,7 @@ public class EqdToTT {
 		storeGroup(eqColGroup,group);
 	}
 
-	private void convertPatientColumns(EQDOCListColumnGroup eqColGroup, String eqTable,Select mainSelect) {
+	private void convertPatientColumns(EQDOCListColumnGroup eqColGroup, String eqTable,Select mainSelect) throws DataFormatException {
 		EQDOCListColumns eqCols = eqColGroup.getColumnar();
 		for (EQDOCListColumn eqCol : eqCols.getListColumn()) {
 			String eqDisplay = eqCol.getDisplayName();
@@ -304,11 +320,9 @@ public class EqdToTT {
 				property.setAlias(CaseUtils.toCamelCase(eqColName, false).replaceAll("[^a-zA-Z0-9_]", ""));
 				String[] path = predicatePath.split("/");
 				for (int part = 0; part < path.length; part++) {
-					property.setIri(IM.NAMESPACE + path[part]);
-					if (path[0].equals("age")) {
-						Function age = ageFunction("YEARS");
-						property.setFunction(age);
-					}
+					property.setIri(IM.NAMESPACE + (path[part].split("~")[0]));
+					if (path[part].contains("~"))
+						property.setFunction(setFunction(path[part]));
 					if (part < path.length - 1) {
 						Select subSelect = new Select();
 						property.setObject(subSelect);
@@ -338,7 +352,9 @@ public class EqdToTT {
 				String predicatePath = dataMap.getProperty(eqTable + slash + eqColName);
 				String[] path = predicatePath.split("/");
 				for (int part = 0; part < path.length; part++) {
-					property.setIri(IM.NAMESPACE + path[part]);
+					property.setIri(IM.NAMESPACE + (path[part].split("~")[0]));
+					if (path[part].contains("~"))
+						property.setFunction(setFunction(path[part]));
 					if (part < (path.length - 1)) {
 						Select select = new Select();
 						property.setObject(select);
@@ -651,8 +667,12 @@ public class EqdToTT {
 	private void setPropertyValue(EQDOCColumnValue cv,String eqTable,String eqColumn,
 																Filter match) throws DataFormatException, IOException {
 		String predPath= getMap(eqTable + slash + eqColumn);
-		String predicate= predPath.substring(predPath.lastIndexOf("/")+1);
+		String predFunction= predPath.substring(predPath.lastIndexOf("/")+1);
+		String predicate= predFunction.split("~")[0];
 		match.setProperty(getIri(IM.NAMESPACE+ predicate));
+		if (predFunction.contains("~")) {
+				match.setFunction(setFunction(predFunction));
+		}
 		VocColumnValueInNotIn in= cv.getInNotIn();
 		varCounter++;
 		match.setValueVar(predicate+varCounter);
@@ -726,13 +746,8 @@ public class EqdToTT {
 		String units=null;
 		if (rFrom.getValue().getUnit()!=null)
 			units= rFrom.getValue().getUnit().value();
-		if (match.getProperty().equals(TTIriRef.iri(IM.NAMESPACE+"age"))){
-			match.setValueCompare(addCompareAge(match,rFrom.getValue(),comp));
-
-		}
-		else {
 			if (rFrom.getValue().getRelation() != null && rFrom.getValue().getRelation() == VocRelation.RELATIVE) {
-				Function function = getTimeDiff(units, match.getValueVar(), "$referenceDate");
+				Function function = getTimeDiff(units, match, "$referenceDate");
 				match.setValueCompare(new Compare()
 					.setComparison(comp)
 					.setValue(value));
@@ -742,7 +757,6 @@ public class EqdToTT {
 					.setComparison(comp)
 					.setValue(value));
 			}
-		}
 	}
 
 	private Compare addCompareAge(Filter match, EQDOCValue valueCompare,Comparison comp) {
@@ -776,12 +790,8 @@ public class EqdToTT {
 		String units=null;
 		if (rTo.getValue().getUnit()!=null)
 			units= rTo.getValue().getUnit().value();
-		if (match.getProperty().equals(TTIriRef.iri(IM.NAMESPACE+"age"))){
-			match.setValueCompare(addCompareAge(match,rTo.getValue(),comp));
-		}
-		else {
 			if (rTo.getValue().getRelation() != null && rTo.getValue().getRelation() == VocRelation.RELATIVE) {
-				Function function = getTimeDiff(units, match.getValueVar(), "$referenceDate");
+				Function function = getTimeDiff(units, match, "$referenceDate");
 				match.setValueCompare(new Compare()
 					.setComparison(comp)
 					.setValue(value));
@@ -791,16 +801,18 @@ public class EqdToTT {
 					.setComparison(comp)
 					.setValue(value));
 			}
-		}
 	}
 
 
-	private Function getTimeDiff(String units,String firstDate,String compareAgainst){
+	private Function getTimeDiff(String units,Filter match,String compareAgainst){
 		Function function=null;
 		if (compareAgainst!=null) {
 			function = new Function().setId(TTIriRef.iri(IM.NAMESPACE + "TimeDifference").setName("Time Difference"));
 			function.addArgument(new Argument().setParameter("units").setValue(units));
-			function.addArgument(new Argument().setParameter("firstDate").setValue(firstDate));
+			if (match.getFunction()!=null)
+				function.addArgument(new Argument().setParameter("firstDate").setFunctionValue(match.getFunction()));
+			else
+				function.addArgument(new Argument().setParameter("firstDate").setValue("$this"));
 			function.addArgument(new Argument().setParameter("secondDate").setValue(compareAgainst));
 		}
 		return function;
@@ -818,11 +830,8 @@ public class EqdToTT {
 		String units= null;
 		if (rFrom.getValue().getUnit()!=null)
 			units= rFrom.getValue().getUnit().value();
-		if (match.getProperty().equals(TTIriRef.iri(IM.NAMESPACE+"age"))){
-			match.setFunction(ageFunction(units));
-		}
-			if (rFrom.getValue().getRelation() != null && rFrom.getValue().getRelation() == VocRelation.RELATIVE) {
-				Function function = getTimeDiff(units, match.getValueVar(), "$referenceDate");
+		if (rFrom.getValue().getRelation() != null && rFrom.getValue().getRelation() == VocRelation.RELATIVE) {
+				Function function = getTimeDiff(units, match, "$referenceDate");
 				range.setFrom(new Compare()
 					.setComparison(fromComp)
 					.setValue(fromValue));
@@ -844,7 +853,7 @@ public class EqdToTT {
 		if (rTo.getValue().getUnit()!=null)
 			units= rTo.getValue().getUnit().value();
 		if (rTo.getValue().getRelation()!=null && rTo.getValue().getRelation() == VocRelation.RELATIVE) {
-			Function function = getTimeDiff(units, match.getValueVar(), "$referenceDate");
+			Function function = getTimeDiff(units, match, "$referenceDate");
 			range.setTo(new Compare()
 				.setComparison(toComp)
 				.setValue(toValue));
@@ -883,7 +892,7 @@ public class EqdToTT {
 		String value= eqRel.getRangeValue().getRangeFrom().getValue().getValue();
 		String firstDate= linkProperty.getValueVar();
 		String secondDate= linkTarget.getAnd().get(0).getValueVar();
-		Function function= getTimeDiff(units,firstDate,secondDate);
+		Function function= getTimeDiff(units,linkProperty,secondDate);
 		within.setCompare(new Compare()
 			.setComparison((Comparison) vocabMap.get(eqOp))
 			.setValue(value));
@@ -1151,50 +1160,6 @@ public class EqdToTT {
 
 
 
-	/*
-	private Set<TTIriRef> getValue(VocCodeSystemEx scheme, String originalCode,
-																 String originalTerm,String legacyCode) throws DataFormatException {
-		if (scheme== VocCodeSystemEx.EMISINTERNAL) {
-			String key = "EMISINTERNAL/" + originalCode;
-			Object mapValue = dataMap.get(key);
-			if (mapValue != null) {
-				Set<TTIriRef> result= new HashSet<>();
-				result.add(TTIriRef.iri(mapValue.toString()));
-				return result;
-			}
-			else
-				throw new DataFormatException("unmapped emis internal code : "+key);
-		}
-		else if (scheme== VocCodeSystemEx.SNOMED_CONCEPT || scheme.value().contains("SCT")){
-			List<String> schemes= new ArrayList<>();
-			schemes.add(SNOMED.NAMESPACE);
-			schemes.add(IM.CODE_SCHEME_EMIS.getIri());
-			Set<TTIriRef> snomed= valueMap.get(originalCode);
-			if (snomed==null) {
-				snomed= getCoreFromCode(originalCode,schemes);
-				if (snomed==null)
-					if (legacyCode!=null)
-						snomed=getCoreFromCode(legacyCode,schemes);
-				if (snomed == null)
-					if (originalTerm != null)
-						snomed= getCoreFromLegacyTerm(originalTerm);
-			if (snomed==null)
-				snomed= getCoreFromCodeId(originalCode);
-				if (snomed==null)
-					snomed= getLegacyFromTermCode(originalCode);
-
-
-				if (snomed != null)
-					valueMap.put(originalCode, snomed);
-			}
-			return snomed;
-		}
-		else
-			throw new DataFormatException("code scheme not recognised : "+scheme.value());
-
-	}
-
-	*/
 	private Set<TTIriRef> getCoreFromCodeId(String originalCode){
 
 		try {
