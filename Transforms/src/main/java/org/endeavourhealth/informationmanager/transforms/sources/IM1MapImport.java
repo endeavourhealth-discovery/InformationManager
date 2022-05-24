@@ -37,6 +37,7 @@ public class IM1MapImport implements TTImport {
     private final Map<String,String> oldIriSnomed = new HashMap<>();
     private final Map<String,Integer> IdToDbid = new HashMap<>();
     private final Map<String, TTNode> oldIriContext= new HashMap<>();
+    private final Set<String> contexts = new HashSet<>();
 
 
 
@@ -586,25 +587,51 @@ public class IM1MapImport implements TTImport {
                     }
                     else
                         propertyIri= TTIriRef.iri(propertyEntity.getIri());
-                    context.set(IM.SOURCE_PUBLISHER,TTLiteral.literal(publisher));
-                    context.set(IM.SOURCE_SYSTEM,TTLiteral.literal(system));
-                    context.set(IM.SOURCE_SCHEMA,TTLiteral.literal(schema));
-                    context.set(IM.SOURCE_TABLE,TTLiteral.literal(table));
-                    context.set(IM.SOURCE_FIELD,TTLiteral.literal(field));
-                    context.set(IM.TARGET_PROPERTY,propertyIri);
-                    if (sourceValue!=null)
-                        context.set(IM.SOURCE_VALUE,TTLiteral.literal(sourceValue));
-                    if (regex!=null)
-                        context.set(IM.SOURCE_REGEX,TTLiteral.literal(regex));
-                    if (headerCode!=null)
-                        context.set(IM.SOURCE_HEADING,TTLiteral.literal(headerCode));
+                    addContext(context,publisher,system,schema,table,field,sourceValue,regex,headerCode,propertyIri);
+
+                    contexts.add(oldIri);
                     TTEntity entity= oldIriEntity.get(oldIri);
                     if (entity==null) {
                         entity= addOldEntity(newScheme,oldIri,publisher,system,oldIri);
                     }
-                    entity.set(IM.HAS_SOURCE_CONTEXT,context);
+                    TTIriRef scheme= entity.getScheme();
+                    if (scheme!=null)
+                        if (!scheme.equals(SNOMED.GRAPH_SNOMED)&&(!scheme.equals(IM.CODE_SCHEME_DISCOVERY))) {
+                            entity.set(IM.HAS_SOURCE_CONTEXT, context);
+                    }
 
                     line = reader.readLine();
+                }
+            }
+        }
+    }
+
+    private void addContext(TTNode context, String publisher, String system, String schema, String table, String field, String sourceValue, String regex, String headerCode,TTIriRef propertyIri) {
+        context.set(IM.SOURCE_PUBLISHER,TTLiteral.literal(publisher));
+        context.set(IM.SOURCE_SYSTEM,TTLiteral.literal(system));
+        context.set(IM.SOURCE_SCHEMA,TTLiteral.literal(schema));
+        context.set(IM.SOURCE_TABLE,TTLiteral.literal(table));
+        context.set(IM.SOURCE_FIELD,TTLiteral.literal(field));
+        context.set(IM.TARGET_PROPERTY,propertyIri);
+        if (sourceValue!=null)
+            context.set(IM.SOURCE_VALUE,TTLiteral.literal(sourceValue));
+        if (regex!=null)
+            context.set(IM.SOURCE_REGEX,TTLiteral.literal(regex));
+        if (headerCode!=null)
+            context.set(IM.SOURCE_HEADING,TTLiteral.literal(headerCode));
+    }
+
+    private void addMoreContext(){
+        for (String oldIri: oldIriEntity.keySet()){
+            if (!contexts.contains(oldIri)){
+                TTEntity entity= oldIriEntity.get(oldIri);
+                if (entity.get(IM.HAS_SOURCE_CONTEXT)==null) {
+                    TTIriRef scheme = entity.getScheme();
+                    TTNode context = new TTNode();
+                    if (scheme.equals(IM.CODE_SCHEME_BARTS_CERNER)){
+
+                    }
+
                 }
             }
         }
