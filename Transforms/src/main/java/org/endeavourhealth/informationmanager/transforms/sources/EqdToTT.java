@@ -40,12 +40,12 @@ public class EqdToTT {
 	private boolean needsDob;
 	private String dobVar;
 	private Map<String,String> propertyVar;
-	private final Map<String,Filter> varFilter = new HashMap<>();
+	private final Map<String,Match> varMatch = new HashMap<>();
 	private final Map<String,Set<TTIriRef>> valueMap= new HashMap<>();
 	private final ImportMaps importMaps = new ImportMaps();
 
 
-	String dateFilter;
+	String dateMatch;
 	private final Map<Object, Object> vocabMap = new HashMap<>();
 
 	public void convertDoc(TTDocument document, TTIriRef mainFolder,TTIriRef fieldGroupFolder, TTIriRef valueSetFolder, EnquiryDocument eqd, TTIriRef owner, Properties dataMap,
@@ -147,7 +147,7 @@ public class EqdToTT {
 		TTEntity entity= new TTEntity();
 		entity.setIri("urn:uuid:" + eqReport.getId());
 		entity.setName(eqReport.getName());
-		entity.setDescription(eqReport.getDescription());
+		entity.setDescription(eqReport.getDescription().replace("\n","<p>"));
 		if (eqReport.getFolder()!=null)
 			entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri("urn:uuid:"+ eqReport.getFolder()));
 		if (eqReport.getCreationTime()!=null)
@@ -155,7 +155,7 @@ public class EqdToTT {
 
 		if (eqReport.getPopulation() != null) {
 			entity.addType(IM.QUERY);
-			DataSet profile= new DataSet();
+			Query profile= new Query();
 			profile.setName(entity.getName());
 			profile.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Person"));
 			profile.setDescription(entity.getDescription());
@@ -163,8 +163,8 @@ public class EqdToTT {
 			profile.setSelect(new Select());
 			Select select= profile.getSelect();
 			select.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"));
-			Filter main= new Filter();
-			select.setFilter(main);
+			Match main= new Match();
+			select.setMatch(main);
 
 			if (eqReport.getParent().getParentType() == VocPopulationParentType.ACTIVE) {
 				setFrom(main,TTIriRef.iri(IM.NAMESPACE+"Q_RegisteredGMS").setName("Registered with GP for GMS services on the reference date"));
@@ -183,7 +183,7 @@ public class EqdToTT {
 		}
 		if (eqReport.getListReport()!=null){
 			entity.addType(IM.QUERY);
-			DataSet set= new DataSet();
+			Query set= new Query();
 			set.setName(entity.getName());
 			set.setDescription(entity.getDescription());
 			set.setIri(entity.getIri());
@@ -191,8 +191,8 @@ public class EqdToTT {
 			Select select= new Select();
 			set.setSelect(select);
 			select.setEntityType(TTIriRef.iri(IM.NAMESPACE + "Person").setName("Person"));
-			Filter main= new Filter();
-			select.setFilter(main);
+			Match main= new Match();
+			select.setMatch(main);
 			String id = eqReport.getParent().getSearchIdentifier().getReportGuid();
 			setFrom(main,TTIriRef.iri("urn:uuid:" + id).setName(reportNames.get(id)));
 			convertListReport(eqReport.getListReport(),set);
@@ -205,7 +205,7 @@ public class EqdToTT {
 		}
 		if (eqReport.getAuditReport()!=null){
 			entity.addType(IM.QUERY);
-			DataSet set= new DataSet();
+			Query set= new Query();
 			set.setName(entity.getName());
 			set.setDescription(entity.getDescription());
 			set.setIri(entity.getIri());
@@ -222,18 +222,18 @@ public class EqdToTT {
 		return entity;
 	}
 
-	private void convertAuditReport(EQDOCAuditReport auditReport, DataSet set) throws IOException, DataFormatException {
+	private void convertAuditReport(EQDOCAuditReport auditReport, Query set) throws IOException{
 		Select select= new Select();
 		set.setSelect(select);
-		Filter mainFilter= new Filter();
+		Match mainFilter= new Match();
 		select.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"));
-		select.setFilter(mainFilter);
-		mainFilter.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person"));
+		select.setMatch(mainFilter);
+		mainFilter.setEntityType(getIri(IM.NAMESPACE+"Person"));
 		mainFilter.setProperty(getIri(IM.IN_RESULT_SET.getIri()));
 		for (String popId:auditReport.getPopulation()){
-			mainFilter.addValueIn(TTIriRef.iri("urn:uuid:"+ popId).setName(reportNames.get(popId)));
+			mainFilter.addInSet(TTIriRef.iri("urn:uuid:"+ popId).setName(reportNames.get(popId)));
 		}
-		PropertyObject property= new PropertyObject();
+		PropertySelect property= new PropertySelect();
 		select.addProperty(property);
 		property.
 			setIri(IM.NAMESPACE+"id")
@@ -245,46 +245,22 @@ public class EqdToTT {
 			for (String eqColum: group.getGroupingColumn()){
 				String predicate= (String) dataMap.get(eqTable+slash+ eqColum);
 				String[] path= predicate.split("/");
-				for (int part = 0; part < path.length; part++) {
-					property= new PropertyObject();
-					select.addProperty(property);
-					property.setIri(IM.NAMESPACE + (path[part].split("~")[0]));
-					if (path[part].contains("~")){
-						property.setFunction(setFunction(path[part]));
+				property= new PropertySelect();
+				select.addProperty(property);
+				for (int part = 0; part < path.length; part=part+2) {
+					property.setIri(getIri(IM.NAMESPACE+path[part]));
+					if (part+2<path.length){
+						select= new Select();
+						property.setSelect(select);
+						property= new PropertySelect();
+						select.addProperty(property);
 					}
-
-					if (part < (path.length - 1)) {
-						select = new Select();
-						property.setObject(select);
 					}
 				}
-			}
 		}
 	}
 
-	private Function setFunction(String propertyFunction) throws DataFormatException {
-		Function result = new Function();
-		String definition = propertyFunction.split("~")[1];
-		result.setName(definition.split(":")[0]);
-		if (definition.contains(":")) {
-			String[] parts = definition.split(":");
-			for (int i = 1; i < parts.length; i++) {
-				String argument = parts[i];
-				String param = argument.split(";")[0];
-				String value = argument.split(";")[1];
-				result.addArgument(new Argument()
-					.setParameter(param)
-					.setValue(value));
-			}
-			return result;
-		} else if (definition.equals("AgeFunction"))
-			return ageFunction("YEARS");
-		else
-			throw new DataFormatException("unknown function type : " + definition);
-	}
-
-
-	private void convertListReport(EQDOCListReport eqListReport, DataSet shape) throws DataFormatException, IOException {
+	private void convertListReport(EQDOCListReport eqListReport, Query shape) throws DataFormatException, IOException {
 		for (EQDOCListReport.ColumnGroups eqColGroups : eqListReport.getColumnGroups()) {
 			EQDOCListColumnGroup eqColGroup = eqColGroups.getColumnGroup();
 			Select selectGroup = new Select();
@@ -308,25 +284,24 @@ public class EqdToTT {
 		storeGroup(eqColGroup,group);
 	}
 
-	private void convertPatientColumns(EQDOCListColumnGroup eqColGroup, String eqTable,Select mainSelect) throws DataFormatException {
+	private void convertPatientColumns(EQDOCListColumnGroup eqColGroup, String eqTable,Select mainSelect) throws IOException {
 		EQDOCListColumns eqCols = eqColGroup.getColumnar();
 		for (EQDOCListColumn eqCol : eqCols.getListColumn()) {
 			String eqDisplay = eqCol.getDisplayName();
 			for (String eqColName : eqCol.getColumn()) {
 				String predicatePath = dataMap.getProperty(eqTable + slash + eqColName);
-				PropertyObject property = new PropertyObject();
+				PropertySelect property = new PropertySelect();
 				mainSelect.addProperty(property);
 				property.setName(eqDisplay);
 				property.setAlias(CaseUtils.toCamelCase(eqColName, false).replaceAll("[^a-zA-Z0-9_]", ""));
 				String[] path = predicatePath.split("/");
-				for (int part = 0; part < path.length; part++) {
-					property.setIri(IM.NAMESPACE + (path[part].split("~")[0]));
-					if (path[part].contains("~"))
-						property.setFunction(setFunction(path[part]));
-					if (part < path.length - 1) {
-						Select subSelect = new Select();
-						property.setObject(subSelect);
-						mainSelect = subSelect;
+				for (int part = 0; part < path.length; part=part+2) {
+					property.setIri(getIri(IM.NAMESPACE + path[part]));
+					if (part+2<path.length){
+						mainSelect= new Select();
+						property.setSelect(mainSelect);
+						property= new PropertySelect();
+						mainSelect.addProperty(property);
 					}
 				}
 			}
@@ -334,37 +309,37 @@ public class EqdToTT {
 	}
 
 	private void convertEventColumns(EQDOCListColumnGroup eqColGroup, String eqTable,Select mainSelect) throws DataFormatException, IOException {
-		PropertyObject property = new PropertyObject();
+		PropertySelect property = new PropertySelect();
 		mainSelect.addProperty(property);
-		property.setIri(IM.NAMESPACE + "isSubjectOf");
-		Filter mainFilter = new Filter();
-		mainSelect.setFilter(mainFilter);
-		convertCriteria(eqColGroup.getCriteria(), mainFilter);
+		property.setIri(getIri(IM.NAMESPACE + "isSubjectOf"));
+		Match mainMatch = new Match();
+		mainSelect.setMatch(mainMatch);
+		convertCriteria(eqColGroup.getCriteria(), mainMatch);
 		mainSelect = new Select();
-		property.setObject(mainSelect);
+		property.setSelect(mainSelect);
 		EQDOCListColumns eqCols = eqColGroup.getColumnar();
 		for (EQDOCListColumn eqCol : eqCols.getListColumn()) {
-			property= new PropertyObject();
+			property = new PropertySelect();
 			mainSelect.addProperty(property);
 			String eqDisplay = eqCol.getDisplayName();
 			property.setName(eqDisplay);
 			for (String eqColName : eqCol.getColumn()) {
 				String predicatePath = dataMap.getProperty(eqTable + slash + eqColName);
 				String[] path = predicatePath.split("/");
-				for (int part = 0; part < path.length; part++) {
-					property.setIri(IM.NAMESPACE + (path[part].split("~")[0]));
-					if (path[part].contains("~"))
-						property.setFunction(setFunction(path[part]));
-					if (part < (path.length - 1)) {
-						Select select = new Select();
-						property.setObject(select);
-						property = new PropertyObject();
-						select.addProperty(property);
-					}
-				}
-			}
+				for (int part = 0; part < path.length; part = part + 2) {
+				 property.setIri(getIri(IM.NAMESPACE+path[part]));
+				 if (part+2<path.length){
+					 mainSelect= new Select();
+					 property.setSelect(mainSelect);
+					 property= new PropertySelect();
+					 mainSelect.addProperty(property);
+				 }
 
+				}
+
+			}
 		}
+
 	}
 
 
@@ -398,60 +373,64 @@ public class EqdToTT {
 			return RDFS.LABEL.setName("label");
 		else {
 			if (!token.contains(":")) {
-				return (TTIriRef.iri(IM.NAMESPACE + token).setName(importMaps.getCoreName(IM.NAMESPACE+ token)));
+				TTIriRef iri = TTIriRef.iri(IM.NAMESPACE + token);
+				iri.setName(importMaps.getCoreName(IM.NAMESPACE + token));
+				return iri;
+			} else {
+				TTIriRef iri=TTIriRef.iri(token);
+				iri.setName(importMaps.getCoreName(token));
+				return iri;
 			}
-			else
-				return (TTIriRef.iri(token).setName(importMaps.getCoreName(token)));
 		}
 	}
 
 
 
-	private void convertPopulation(EQDOCPopulation population, Filter main) throws DataFormatException, IOException {
-		Filter orFilter= null;
+	private void convertPopulation(EQDOCPopulation population, Match main) throws DataFormatException, IOException {
+		Match orMatch= null;
 		propertyVar= new HashMap<>();
 		for (EQDOCCriteriaGroup eqGroup : population.getCriteriaGroup()) {
 			VocRuleAction ifTrue = eqGroup.getActionIfTrue();
 			VocRuleAction ifFalse = eqGroup.getActionIfFalse();
 
 			if (ifTrue == VocRuleAction.SELECT && ifFalse == VocRuleAction.NEXT) {
-				orFilter= new Filter();
-				main.addOr(orFilter);
-				addToOr(eqGroup,orFilter);
+				orMatch= new Match();
+				main.addOr(orMatch);
+				addToOr(eqGroup,orMatch);
 
 			}
 			else if (ifTrue == VocRuleAction.SELECT && ifFalse == VocRuleAction.REJECT) {
-				if (orFilter!=null){
-					Filter lastOr= new Filter();
+				if (orMatch!=null){
+					Match lastOr= new Match();
 					main.addOr(lastOr);
 					addToOr(eqGroup,lastOr);
-					orFilter=null;
+					orMatch=null;
 				}
 				else {
 					addAnd(eqGroup,main);
 				}
 			}
 			else if (ifTrue == VocRuleAction.NEXT && ifFalse == VocRuleAction.REJECT) {
-				if (orFilter != null) {
-					Filter lastOr = new Filter();
+				if (orMatch != null) {
+					Match lastOr = new Match();
 					main.addOr(lastOr);
 					addToOr(eqGroup, lastOr);
-					orFilter = null;
+					orMatch = null;
 				} else {
 					addAnd(eqGroup, main);
 				}
 			}
 			else if (ifTrue == VocRuleAction.REJECT && ifFalse == VocRuleAction.NEXT) {
-				orFilter = new Filter();
-				main.addOr(orFilter);
-				addToOr(eqGroup, orFilter);
+				orMatch = new Match();
+				main.addOr(orMatch);
+				addToOr(eqGroup, orMatch);
 			}
 			else if (ifTrue == VocRuleAction.REJECT && ifFalse == VocRuleAction.SELECT) {
-				if (orFilter != null) {
-					Filter lastOr = new Filter();
+				if (orMatch != null) {
+					Match lastOr = new Match();
 					main.addOr(lastOr);
 					addToOr(eqGroup, lastOr);
-					orFilter = null;
+					orMatch = null;
 				} else {
 					addAnd(eqGroup, main);
 				}
@@ -463,25 +442,25 @@ public class EqdToTT {
 			}
 	}
 
-	private void addAnd(EQDOCCriteriaGroup eqGroup, Filter main) throws DataFormatException, IOException {
+	private void addAnd(EQDOCCriteriaGroup eqGroup, Match main) throws DataFormatException, IOException {
 		VocMemberOperator memberOp = eqGroup.getDefinition().getMemberOperator();
 		boolean negation= eqGroup.getActionIfTrue() == VocRuleAction.REJECT;
 		if (memberOp== VocMemberOperator.AND) {
 			for (EQDOCCriteria eqCriteria : eqGroup.getDefinition().getCriteria()) {
-				Filter andFilter = new Filter();
-				main.addAnd(andFilter);
+				Match andMatch = new Match();
+				main.addAnd(andMatch);
 				if (negation)
-					andFilter.setNotExist(true);
-				convertCriteria(eqCriteria,andFilter);
+					andMatch.setNotExist(true);
+				convertCriteria(eqCriteria,andMatch);
 			}
 		}
 		else {
-			Filter andFilter= new Filter();
+			Match andFilter= new Match();
 			main.addAnd(andFilter);
 			if (negation)
 				andFilter.setNotExist(true);
 			for (EQDOCCriteria eqCriteria : eqGroup.getDefinition().getCriteria()) {
-				Filter orFilter= new Filter();
+				Match orFilter= new Match();
 				andFilter.addOr(orFilter);
 				convertCriteria(eqCriteria,orFilter);
 			}
@@ -489,7 +468,7 @@ public class EqdToTT {
 
 	}
 
-	private void addToOr(EQDOCCriteriaGroup eqGroup, Filter orFilter) throws DataFormatException, IOException {
+	private void addToOr(EQDOCCriteriaGroup eqGroup, Match orFilter) throws DataFormatException, IOException {
 
 		VocMemberOperator memberOp = eqGroup.getDefinition().getMemberOperator();
 		boolean negation= eqGroup.getActionIfTrue() == VocRuleAction.REJECT;
@@ -501,7 +480,7 @@ public class EqdToTT {
 		}
 		else if (memberOp== VocMemberOperator.OR) {
 			for (EQDOCCriteria eqCriteria : eqGroup.getDefinition().getCriteria()) {
-				Filter subOrFilter = new Filter();
+				Match subOrFilter = new Match();
 				if (negation)
 					subOrFilter.setNotExist(true);
 				orFilter.addOr(subOrFilter);
@@ -510,7 +489,7 @@ public class EqdToTT {
 		}
 		else{
 			for (EQDOCCriteria eqCriteria : eqGroup.getDefinition().getCriteria()) {
-				Filter andFilter= new Filter();
+				Match andFilter= new Match();
 				orFilter.addAnd(andFilter);
 				convertCriteria(eqCriteria,andFilter);
 			}
@@ -521,14 +500,14 @@ public class EqdToTT {
 
 
 	private void convertCriteria(EQDOCCriteria eqCriteria,
-													 Filter match) throws DataFormatException, IOException {
+													 Match match) throws DataFormatException, IOException {
 
-		dateFilter = null;
+		dateMatch = null;
 		needsDob=false;
 		if ((eqCriteria.getPopulationCriterion() != null)) {
 			EQDOCSearchIdentifier srch = eqCriteria.getPopulationCriterion();
 			match.setProperty(ConceptRef.iri(IM.IN_RESULT_SET).setName("subset of"));
-			match.addValueIn(TTIriRef.iri("urn:uuid:" + srch.getReportGuid())
+			match.addInSet(TTIriRef.iri("urn:uuid:" + srch.getReportGuid())
 					.setName(reportNames.get(srch.getReportGuid())));
 		}
 		else {
@@ -540,14 +519,14 @@ public class EqdToTT {
 
 	}
 
-	private void convertCriterion(EQDOCCriterion eqCriterion, Filter match, String linkField) throws DataFormatException, IOException {
+	private void convertCriterion(EQDOCCriterion eqCriterion, Match match, String linkField) throws DataFormatException, IOException {
 		String eqTable = eqCriterion.getTable();
 		String entityType = (String) dataMap.get(eqTable);
 
 		if (!eqTable.equals("PATIENTS")){
 			match.setProperty(getIri(IM.NAMESPACE+"isSubjectOf"));
-			match.setValueObject(new Filter());
-			match= match.getValueObject();
+			match.setMatch(new Match());
+			match= match.getMatch();
 			match.setEntityType(getIri(IM.NAMESPACE + entityType));
 		}
 
@@ -565,32 +544,32 @@ public class EqdToTT {
 		if (eqCriterion.getFilterAttribute().getRestriction() != null) {
 			setRestriction(eqCriterion, match);
 			if (eqCriterion.getFilterAttribute().getRestriction().getTestAttribute() != null) {
-				Filter test = new Filter();
-				match.getSortLimit().addMust(test);
+				Match test = new Match();
+				match.getOrderLimit().addTest(test);
 				List<EQDOCColumnValue> cvs = eqCriterion.getFilterAttribute().getRestriction().getTestAttribute().getColumnValue();
 				if (cvs.size()==1) {
 					setMainCriterion(eqTable, cvs.get(0), test);
 				}
 				else {
 					for (EQDOCColumnValue cv:cvs){
-						Filter subTest= new Filter();
+						Match subTest= new Match();
 						test.addAnd(subTest);
 						setMainCriterion(eqTable, cv, subTest);
 					}
 				}
-				if (linkField != null && dateFilter == null) {
-					Filter subFilter = new Filter();
+				if (linkField != null && dateMatch == null) {
+					Match subFilter = new Match();
 					match.addOptional(subFilter);
 					addDateFilter(subFilter, eqTable, linkField);
 				}
 			}
 		}
 		if (needsDob){
-				Filter dobFilter= new Filter();
+				Match dobFilter= new Match();
 				match.addAnd(dobFilter);
 				dobFilter.setProperty(getIri(IM.NAMESPACE+"dateOfBirth"));
 				dobFilter.setValueVar(dobVar);
-				varFilter.put(dobVar,dobFilter);
+				varMatch.put(dobVar,dobFilter);
 		}
 
 		if (eqCriterion.getLinkedCriterion()!=null) {
@@ -602,7 +581,7 @@ public class EqdToTT {
 
 
 
-	private void convertColumns(EQDOCFilterAttribute filterAttribute, String eqTable,Filter entity,
+	private void convertColumns(EQDOCFilterAttribute filterAttribute, String eqTable,Match entity,
 								String linkField) throws DataFormatException, IOException {
 
 		if (filterAttribute.getColumnValue().size()==1 &&linkField==null){
@@ -610,38 +589,38 @@ public class EqdToTT {
 		}
 		else {
 			for (EQDOCColumnValue cv : filterAttribute.getColumnValue()) {
-				Filter match = new Filter();
+				Match match = new Match();
 				entity.addAnd(match);
 				setMainCriterion(eqTable, cv, match);
 
 			}
 		}
-		if (linkField != null && dateFilter == null) {
-			Filter dateFilter = new Filter();
-			entity.addAnd(dateFilter);
-			addDateFilter(dateFilter, eqTable, linkField);
+		if (linkField != null && dateMatch == null) {
+			Match dateMatch = new Match();
+			entity.addAnd(dateMatch);
+			addDateFilter(dateMatch, eqTable, linkField);
 		}
 
 	}
 
-	private void addDateFilter(Filter subFilter,String eqTable,String linkField) throws DataFormatException, IOException {
+	private void addDateFilter(Match subFilter,String eqTable,String linkField) throws DataFormatException, IOException {
 		String fieldPath= getMap(eqTable + slash + linkField);
 		String date= fieldPath.substring(fieldPath.lastIndexOf("/")+1);
 		subFilter.setProperty(getIri(IM.NAMESPACE+date));
 		varCounter++;
 		subFilter.setValueVar(date+varCounter);
-		dateFilter= date+varCounter;
+		dateMatch= date+varCounter;
 		propertyVar.put(fieldPath,date+varCounter);
-		varFilter.put(date+varCounter,subFilter);
+		varMatch.put(date+varCounter,subFilter);
 
 	}
 
-	private void setRestriction(EQDOCCriterion eqCriterion,Filter matchEntity) throws IOException {
+	private void setRestriction(EQDOCCriterion eqCriterion,Match matchEntity) throws IOException {
 		String eqTable = eqCriterion.getTable();
 		String linkColumn= eqCriterion.getFilterAttribute().getRestriction()
 				.getColumnOrder().getColumns().get(0).getColumn().get(0);
-		SortLimit sort= new SortLimit();
-		matchEntity.setSortLimit(sort);
+		OrderLimit sort= new OrderLimit();
+		matchEntity.setOrderLimit(sort);
 		String predicatePath= (String) dataMap.get(eqTable+slash+ linkColumn);
 		sort.setOrderBy(getIri(IM.NAMESPACE+predicatePath));
 		sort.setCount(1);
@@ -655,47 +634,43 @@ public class EqdToTT {
 
 
 
-	private void setMainCriterion(String eqTable,EQDOCColumnValue cv,Filter match) throws DataFormatException, IOException {
+	private void setMainCriterion(String eqTable,EQDOCColumnValue cv,Match match) throws DataFormatException, IOException {
 		for (String eqColumn : cv.getColumn()) {
 			setPropertyValue(cv, eqTable, eqColumn, match);
 			if (eqColumn.contains("DATE"))
-				dateFilter= match.getValueVar();
+				dateMatch= match.getValueVar();
 		}
 	}
 
 
 	private void setPropertyValue(EQDOCColumnValue cv,String eqTable,String eqColumn,
-																Filter match) throws DataFormatException, IOException {
+																Match match) throws DataFormatException, IOException {
 		String predPath= getMap(eqTable + slash + eqColumn);
-		String predFunction= predPath.substring(predPath.lastIndexOf("/")+1);
-		String predicate= predFunction.split("~")[0];
+		String predicate= predPath.substring(predPath.lastIndexOf("/")+1);
 		match.setProperty(getIri(IM.NAMESPACE+ predicate));
-		if (predFunction.contains("~")) {
-				match.setFunction(setFunction(predFunction));
-		}
 		VocColumnValueInNotIn in= cv.getInNotIn();
 		varCounter++;
 		match.setValueVar(predicate+varCounter);
 		propertyVar.put(predPath,predicate+varCounter);
-		varFilter.put(predicate+varCounter,match);
+		varMatch.put(predicate+varCounter,match);
 		boolean notIn= (in== VocColumnValueInNotIn.NOTIN);
 		if (!cv.getValueSet().isEmpty()){
 			for (EQDOCValueSet vs:cv.getValueSet()) {
 				if (vs.getAllValues()!=null){
-					match.setValueNotIn(getExceptionSet(vs.getAllValues()));
+					match.setNotInSet(getExceptionSet(vs.getAllValues()));
 				}
 				else {
 					if (!notIn) {
 						if (isValueSet(vs)) {
-							match.addValueIn(getValueSet(vs));
+							match.addInSet(getValueSet(vs));
 						} else
-							match.setValueConcept(getInlineValues(vs));
+							match.setIsConcept(getInlineValues(vs));
 					}
 					else {
 						if (isValueSet(vs)) {
-							match.addValueNotIn(getValueSet(vs));
+							match.addNotInSet(getValueSet(vs));
 						} else
-							match.setValueConcept(getInlineValues(vs));
+							match.setIsNotConcept(getInlineValues(vs));
 					}
 				}
 			}
@@ -707,9 +682,9 @@ public class EqdToTT {
 				if (labels.get(vset)!=null)
 					vsetName= (String) labels.get(vset);
 				if (!notIn)
-					match.addValueIn(TTIriRef.iri("urn:uuid:" + vset).setName(vsetName));
+					match.addInSet(TTIriRef.iri("urn:uuid:" + vset).setName(vsetName));
 				else
-					match.addValueNotIn(TTIriRef.iri("urn:uuid:" + vset).setName(vsetName));
+					match.addNotInSet(TTIriRef.iri("urn:uuid:" + vset).setName(vsetName));
 			}
 		}
 		else if (cv.getRangeValue()!=null){
@@ -718,7 +693,7 @@ public class EqdToTT {
 	}
 
 
-	private void setRangeValue(EQDOCRangeValue rv, Filter match) {
+	private void setRangeValue(EQDOCRangeValue rv, Match match) throws DataFormatException {
 
 		EQDOCRangeFrom rFrom= rv.getRangeFrom();
 		EQDOCRangeTo rTo= rv.getRangeTo();
@@ -736,91 +711,80 @@ public class EqdToTT {
 
 	}
 
-	private void setCompareFrom(Filter match, EQDOCRangeFrom rFrom) {
+	private void setCompareFrom(Match match, EQDOCRangeFrom rFrom) throws DataFormatException {
 		Comparison comp;
 		if (rFrom.getOperator() != null)
 			comp = (Comparison) vocabMap.get(rFrom.getOperator());
 		else
 			comp = Comparison.EQUAL;
 		String value = rFrom.getValue().getValue();
-		String units=null;
-		if (rFrom.getValue().getUnit()!=null)
-			units= rFrom.getValue().getUnit().value();
-			if (rFrom.getValue().getRelation() != null && rFrom.getValue().getRelation() == VocRelation.RELATIVE) {
-				Function function = getTimeDiff(units, match, "$referenceDate");
-				match.setValueCompare(new Compare()
+		String units = null;
+		if (rFrom.getValue().getUnit() != null)
+			units = rFrom.getValue().getUnit().value();
+		VocRelation relation = VocRelation.ABSOLUTE;
+		if (rFrom.getValue().getRelation() != null && rFrom.getValue().getRelation() == VocRelation.RELATIVE) {
+			relation = VocRelation.RELATIVE;
+		}
+		setCompare(match, comp, value, units, relation,true);
+	}
+
+	private void setCompare(Match match, Comparison comp, String value, String units, VocRelation relation,
+													boolean from) throws DataFormatException {
+		if (relation==VocRelation.RELATIVE){
+			String first= from ?"$this" : "$referenceDate";
+			String second= from ?"$referenceDate" : "$this";
+	      Function function = getTimeDiff(units, first, second);
+				match.setValue(new Compare()
 					.setComparison(comp)
-					.setValue(value));
+					.setValueData(value));
 					match.setFunction(function);
-			} else {
-				match.setValueCompare(new Compare()
+		} else {
+				match.setValue(new Compare()
 					.setComparison(comp)
-					.setValue(value));
+					.setValueData(value));
+				if (match.getProperty().equals(TTIriRef.iri(IM.NAMESPACE+"age"))){
+					if (units==null)
+						throw new DataFormatException("missing units from age");
+					match.setFunction(new Function()
+						.addArgument(new Argument()
+							.setParameter("units")
+							.setValueData(units)));
+				}
 			}
 	}
 
-	private Compare addCompareAge(Filter match, EQDOCValue valueCompare,Comparison comp) {
 
-		Compare compare= new Compare();
-		match.setFunction(ageFunction(valueCompare.getUnit().value()));
-		compare.setValue(valueCompare.getValue());
-		compare.setComparison(comp);
-		return compare;
-	}
 
-	private Function ageFunction(String units){
-		Function function = new Function();
-		function.setId(TTIriRef.iri(IM.NAMESPACE+"AgeFunction"));
-		function.addArgument(new Argument().setParameter("units").setValue(units));
-		varCounter++;
-		dobVar= "dateOfBirth"+ varCounter;
-		needsDob=true;
-		function.addArgument(new Argument().setParameter("fromDate").setValue(dobVar));
-		function.addArgument(new Argument().setParameter("referenceDate").setValue("$referenceDate"));
-		return function;
-	}
-
-	private void setCompareTo(Filter match, EQDOCRangeTo rTo) {
+	private void setCompareTo(Match match, EQDOCRangeTo rTo) throws DataFormatException {
 		Comparison comp;
 		if (rTo.getOperator() != null)
 			comp = (Comparison) vocabMap.get(rTo.getOperator());
 		else
 			comp = Comparison.EQUAL;
 		String value = rTo.getValue().getValue();
-		String units=null;
-		if (rTo.getValue().getUnit()!=null)
-			units= rTo.getValue().getUnit().value();
-			if (rTo.getValue().getRelation() != null && rTo.getValue().getRelation() == VocRelation.RELATIVE) {
-				Function function = getTimeDiff(units, match, "$referenceDate");
-				match.setValueCompare(new Compare()
-					.setComparison(comp)
-					.setValue(value));
-					match.setFunction(function);
-			} else {
-				match.setValueCompare(new Compare()
-					.setComparison(comp)
-					.setValue(value));
-			}
+		String units = null;
+		if (rTo.getValue().getUnit() != null)
+			units = rTo.getValue().getUnit().value();
+		VocRelation relation = VocRelation.ABSOLUTE;
+		if (rTo.getValue().getRelation() != null && rTo.getValue().getRelation() == VocRelation.RELATIVE) {
+			relation = VocRelation.RELATIVE;
+		}
+		setCompare(match, comp, value, units, relation,false);
 	}
 
 
-	private Function getTimeDiff(String units,Filter match,String compareAgainst){
-		Function function=null;
-		if (compareAgainst!=null) {
-			function = new Function().setId(TTIriRef.iri(IM.NAMESPACE + "TimeDifference").setName("Time Difference"));
-			function.addArgument(new Argument().setParameter("units").setValue(units));
-			if (match.getFunction()!=null)
-				function.addArgument(new Argument().setParameter("firstDate").setFunctionValue(match.getFunction()));
-			else
-				function.addArgument(new Argument().setParameter("firstDate").setValue("$this"));
-			function.addArgument(new Argument().setParameter("secondDate").setValue(compareAgainst));
-		}
+	private Function getTimeDiff(String units,String first,String second){
+		Function 	function = new Function().setId(TTIriRef.iri(IM.NAMESPACE + "TimeDifference")
+				.setName("Time Difference"));
+			function.addArgument(new Argument().setParameter("units").setValueData(units));
+			function.addArgument(new Argument().setParameter("firstDate").setValueVariable(first));
+			function.addArgument(new Argument().setParameter("secondDate").setValueVariable(second));
 		return function;
 	}
 
-	private void setRangeCompare(Filter match, EQDOCRangeFrom rFrom,EQDOCRangeTo rTo) {
+	private void setRangeCompare(Match match, EQDOCRangeFrom rFrom,EQDOCRangeTo rTo) throws DataFormatException {
 		Range range= new Range();
-		match.setValueRange(range);
+		match.setInRange(range);
 		Comparison fromComp;
 		if (rFrom.getOperator() != null)
 			fromComp = (Comparison) vocabMap.get(rFrom.getOperator());
@@ -831,16 +795,24 @@ public class EqdToTT {
 		if (rFrom.getValue().getUnit()!=null)
 			units= rFrom.getValue().getUnit().value();
 		if (rFrom.getValue().getRelation() != null && rFrom.getValue().getRelation() == VocRelation.RELATIVE) {
-				Function function = getTimeDiff(units, match, "$referenceDate");
+				Function function = getTimeDiff(units, "$this", "$referenceDate");
 				range.setFrom(new Compare()
 					.setComparison(fromComp)
-					.setValue(fromValue));
+					.setValueData(fromValue));
 					match.setFunction(function);
 		}
 		else {
 			range.setFrom(new Compare()
 				.setComparison(fromComp)
-				.setValue(fromValue));
+				.setValueData(fromValue));
+			if (match.getProperty().equals(TTIriRef.iri(IM.NAMESPACE+"age"))){
+				if (units==null)
+					throw new DataFormatException("missing units from age");
+				match.setFunction(new Function()
+					.addArgument(new Argument()
+						.setParameter("units")
+						.setValueData(units)));
+			}
 		}
 
 		Comparison toComp;
@@ -853,16 +825,16 @@ public class EqdToTT {
 		if (rTo.getValue().getUnit()!=null)
 			units= rTo.getValue().getUnit().value();
 		if (rTo.getValue().getRelation()!=null && rTo.getValue().getRelation() == VocRelation.RELATIVE) {
-			Function function = getTimeDiff(units, match, "$referenceDate");
+			Function function = getTimeDiff(units, "$referenceDate", "$this");
 			range.setTo(new Compare()
 				.setComparison(toComp)
-				.setValue(toValue));
+				.setValueData(toValue));
 				match.setFunction(function);
 		}
 		else {
 			range.setTo(new Compare()
 				.setComparison(toComp)
-				.setValue(toValue));
+				.setValueData(toValue));
 		}
 
 	}
@@ -875,40 +847,39 @@ public class EqdToTT {
 		return (String) target;
 	}
 
-	private void convertLinkedCriterion(String eqTable,EQDOCLinkedCriterion eqLinked, Filter entity) throws DataFormatException, IOException {
+	private void convertLinkedCriterion(String eqTable,EQDOCLinkedCriterion eqLinked, Match entity) throws DataFormatException, IOException {
 		EQDOCCriterion eqTargetCriterion= eqLinked.getCriterion();
 		Within within= new Within();
-		Filter linkTarget= new Filter();
+		Match linkTarget= new Match();
 		within.setTargetFilter(linkTarget);
 		convertCriterion(eqTargetCriterion,linkTarget,"DATE");
-		linkTarget= linkTarget.getValueObject();
+		linkTarget= linkTarget.getMatch();
 		EQDOCRelationship eqRel = eqLinked.getRelationship();
 
-		Filter linkProperty= findLinkProperty(eqTable,eqRel.getParentColumn(),entity);
+		Match linkProperty= findLinkProperty(eqTable,eqRel.getParentColumn(),entity);
 
-		linkProperty.setValueWithin(within);
+		linkProperty.setWithin(within);
 		String units= eqRel.getRangeValue().getRangeFrom().getValue().getUnit().value();
 		VocRangeFromOperator eqOp= eqRel.getRangeValue().getRangeFrom().getOperator();
 		String value= eqRel.getRangeValue().getRangeFrom().getValue().getValue();
-		String firstDate= linkProperty.getValueVar();
 		String secondDate= linkTarget.getAnd().get(0).getValueVar();
-		Function function= getTimeDiff(units,linkProperty,secondDate);
+		Function function= getTimeDiff(units,linkProperty.getValueVar(),secondDate);
 		within.setCompare(new Compare()
 			.setComparison((Comparison) vocabMap.get(eqOp))
-			.setValue(value));
+			.setValueData(value));
 			within.setFunction(function);
 	}
 
-	private Filter findLinkProperty(String eqTable,String parentColumn,Filter entity) throws IOException {
+	private Match findLinkProperty(String eqTable,String parentColumn,Match entity) throws IOException {
 		String predicate= (String) dataMap.get(eqTable+slash+ parentColumn);
 		TTIriRef property= getIri(IM.NAMESPACE+predicate);
 		if (entity.getAnd()!=null){
-			for (Filter match:entity.getAnd()){
+			for (Match match:entity.getAnd()){
 				if (match.getProperty().equals(property))
 					return match;
 			}
 		}
-		Filter linkFilter= new Filter();
+		Match linkFilter= new Match();
 		entity.addAnd(linkFilter);
 		linkFilter.setProperty(property);
 		varCounter++;
@@ -1007,9 +978,7 @@ public class EqdToTT {
 					}
 				}
 			}
-//			else if (i==2){
-//				vsetName.append(".. and more ...");
-//			}
+
 			Set<TTIriRef> concepts = getValue(scheme, ev);
 			if (concepts != null) {
 				setContent.addAll(new ArrayList<>(concepts));
@@ -1043,71 +1012,6 @@ public class EqdToTT {
 			valueSets.get(iri).addObject(IM.USED_IN,TTIriRef.iri("urn:uuid:"+ activeReport));
 		}
 	}
-
-	/*
-	private TTIriRef getValueSet(EQDOCValueSet vs) throws DataFormatException, IOException {
-		TTEntity valueSet = new TTEntity();
-		TTIriRef iri = TTIriRef.iri("urn:uuid:" + UUID.randomUUID());
-		StringBuilder vsetName = new StringBuilder();
-		if (vs.getDescription()!=null)
-			vsetName = new StringBuilder(vs.getDescription());
-		valueSet.setIri(iri.getIri());
-		valueSet.addType(IM.CONCEPT_SET);
-		VocCodeSystemEx scheme = vs.getCodeSystem();
-		if (vs.getValues().size() == 1) {
-			if (vsetName.length() == 0)
-				vsetName.append(vs.getValues().get(0).getDisplayName());
-			Set<TTIriRef> concepts= getValue(scheme,vs.getValues().get(0));
-			if (concepts!=null) {
-				if (concepts.size()==1)
-					valueSet.addObject(IM.DEFINITION, concepts.stream().findFirst().get());
-				else {
-					TTNode ors= new TTNode();
-					valueSet.addObject(IM.DEFINITION,ors);
-					concepts.forEach(v-> ors.addObject(SHACL.OR,v));
-				}
-			}
-		} else {
-			int i=0;
-			for (EQDOCValueSetValue ev : vs.getValues()) {
-				i++;
-				if (i < 10) {
-					if (vsetName.length() != 0)
-						vsetName.append(", ");
-					vsetName.append(ev.getDisplayName());
-				} else if (i == 10)
-					vsetName.append("..more");
-				Set<TTIriRef> concepts = getValue(scheme, ev);
-				if (concepts!=null) {
-					if (concepts.size()==1)
-						valueSet.addObject(IM.DEFINITION, concepts.stream().findFirst().get());
-					else {
-						TTNode ors= new TTNode();
-						valueSet.addObject(IM.DEFINITION,ors);
-						concepts.forEach(v-> ors.addObject(SHACL.OR,v));
-					}
-				}
-				else
-					System.err.println("Missing \t"+ ev.getValue()+"\t " + ev.getDisplayName());
-			}
-		}
-		if (vsetName.length() > 0) {
-			iri.setName(vsetName.toString());
-			valueSet.setName(iri.getName());
-		}
-
-		TTEntity duplicateOf = getDuplicateSet(valueSet);
-		if (duplicateOf!=null){
-			iri= TTIriRef.iri(duplicateOf.getIri());
-			iri.setName(duplicateOf.getName());
-			return iri;
-		}
-		valueSet.addObject(IM.USED_IN,TTIriRef.iri(reportMap.get(activeReport).getIri()));
-		document.addEntity(valueSet);
-		valueSets.add(valueSet);
-		return iri;
-	}
-	*/
 
 	private Set<TTIriRef> getValue(VocCodeSystemEx scheme,EQDOCValueSetValue ev) throws DataFormatException, IOException {
 		return getValue(scheme, ev.getValue(),ev.getDisplayName(),ev.getLegacyValue());
@@ -1201,11 +1105,11 @@ public class EqdToTT {
 
 
 
-	private void setFrom(Filter match, TTIriRef parent) {
-		Filter cohortMatch= new Filter();
+	private void setFrom(Match match, TTIriRef parent) {
+		Match cohortMatch= new Match();
 		match.addAnd(cohortMatch);
 		cohortMatch.setProperty(TTIriRef.iri(IM.IN_RESULT_SET.getIri(),"in result set of"));
-		cohortMatch.addValueIn(parent);
+		cohortMatch.addInSet(parent);
 	}
 
 

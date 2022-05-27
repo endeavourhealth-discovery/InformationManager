@@ -39,33 +39,33 @@ public class CoreQueryImporter implements TTImport {
 			.setName("Patients registered for GMS services on the reference date")
 			.setDescription("For any registration period,a registration start date before the reference date and no end date," +
 				"or an end date after the reference date.");
-		DataSet prof= new DataSet();
+		Query prof= new Query();
 		prof.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Person"));
 		prof.setIri(qry.getIri());
 		prof.setName(qry.getName());
 		prof.setDescription(qry.getDescription());
 		prof.setSelect(new Select()
 				.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"))
-			.setFilter(new Filter()
+			.setMatch(new Match()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE+"isSubjectOf").setName("has GP registration"))
-				.setValueObject(new Filter()
+				.setMatch(new Match()
 			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
-			.addAnd(new Filter()
+			.addAnd(new Match()
 				.setName("patient type is regular GMS Patient")
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "patientType"))
-				.addValueConcept(ConceptRef.iri(IM.GMS_PATIENT.getIri(),"Regular GMS patient")))
-			.addAnd(new Filter()
+				.addIsConcept(ConceptRef.iri(IM.GMS_PATIENT.getIri(),"Regular GMS patient")))
+			.addAnd(new Match()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "effectiveDate"))
 				.setName("start of registration is before the reference date")
-				.setValueCompare(Comparison.LESS_THAN_OR_EQUAL, "$ReferenceDate"))
-			.addOr(new Filter()
+				.setValue(Comparison.LESS_THAN_OR_EQUAL, "$ReferenceDate"))
+			.addOr(new Match()
 				.setNotExist(true)
 				.setName("the registration has not ended ")
 					.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate")))
-			.addOr(new Filter()
+			.addOr(new Match()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate"))
 				.setName("the end of registration is after the reference date")
-				.setValueCompare(Comparison.GREATER_THAN, "$ReferenceDate")))));
+				.setValue(Comparison.GREATER_THAN, "$ReferenceDate")))));
 
 		qry.set(IM.DEFINITION,TTLiteral.literal(prof.getasJson()));
 		qry.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_StandardCohorts"));
@@ -115,7 +115,7 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 
-	private void outputQuery(DataSet qry) throws IOException {
+	private void outputQuery(Query qry) throws IOException {
 		if ( ImportApp.testDirectory!=null) {
 			String directory = ImportApp.testDirectory.replace("%", " ");
 			try (FileWriter writer = new FileWriter(directory + "\\Core-qry.json")) {
