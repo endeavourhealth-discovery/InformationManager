@@ -622,7 +622,7 @@ public class EqdToTT {
 		OrderLimit sort= new OrderLimit();
 		matchEntity.setOrderLimit(sort);
 		String predicatePath= (String) dataMap.get(eqTable+slash+ linkColumn);
-		sort.setOrderBy(getIri(IM.NAMESPACE+predicatePath));
+		sort.setOrderBy(new Alias(getIri(IM.NAMESPACE+predicatePath)));
 		sort.setCount(1);
 		EQDOCFilterRestriction restrict = eqCriterion.getFilterAttribute().getRestriction();
 		if (restrict.getColumnOrder().getColumns().get(0).getDirection() == VocOrderDirection.ASC)
