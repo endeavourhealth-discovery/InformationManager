@@ -2,6 +2,7 @@ package org.endeavourhealth.informationmanager.transforms.preload;
 
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
+import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
@@ -99,6 +100,8 @@ public class Preload {
 			deltaImporter.importData(cfg);
 		TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
 		closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
+		System.out.println("expanding value sets");
+		new SetExpander().expandAllSets();
 		System.out.println("Finished - " + (new Date()));
 		System.exit(0);
 	}

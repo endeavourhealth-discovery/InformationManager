@@ -12,6 +12,7 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -52,7 +53,7 @@ public class CoreQueryImporter implements TTImport {
 			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
 			.addAnd(new Match()
 				.setName("patient type is regular GMS Patient")
-				.setProperty(TTIriRef.iri(IM.NAMESPACE + "patientType"))
+				.setProperty(TTIriRef.iri(IM.NAMESPACE + "gpPatientType"))
 				.addIsConcept(ConceptRef.iri(IM.GMS_PATIENT.getIri(),"Regular GMS patient")))
 			.addAnd(new Match()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "effectiveDate"))

@@ -37,8 +37,6 @@ public class EqdToTT {
 	private final String slash = "/";
 	private TTIriRef fieldGroupFolder;
 	private TTIriRef valueSetFolder;
-	private boolean needsDob;
-	private String dobVar;
 	private Map<String,String> propertyVar;
 	private final Map<String,Match> varMatch = new HashMap<>();
 	private final Map<String,Set<TTIriRef>> valueMap= new HashMap<>();
@@ -503,7 +501,6 @@ public class EqdToTT {
 													 Match match) throws DataFormatException, IOException {
 
 		dateMatch = null;
-		needsDob=false;
 		if ((eqCriteria.getPopulationCriterion() != null)) {
 			EQDOCSearchIdentifier srch = eqCriteria.getPopulationCriterion();
 			match.setProperty(ConceptRef.iri(IM.IN_RESULT_SET).setName("subset of"));
@@ -564,13 +561,7 @@ public class EqdToTT {
 				}
 			}
 		}
-		if (needsDob){
-				Match dobFilter= new Match();
-				match.addAnd(dobFilter);
-				dobFilter.setProperty(getIri(IM.NAMESPACE+"dateOfBirth"));
-				dobFilter.setValueVar(dobVar);
-				varMatch.put(dobVar,dobFilter);
-		}
+
 
 		if (eqCriterion.getLinkedCriterion()!=null) {
 			convertLinkedCriterion(eqTable,eqCriterion.getLinkedCriterion(),
@@ -608,7 +599,7 @@ public class EqdToTT {
 		String date= fieldPath.substring(fieldPath.lastIndexOf("/")+1);
 		subFilter.setProperty(getIri(IM.NAMESPACE+date));
 		varCounter++;
-		subFilter.setValueVar(date+varCounter);
+		subFilter.getProperty().setAlias(date+varCounter);
 		dateMatch= date+varCounter;
 		propertyVar.put(fieldPath,date+varCounter);
 		varMatch.put(date+varCounter,subFilter);
@@ -638,7 +629,7 @@ public class EqdToTT {
 		for (String eqColumn : cv.getColumn()) {
 			setPropertyValue(cv, eqTable, eqColumn, match);
 			if (eqColumn.contains("DATE"))
-				dateMatch= match.getValueVar();
+				dateMatch= match.getProperty().getAlias();
 		}
 	}
 
@@ -650,7 +641,7 @@ public class EqdToTT {
 		match.setProperty(getIri(IM.NAMESPACE+ predicate));
 		VocColumnValueInNotIn in= cv.getInNotIn();
 		varCounter++;
-		match.setValueVar(predicate+varCounter);
+		match.getProperty().setAlias(predicate+varCounter);
 		propertyVar.put(predPath,predicate+varCounter);
 		varMatch.put(predicate+varCounter,match);
 		boolean notIn= (in== VocColumnValueInNotIn.NOTIN);
@@ -862,8 +853,8 @@ public class EqdToTT {
 		String units= eqRel.getRangeValue().getRangeFrom().getValue().getUnit().value();
 		VocRangeFromOperator eqOp= eqRel.getRangeValue().getRangeFrom().getOperator();
 		String value= eqRel.getRangeValue().getRangeFrom().getValue().getValue();
-		String secondDate= linkTarget.getAnd().get(0).getValueVar();
-		Function function= getTimeDiff(units,linkProperty.getValueVar(),secondDate);
+		String secondDate= linkTarget.getAnd().get(0).getProperty().getAlias();
+		Function function= getTimeDiff(units,linkProperty.getProperty().getAlias(),secondDate);
 		within.setCompare(new Compare()
 			.setComparison((Comparison) vocabMap.get(eqOp))
 			.setValueData(value));
@@ -883,7 +874,7 @@ public class EqdToTT {
 		entity.addAnd(linkFilter);
 		linkFilter.setProperty(property);
 		varCounter++;
-		linkFilter.setValueVar(predicate+varCounter);
+		linkFilter.getProperty().setAlias(predicate+varCounter);
 		return linkFilter;
 	}
 
