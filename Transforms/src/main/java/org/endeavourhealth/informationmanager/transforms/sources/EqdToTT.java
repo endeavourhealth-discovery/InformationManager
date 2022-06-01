@@ -25,7 +25,6 @@ import java.util.zip.DataFormatException;
 
 public class EqdToTT {
 	private static  Map<String,String> reportNames;
-	private static final Map<TTIriRef,TTEntity> valueSets = new HashMap<>();
 	private static final Set<String> roles= new HashSet<>();
 	private static final Set<TTIriRef> fieldGroups = new HashSet<>();
 	private TTIriRef owner;
@@ -672,15 +671,18 @@ public class EqdToTT {
 				String vsetName="Unknown code set";
 				if (labels.get(vset)!=null)
 					vsetName= (String) labels.get(vset);
+				TTIriRef iri= TTIriRef.iri("urn:uuid:" + vset).setName(vsetName);
 				if (!notIn)
-					match.addInSet(TTIriRef.iri("urn:uuid:" + vset).setName(vsetName));
+					match.addInSet(iri);
 				else
-					match.addNotInSet(TTIriRef.iri("urn:uuid:" + vset).setName(vsetName));
+					match.addNotInSet(iri);
+				storeLibraryItem(iri);
 			}
 		}
 		else if (cv.getRangeValue()!=null){
 			setRangeValue(cv.getRangeValue(),match);
 		}
+
 	}
 
 
@@ -984,10 +986,23 @@ public class EqdToTT {
 		return TTIriRef.iri("urn:uuid:"+vs.getId()).setName(vsetName.toString());
 	}
 
+	private void storeLibraryItem(TTIriRef iri){
+		if (!CEGImporter.valueSets.containsKey(iri)){
+			TTEntity conceptSet= new TTEntity()
+				.setIri(iri.getIri())
+				.addType(IM.CONCEPT_SET)
+				.setName(iri.getName());
+			conceptSet.addObject(IM.IS_CONTAINED_IN,valueSetFolder);
+			conceptSet.addObject(IM.USED_IN,TTIriRef.iri("urn:uuid:"+ activeReport));
+			document.addEntity(conceptSet);
+			CEGImporter.valueSets.put(iri,conceptSet);
+		}
+	}
+
 	private void storeValueSet(EQDOCValueSet vs, List<TTIriRef> valueSet,String vSetName) {
 		if (vs.getId()!=null){
 			TTIriRef iri= TTIriRef.iri("urn:uuid:"+vs.getId()).setName(vSetName);
-			if (!valueSets.containsKey(iri)){
+			if (!CEGImporter.valueSets.containsKey(iri)){
 				TTEntity conceptSet= new TTEntity()
 					.setIri(iri.getIri())
 					.addType(IM.CONCEPT_SET)
@@ -998,9 +1013,9 @@ public class EqdToTT {
 				for (TTIriRef member:valueSet)
 					ors.addObject(SHACL.OR,member);
 				document.addEntity(conceptSet);
-				valueSets.put(iri,conceptSet);
+				CEGImporter.valueSets.put(iri,conceptSet);
 			}
-			valueSets.get(iri).addObject(IM.USED_IN,TTIriRef.iri("urn:uuid:"+ activeReport));
+			CEGImporter.valueSets.get(iri).addObject(IM.USED_IN,TTIriRef.iri("urn:uuid:"+ activeReport));
 		}
 	}
 

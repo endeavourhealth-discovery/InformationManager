@@ -29,11 +29,13 @@ public class CEGImporter implements TTImport {
 	private TTEntity owner;
 	private final Set<TTEntity> allEntities = new HashSet<>();
 
+
 	private static final String[] queries = {".*\\\\CEGQuery"};
 	private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
 	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
+	public static final Map<TTIriRef,TTEntity> valueSets= new HashMap<>();
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
@@ -49,6 +51,7 @@ public class CEGImporter implements TTImport {
 		 CEGEthnicityImport ethnicImport= new CEGEthnicityImport();
 		ethnicImport.importData(config);
 		createFolders();
+
 
 		loadAndConvert(config.getFolder());
 		WrapAsJson();

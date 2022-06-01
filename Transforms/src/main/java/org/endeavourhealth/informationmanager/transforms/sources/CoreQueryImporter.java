@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 public class CoreQueryImporter implements TTImport {
+
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager = new TTManager();
