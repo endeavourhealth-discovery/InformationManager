@@ -1045,6 +1045,7 @@ public class EqdToTT {
 			schemes.add(IM.CODE_SCHEME_EMIS.getIri());
 			Set<TTIriRef> snomed= valueMap.get(originalCode);
 			if (snomed==null) {
+
 				snomed= getCoreFromCode(originalCode,schemes);
 				if (snomed==null)
 					if (legacyCode!=null)
