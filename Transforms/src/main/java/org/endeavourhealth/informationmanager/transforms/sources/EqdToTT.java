@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InvalidClassException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 
 public class EqdToTT {
@@ -226,9 +227,8 @@ public class EqdToTT {
 		select.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"));
 		select.setMatch(mainFilter);
 		mainFilter.setEntityType(getIri(IM.NAMESPACE+"Person"));
-		mainFilter.setProperty(getIri(IM.IN_RESULT_SET.getIri()));
 		for (String popId:auditReport.getPopulation()){
-			mainFilter.addInSet(TTIriRef.iri("urn:uuid:"+ popId).setName(reportNames.get(popId)));
+			mainFilter.addEntityInSet(TTIriRef.iri("urn:uuid:"+ popId).setName(reportNames.get(popId)));
 		}
 		PropertySelect property= new PropertySelect();
 		select.addProperty(property);
@@ -502,8 +502,7 @@ public class EqdToTT {
 		dateMatch = null;
 		if ((eqCriteria.getPopulationCriterion() != null)) {
 			EQDOCSearchIdentifier srch = eqCriteria.getPopulationCriterion();
-			match.setProperty(ConceptRef.iri(IM.IN_RESULT_SET).setName("subset of"));
-			match.addInSet(TTIriRef.iri("urn:uuid:" + srch.getReportGuid())
+			match.addEntityInSet(TTIriRef.iri("urn:uuid:" + srch.getReportGuid())
 					.setName(reportNames.get(srch.getReportGuid())));
 		}
 		else {
@@ -767,7 +766,7 @@ public class EqdToTT {
 
 
 	private Function getTimeDiff(String units,String first,String second){
-		Function 	function = new Function().setId(TTIriRef.iri(IM.NAMESPACE + "TimeDifference")
+		Function 	function = new Function().setIri(TTIriRef.iri(IM.NAMESPACE + "TimeDifference")
 				.setName("Time Difference"));
 			function.addArgument(new Argument().setParameter("units").setValueData(units));
 			function.addArgument(new Argument().setParameter("firstDate").setValueVariable(first));
@@ -911,11 +910,11 @@ public class EqdToTT {
 
 	 */
 
-	private List<TTIriRef> getExceptionSet(EQDOCException set) throws DataFormatException, IOException {
-		List<TTIriRef> valueSet = new ArrayList<>();
+	private List<ConceptRef> getExceptionSet(EQDOCException set) throws DataFormatException, IOException {
+		List<ConceptRef> valueSet = new ArrayList<>();
 		VocCodeSystemEx scheme= set.getCodeSystem();
 		for (EQDOCExceptionValue ev:set.getValues()) {
-			Set<TTIriRef> values = getValue(scheme, ev.getValue(), ev.getDisplayName(), ev.getLegacyValue());
+			Set<ConceptRef> values = getValue(scheme, ev.getValue(), ev.getDisplayName(), ev.getLegacyValue());
 			if (values != null) {
 				valueSet.addAll(new ArrayList<>(values));
 			} else
@@ -939,9 +938,9 @@ public class EqdToTT {
 		List<ConceptRef> setContent = new ArrayList<>();
 		VocCodeSystemEx scheme = vs.getCodeSystem();
 		for (EQDOCValueSetValue ev : vs.getValues()) {
-			Set<TTIriRef> concepts = getValue(scheme, ev);
+			Set<ConceptRef> concepts = getValue(scheme, ev);
 			if (concepts != null) {
-				for (TTIriRef iri:concepts){
+				for (ConceptRef iri:concepts){
 					ConceptRef conRef= new ConceptRef(iri.getIri(),iri.getName());
 					conRef.setIncludeSubtypes(true);
 					setContent.add(conRef);
@@ -972,7 +971,7 @@ public class EqdToTT {
 				}
 			}
 
-			Set<TTIriRef> concepts = getValue(scheme, ev);
+			Set<ConceptRef> concepts = getValue(scheme, ev);
 			if (concepts != null) {
 				setContent.addAll(new ArrayList<>(concepts));
 			} else
@@ -1019,11 +1018,11 @@ public class EqdToTT {
 		}
 	}
 
-	private Set<TTIriRef> getValue(VocCodeSystemEx scheme,EQDOCValueSetValue ev) throws DataFormatException, IOException {
+	private Set<ConceptRef> getValue(VocCodeSystemEx scheme,EQDOCValueSetValue ev) throws DataFormatException, IOException {
 		return getValue(scheme, ev.getValue(),ev.getDisplayName(),ev.getLegacyValue());
 	}
 
-	private Set<TTIriRef> getValue(VocCodeSystemEx scheme, String originalCode,
+	private Set<ConceptRef> getValue(VocCodeSystemEx scheme, String originalCode,
 																 String originalTerm,String legacyCode) throws DataFormatException, IOException {
 		if (scheme== VocCodeSystemEx.EMISINTERNAL) {
 			String key = "EMISINTERNAL/" + originalCode;
@@ -1035,7 +1034,7 @@ public class EqdToTT {
 					iri.setName(name);
 				Set<TTIriRef> result= new HashSet<>();
 				result.add(iri);
-				return result;
+				return result.stream().map(ConceptRef::new).collect(Collectors.toSet());
 			}
 			else
 				throw new DataFormatException("unmapped emis internal code : "+key);
@@ -1061,7 +1060,10 @@ public class EqdToTT {
 				if (snomed != null)
 					valueMap.put(originalCode, snomed);
 			}
-			return snomed;
+			if (snomed!=null)
+			 return snomed.stream().map(ConceptRef::new).collect(Collectors.toSet());
+			else
+				return null;
 		}
 		else
 			throw new DataFormatException("code scheme not recognised : "+scheme.value());
@@ -1112,10 +1114,7 @@ public class EqdToTT {
 
 
 	private void setFrom(Match match, TTIriRef parent) {
-		Match cohortMatch= new Match();
-		match.addAnd(cohortMatch);
-		cohortMatch.setProperty(TTIriRef.iri(IM.IN_RESULT_SET.getIri(),"in result set of"));
-		cohortMatch.addInSet(parent);
+		match.addEntityInSet(parent);
 	}
 
 
