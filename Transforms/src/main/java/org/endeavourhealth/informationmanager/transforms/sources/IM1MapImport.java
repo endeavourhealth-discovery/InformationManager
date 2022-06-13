@@ -80,7 +80,7 @@ public class IM1MapImport implements TTImport {
         int count = 0;
         try (BufferedReader reader= new BufferedReader(new FileReader(file.toFile()))) {
             writer= new FileWriter(file.toFile().getParentFile().toString()+"\\UnmappedConcepts.txt");
-            writer.write("oldIri\tterm\tscheme\tcode\n");
+            writer.write("oldIri"+ "\t" + "term" + "\t" + "im1Scheme" + "\t" + "code" + "\t" + "description" + "\t" + "used"+ "\n");
             reader.readLine();
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
@@ -91,6 +91,8 @@ public class IM1MapImport implements TTImport {
                 }
                 Integer dbid= Integer.parseInt(fields[0]);
                 String oldIri = fields[1];
+                if (oldIri.equals("DM_criticalCareAdmType"))
+                    System.out.println("");
                 IdToDbid.put(oldIri,dbid);
                 String term=fields[2];
                 String description= fields[3];
@@ -392,6 +394,7 @@ public class IM1MapImport implements TTImport {
 
     private void checkEntity(String scheme, String lname, String im1Scheme,String term, String code, String oldIri,
                              String description) throws IOException {
+
         if (entities.containsKey(scheme+lname)) {
             addIM1id(scheme + lname, oldIri);
         }
@@ -467,6 +470,7 @@ public class IM1MapImport implements TTImport {
         if (used.containsKey(oldIri))
             entity.set(IM.USAGE_TOTAL,TTLiteral.literal(used.get(oldIri)));
         document.addEntity(entity);
+        oldIriEntity.put(oldIri,entity);
         return entity;
     }
     private void addIM1id(String iri,String oldIri){
@@ -577,7 +581,7 @@ public class IM1MapImport implements TTImport {
                         String lname= targetProperty.split("_")[1];
                         if (!entities.containsKey(IM.NAMESPACE+lname)) {
                             propertyEntity = addNewEntity(IM.NAMESPACE + lname,
-                              null, getTerm(lname), null, "CM_DiscoveryCode", oldIri, null, RDF.PROPERTY);
+                              null, getTerm(lname), null, "CM_DiscoveryCode", targetProperty, null, RDF.PROPERTY);
                             propertyIri= TTIriRef.iri(propertyEntity.getIri());
                             propertyEntity.addObject(RDFS.SUBPROPERTYOF, TTIriRef.iri(IM.NAMESPACE+"DataModelObjectProperty"));
                         }
@@ -654,6 +658,7 @@ public class IM1MapImport implements TTImport {
         system=system.split("_")[2];
         if (oldIri.startsWith("CM_"))
             oldIri= oldIri.split("_")[1];
+
         TTEntity entity= new TTEntity()
           .setGraph(newScheme)
           .setIri(newScheme.getIri()+oldIri)

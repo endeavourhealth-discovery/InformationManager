@@ -54,7 +54,7 @@ public class CoreQueryImporter implements TTImport {
 			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
 			.addAnd(new Match()
 				.setName("patient type is regular GMS Patient")
-				.setProperty(TTIriRef.iri(IM.NAMESPACE + "gpPatientType"))
+				.setProperty(TTIriRef.iri(IM.NAMESPACE + "patientType"))
 				.addIsConcept(ConceptRef.iri(IM.GMS_PATIENT.getIri(),"Regular GMS patient")))
 			.addAnd(new Match()
 				.setProperty(TTIriRef.iri(IM.NAMESPACE + "effectiveDate"))
@@ -69,7 +69,7 @@ public class CoreQueryImporter implements TTImport {
 				.setName("the end of registration is after the reference date")
 				.setValue(Comparison.GREATER_THAN, "$ReferenceDate")))));
 
-		qry.set(IM.DEFINITION,TTLiteral.literal(prof.getasJson()));
+		qry.set(IM.QUERY_DEFINITON,TTLiteral.literal(prof.getasJson()));
 		qry.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_StandardCohorts"));
 		document.addEntity(qry);
 		document.setContext(TTUtil.getDefaultContext());

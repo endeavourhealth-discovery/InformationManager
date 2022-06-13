@@ -171,8 +171,9 @@ public class CEGEthnicityImport implements TTImport {
                 .setCode(cat16)
                 .setScheme(IM.GRAPH_CEG_QUERY)
                 .setDescription("QMUL CEG 16+ Ethnic category "+cat16)
+							.set(IM.IS_SUBSET_OF,TTIriRef.iri(cegSet.getIri()))
                 .set(IM.DEFINITION,new TTNode().set(SHACL.OR, new TTArray()));
-            cegSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(cegSubset.getIri()));
+            //cegSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(cegSubset.getIri()));
             document.addEntity(cegSubset);
             cegCatMap.put(cat16,cegSubset);
         }
@@ -188,8 +189,9 @@ public class CEGEthnicityImport implements TTImport {
                 .addType(IM.CONCEPT_SET)
                     .setName("Concept set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
                 .setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
+									.set(IM.IS_SUBSET_OF,TTIriRef.iri(nhsSet.getIri()))
                     .set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
-                nhsSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(nhsSubset.getIri()));
+                //nhsSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(nhsSubset.getIri()));
                 nhsDocument.addEntity(nhsSubset);
                 nhsCatmap.put(snoNhs, nhsSubset);
             }
