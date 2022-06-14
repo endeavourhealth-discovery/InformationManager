@@ -178,7 +178,7 @@ public class EqdToTT {
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 			String json = objectMapper.writeValueAsString(profile);
-			entity.set(IM.QUERY_DEFINITON, TTLiteral.literal(json));
+			entity.set(IM.QUERY_DEFINITION, TTLiteral.literal(json));
 		}
 		if (eqReport.getListReport() != null) {
 			entity.addType(IM.QUERY);
@@ -200,7 +200,7 @@ public class EqdToTT {
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 			String json = objectMapper.writeValueAsString(set);
-			entity.set(IM.QUERY_DEFINITON, TTLiteral.literal(json));
+			entity.set(IM.QUERY_DEFINITION, TTLiteral.literal(json));
 		}
 		if (eqReport.getAuditReport() != null) {
 			entity.addType(IM.QUERY);
@@ -215,7 +215,7 @@ public class EqdToTT {
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 			String json = objectMapper.writeValueAsString(set);
-			entity.set(IM.QUERY_DEFINITON, TTLiteral.literal(json));
+			entity.set(IM.QUERY_DEFINITION, TTLiteral.literal(json));
 
 		}
 		return entity;

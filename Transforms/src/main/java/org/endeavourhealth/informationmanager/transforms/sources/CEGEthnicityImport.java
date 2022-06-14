@@ -176,8 +176,9 @@ public class CEGEthnicityImport implements TTImport {
             //cegSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(cegSubset.getIri()));
             document.addEntity(cegSubset);
             cegCatMap.put(cat16,cegSubset);
+
         }
-				
+
         cegSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
         if (cegSubset.get(IM.HAS_TERM_CODE)==null)
             TTManager.addTermCode(cegSubset,catTerm,null);

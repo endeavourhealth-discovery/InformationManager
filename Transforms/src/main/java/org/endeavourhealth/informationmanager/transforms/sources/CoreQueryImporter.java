@@ -69,7 +69,7 @@ public class CoreQueryImporter implements TTImport {
 				.setName("the end of registration is after the reference date")
 				.setValue(Comparison.GREATER_THAN, "$ReferenceDate")))));
 
-		qry.set(IM.QUERY_DEFINITON,TTLiteral.literal(prof.getasJson()));
+		qry.set(IM.QUERY_DEFINITION,TTLiteral.literal(prof.getasJson()));
 		qry.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_StandardCohorts"));
 		document.addEntity(qry);
 		document.setContext(TTUtil.getDefaultContext());

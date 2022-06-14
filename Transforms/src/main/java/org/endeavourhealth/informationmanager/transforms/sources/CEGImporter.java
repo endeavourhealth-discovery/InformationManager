@@ -96,7 +96,7 @@ public class CEGImporter implements TTImport {
 	private void WrapAsJson() throws JsonProcessingException {
 		for (TTEntity entity:document.getEntities()){
 			if (entity.isType(IM.QUERY))
-				if (entity.get(IM.DEFINITION)!=null)
+				if (entity.get(IM.QUERY_DEFINITION)!=null)
 					TTManager.wrapRDFAsJson(entity);
 
 		}
@@ -180,7 +180,7 @@ public class CEGImporter implements TTImport {
 				qDocument.addEntity(entity);
 				if (!allEntities.contains(entity)) {
 					if (entity.isType(IM.QUERY)){
-						hql.addDataSet(SetFactory.createSetModelFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
+						hql.addDataSet(SetFactory.createSetModelFromJson(entity.get(IM.QUERY_DEFINITION).asLiteral().getValue()));
 						allEntities.add(entity);
 					}
 				}
