@@ -1196,7 +1196,6 @@ public class EqdToTT {
 				else
 					match.getSubselect().getMatch().setIsConcept(main);
 				match.setNotExist(true);
-				match.setInSet(null);
 				varCounter++;
 				String date= "effectiveDate"+varCounter;
 				Match cm= new Match();
@@ -1206,6 +1205,7 @@ public class EqdToTT {
 						cm.setInSet(notFollowed);
 				else
 					cm.setIsConcept(notFollowed);
+				match.setInSet(null);
 				match.and(dm->dm
 						.property(new ConceptRef(IM.NAMESPACE+"effectiveDate").setAlias(date))
 						.value(v->v
