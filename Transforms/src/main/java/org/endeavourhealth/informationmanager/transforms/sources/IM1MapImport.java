@@ -30,14 +30,15 @@ public class IM1MapImport implements TTImport {
     private static final Map<String,TTEntity> iriToCore= new HashMap<>();
     private static final  ImportMaps importMaps = new ImportMaps();
     private static Map<String,Integer> used= new HashMap<>();
-    private static Map<Integer,Integer> usedDbid= new HashMap<>();
+    private static final Map<Integer,Integer> usedDbid= new HashMap<>();
     private FileWriter writer;
-    private String visionNamespace= "1000027";
     private final Map<String,String> oldIriTerm= new HashMap<>();
     private final Map<String,String> oldIriSnomed = new HashMap<>();
     private final Map<String,Integer> IdToDbid = new HashMap<>();
     private final Map<String, TTNode> oldIriContext= new HashMap<>();
     private final Set<String> contexts = new HashSet<>();
+    private final Set<TTEntity> valueSets= new HashSet<>();
+    private final Map<String,TTEntity> iriToSet= new HashMap<>();
 
 
 
@@ -304,6 +305,7 @@ public class IM1MapImport implements TTImport {
                             }
                         }
                         else if (scheme.equals(SNOMED.NAMESPACE)){
+                            String visionNamespace = "1000027";
                             if (getNameSpace(code).equals(visionNamespace)){
                                 scheme= IM.CODE_SCHEME_VISION.getIri();
                                 addNewEntity(scheme+code,null,term,code,im1Scheme,oldIri,description,IM.CONCEPT);
@@ -398,6 +400,13 @@ public class IM1MapImport implements TTImport {
         if (entities.containsKey(scheme+lname)) {
             addIM1id(scheme + lname, oldIri);
         }
+        if (oldIri.startsWith("CM_")){
+            String potential= oldIri.substring(oldIri.lastIndexOf("_")+1);
+            TTIriRef core= importMaps.getReferenceFromCoreTerm(getPhrase(potential));
+            if (core!=null){
+                addIM1id(core.getIri(),oldIri);
+            }
+        }
         else {
             TTEntity unassigned= new TTEntity();
             unassigned.setGraph(TTIriRef.iri(scheme));
@@ -470,6 +479,8 @@ public class IM1MapImport implements TTImport {
         if (used.containsKey(oldIri))
             entity.set(IM.USAGE_TOTAL,TTLiteral.literal(used.get(oldIri)));
         document.addEntity(entity);
+        if (oldIri.equals("CM_CritCareSrcLctn04"))
+            System.out.println("CM_CritCareSrcLctn04");
         oldIriEntity.put(oldIri,entity);
         return entity;
     }
@@ -493,6 +504,8 @@ public class IM1MapImport implements TTImport {
         }
         if (usedCount>0)
             im1.set(IM.USAGE_TOTAL,TTLiteral.literal(usedCount));
+        if (oldIri.equals("CM_CritCareSrcLctn04"))
+          System.out.println("CM_CritCareSrcLctn04");
         oldIriEntity.put(oldIri,im1);
         document.addEntity(im1);
     }
@@ -556,6 +569,8 @@ public class IM1MapImport implements TTImport {
                         sourceValue=null;
                     String oldIri1= fields[8];
                     String headerCode= fields[9];
+                    if (headerCode.equals("NULL"))
+                        headerCode=null;
                     String regex= fields[10];
                     if (regex.equals("NULL"))
                         regex=null;
@@ -568,11 +583,12 @@ public class IM1MapImport implements TTImport {
                     else
                     {
                         oldIri= oldIri1;
-                        if (!headerCode.equals("NULL"))
+                        if (headerCode!=null)
                             throw new IOException("value column should be null");
-                        headerCode=null;
 
                     }
+                    if (oldIri.equals("CM_CritCareSrcLctn04"))
+                        System.out.println("CM_CritCareSrcLctn04");
                     TTIriRef newScheme = getScheme(publisher,system);
                     TTNode context= new TTNode();
                     TTEntity propertyEntity= oldIriEntity.get(targetProperty);
@@ -593,21 +609,39 @@ public class IM1MapImport implements TTImport {
                         propertyIri= TTIriRef.iri(propertyEntity.getIri());
                     addContext(context,publisher,system,schema,table,field,sourceValue,regex,headerCode,propertyIri);
 
+
                     contexts.add(oldIri);
                     TTEntity entity= oldIriEntity.get(oldIri);
                     if (entity==null) {
-                        entity= addOldEntity(newScheme,oldIri,publisher,system,oldIri);
+                        entity= addOldEntity(newScheme,oldIri,publisher,system,sourceValue,headerCode,regex);
                     }
                     TTIriRef scheme= entity.getScheme();
                     if (scheme!=null)
                         if (!scheme.equals(SNOMED.GRAPH_SNOMED)&&(!scheme.equals(IM.CODE_SCHEME_DISCOVERY))) {
-                            entity.set(IM.HAS_SOURCE_CONTEXT, context);
+                            entity.set(IM.SOURCE_CONTEXT, context);
                     }
+               //     bindToSet(propertyIri.getIri(),entity.getIri());
 
                     line = reader.readLine();
                 }
             }
         }
+    }
+
+    private void bindToSet(String propertyIri, String iri) {
+        if (propertyIri.equals(IM.NAMESPACE+"concept"))
+            return;
+        String lname= propertyIri.substring(propertyIri.lastIndexOf("#")+1);
+        String setIri= 	IM.NAMESPACE+ "VSET_"+ (lname.substring(0, 1).toUpperCase() + lname.substring(1));
+        TTEntity valueSet= iriToSet.get(setIri);
+        if (valueSet==null){
+            valueSet= new TTEntity()
+              .setCrud(IM.ADD_QUADS);
+            valueSet.set(IM.DEFINITION,new TTNode());
+            document.addEntity(valueSet);
+        }
+        valueSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(iri));
+
     }
 
     private void addContext(TTNode context, String publisher, String system, String schema, String table, String field, String sourceValue, String regex, String headerCode,TTIriRef propertyIri) {
@@ -629,7 +663,7 @@ public class IM1MapImport implements TTImport {
         for (String oldIri: oldIriEntity.keySet()){
             if (!contexts.contains(oldIri)){
                 TTEntity entity= oldIriEntity.get(oldIri);
-                if (entity.get(IM.HAS_SOURCE_CONTEXT)==null) {
+                if (entity.get(IM.SOURCE_CONTEXT)==null) {
                     TTIriRef scheme = entity.getScheme();
                     TTNode context = new TTNode();
                     if (scheme.equals(IM.CODE_SCHEME_BARTS_CERNER)){
@@ -639,6 +673,18 @@ public class IM1MapImport implements TTImport {
                 }
             }
         }
+    }
+    private static String getPhrase(String iri) {
+        iri = iri.substring(0, 1).toUpperCase() + iri.substring(1);
+        StringBuilder term= new StringBuilder();
+        term.append(iri.charAt(0));
+        for (int i=1; i<iri.length();i++){
+            if (Character.isUpperCase(iri.charAt(i))){
+                term.append(" ");
+            }
+            term.append(iri.charAt(i));
+        }
+        return term.toString();
     }
 
     private String getTerm(String lname) {
@@ -653,21 +699,44 @@ public class IM1MapImport implements TTImport {
         return term.toString();
     }
 
-    private TTEntity addOldEntity(TTIriRef newScheme, String oldIri,String publisher,String system,String value) {
+    private TTEntity addOldEntity(TTIriRef newScheme, String oldIri,String publisher,String system,String value,String headerCode,String regex) throws IOException {
+        String term=null;
+        if (headerCode!=null){
+            term= oldIriTerm.get(headerCode);
+            if (term!=null){
+                if (regex!=null){
+                   term= "Orginal term : "+ headerCode+ " parsed "+regex;
+                }
+            }
+        }
+
+
         publisher= publisher.split("_")[2];
         system=system.split("_")[2];
+        if (term==null){
+            term="Original term : "+  value+ "("+ publisher +" "+ system+")";
+        }
         if (oldIri.startsWith("CM_"))
             oldIri= oldIri.split("_")[1];
+        if (value==null)
+            value= oldIri;
 
         TTEntity entity= new TTEntity()
           .setGraph(newScheme)
           .setIri(newScheme.getIri()+oldIri)
-          .setName("Original code : "+ value+ "("+ publisher +" "+ system+")")
+          .setName(term)
           .setScheme(newScheme)
           .setCode(value)
           .set(IM.IM1ID,TTLiteral.literal(oldIri))
             .setStatus(IM.UNASSIGNED);
         document.addEntity(entity);
+        if (value!=null) {
+            String coreTerm = getPhrase(oldIri);
+            TTIriRef core = importMaps.getReferenceFromCoreTerm(coreTerm);
+            if (core != null)
+                entity.addObject(IM.MATCHED_TO, TTIriRef.iri(core.getIri()));
+        }
+
         return entity;
     }
 
