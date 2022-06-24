@@ -1,4 +1,4 @@
-package org.endeavourhealth.informationmanager.scratch.opensearch;
+package org.endeavourhealth.informationmanager.utils.opensearch;
 
 import java.io.IOException;
 
