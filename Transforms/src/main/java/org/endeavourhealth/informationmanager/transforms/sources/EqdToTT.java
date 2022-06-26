@@ -1125,26 +1125,31 @@ public class EqdToTT {
 
 	public void upgradeQuery(Query query) {
 		for (int i=0; i<query.getSelect().getMatch().size(); i++){
-			upgradeMatch(query.getSelect().getMatch().get(i),query.getSelect(),i);
+			upgradeMatch(query.getSelect().getMatch().get(i));
 		}
 	}
 
-	private void upgradeMatch(Match match,Select select,int index) {
+	private void upgradeMatch(Match match) {
 		if (match.getTestProperty() != null) {
 			if (match.getOrderLimit().getOrderBy().getIri().equals(IM.NAMESPACE + "effectiveDate")) {
 				if (match.getTestProperty().get(0).getInSet() != null) {
-					notFollowedBy(match, select, index);
+					notFollowedBy(match);
 				}
 				else if (match.getTestProperty().get(0).getIsConcept() != null) {
-					notFollowedBy(match, select, index);
+					notFollowedBy(match);
 				}
+			}
+		}
+		else if (match.getOr()!=null){
+			for (Match or:match.getOr()){
+				upgradeMatch(or);
 			}
 		}
 	}
 
 
 
-	private void notFollowedBy(Match match,Select select, int index) {
+	private void notFollowedBy(Match match) {
 		List<ConceptRef> mixed;
 		if (match.getOrderLimit() != null) {
 			if (match.getOrderLimit().getDirection() == Order.DESCENDING) {
@@ -1154,7 +1159,7 @@ public class EqdToTT {
 						if (match.getTestProperty().get(0).getInSet()!=null){
 						if (match.getTestProperty().get(0).getInSet().size() == 1) {
 							List<ConceptRef> main = match.getTestProperty().get(0).getInSet();
-							reformAsFollowed(match, main, mixed,select,index);
+							reformAsFollowed(match, main, mixed);
 						}
 						}
 					}
@@ -1166,7 +1171,7 @@ public class EqdToTT {
 							if (match.getTestProperty().get(0).getIsConcept()!=null){
 								if (match.getTestProperty().get(0).getIsConcept().size() == 1) {
 									List<ConceptRef> main = match.getTestProperty().get(0).getIsConcept();
-									reformAsFollowed(match, main, mixed,select, index);
+									reformAsFollowed(match, main, mixed);
 								}
 							}
 						}
@@ -1177,7 +1182,11 @@ public class EqdToTT {
 	}
 
 
-	private void reformAsFollowed(Match match, List<ConceptRef> main, List<ConceptRef> original,Select select, int index) {
+	private void reformAsFollowed(Match match, List<ConceptRef> main, List<ConceptRef> original) {
+		Match mainMatch= new Match();
+		match.addAnd(mainMatch);
+		mainMatch.setProperty(match.getProperty());
+		mainMatch.setOrderLimit(match.getOrderLimit());
 			if (original.contains(main.get(0))){
 				List<ConceptRef> notFollowed= original;
 				notFollowed.remove(main.get(0));
@@ -1186,7 +1195,7 @@ public class EqdToTT {
 				else
 					match.getProperty().get(0).setIsConcept(main);
 				Match nFM= new Match();
-				select.getMatch().add(index+1,nFM);
+				match.addAnd(nFM);
 				nFM.setNotExist(true);
 				varCounter++;
 				String date= "effectiveDate"+varCounter;
@@ -1197,13 +1206,15 @@ public class EqdToTT {
 				else
 					cm.setIsConcept(notFollowed);
 				match.setTestProperty(null);
+				match.setProperty(null);
+				match.setOrderLimit(null);
 				nFM.property(dm->dm
 						.setIri(new ConceptRef(IM.NAMESPACE+"effectiveDate"))
 						.setAlias(date)
 						.setName("date")
 						.value(v->v
 							.setComparison(Comparison.GREATER_THAN)
-							.setValueVariable(match.getOrderLimit().getOrderBy().getAlias())));
+							.setValueVariable(mainMatch.getOrderLimit().getOrderBy().getAlias())));
 			}
 	}
 
