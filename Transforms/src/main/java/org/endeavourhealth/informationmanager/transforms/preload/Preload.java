@@ -6,7 +6,9 @@ import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
+import org.endeavourhealth.informationmanager.transforms.sources.CoreImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
+import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 
 import java.io.File;
@@ -59,6 +61,7 @@ public class Preload {
 	}
 
 	private static void importData(TTImportConfig cfg,String graphdb) throws Exception {
+		    validateGraphConfig(cfg.getFolder());
 				TTImportByType importer = new Importer()
 					.validateByType(IM.GRAPH_DISCOVERY, cfg.getFolder())
 					.validateByType(SNOMED.GRAPH_SNOMED, cfg.getFolder())
@@ -104,6 +107,11 @@ public class Preload {
 		new SetExpander().expandAllSets();
 		System.out.println("Finished - " + (new Date()));
 		System.exit(0);
+	}
+	public static void validateGraphConfig(String inFolder){
+		ImportUtils.validateFiles(inFolder, new String[] {
+			".*config.ttl"});
+
 	}
 
 	private static void startGraph(String graphdb) throws IOException, InterruptedException {

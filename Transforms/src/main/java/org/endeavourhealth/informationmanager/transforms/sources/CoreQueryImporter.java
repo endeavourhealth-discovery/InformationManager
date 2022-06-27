@@ -48,26 +48,26 @@ public class CoreQueryImporter implements TTImport {
 		prof.setDescription(qry.getDescription());
 		prof.setSelect(new Select()
 				.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"))
-			.setMatch(new Match()
-				.setProperty(TTIriRef.iri(IM.NAMESPACE+"isSubjectOf").setName("has GP registration"))
-				.setMatch(new Match()
+			.addMatch(new Match()
+				.addPathTo(new ConceptRef(IM.NAMESPACE+"isSubjectOf").setName("has GP registration"))
+				.setName(prof.getName())
 			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
-			.addAnd(new Match()
+			.property(pv-> pv
 				.setName("patient type is regular GMS Patient")
-				.setProperty(TTIriRef.iri(IM.NAMESPACE + "patientType"))
+				.setIri(IM.NAMESPACE + "patientType")
 				.addIsConcept(ConceptRef.iri(IM.GMS_PATIENT.getIri(),"Regular GMS patient")))
-			.addAnd(new Match()
-				.setProperty(TTIriRef.iri(IM.NAMESPACE + "effectiveDate"))
+			.property(pv->pv
+				.setIri(IM.NAMESPACE + "effectiveDate")
 				.setName("start of registration is before the reference date")
 				.setValue(Comparison.LESS_THAN_OR_EQUAL, "$ReferenceDate"))
-			.addOr(new Match()
+			.orProperty(pv-> pv
 				.setNotExist(true)
 				.setName("the registration has not ended ")
-					.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate")))
-			.addOr(new Match()
-				.setProperty(TTIriRef.iri(IM.NAMESPACE + "endDate"))
+					.setIri(IM.NAMESPACE + "endDate"))
+			.orProperty(pv-> pv
+				.setIri(IM.NAMESPACE + "endDate")
 				.setName("the end of registration is after the reference date")
-				.setValue(Comparison.GREATER_THAN, "$ReferenceDate")))));
+				.setValue(Comparison.GREATER_THAN, "$ReferenceDate"))));
 
 		qry.set(IM.QUERY_DEFINITION,TTLiteral.literal(prof.getasJson()));
 		qry.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_StandardCohorts"));
