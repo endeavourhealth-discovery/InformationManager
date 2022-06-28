@@ -41,13 +41,22 @@ public class CEGEthnicityImport implements TTImport {
 		spellCorrections();
 		importEthnicGroups(config.getFolder());
 
+		if (TTFilerFactory.isTransactional()){
+			new TTTransactionFiler(null).fileTransaction(document);
+		}
+		else {
 
-		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
-        }
-
-		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-			filer.fileDocument(nhsDocument);
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+				filer.fileDocument(document);
+			}
+		}
+		if (TTFilerFactory.isTransactional()){
+			new TTTransactionFiler(null).fileTransaction(nhsDocument);
+		}
+		else {
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+				filer.fileDocument(nhsDocument);
+			}
 		}
 
 		return this;

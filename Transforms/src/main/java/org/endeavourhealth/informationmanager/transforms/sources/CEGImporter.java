@@ -81,11 +81,14 @@ public class CEGImporter implements TTImport {
 		for (TTEntity folder:vsetFolders){
 			document.addEntity(folder);
 		}
+		if (TTFilerFactory.isTransactional()){
+			new TTTransactionFiler(null).fileTransaction(document);
+			return this;
+		}
 
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}
-
 
 		return this;
 	}

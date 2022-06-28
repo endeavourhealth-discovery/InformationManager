@@ -78,6 +78,7 @@ public class Preload {
 					.validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
 					.validateByType(IM.GRAPH_CEG_QUERY,cfg.getFolder())
 					.validateByType(IM.GRAPH_IM1,cfg.getFolder());
+
 				importer.importByType(IM.GRAPH_DISCOVERY, cfg);
 				importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
 				importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
@@ -91,18 +92,21 @@ public class Preload {
 				importer.importByType(IM.GRAPH_NHS_TFC,cfg);
 				importer.importByType(IM.GRAPH_IM1,cfg);
 
+		TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
+		closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
 
 			TTBulkFiler.createRepository();
 			startGraph(graphdb);
 			System.out.println("Filing into live graph starting with CEG");
+
 		  TTFilerFactory.setBulk(false);
-		importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
+		TTFilerFactory.setTransactional(true);
+			importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
 		importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
 	   importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
 			TTImport deltaImporter= new DeltaImporter();
 			deltaImporter.importData(cfg);
-		TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
-		closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
+
 		System.out.println("expanding value sets");
 		new SetExpander().expandAllSets();
 		System.out.println("Finished - " + (new Date()));
