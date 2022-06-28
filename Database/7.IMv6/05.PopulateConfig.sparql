@@ -43,7 +43,7 @@ INSERT DATA {
     <http://endhealth.info/config#defaultPredicateNames>
         <http://www.w3.org/2000/01/rdf-schema#label>    'Default predicate names' ;
         <http://www.w3.org/2000/01/rdf-schema#comment>  'Predicate name overrides for display purposes' ;
-        <http://endhealth.info/im#hasConfig>            '{"http://www.w3.org/2000/01/rdf-schema#subClassOf":"Is subclass of","http://endhealth.info/im#roleGroup":"Where","http://www.w3.org/2002/07/owl#equivalentClass":"Is equivalent to","http://www.w3.org/2002/07/owl#intersectionOf":"Combination of","http://www.w3.org/2002/07/owl#someValuesFrom":"With a value","http://www.w3.org/2002/07/owl#onProperty":"On property","http://www.w3.org/ns/shacl#property":"Properties","http://www.w3.org/ns/shacl#class":"Type","http://www.w3.org/ns/shacl#path":"Property","http://www.w3.org/ns/shacl#datatype":"Type"}' .
+        <http://endhealth.info/im#hasConfig>            '{"http://www.w3.org/2000/01/rdf-schema#subClassOf":"Is subclass of","http://endhealth.info/im#roleGroup":"Where","http://www.w3.org/2002/07/owl#equivalentClass":"Is equivalent to","http://www.w3.org/2002/07/owl#intersectionOf":"Combination of","http://www.w3.org/2002/07/owl#someValuesFrom":"With a value","http://www.w3.org/2002/07/owl#onProperty":"On property","http://www.w3.org/ns/shacl#class":"Type","http://www.w3.org/ns/shacl#path":"Property","http://www.w3.org/ns/shacl#datatype":"Type"}' .
 
     <http://endhealth.info/config#xmlSchemaDataTypes>
         <http://www.w3.org/2000/01/rdf-schema#label>    'XML Schema datatypes' ;
