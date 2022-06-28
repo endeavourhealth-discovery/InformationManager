@@ -78,7 +78,6 @@ public class Preload {
 					.validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
 					.validateByType(IM.GRAPH_CEG_QUERY,cfg.getFolder())
 					.validateByType(IM.GRAPH_IM1,cfg.getFolder());
-
 				importer.importByType(IM.GRAPH_DISCOVERY, cfg);
 				importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
 				importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);

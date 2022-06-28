@@ -6,8 +6,12 @@ import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
+import org.endeavourhealth.imapi.model.tripletree.TTEntity;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
+import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 import java.io.File;
@@ -56,6 +60,7 @@ public class CoreImporter implements TTImport {
          Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
          manager.loadDocument(path.toFile());
          TTDocument document= manager.getDocument();
+         addSpecials(document);
         System.out.println("Filing  "+ document.getGraph().getIri() + " from " + coreFile);
          try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
              filer.fileDocument(document);
@@ -65,6 +70,15 @@ public class CoreImporter implements TTImport {
       qryImporter.importData(config);
       return this;
    }
+
+  private void addSpecials(TTDocument document) {
+     //Snomed telephone is a device
+     TTEntity telephone= new TTEntity()
+       .setIri(SNOMED.NAMESPACE+"359993007")
+       .setCrud(IM.ADD_QUADS);
+       telephone.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(IM.NAMESPACE+"71000252102"));
+       document.addEntity(telephone);
+  }
 
   private static void generateInferred(TTImportConfig config) throws IOException, DataFormatException, OWLOntologyCreationException {
 
