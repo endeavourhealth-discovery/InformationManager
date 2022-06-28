@@ -1,29 +1,28 @@
-PUT /{}
 {
-"mappings" :{
-  "properties": {
-    "scheme.@id": {
-      "type": "keyword"
-    },
-    "iri" : {
-    "type" : "keyword"
-    },
-    "entityType.@id":{
-      "type": "keyword"
-    },
-    "status.@id" : {
-      "type" : "keyword"
-    },
-    "code":{
-      "type" :"keyword"
-    },
-    "termCode.status.@id" :{
-      "type" :"keyword"
-    },
-    "key" :{
-     "type" :"keyword"
-    }
-    }
-
-  }
+"mappings" :
+ {
+ 	 "properties": {
+ 		 "scheme.@id": {
+ 			 "type": "keyword"
+ 		},
+ 		 "entityType.@id": {
+ 			 "type": "keyword"
+ 		},
+ 		 "status.@id": {
+ 			 "type": "keyword"
+ 		},
+ 		 "isA.@id": {
+ 			 "type": "keyword"
+ 		},
+ 		 "code": {
+ 			 "type": "keyword"
+ 		},
+ 		"iri" : {
+ 		"type" : "keyword"
+ 		},
+ 		"key" : {
+ 		"type" : "keyword"
+ 		}
+ 	}
+ }
  }

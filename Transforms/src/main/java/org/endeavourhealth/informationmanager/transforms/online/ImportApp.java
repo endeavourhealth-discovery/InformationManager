@@ -4,6 +4,7 @@ import org.endeavourhealth.imapi.filer.TCGenerator;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImportByType;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
@@ -195,6 +196,8 @@ public class ImportApp {
             TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
             closureGenerator.generateClosure(cfg.getFolder(), cfg.isSecure());
         }
+        System.out.println("expanding value sets");
+        new SetExpander().expandAllSets();
 
         System.out.println("Finished - " + (new Date()));
     }

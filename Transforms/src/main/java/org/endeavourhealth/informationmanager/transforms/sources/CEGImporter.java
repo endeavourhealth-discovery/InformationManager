@@ -29,11 +29,13 @@ public class CEGImporter implements TTImport {
 	private TTEntity owner;
 	private final Set<TTEntity> allEntities = new HashSet<>();
 
+
 	private static final String[] queries = {".*\\\\CEGQuery"};
 	private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
 	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
+	public static final Map<TTIriRef,TTEntity> valueSets= new HashMap<>();
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
@@ -49,6 +51,7 @@ public class CEGImporter implements TTImport {
 		 CEGEthnicityImport ethnicImport= new CEGEthnicityImport();
 		ethnicImport.importData(config);
 		createFolders();
+
 
 		loadAndConvert(config.getFolder());
 		WrapAsJson();
@@ -78,11 +81,14 @@ public class CEGImporter implements TTImport {
 		for (TTEntity folder:vsetFolders){
 			document.addEntity(folder);
 		}
+		if (TTFilerFactory.isTransactional()){
+			new TTTransactionFiler(null).fileTransaction(document);
+			return this;
+		}
 
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}
-
 
 		return this;
 	}
@@ -93,7 +99,7 @@ public class CEGImporter implements TTImport {
 	private void WrapAsJson() throws JsonProcessingException {
 		for (TTEntity entity:document.getEntities()){
 			if (entity.isType(IM.QUERY))
-				if (entity.get(IM.DEFINITION)!=null)
+				if (entity.get(IM.QUERY_DEFINITION)!=null)
 					TTManager.wrapRDFAsJson(entity);
 
 		}
@@ -177,7 +183,7 @@ public class CEGImporter implements TTImport {
 				qDocument.addEntity(entity);
 				if (!allEntities.contains(entity)) {
 					if (entity.isType(IM.QUERY)){
-						hql.addDataSet(SetFactory.createSetModelFromJson(entity.get(IM.DEFINITION).asLiteral().getValue()));
+						hql.addDataSet(SetFactory.createSetModelFromJson(entity.get(IM.QUERY_DEFINITION).asLiteral().getValue()));
 						allEntities.add(entity);
 					}
 				}

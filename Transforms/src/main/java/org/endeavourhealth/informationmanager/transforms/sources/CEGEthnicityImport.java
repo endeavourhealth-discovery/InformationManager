@@ -41,13 +41,22 @@ public class CEGEthnicityImport implements TTImport {
 		spellCorrections();
 		importEthnicGroups(config.getFolder());
 
+		if (TTFilerFactory.isTransactional()){
+			new TTTransactionFiler(null).fileTransaction(document);
+		}
+		else {
 
-		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
-        }
-
-		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-			filer.fileDocument(nhsDocument);
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+				filer.fileDocument(document);
+			}
+		}
+		if (TTFilerFactory.isTransactional()){
+			new TTTransactionFiler(null).fileTransaction(nhsDocument);
+		}
+		else {
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+				filer.fileDocument(nhsDocument);
+			}
 		}
 
 		return this;
@@ -171,11 +180,14 @@ public class CEGEthnicityImport implements TTImport {
                 .setCode(cat16)
                 .setScheme(IM.GRAPH_CEG_QUERY)
                 .setDescription("QMUL CEG 16+ Ethnic category "+cat16)
+							.set(IM.IS_SUBSET_OF,TTIriRef.iri(cegSet.getIri()))
                 .set(IM.DEFINITION,new TTNode().set(SHACL.OR, new TTArray()));
-            cegSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(cegSubset.getIri()));
+            //cegSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(cegSubset.getIri()));
             document.addEntity(cegSubset);
             cegCatMap.put(cat16,cegSubset);
+
         }
+
         cegSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
         if (cegSubset.get(IM.HAS_TERM_CODE)==null)
             TTManager.addTermCode(cegSubset,catTerm,null);
@@ -188,8 +200,9 @@ public class CEGEthnicityImport implements TTImport {
                 .addType(IM.CONCEPT_SET)
                     .setName("Concept set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
                 .setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
+									.set(IM.IS_SUBSET_OF,TTIriRef.iri(nhsSet.getIri()))
                     .set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
-                nhsSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(nhsSubset.getIri()));
+                //nhsSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(nhsSubset.getIri()));
                 nhsDocument.addEntity(nhsSubset);
                 nhsCatmap.put(snoNhs, nhsSubset);
             }

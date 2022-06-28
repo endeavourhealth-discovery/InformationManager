@@ -2,9 +2,13 @@ package org.endeavourhealth.informationmanager.transforms.preload;
 
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
+import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
+import org.endeavourhealth.informationmanager.transforms.sources.CoreImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
+import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 
 import java.io.File;
@@ -12,9 +16,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 public class Preload {
-	public static String testDirectory;
+
 
 	public static void main(String[] args) throws Exception {
 		if (args.length < 5) {
@@ -42,6 +47,8 @@ public class Preload {
 					TTBulkFiler.setPrivacyLevel(Integer.parseInt(arg.split("=")[1]));
 				else if (arg.startsWith("cmd"))
 					graphdbCommand= arg.split("=")[1];
+				else 	if (args[i].contains("test="))
+					ImportApp.testDirectory= args[i].substring(args[i].lastIndexOf("=")+1);
 				else
 							System.err.println("Unknown parameter " + args[i]);
 			}
@@ -54,6 +61,7 @@ public class Preload {
 	}
 
 	private static void importData(TTImportConfig cfg,String graphdb) throws Exception {
+		    validateGraphConfig(cfg.getFolder());
 				TTImportByType importer = new Importer()
 					.validateByType(IM.GRAPH_DISCOVERY, cfg.getFolder())
 					.validateByType(SNOMED.GRAPH_SNOMED, cfg.getFolder())
@@ -70,8 +78,8 @@ public class Preload {
 					.validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
 					.validateByType(IM.GRAPH_CEG_QUERY,cfg.getFolder())
 					.validateByType(IM.GRAPH_IM1,cfg.getFolder());
-				importer.importByType(IM.GRAPH_DISCOVERY, cfg);
 
+				importer.importByType(IM.GRAPH_DISCOVERY, cfg);
 				importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
 				importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
 				importer.importByType(IM.GRAPH_EMIS, cfg);
@@ -79,38 +87,56 @@ public class Preload {
 				importer.importByType(IM.GRAPH_OPCS4, cfg);
 				importer.importByType(IM.GRAPH_ICD10, cfg);
 				importer.importByType(IM.GRAPH_VISION, cfg);
-			//	importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
-				//importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
 				importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
 				importer.importByType(IM.GRAPH_ODS, cfg);
 				importer.importByType(IM.GRAPH_NHS_TFC,cfg);
-		    importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
 				importer.importByType(IM.GRAPH_IM1,cfg);
 
-			TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
-			closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
+		TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
+		closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
+
 			TTBulkFiler.createRepository();
 			startGraph(graphdb);
+			System.out.println("Filing into live graph starting with CEG");
+
+		  TTFilerFactory.setBulk(false);
+		TTFilerFactory.setTransactional(true);
+			importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
+		importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
+	   importer.importByType(IM.GRAPH_CEG_QUERY,cfg);
 			TTImport deltaImporter= new DeltaImporter();
 			deltaImporter.importData(cfg);
 
+		System.out.println("expanding value sets");
+		new SetExpander().expandAllSets();
 		System.out.println("Finished - " + (new Date()));
+		System.exit(0);
+	}
+	public static void validateGraphConfig(String inFolder){
+		ImportUtils.validateFiles(inFolder, new String[] {
+			".*config.ttl"});
+
 	}
 
 	private static void startGraph(String graphdb) throws IOException, InterruptedException {
-        List<String> cmds = new ArrayList();
-        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-            cmds.add("cmd");
-            cmds.add("/k");
-        }
-        cmds.add(graphdb);
 
-        Process process = new ProcessBuilder()
-            .directory(new File(TTBulkFiler.getPreload()))
-            .command(cmds)
-            .start();
+		Scanner scanner = new Scanner(System.in);
+		boolean ok = false;
+		while (!ok) {
+			System.out.println("");
+			System.err.println("Please start graph db in the usual manner and enter 'OK' when done : ");
+			String line = scanner.nextLine();
+			if (line.equalsIgnoreCase("ok"))
+				ok = true;
+		}
 
-        Thread.sleep(10000);
-    }
+		 /*
+
+		System.out.println("Starting graph db....");
+		 new Thread(new GraphDBRunner(graphdb)).start();
+		 Thread.sleep(15000);
+
+		  */
+	}
 
 }
