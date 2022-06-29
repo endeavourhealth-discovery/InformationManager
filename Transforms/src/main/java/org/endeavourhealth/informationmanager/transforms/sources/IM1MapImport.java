@@ -21,8 +21,8 @@ public class IM1MapImport implements TTImport {
     private static final String[] im1Codes = {".*\\\\IMv1\\\\concepts.txt"};
     private static final String[] oldIris= {  ".*\\\\IMv1\\\\oldiris.txt"};
     private static final String[] context= {  ".*\\\\IMv1\\\\ContextMaps.txt"};
-    private static final String[] usage = {".*\\\\DiscoveryLive\\\\usage.txt"};
-    private static final String[] usageDbid = {".*\\\\DiscoveryLive\\\\usagebarts_dbid.txt",".*\\\\DiscoveryLive\\\\usagebhr_dbid.txt"};
+    private static final String[] usageDbid = {".*\\\\DiscoveryLive\\\\stats1.txt",".*\\\\DiscoveryLive\\\\stats2.txt"
+    ,".*\\\\DiscoveryLive\\\\stats3.txt"};
     private static final Map<String,TTEntity> oldIriEntity = new HashMap<>();
     private static TTDocument document;
     private static TTDocument statsDocument;
@@ -31,6 +31,7 @@ public class IM1MapImport implements TTImport {
     private static final  ImportMaps importMaps = new ImportMaps();
     private static Map<String,Integer> used= new HashMap<>();
     private static final Map<Integer,Integer> usedDbid= new HashMap<>();
+    private static final Set<Integer> numericConcepts= new HashSet<>();
     private FileWriter writer;
     private final Map<String,String> oldIriTerm= new HashMap<>();
     private final Map<String,String> oldIriSnomed = new HashMap<>();
@@ -489,6 +490,7 @@ public class IM1MapImport implements TTImport {
         TTIriRef graph=TTIriRef.iri(iri.substring(0,iri.lastIndexOf("#")+1));
         im1.setGraph(graph);
         im1.addObject(IM.IM1ID,TTLiteral.literal(oldIri));
+
         Integer usedCount=0;
         if (used.containsKey(oldIri)){
             if (im1.get(IM.USAGE_TOTAL)!=null)
@@ -498,6 +500,8 @@ public class IM1MapImport implements TTImport {
             usedCount= used.get(oldIri);
         if (IdToDbid.get(oldIri)!=null){
             Integer dbid= IdToDbid.get(oldIri);
+            if (numericConcepts.contains(dbid))
+              im1.set(IM.HAS_NUMERIC,TTLiteral.literal("true"));
             Integer dbused= usedDbid.get(dbid);
             if (dbused!=null)
                 usedCount=usedCount+dbused;
@@ -511,22 +515,7 @@ public class IM1MapImport implements TTImport {
     }
 
     private Map<String,Integer> importUsage(String inFolder) throws IOException {
-        for (String statsFile : usage) {
-            Path file = ImportUtils.findFilesForId(inFolder, statsFile).get(0);
-            System.out.println("Retrieving counts from..."+ file.toString());
-            try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-                reader.readLine();  // NOSONAR - Skipping header
-                String line = reader.readLine();
-                while (line != null && !line.isEmpty()) {
-                    String[] fields = line.split("\t");
-                    String oldIri = fields[0];
-                    int count = Integer.parseInt(fields[1]);
-                    used.putIfAbsent(oldIri,0);
-                    used.put(oldIri,used.get(oldIri)+count);
-                    line = reader.readLine();
-                }
-            }
-        }
+
         for (String statsFile : usageDbid) {
             Path file = ImportUtils.findFilesForId(inFolder, statsFile).get(0);
             System.out.println("Retrieving counts from..."+ file.toString());
@@ -535,10 +524,13 @@ public class IM1MapImport implements TTImport {
                 String line = reader.readLine();
                 while (line != null && !line.isEmpty()) {
                     String[] fields = line.split("\t");
-                    Integer dbid = Integer.parseInt(fields[0]);
-                    int count = Integer.parseInt(fields[1]);
+                    Integer dbid = Integer.parseInt(fields[1]);
+                    String numeric= fields[3];
+                    int count = Integer.parseInt(fields[4]);
                     usedDbid.putIfAbsent(dbid,0);
                     usedDbid.put(dbid,usedDbid.get(dbid)+count);
+                    if (numeric.equals("Y"))
+                        numericConcepts.add(dbid);
                     line = reader.readLine();
                 }
             }
@@ -850,7 +842,7 @@ public class IM1MapImport implements TTImport {
     @Override
 	public TTImport validateFiles(String inFolder)  {
 
-         ImportUtils.validateFiles(inFolder,usage,im1Codes,oldIris,context,usageDbid);
+         ImportUtils.validateFiles(inFolder,im1Codes,oldIris,context,usageDbid);
          return this;
 	}
 

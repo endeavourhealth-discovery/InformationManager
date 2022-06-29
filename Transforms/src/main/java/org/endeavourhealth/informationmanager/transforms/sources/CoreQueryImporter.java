@@ -78,16 +78,10 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 	private void setProvenance(TTEntity rdf,TTDocument document) {
-		ProvAgent agent= new ProvAgent()
-			.setPersonInRole(TTIriRef.iri("http://uir.endhealth.org#Stables1"))
-			.setParticipationType(IM.AUTHOR_ROLE);
-		agent.setIri("http://agent.endhealth.org#Stables1");
-		document.addEntity(agent);
 		ProvActivity activity= new ProvActivity()
 			.setIri("http://prov.endhealth.info/im#Q_RegisteredGMS")
 			.setActivityType(IM.PROV_CREATION)
 			.setEffectiveDate(LocalDateTime.now().toString())
-			.addAgent(TTIriRef.iri(agent.getIri()))
 			.setTargetEntity(TTIriRef.iri(rdf.getIri()));
 		document.addEntity(activity);
 

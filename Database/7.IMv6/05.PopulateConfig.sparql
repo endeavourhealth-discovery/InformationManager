@@ -33,7 +33,7 @@ INSERT DATA {
     <http://endhealth.info/config#graphExcludePredicates>
         <http://www.w3.org/2000/01/rdf-schema#label>    'Graph exclude predicates' ;
         <http://www.w3.org/2000/01/rdf-schema#comment>  'Graph predicates exclusion list' ;
-        <http://endhealth.info/im#hasConfig>            '["http://endhealth.info/im#matchedTo","http://www.w3.org/2000/01/rdf-schema#label","http://endhealth.info/im#status","http://endhealth.info/im#Status","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","http://www.w3.org/2000/01/rdf-schema#comment","http://endhealth.info/im#isChildOf","http://endhealth.info/im#hasChildren", "http://endhealth.info/im#definition", "http://endhealth.info/im#usageStats", "http://endhealth.info/im#isA"]' .
+        <http://endhealth.info/im#hasConfig>            '["http://endhealth.info/im#matchedTo", "http://endhealth.info/im#query", "http://endhealth.info/im#select", "http://www.w3.org/2000/01/rdf-schema#label","http://endhealth.info/im#status","http://endhealth.info/im#Status","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","http://www.w3.org/2000/01/rdf-schema#comment","http://endhealth.info/im#isChildOf","http://endhealth.info/im#hasChildren", "http://endhealth.info/im#definition", "http://endhealth.info/im#usageStats", "http://endhealth.info/im#isA"]' .
 
     <http://endhealth.info/config#conceptDashboard>
         <http://www.w3.org/2000/01/rdf-schema#label>    'Concept dashboard' ;
@@ -43,7 +43,7 @@ INSERT DATA {
     <http://endhealth.info/config#defaultPredicateNames>
         <http://www.w3.org/2000/01/rdf-schema#label>    'Default predicate names' ;
         <http://www.w3.org/2000/01/rdf-schema#comment>  'Predicate name overrides for display purposes' ;
-        <http://endhealth.info/im#hasConfig>            '{"http://www.w3.org/2000/01/rdf-schema#subClassOf":"Is subclass of","http://endhealth.info/im#roleGroup":"Where","http://www.w3.org/2002/07/owl#equivalentClass":"Is equivalent to","http://www.w3.org/2002/07/owl#intersectionOf":"Combination of","http://www.w3.org/2002/07/owl#someValuesFrom":"With a value","http://www.w3.org/2002/07/owl#onProperty":"On property","http://www.w3.org/ns/shacl#property":"Properties","http://www.w3.org/ns/shacl#class":"Type","http://www.w3.org/ns/shacl#path":"Property","http://www.w3.org/ns/shacl#datatype":"Type"}' .
+        <http://endhealth.info/im#hasConfig>            '{"http://www.w3.org/2000/01/rdf-schema#subClassOf":"Is subclass of","http://endhealth.info/im#roleGroup":"Where","http://www.w3.org/2002/07/owl#equivalentClass":"Is equivalent to","http://www.w3.org/2002/07/owl#intersectionOf":"Combination of","http://www.w3.org/2002/07/owl#someValuesFrom":"With a value","http://www.w3.org/2002/07/owl#onProperty":"On property","http://www.w3.org/ns/shacl#class":"Type","http://www.w3.org/ns/shacl#path":"Property","http://www.w3.org/ns/shacl#datatype":"Type"}' .
 
     <http://endhealth.info/config#xmlSchemaDataTypes>
         <http://www.w3.org/2000/01/rdf-schema#label>    'XML Schema datatypes' ;

@@ -38,9 +38,13 @@ public class WinPathKingsImport implements TTImport {
 		setTopLevel();
 		importR2Matches();
 		importWinPathKings(config.getFolder());
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+		if (TTFilerFactory.isTransactional()){
+			new TTTransactionFiler(null).fileTransaction(document);
+			return this;
+		}
+		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
-        }
+		}
 		return this;
 
 	}
@@ -75,7 +79,7 @@ public class WinPathKingsImport implements TTImport {
 				String[] fields = line.split("\t");
 				String readCode = fields[2];
 				String code = fields[0];
-				String iri = IM.CODE_SCHEME_KINGS_WINPATH.getIri() + (fields[0].replace(" %,.\"", ""));
+				String iri = IM.CODE_SCHEME_KINGS_WINPATH.getIri() + (fields[0].replaceAll("[ %,.\"]", ""));
 				TTEntity entity = new TTEntity()
 					.setIri(iri)
 					.addType(IM.CONCEPT)

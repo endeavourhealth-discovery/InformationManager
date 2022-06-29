@@ -37,6 +37,10 @@ public class ApexKingsImport implements TTImport {
         importR2Matches();
         setTopLevel();
         importApexKings(config.getFolder());
+				if (TTFilerFactory.isTransactional()){
+					new TTTransactionFiler(null).fileTransaction(document);
+					return this;
+				}
 
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
@@ -75,7 +79,7 @@ public class ApexKingsImport implements TTImport {
 				String[] fields = line.split("\t");
 				String readCode= fields[0];
 				String code= fields[1];
-				String iri = IM.CODE_SCHEME_KINGS_APEX.getIri()+ (fields[1].replace(" .,\"%",""));
+				String iri = IM.CODE_SCHEME_KINGS_APEX.getIri()+ (fields[1].replaceAll("[ .,\"%]",""));
 				TTEntity entity= new TTEntity()
 					.setIri(iri)
 					.addType(IM.CONCEPT)
@@ -99,13 +103,6 @@ public class ApexKingsImport implements TTImport {
 			System.out.println("Process ended with " + count + " records");
 		}
 
-	}
-
-	private String editField(String field){
-		return field
-				.replace(" ","")
-				.replace("\"", "")
-				.replace("'", "");
 	}
 
 
