@@ -52,6 +52,7 @@ public class SetsTypeFixer implements TTImport {
                 .add("  ?s rdf:type ?st .")
                 .add("  FILTER(?st IN(im:ConceptSet,im:ValueSet))")
                 .add("  ?s im:isContainedIn ?set .")
+                .add("  FILTER NOT EXISTS {?s (im:isSubsetOf) ?set .}")
                 .add("  ?set rdf:type ?sett .")
                 .add("  FILTER(?sett IN(im:ConceptSet,im:ValueSet))")
                 .add("  FILTER NOT EXISTS {?set (im:hasMember|im:definition) ?m .}")
