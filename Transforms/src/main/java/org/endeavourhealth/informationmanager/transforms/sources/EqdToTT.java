@@ -688,10 +688,9 @@ public class EqdToTT {
 			if (pv.getIri().equals(IM.NAMESPACE + "age")) {
 				if (units == null)
 					throw new DataFormatException("missing units from age");
-				pv.setFunction(new Function()
-					.addArgument(new Argument()
+				pv.addArgument(new Argument()
 						.setParameter("units")
-						.setValueData(units)));
+						.setValueData(units));
 			}
 		}
 	}
@@ -761,10 +760,9 @@ public class EqdToTT {
 			if (pv.getIri().equals(IM.NAMESPACE + "age")) {
 				if (units == null)
 					throw new DataFormatException("missing units from age");
-				pv.setFunction(new Function()
-					.addArgument(new Argument()
+				pv.addArgument(new Argument()
 						.setParameter("units")
-						.setValueData(units)));
+						.setValueData(units));
 			}
 		}
 
