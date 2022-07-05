@@ -57,7 +57,8 @@ public class EMISImport implements TTImport {
     public TTImport importData(TTImportConfig config) throws Exception {
         System.out.println("Retrieving filed snomed codes");
         document = manager.createDocument(IM.GRAPH_EMIS.getIri());
-        document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(), "Read Thesaurus", "Read Thesaurus"));
+        document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(), "EMIS (including Read) codes",
+            "The EMIS local code scheme and graph including Read 2 and EMIS local codes."));
         System.out.println("importing emis code file");
         populateRemaps();
         addEMISUnlinked();

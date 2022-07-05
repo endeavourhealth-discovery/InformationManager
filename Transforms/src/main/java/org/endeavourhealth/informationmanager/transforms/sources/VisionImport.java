@@ -48,8 +48,8 @@ public class VisionImport implements TTImport {
 		System.out.println("retrieving snomed codes from IM");
 		snomedCodes= importMaps.importSnomedCodes();
 		document= manager.createDocument(IM.GRAPH_VISION.getIri());
-		document.addEntity(manager.createGraph(IM.GRAPH_VISION.getIri(),"Vision Read2 code scheme and graph",
-			"The Vision Read 2 scheme and graph including the Vision version of Read 2 and Vision local codes"));
+		document.addEntity(manager.createGraph(IM.GRAPH_VISION.getIri(),"Vision (including Read) codes",
+			"The Vision local code scheme and graph including Read 2 and Vision local codes"));
 
 		importEmis();
 		importR2Desc(config.getFolder());

@@ -77,7 +77,7 @@ public class IM1MapImport implements TTImport {
     }
 
     private void importv1Codes(String inFolder) throws Exception {
-        System.out.println("Importing IMv1");
+        LOG.info("Importing IMv1");
         Path file =  ImportUtils.findFileForId(inFolder, im1Codes[0]);
         int count = 0;
         try (BufferedReader reader= new BufferedReader(new FileReader(file.toFile()))) {
@@ -94,7 +94,7 @@ public class IM1MapImport implements TTImport {
                 Integer dbid= Integer.parseInt(fields[0]);
                 String oldIri = fields[1];
                 if (oldIri.equals("DM_criticalCareAdmType"))
-                    System.out.println("");
+                    LOG.info("");
                 IdToDbid.put(oldIri,dbid);
                 String term=fields[2];
                 String description= fields[3];
@@ -198,8 +198,8 @@ public class IM1MapImport implements TTImport {
                             break;
                         default:
                             if (code.startsWith("DM_"))
-                                System.out.println("data model property");
-                            System.err.println(im1Scheme + " :" + code + " : " + oldIri);
+                                LOG.info("data model property");
+                            LOG.error(im1Scheme + " :" + code + " : " + oldIri);
                             scheme = "X";
                     }
                     if (scheme == null)
@@ -225,29 +225,30 @@ public class IM1MapImport implements TTImport {
                         }
 
                         else if (scheme.equals(IM.CODE_SCHEME_EMIS.getIri())) {
-                            lname = lname.replaceAll("[&/' |()^]", "_");
-                            lname = lname.replace("[", "_").replace("]", "_");
-                            if (im1Scheme.equals("READ2"))
-                                lname = lname.replace(".", "");
-                            else
-                                lname = lname.replace(".", "_");
-                            if (entities.containsKey(scheme+lname)) {
-                                checkEntity(scheme, lname, im1Scheme, term, code, oldIri,description);
-                            }
-                            else if (term.startsWith("[")) {
+                            if (".....".equals(code)) {
+                                LOG.warn("Skipping READ [.....]");
+                            } else {
+                                lname = lname.replaceAll("[&/' |()^]", "_");
+                                lname = lname.replace("[", "_").replace("]", "_");
+                                if (im1Scheme.equals("READ2"))
+                                    lname = lname.replace(".", "");
+                                else
+                                    lname = lname.replace(".", "_");
+                                if (entities.containsKey(scheme + lname)) {
+                                    checkEntity(scheme, lname, im1Scheme, term, code, oldIri, description);
+                                } else if (term.startsWith("[")) {
                                     String suffix = term.substring(1, term.indexOf("]"));
                                     String realName = lname.replace("_", "") + "-" + suffix;
                                     if (entities.containsKey(scheme + realName)) {
-                                        addIM1id(scheme+realName,oldIri);
+                                        addIM1id(scheme + realName, oldIri);
 
-                                    }
-                                    else if (entities.containsKey(scheme + code.replace(".", ""))) {
+                                    } else if (entities.containsKey(scheme + code.replace(".", ""))) {
                                         realName = code.replace(".", "");
-                                        addIM1id(scheme+realName,oldIri);
-                                    }
-                                    else
-                                        checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
+                                        addIM1id(scheme + realName, oldIri);
+                                    } else
+                                        checkEntity(scheme, lname, im1Scheme, term, code, oldIri, description);
                                 }
+                            }
                         }
 
                         else if (scheme.equals(IM.CODE_SCHEME_ENCOUNTERS.getIri())) {
@@ -358,7 +359,7 @@ public class IM1MapImport implements TTImport {
             }
             writer.close();
         }
-        System.out.println("Process ended with " + count);
+        LOG.info("Process ended with " + count);
 
 	}
 
@@ -481,7 +482,7 @@ public class IM1MapImport implements TTImport {
             entity.set(IM.USAGE_TOTAL,TTLiteral.literal(used.get(oldIri)));
         document.addEntity(entity);
         if (oldIri.equals("CM_CritCareSrcLctn04"))
-            System.out.println("CM_CritCareSrcLctn04");
+            LOG.info("CM_CritCareSrcLctn04");
         oldIriEntity.put(oldIri,entity);
         return entity;
     }
@@ -509,7 +510,7 @@ public class IM1MapImport implements TTImport {
         if (usedCount>0)
             im1.set(IM.USAGE_TOTAL,TTLiteral.literal(usedCount));
         if (oldIri.equals("CM_CritCareSrcLctn04"))
-          System.out.println("CM_CritCareSrcLctn04");
+          LOG.info("CM_CritCareSrcLctn04");
         oldIriEntity.put(oldIri,im1);
         document.addEntity(im1);
     }
@@ -518,7 +519,7 @@ public class IM1MapImport implements TTImport {
 
         for (String statsFile : usageDbid) {
             Path file = ImportUtils.findFilesForId(inFolder, statsFile).get(0);
-            System.out.println("Retrieving counts from..."+ file.toString());
+            LOG.info("Retrieving counts from..."+ file.toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
                 reader.readLine();  // NOSONAR - Skipping header
                 String line = reader.readLine();
@@ -544,7 +545,7 @@ public class IM1MapImport implements TTImport {
     private void importContext(String inFolder) throws IOException,DataFormatException {
         for (String statsFile : context) {
             Path file = ImportUtils.findFilesForId(inFolder, statsFile).get(0);
-            System.out.println("Retrieving counts from..." + file.toString());
+            LOG.info("Retrieving counts from..." + file.toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
                 reader.readLine();  // NOSONAR - Skipping header
                 String line = reader.readLine();
@@ -580,7 +581,7 @@ public class IM1MapImport implements TTImport {
 
                     }
                     if (oldIri.equals("CM_CritCareSrcLctn04"))
-                        System.out.println("CM_CritCareSrcLctn04");
+                        LOG.info("CM_CritCareSrcLctn04");
                     TTIriRef newScheme = getScheme(publisher,system);
                     TTNode context= new TTNode();
                     TTEntity propertyEntity= oldIriEntity.get(targetProperty);
@@ -786,7 +787,7 @@ public class IM1MapImport implements TTImport {
     private void importOld(String inFolder) throws IOException {
         for (String oldFile : oldIris) {
             Path file = ImportUtils.findFilesForId(inFolder, oldFile).get(0);
-            System.out.println("Retrieving old iri maps from..."+ file.toString());
+            LOG.info("Retrieving old iri maps from..."+ file.toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
                 reader.readLine();  // NOSONAR - Skipping header
                 String line = reader.readLine();
