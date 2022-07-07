@@ -575,15 +575,20 @@ public class EqdToTT {
 
 
 	private void setMainCriterion(String eqTable, EQDOCColumnValue cv, Match match,PropertyValue pv) throws DataFormatException, IOException {
-		for (String eqColumn : cv.getColumn()) {
-			setPropertyValue(cv, eqTable, eqColumn, match,pv);
-		}
+		String eqColumn= String.join("/",cv.getColumn());
+		setPropertyValue(cv, eqTable, eqColumn, match,pv);
 	}
 
 
 	private void setPropertyValue(EQDOCColumnValue cv, String eqTable, String eqColumn,
 																Match match,PropertyValue pv) throws DataFormatException, IOException {
 		String predPath = getMap(eqTable + slash + eqColumn);
+		if (predPath.split("/").length>1){
+			String[] pathsTo= predPath.split("/");
+			for (int i=0; i<pathsTo.length-1; i=i+2){
+				pv.addPathTo(new ConceptRef(getIri(IM.NAMESPACE+ pathsTo[i])));
+			}
+		}
 		String predicate = predPath.substring(predPath.lastIndexOf("/") + 1);
 		TTIriRef propertyIri= getIri(IM.NAMESPACE + predicate);
 		pv.setIri(propertyIri.getIri());
