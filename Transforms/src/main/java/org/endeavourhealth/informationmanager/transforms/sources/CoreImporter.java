@@ -28,6 +28,7 @@ public class CoreImporter implements TTImport {
      ".*\\\\DiscoveryCore\\\\CoreOntology.json",
      ".*\\\\DiscoveryCore\\\\CoreOntology-more-inferred.json",
   ".*\\\\DiscoveryCore\\\\StatsReports.json",
+     ".*\\\\DiscoveryCore\\\\Forms.json",
      ".*\\\\DiscoveryCore\\\\Sets.json"
    };
 
