@@ -4,13 +4,14 @@
 
 sonarqube {
     properties {
-        property 'sonar.projectKey', 'endeavourhealth-discovery_InformationManager::Feeds'
+        property 'sonar.projectKey', 'endeavourhealth-discovery_InformationManager::Utils'
     }
 }
 
 dependencies {
     api project(':common')
     implementation libs.imapi
+    implementation project(':Transforms')
 
     implementation libs.commonsIO
     implementation libs.jacksonAnnotations
@@ -28,10 +29,12 @@ dependencies {
     implementation libs.wsrs
 
     testImplementation libs.junit
+    testImplementation libs.junitEngine
+    testImplementation libs.junitRunner
 }
 
 test {
     useJUnitPlatform()
 }
 
-description = 'Scratch'
+description = 'Utils'
