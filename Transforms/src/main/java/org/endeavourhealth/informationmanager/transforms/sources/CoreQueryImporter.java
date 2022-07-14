@@ -9,12 +9,14 @@ import org.endeavourhealth.imapi.model.cdm.ProvAgent;
 import org.endeavourhealth.imapi.model.sets.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.transforms.TTToClassObject;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 
 public class CoreQueryImporter implements TTImport {
@@ -34,7 +36,7 @@ public class CoreQueryImporter implements TTImport {
 		return null;
 	}
 
-	private void addCurrentReg(TTDocument document,String outFolder) throws IOException {
+	private void addCurrentReg(TTDocument document,String outFolder) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		TTEntity qry = new TTEntity().addType(IM.QUERY);
 		qry
 			.setIri(IM.NAMESPACE + "Q_RegisteredGMS")
@@ -69,12 +71,12 @@ public class CoreQueryImporter implements TTImport {
 				.setName("the end of registration is after the reference date")
 				.setValue(Comparison.GREATER_THAN, "$ReferenceDate"))));
 
-		qry.set(IM.QUERY_DEFINITION,TTLiteral.literal(prof.getasJson()));
+		qry.set(IM.QUERY_DEFINITION,TTLiteral.literal(prof.getJson()));
 		qry.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_StandardCohorts"));
 		document.addEntity(qry);
 		document.setContext(TTUtil.getDefaultContext());
 		setProvenance(qry,document);
-		outputQuery(prof);
+		outputQuery(new TTToClassObject().getObject(qry,QueryEntity.class));
 	}
 
 	private void setProvenance(TTEntity rdf,TTDocument document) {
@@ -111,7 +113,7 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 
-	private void outputQuery(Query qry) throws IOException {
+	private void outputQuery(QueryEntity qry) throws IOException {
 		if ( ImportApp.testDirectory!=null) {
 			String directory = ImportApp.testDirectory.replace("%", " ");
 			try (FileWriter writer = new FileWriter(directory + "\\Core-qry.json")) {

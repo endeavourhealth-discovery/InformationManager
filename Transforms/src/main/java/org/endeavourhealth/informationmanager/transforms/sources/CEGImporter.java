@@ -5,10 +5,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.model.sets.SetDocument;
+import org.endeavourhealth.imapi.model.sets.QueryDocument;
+import org.endeavourhealth.imapi.model.sets.QueryDocument;
+import org.endeavourhealth.imapi.model.sets.QueryEntity;
 import org.endeavourhealth.imapi.model.sets.SetFactory;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.transforms.TTToClassObject;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
@@ -20,6 +23,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DataFormatException;
@@ -138,7 +142,7 @@ public class CEGImporter implements TTImport {
 		document.addEntity(owner);
 	}
 
-	public void loadAndConvert(String folder) throws JAXBException, IOException, DataFormatException {
+	public void loadAndConvert(String folder) throws JAXBException, IOException, DataFormatException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		Properties dataMap= new Properties();
 		try (FileReader reader = new FileReader(( ImportUtils.findFileForId(folder, dataMapFile[0]).toFile()))) {
             dataMap.load(reader);
@@ -173,17 +177,17 @@ public class CEGImporter implements TTImport {
 
 	}
 
-	private void output(File fileEntry) throws IOException {
+	private void output(File fileEntry) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		if ( ImportApp.testDirectory!=null) {
 			String directory = ImportApp.testDirectory.replace("%", " ");
 			TTManager manager = new TTManager();
-			SetDocument hql = new SetDocument();
+			QueryDocument hql = new QueryDocument();
 			TTDocument qDocument = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 			for (TTEntity entity : document.getEntities()) {
 				qDocument.addEntity(entity);
 				if (!allEntities.contains(entity)) {
 					if (entity.isType(IM.QUERY)){
-						hql.addDataSet(SetFactory.createSetModelFromJson(entity.get(IM.QUERY_DEFINITION).asLiteral().getValue()));
+						hql.addQuery(new TTToClassObject().getObject(entity,QueryEntity.class));
 						allEntities.add(entity);
 					}
 				}

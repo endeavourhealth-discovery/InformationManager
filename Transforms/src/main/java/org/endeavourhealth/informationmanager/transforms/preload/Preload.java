@@ -62,7 +62,7 @@ public class Preload {
 	}
 
 	private static void importData(TTImportConfig cfg,String graphdb) throws Exception {
-		/*
+
 		    validateGraphConfig(cfg.getFolder());
 				TTImportByType importer = new Importer()
 					.validateByType(IM.GRAPH_DISCOVERY, cfg.getFolder())
@@ -115,7 +115,7 @@ public class Preload {
 		new SetExpander().expandAllSets();
 		System.out.println("Finished - " + (new Date()));
 
-		*/
+
 		System.out.println("Building text index");
 		new LuceneIndexer().buildIndexes();
 		System.exit(0);

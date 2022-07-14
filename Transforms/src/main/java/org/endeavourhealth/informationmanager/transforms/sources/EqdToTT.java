@@ -356,7 +356,7 @@ public class EqdToTT {
 				.setName(eqColGroup.getDisplayName());
 			document.addEntity(fieldGroup);
 			fieldGroup.addObject(IM.IS_CONTAINED_IN, fieldGroupFolder);
-			fieldGroup.addObject(IM.SELECT, TTLiteral.literal(objectMapper.writeValueAsString(group)));
+			fieldGroup.addObject(IM.QUERY_DEFINITION, TTLiteral.literal(objectMapper.writeValueAsString(group)));
 			fieldGroups.add(iri);
 		}
 
