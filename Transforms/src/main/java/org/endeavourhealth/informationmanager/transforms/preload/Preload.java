@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.preload;
 
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
 import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -61,6 +62,7 @@ public class Preload {
 	}
 
 	private static void importData(TTImportConfig cfg,String graphdb) throws Exception {
+		/*
 		    validateGraphConfig(cfg.getFolder());
 				TTImportByType importer = new Importer()
 					.validateByType(IM.GRAPH_DISCOVERY, cfg.getFolder())
@@ -78,6 +80,7 @@ public class Preload {
 					.validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
 					.validateByType(IM.GRAPH_CEG_QUERY,cfg.getFolder())
 					.validateByType(IM.GRAPH_IM1,cfg.getFolder());
+
 				importer.importByType(IM.GRAPH_DISCOVERY, cfg);
 				importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
 				importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
@@ -98,6 +101,8 @@ public class Preload {
 			startGraph(graphdb);
 			System.out.println("Filing into live graph starting with CEG");
 
+
+
 		  TTFilerFactory.setBulk(false);
 		TTFilerFactory.setTransactional(true);
 			importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
@@ -109,8 +114,13 @@ public class Preload {
 		System.out.println("expanding value sets");
 		new SetExpander().expandAllSets();
 		System.out.println("Finished - " + (new Date()));
+
+		*/
+		System.out.println("Building text index");
+		new LuceneIndexer().buildIndexes();
 		System.exit(0);
 	}
+
 	public static void validateGraphConfig(String inFolder){
 		ImportUtils.validateFiles(inFolder, new String[] {
 			".*config.ttl"});

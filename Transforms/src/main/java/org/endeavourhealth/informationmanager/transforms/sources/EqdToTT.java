@@ -409,9 +409,14 @@ public class EqdToTT {
 					addAnd(eqGroup, mainSelect, null);
 				}
 			} else if (ifTrue == VocRuleAction.REJECT && ifFalse == VocRuleAction.NEXT) {
-				orMatch = new Match();
-				mainSelect.addMatch(orMatch);
-				addToOr(eqGroup, orMatch);
+				if (orMatch!=null){
+					addToOr(eqGroup,orMatch);
+				}
+				else {
+					orMatch = new Match();
+					mainSelect.addMatch(orMatch);
+					addToOr(eqGroup,orMatch);
+				}
 			} else if (ifTrue == VocRuleAction.REJECT && ifFalse == VocRuleAction.SELECT) {
 				if (orMatch != null) {
 					addToOr(eqGroup, orMatch);
@@ -459,24 +464,29 @@ public class EqdToTT {
 
 		VocMemberOperator memberOp = eqGroup.getDefinition().getMemberOperator();
 		boolean negation = eqGroup.getActionIfTrue() == VocRuleAction.REJECT;
-		int eqCount = eqGroup.getDefinition().getCriteria().size();
-		if (eqCount == 1) {
-			if (negation)
-				orFilter.setNotExist(true);
-			convertCriteria(eqGroup.getDefinition().getCriteria().get(0), orFilter);
-		} else if (memberOp == VocMemberOperator.OR) {
-			for (EQDOCCriteria eqCriteria : eqGroup.getDefinition().getCriteria()) {
-				Match subOrFilter = new Match();
+			if (memberOp == VocMemberOperator.OR){
+			  for (EQDOCCriteria eqCriteria : eqGroup.getDefinition().getCriteria()) {
+					Match subOrFilter= new Match();
+					orFilter.addOr(subOrFilter);
+				  if (negation)
+				 		subOrFilter.setNotExist(true);
+				convertCriteria(eqCriteria, subOrFilter);
+				}
+			}
+			else if (eqGroup.getDefinition().getCriteria().size()==1){
+				Match subOrFilter= new Match();
+				orFilter.addOr(subOrFilter);
 				if (negation)
 					subOrFilter.setNotExist(true);
-				orFilter.addOr(subOrFilter);
-				convertCriteria(eqCriteria, subOrFilter);
+				convertCriteria(eqGroup.getDefinition().getCriteria().get(0), subOrFilter);
 			}
-		} else {
-			Match subOrFilter= new Match();
-			orFilter.addOr(subOrFilter);
-			addAnd(eqGroup,null,subOrFilter);
-		}
+			else {
+				Match subOrFilter= new Match();
+				orFilter.addOr(subOrFilter);
+				if (negation)
+					subOrFilter.setNotExist(true);
+				addAnd(eqGroup,null,subOrFilter);
+			}
 
 	}
 

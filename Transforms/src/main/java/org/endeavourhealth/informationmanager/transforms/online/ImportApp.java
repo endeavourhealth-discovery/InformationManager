@@ -4,6 +4,7 @@ import org.endeavourhealth.imapi.filer.TCGenerator;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImportByType;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
 import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
@@ -45,6 +46,9 @@ public class ImportApp {
                         break;
                     case "skipsearch":
                         cfg.setSkipsearch(true);
+                        break;
+                    case "skiplucene":
+                        cfg.setSkiplucene(true);
                         break;
                     case "skipdeletes":
                         TTFilerFactory.setSkipDeletes(true);
@@ -196,8 +200,13 @@ public class ImportApp {
             TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
             closureGenerator.generateClosure(cfg.getFolder(), cfg.isSecure());
         }
+
         System.out.println("expanding value sets");
         new SetExpander().expandAllSets();
+        if (!cfg.isSkiplucene()){
+            System.out.println("building lucene index");
+            new LuceneIndexer().buildIndexes();
+        }
 
         System.out.println("Finished - " + (new Date()));
     }
