@@ -1331,8 +1331,8 @@ public class EqdToTT {
 				for (Argument arg : pv.getFunction().getArgument()) {
 					if (arg.getParameter().equals("units"))
 						text.append(((String) arg.getValueData()).toLowerCase(Locale.ROOT));
-					if (arg.getValueData()!=null)
-						if (arg.getValueData().equals("$referenceDate"))
+					if (arg.getValueVariable()!=null)
+						if (arg.getValueVariable().equals("$referenceDate"))
 						text.append(" of reference date");
 				}
 			}
