@@ -329,6 +329,7 @@ public class EqdToTT {
 
 				}
 		}
+		generateDisplay(mainSelect);
 
 	}
 
@@ -420,6 +421,7 @@ public class EqdToTT {
 				throw new DataFormatException("unrecognised action rule combination : " + activeReport);
 
 		}
+		generateDisplay(mainSelect);
 	}
 
 	private void addAnd(EQDOCCriteriaGroup eqGroup, Select mainSelect, Match topMatch) throws DataFormatException, IOException {
@@ -1221,6 +1223,137 @@ public class EqdToTT {
 							.setValueVariable(mainMatch.getOrderLimit().getOrderBy().getAlias())));
 			}
 	}
+	public static void generateDisplay(Select select) {
+		Map<String, String> references = new HashMap<>();
+		if (select.getMatch() != null)
+			for (Match match : select.getMatch()) {
+				abbreviateMatch(match, references);
+			}
+	}
+
+	private static void abbreviateMatch(Match match, Map<String,String> references) {
+		if (match.getDisplayText() != null)
+			return;
+		if (match.getOr() != null) {
+			for (Match or : match.getOr())
+				abbreviateMatch(or, references);
+		}
+		if (match.getAnd() != null) {
+			for (Match or : match.getAnd())
+				abbreviateMatch(or, references);
+		}
+
+		StringBuilder text = new StringBuilder();
+		if (match.isNotExist())
+			text.append("Exclude if : ");
+		if (match.getEntityInSet()!=null){
+			 text.append("in population : ");
+				List<String> concepts = new ArrayList<>();
+				for (ConceptRef cr : match.getEntityInSet())
+					concepts.add(cr.getName());
+				text.append(String.join(" & ", concepts));
+			}
+		if (match.getProperty() != null) {
+			for (PropertyValue pv : match.getProperty()) {
+				String iri = pv.getIri();
+				if (pv.getIsConcept() != null) {
+						List<String> concepts = new ArrayList<>();
+						for (ConceptRef cr : pv.getIsConcept())
+							concepts.add(cr.getName());
+						text.append(String.join(" + ", concepts));
+					}
+				if (pv.getInSet() != null) {
+						List<String> concepts = new ArrayList<>();
+						for (ConceptRef cr : pv.getInSet())
+							if (cr.getName() != null)
+								concepts.add(cr.getName());
+						text.append(String.join(" + ", concepts));
+					}
+				else if (pv.getValue() != null) {
+						abbreviateValue(pv, references, text);
+				}
+				else {
+					if (pv.getName()!=null)
+					text.append(pv.getName()+" ");
+				}
+				if (pv.getInRange()!=null){
+					abbreviateRange(pv,references,text);
+				}
+				text.append(" ");
+			}
+		}
+		if (match.getOrderLimit()!=null){
+			if (match.getOrderLimit().getOrderBy()!=null)
+				if (match.getOrderLimit().getOrderBy().getAlias()!=null) {
+					references.put(match.getOrderLimit().getOrderBy().getAlias(), "("+text.toString()+")");
+				}
+		}
+		match.setDisplayText(text.toString());
+	}
+
+	private static void abbreviateRange(PropertyValue pv, Map<String, String> references, StringBuilder text) {
+		Range range= pv.getInRange();
+		if (range.getFrom()!=null) {
+			text.append(" from ");
+			text.append(abbreviateComparison(range.getFrom().getComparison()));
+			if (range.getFrom().getValueData() != null)
+				text.append(range.getFrom().getValueData());
+			else if (range.getFrom().getValueVariable() != null)
+				text.append(references.get(range.getFrom().getValueVariable()));
+		}
+		if (range.getTo()!=null) {
+			text.append(" to ");
+			text.append(abbreviateComparison(range.getTo().getComparison()));
+			if (range.getTo().getValueData() != null)
+				text.append(range.getTo().getValueData());
+			else if (range.getTo().getValueVariable() != null)
+				text.append(references.get(range.getTo().getValueVariable()));
+		}
+	}
+
+	private static void abbreviateValue(PropertyValue pv, Map<String,String> references, StringBuilder text) {
+		String iri = pv.getIri();
+		if (iri.contains("Date")) {
+			text.append("date ");
+			if (pv.getFunction() != null) {
+				if (pv.getFunction().getIri().contains("TimeDifference")) {
+					text.append("within ");
+				}
+			}
+		}
+		text.append(abbreviateComparison(pv.getValue().getComparison()));
+		if (pv.getValue().getValueData() != null)
+			text.append(pv.getValue().getValueData());
+		else if (pv.getValue().getValueVariable() != null)
+			text.append(references.get(pv.getValue().getValueVariable()));
+		if (pv.getFunction() != null) {
+			if (pv.getFunction().getArgument() != null) {
+				for (Argument arg : pv.getFunction().getArgument()) {
+					if (arg.getParameter().equals("units"))
+						text.append(((String) arg.getValueData()).toLowerCase(Locale.ROOT));
+					if (arg.getValueData()!=null)
+						if (arg.getValueData().equals("$referenceDate"))
+						text.append(" of reference date");
+				}
+			}
+		}
+
+	}
+	private static String abbreviateComparison(Comparison comparison) {
+		switch (comparison) {
+			case LESS_THAN:
+				return "<";
+			case LESS_THAN_OR_EQUAL:
+				return "<=";
+			case GREATER_THAN:
+				return ">";
+			case GREATER_THAN_OR_EQUAL:
+				return ">=";
+			default:
+				return comparison.name();
+		}
+	}
+
 
 
 }
