@@ -287,56 +287,47 @@ public class EqdToTT {
 		EQDOCListColumns eqCols = eqColGroup.getColumnar();
 		for (EQDOCListColumn eqCol : eqCols.getListColumn()) {
 			String eqDisplay = eqCol.getDisplayName();
-			for (String eqColName : eqCol.getColumn()) {
-				String predicatePath = dataMap.getProperty(eqTable + slash + eqColName);
-				PropertySelect property = new PropertySelect();
-				mainSelect.addProperty(property);
-				property.setName(eqDisplay);
-				property.setAlias(CaseUtils.toCamelCase(eqColName, false).replaceAll("[^a-zA-Z0-9_]", ""));
+			String eqColumn= String.join("/",eqCol.getColumn());
+				String predicatePath = dataMap.getProperty(eqTable + slash + eqColumn);
 				String[] path = predicatePath.split("/");
-				for (int part = 0; part < path.length; part = part + 2) {
-					property.setIri(getIri(IM.NAMESPACE + path[part]));
-					if (part + 2 < path.length) {
-						mainSelect = new Select();
-						property.setSelect(mainSelect);
-						property = new PropertySelect();
+						PropertySelect property = new PropertySelect();
 						mainSelect.addProperty(property);
-					}
-				}
-			}
+						property.setName(eqDisplay);
+						property.setAlias(CaseUtils.toCamelCase(eqColumn, false).replaceAll("[^a-zA-Z0-9_]", ""));
+						property.setIri(getIri(IM.NAMESPACE + path[path.length-1]));
 		}
+
 	}
 
 	private void convertEventColumns(EQDOCListColumnGroup eqColGroup, String eqTable, Select mainSelect) throws DataFormatException, IOException {
-		PropertySelect property = new PropertySelect();
-		mainSelect.addProperty(property);
-		property.setIri(getIri(IM.NAMESPACE + "isSubjectOf"));
 		Match mainMatch = new Match();
 		mainSelect.addMatch(mainMatch);
+		mainSelect.addPathTo(new ConceptRef().setIri(getIri(IM.NAMESPACE+"isSubjectOf").getIri()));
 		convertCriteria(eqColGroup.getCriteria(), mainMatch);
-		mainSelect = new Select();
-		property.setSelect(mainSelect);
 		EQDOCListColumns eqCols = eqColGroup.getColumnar();
 		for (EQDOCListColumn eqCol : eqCols.getListColumn()) {
-			property = new PropertySelect();
+			PropertySelect property = new PropertySelect();
 			mainSelect.addProperty(property);
 			String eqDisplay = eqCol.getDisplayName();
 			property.setName(eqDisplay);
-			for (String eqColName : eqCol.getColumn()) {
-				String predicatePath = dataMap.getProperty(eqTable + slash + eqColName);
-				String[] path = predicatePath.split("/");
-				for (int part = 0; part < path.length; part = part + 2) {
-					property.setIri(getIri(IM.NAMESPACE + path[part]));
+			String eqColumn= String.join("/",eqCol.getColumn());
+			String predicatePath = dataMap.getProperty(eqTable + slash + eqColumn);
+			String[] path = predicatePath.split("/");
+			for (int part = 0; part < path.length; part = part + 2) {
 					if (part + 2 < path.length) {
-						mainSelect = new Select();
-						property.setSelect(mainSelect);
-						property = new PropertySelect();
-						mainSelect.addProperty(property);
+						property.setIri(getIri(IM.NAMESPACE+path[part]).getIri());
+						property.setSelect(new Select());
+						Select select= new Select();
+						property.setSelect(select);
+						property= new PropertySelect();
+						select.addProperty(property);
+					}
+					else {
+						property.setIri(getIri(IM.NAMESPACE + path[part]));
+						property.setAlias(CaseUtils.toCamelCase(eqColumn, false).replaceAll("[^a-zA-Z0-9_]", ""));
 					}
 
 				}
-
-			}
 		}
 
 	}

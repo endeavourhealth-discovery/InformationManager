@@ -81,7 +81,6 @@ public class ComplexMapImporter {
          entity.addObject(IM.HAS_MAP,ttComplexMap);
           processMap(snomed, sourceMap, ttComplexMap);
       }
-      TTManager.wrapRDFAsJson(entity);
    }
 
     private void processMap(String snomed, ComplexMap sourceMap, TTNode ttComplexMap) {

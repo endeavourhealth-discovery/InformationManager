@@ -592,7 +592,7 @@ public class IM1MapImport implements TTImport {
                             propertyEntity = addNewEntity(IM.NAMESPACE + lname,
                               null, getTerm(lname), null, "CM_DiscoveryCode", targetProperty, null, RDF.PROPERTY);
                             propertyIri= TTIriRef.iri(propertyEntity.getIri());
-                            propertyEntity.addObject(RDFS.SUBPROPERTYOF, TTIriRef.iri(IM.NAMESPACE+"dataModelObjectProperty"));
+                            propertyEntity.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(IM.NAMESPACE+"dataModelObjectProperty"));
                         }
                         else {
                             propertyIri= TTIriRef.iri(IM.NAMESPACE+ lname);

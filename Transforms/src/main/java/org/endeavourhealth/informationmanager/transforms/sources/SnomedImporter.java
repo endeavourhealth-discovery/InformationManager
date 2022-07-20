@@ -538,7 +538,7 @@ public class SnomedImporter implements TTImport {
     }
 
     private void addIsa(TTEntity entity,String parent){
-      TTIriRef isa= entity.isType(RDF.PROPERTY) ? RDFS.SUBPROPERTYOF : RDFS.SUBCLASSOF;
+      TTIriRef isa=  RDFS.SUBCLASSOF;
       if (entity.get(isa)==null) {
          TTArray isas = new TTArray();
          entity.set(isa, isas);
@@ -553,7 +553,7 @@ public class SnomedImporter implements TTImport {
       if (relationship.equals(IS_A)) {
          addIsa(c,target);
          if (c.getIri().equals(SNOMED_ATTRIBUTE))
-            c.addObject(RDFS.SUBPROPERTYOF,RDF.PROPERTY);
+            c.addObject(RDFS.SUBCLASSOF,RDF.PROPERTY);
 
       } else if (relationship.equals(REPLACED_BY)){
          c.addObject(SNOMED.REPLACED_BY,TTIriRef.iri(SNOMED.NAMESPACE+target));
@@ -565,8 +565,8 @@ public class SnomedImporter implements TTImport {
    }
 
    private TTNode getRoleGroup(TTEntity c, Integer groupNumber) {
-      if (groupNumber==0)
-         return c;
+     // if (groupNumber==0)
+       //  return c;
       if (c.get(IM.ROLE_GROUP)==null){
          TTArray roleGroups= new TTArray();
          c.set(IM.ROLE_GROUP,roleGroups);

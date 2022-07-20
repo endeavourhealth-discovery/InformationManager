@@ -97,6 +97,7 @@ public class Preload {
 		TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
 		closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
 
+
 			TTBulkFiler.createRepository();
 			startGraph(graphdb);
 			System.out.println("Filing into live graph starting with CEG");
