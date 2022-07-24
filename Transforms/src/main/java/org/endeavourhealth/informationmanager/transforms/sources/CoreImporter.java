@@ -1,9 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
@@ -58,14 +55,19 @@ public class CoreImporter implements TTImport {
         if (!coreFile.contains(INFERRED_SUFFIX))
           coreFile = coreFile.substring(0, coreFile.indexOf(".json")) + INFERRED_SUFFIX;
         TTManager manager = new TTManager();
-         Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
-         manager.loadDocument(path.toFile());
-         TTDocument document= manager.getDocument();
-         addSpecials(document);
-        System.out.println("Filing  "+ document.getGraph().getIri() + " from " + coreFile);
-         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-             filer.fileDocument(document);
-         }
+        Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
+        manager.loadDocument(path.toFile());
+        TTDocument document = manager.getDocument();
+        addSpecials(document);
+        System.out.println("Filing  " + document.getGraph().getIri() + " from " + coreFile);
+        if (!TTFilerFactory.isBulk()) {
+          TTTransactionFiler filer= new TTTransactionFiler(null);
+          filer.fileTransaction(document);
+        } else {
+          try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+          }
+        }
       }
       CoreQueryImporter qryImporter= new CoreQueryImporter();
       qryImporter.importData(config);
