@@ -122,6 +122,7 @@ public class SnomedImporter implements TTImport {
       importSubstitution(config.getFolder());
 
      conceptMap.clear();
+     addSpecials(document);
        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
            filer.fileDocument(document);
        }
@@ -137,6 +138,16 @@ public class SnomedImporter implements TTImport {
      }
       return this;
    }
+
+  private void addSpecials(TTDocument document) {
+    //Snomed telephone is a device
+    TTEntity telephone= new TTEntity()
+      .setIri(SNOMED.NAMESPACE+"359993007")
+      .setCrud(IM.ADD_QUADS)
+        .setGraph(IM.CODE_SCHEME_DISCOVERY);
+    telephone.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(IM.NAMESPACE+"71000252102"));
+    document.addEntity(telephone);
+  }
 
    private void removeQualifiers(TTDocument document) {
       System.out.println("Removing bracketed qualifiers");

@@ -58,7 +58,6 @@ public class CoreImporter implements TTImport {
         Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
         manager.loadDocument(path.toFile());
         TTDocument document = manager.getDocument();
-        addSpecials(document);
         System.out.println("Filing  " + document.getGraph().getIri() + " from " + coreFile);
         if (!TTFilerFactory.isBulk()) {
           TTTransactionFiler filer= new TTTransactionFiler(null);
@@ -74,14 +73,7 @@ public class CoreImporter implements TTImport {
       return this;
    }
 
-  private void addSpecials(TTDocument document) {
-     //Snomed telephone is a device
-     TTEntity telephone= new TTEntity()
-       .setIri(SNOMED.NAMESPACE+"359993007")
-       .setCrud(IM.ADD_QUADS);
-       telephone.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(IM.NAMESPACE+"71000252102"));
-       document.addEntity(telephone);
-  }
+
 
   private static void generateInferred(TTImportConfig config) throws IOException, DataFormatException, OWLOntologyCreationException {
 
