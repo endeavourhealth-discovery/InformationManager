@@ -154,12 +154,12 @@ public class EqdToTT {
 			entity.addType(IM.QUERY);
 			Query profile = new Query();
 			profile.setName(entity.getName());
-			profile.setMainEntity(TTIriRef.iri(IM.NAMESPACE + "Person"));
+			profile.setMainEntity(TTIriRef.iri(IM.NAMESPACE + "Patient"));
 			profile.setDescription(entity.getDescription());
 			profile.setIri(entity.getIri());
 			profile.setSelect(new Select());
 			Select select = profile.getSelect();
-			select.setEntityType(TTIriRef.iri(IM.NAMESPACE + "Person").setName("Person"));
+			select.setEntityType(TTIriRef.iri(IM.NAMESPACE + "Patient").setName("Patient"));
 			Match main = new Match();
 			select.addMatch(main);
 
@@ -188,10 +188,10 @@ public class EqdToTT {
 			set.setName(entity.getName());
 			set.setDescription(entity.getDescription());
 			set.setIri(entity.getIri());
-			set.setMainEntity(TTIriRef.iri(IM.NAMESPACE + "Person"));
+			set.setMainEntity(TTIriRef.iri(IM.NAMESPACE + "Patient"));
 			Select select = new Select();
 			set.setSelect(select);
-			select.setEntityType(TTIriRef.iri(IM.NAMESPACE + "Person").setName("Person"));
+			select.setEntityType(TTIriRef.iri(IM.NAMESPACE + "Patient").setName("Patient"));
 			Match main = new Match();
 			select.addMatch(main);
 			String id = eqReport.getParent().getSearchIdentifier().getReportGuid();
@@ -210,7 +210,7 @@ public class EqdToTT {
 			set.setName(entity.getName());
 			set.setDescription(entity.getDescription());
 			set.setIri(entity.getIri());
-			set.setMainEntity(TTIriRef.iri(IM.NAMESPACE + "Person"));
+			set.setMainEntity(TTIriRef.iri(IM.NAMESPACE + "Patient"));
 			convertAuditReport(eqReport.getAuditReport(), set);
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -227,9 +227,9 @@ public class EqdToTT {
 		Select select = new Select();
 		set.setSelect(select);
 		Match mainFilter = new Match();
-		select.setEntityType(TTIriRef.iri(IM.NAMESPACE + "Person").setName("Person"));
+		select.setEntityType(TTIriRef.iri(IM.NAMESPACE + "Patient").setName("Patient"));
 		select.addMatch(mainFilter);
-		mainFilter.setEntityType(getIri(IM.NAMESPACE + "Person"));
+		mainFilter.setEntityType(getIri(IM.NAMESPACE + "Patient"));
 		for (String popId : auditReport.getPopulation()) {
 			mainFilter.addEntityInSet(TTIriRef.iri("urn:uuid:" + popId).setName(reportNames.get(popId)));
 		}
@@ -302,7 +302,7 @@ public class EqdToTT {
 	private void convertEventColumns(EQDOCListColumnGroup eqColGroup, String eqTable, Select mainSelect) throws DataFormatException, IOException {
 		Match mainMatch = new Match();
 		mainSelect.addMatch(mainMatch);
-		mainSelect.addPathTo(new ConceptRef().setIri(getIri(IM.NAMESPACE+"isSubjectOf").getIri()));
+		mainSelect.addPathTo(new ConceptRef().setIri(getIri(IM.NAMESPACE+"hasEntry").getIri()));
 		convertCriteria(eqColGroup.getCriteria(), mainMatch);
 		EQDOCListColumns eqCols = eqColGroup.getColumnar();
 		for (EQDOCListColumn eqCol : eqCols.getListColumn()) {
@@ -505,7 +505,7 @@ public class EqdToTT {
 		String entityType = (String) dataMap.get(eqTable);
 
 		if (!eqTable.equals("PATIENTS")) {
-			match.addPathTo(new ConceptRef(getIri(IM.NAMESPACE + "isSubjectOf")));
+			match.addPathTo(new ConceptRef(getIri(IM.NAMESPACE + "hasEntry")));
 			match.setEntityType(getIri(IM.NAMESPACE + entityType));
 		}
 

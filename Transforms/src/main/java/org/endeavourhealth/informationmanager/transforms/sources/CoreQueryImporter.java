@@ -44,14 +44,14 @@ public class CoreQueryImporter implements TTImport {
 			.setDescription("For any registration period,a registration start date before the reference date and no end date," +
 				"or an end date after the reference date.");
 		Query prof= new Query();
-		prof.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Person"));
+		prof.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Patient"));
 		prof.setIri(qry.getIri());
 		prof.setName(qry.getName());
 		prof.setDescription(qry.getDescription());
 		prof.setSelect(new Select()
-				.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Person").setName("Person"))
+				.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient").setName("Patient"))
 			.addMatch(new Match()
-				.addPathTo(new ConceptRef(IM.NAMESPACE+"isSubjectOf").setName("has GP registration"))
+				.addPathTo(new ConceptRef(IM.NAMESPACE+"hasEntry").setName("has GP registration"))
 				.setName(prof.getName())
 			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
 			.property(pv-> pv

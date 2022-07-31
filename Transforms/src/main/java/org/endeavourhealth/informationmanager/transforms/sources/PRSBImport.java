@@ -41,7 +41,7 @@ public class PRSBImport implements TTImport {
 
 	private void initializeMaps() {
         axiomMap = new HashMap<>();
-        axiomMap.put("prsb03-dataelement-10868", getAxioms(IM.NAMESPACE + "Person"));
+        axiomMap.put("prsb03-dataelement-10868", getAxioms(IM.NAMESPACE + "Patient"));
 
     }
 
