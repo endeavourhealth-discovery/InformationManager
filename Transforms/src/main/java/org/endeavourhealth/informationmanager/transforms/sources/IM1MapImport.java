@@ -93,7 +93,7 @@ public class IM1MapImport implements TTImport {
                 }
                 Integer dbid= Integer.parseInt(fields[0]);
                 String oldIri = fields[1];
-                if (oldIri.equals("DM_criticalCareAdmType"))
+                if (oldIri.equals("DM_aAndEDepartmentType"))
                     LOG.info("");
                 IdToDbid.put(oldIri,dbid);
                 String term=fields[2];
@@ -798,7 +798,7 @@ public class IM1MapImport implements TTImport {
                         oldIri= oldIri.substring(1);
                     String snomed= fields[1];
                     String term= fields[2];
-                    if (oldIri.startsWith(":CM"))
+                    if (oldIri.startsWith("CM"))
                         oldIriSnomed.put(oldIri,snomed);
                     oldIriTerm.put(oldIri,term);
                     line = reader.readLine();
