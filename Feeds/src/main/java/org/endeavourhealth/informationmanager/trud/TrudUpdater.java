@@ -123,7 +123,7 @@ public class TrudUpdater {
 
         for (TrudFeed feed : feeds) {
             LOG.info("Processing {}", feed.getName());
-            if (feed.getUpdated()) {
+            if (feed.getUpdated() && localVersions.get(feed.getName()) != null) {
                 String oldLocalZip = WorkingDir + "/" + feed.getName() + "_" + localVersions.get(feed.getName()).asText() + ".zip";
                 LOG.info("Deleting previous archive [{}]...", oldLocalZip);
                 if (!new File(oldLocalZip).delete())
