@@ -20,9 +20,9 @@ import java.util.zip.DataFormatException;
 
 public class ICD10Importer implements TTImport {
 
-    private static final String[] entities = {".*\\\\icd_df_10.5.0_20151102000001\\\\ICD10_Edition5_.*\\\\Content\\\\ICD10_Edition5_CodesAndTitlesAndMetadata_GB_.*\\.txt"};
-    private static final String[] maps = {".*\\\\SNOMED\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
-    private static final String[] chapters = {".*\\\\icd_df_10.5.0_20151102000001\\\\ICD10_Edition5_.*\\\\Content\\\\ICD10-Chapters.txt"};
+    private static final String[] entities = {".*\\\\ICD10\\\\.*\\\\Content\\\\ICD10_Edition5_CodesAndTitlesAndMetadata_GB_.*\\.txt"};
+    private static final String[] maps = {".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
+    private static final String[] chapters = {".*\\\\ICD10\\\\ICD10-Chapters.txt"};
 
 
     private final TTIriRef icd10Codes= TTIriRef.iri(IM.CODE_SCHEME_ICD10.getIri()+"ICD10Codes");

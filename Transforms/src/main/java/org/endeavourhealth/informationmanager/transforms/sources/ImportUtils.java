@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,19 +25,22 @@ public class ImportUtils {
     * @param path  the root folder that holds the files as subfolders
     * @param values One or more string arrays each containing a list of file patterns
     */
-   public static void validateFiles(String path,String[] ... values){
+   public static void validateFiles(String path,String[] ... values) {
+       AtomicBoolean exit = new AtomicBoolean(false);
+       Arrays.stream(values).sequential().forEach(fileArray ->
+           Arrays.stream(fileArray).sequential().forEach(file -> {
+                   try {
+                       findFileForId(path, file);
+                   } catch (IOException e) {
+                       System.err.println(e.getMessage());
+                       exit.set(true);
+                   }
+               }
+           )
+       );
 
-      Arrays.stream(values).sequential().forEach(fileArray ->
-          Arrays.stream(fileArray).sequential().forEach(file-> {
-         try {
-            findFileForId(path, file);
-         } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
-         }
-      }
-          )
-      );
+       if (exit.get())
+           System.exit(-1);
    }
 
 

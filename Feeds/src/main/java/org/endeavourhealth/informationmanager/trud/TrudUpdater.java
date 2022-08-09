@@ -33,7 +33,9 @@ public class TrudUpdater {
         new TrudFeed("MAPS","9"),
         new TrudFeed("ICD10","258"),
         new TrudFeed("OPCS4","119"),
-        new TrudFeed("HISTORY","276")
+        new TrudFeed("HISTORY","276"),
+        new TrudFeed("ODS","341"),
+        new TrudFeed("PRIMARY","659")
     );
 
     private static String APIKey;
@@ -120,8 +122,17 @@ public class TrudUpdater {
         LOG.info("Downloading updates...");
 
         for (TrudFeed feed : feeds) {
+            LOG.info("Processing {}", feed.getName());
             if (feed.getUpdated()) {
-                LOG.warn("!!NEED TO CHECK/REMOVE PREVIOUS VERSION(S)!!");
+                String oldLocalZip = WorkingDir + "/" + feed.getName() + "_" + localVersions.get(feed.getName()).asText() + ".zip";
+                LOG.info("Deleting previous archive [{}]...", oldLocalZip);
+                if (!new File(oldLocalZip).delete())
+                    LOG.warn("Unable to delete archive!");
+
+                String oldLocalFolder = WorkingDir + "/" + feed.getName() + "/" + localVersions.get(feed.getName()).asText();
+                LOG.info("Deleting previous folder [{}]...", oldLocalFolder);
+                if (!deleteDirectory(new File(oldLocalFolder)))
+                    LOG.warn("Unable to delete folder!");
             }
 
             // Does the extract dir exist?
@@ -142,7 +153,7 @@ public class TrudUpdater {
         URL url = new URL(sourceUrl);
         URLConnection con = url.openConnection();
         long contentLength = con.getContentLengthLong();
-        System.out.println("File contentLength = " + contentLength + " bytes");
+        LOG.info("Downloading {} - {} bytes", url, contentLength);
         try (InputStream inputStream = con.getInputStream();
             OutputStream outputStream = new FileOutputStream(destination + ".tmp")) {
 
@@ -169,6 +180,7 @@ public class TrudUpdater {
     }
 
     private static void unzipArchive(String zipFile, String destination) throws IOException {
+        LOG.info("Unzipping {}", zipFile);
         File destDir = new File(destination);
         byte[] buffer = new byte[1024];
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
@@ -220,5 +232,15 @@ public class TrudUpdater {
         }
 
         return destFile;
+    }
+
+    private static boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        return directoryToBeDeleted.delete();
     }
 }

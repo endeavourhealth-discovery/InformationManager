@@ -24,9 +24,9 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class OPCS4Importer implements TTImport {
 
-    private static final String[] entities = {".*\\\\nhs_opcs4df_9.0.0_.*\\\\OPCS49 CodesAndTitles.*\\.txt"};
-    private static final String[] chapters = {".*\\\\nhs_opcs4df_9.0.0_.*\\\\OPCSChapters.*\\.txt"};
-    private static final String[] maps = {".*\\\\SNOMED\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
+    private static final String[] entities = {".*\\\\OPCS4\\\\.*\\\\OPCS49 CodesAndTitles.*\\.txt"};
+    private static final String[] chapters = {".*\\\\OPCS4\\\\OPCSChapters.txt"};
+    private static final String[] maps = {".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
 
     private TTManager manager= new TTManager();
     private TTDocument document;
