@@ -1,5 +1,7 @@
 package org.endeavourhealth.informationmanager.trud;
 
+import java.util.function.Consumer;
+
 public class TrudFeed {
     private String name;
     private String id;
@@ -7,9 +9,16 @@ public class TrudFeed {
     private String download;
     private boolean updated = false;
 
+    private Consumer<TrudFeed> postProcess;
+
     public TrudFeed(String name, String id) {
+        this(name, id, null);
+    }
+
+    public TrudFeed(String name, String id, Consumer<TrudFeed> postProcess) {
         this.name = name;
         this.id = id;
+        this.postProcess = postProcess;
     }
 
     public String getName() {
@@ -56,4 +65,10 @@ public class TrudFeed {
         this.updated = updated;
         return this;
     }
+
+    public void runPostProcess() {
+        if (this.postProcess != null)
+            this.postProcess.accept(this);
+    }
+
 }

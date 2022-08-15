@@ -21,6 +21,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -34,7 +36,8 @@ public class TrudUpdater {
         new TrudFeed("ICD10","258"),
         new TrudFeed("OPCS4","119"),
         new TrudFeed("HISTORY","276"),
-        new TrudFeed("ODS","341"),
+        new TrudFeed("ODSTOOLS","343", TrudUpdater::processODSTools),
+        new TrudFeed("ODS","341", TrudUpdater::processODS),
         new TrudFeed("PRIMARY","659")
     );
 
@@ -60,7 +63,6 @@ public class TrudUpdater {
             getLocalVersions();
             if (versionMismatches()) {
                 downloadUpdates();
-                // importSnomed();
             }
             LOG.info("Finished");
         } catch (Exception e) {
@@ -123,6 +125,7 @@ public class TrudUpdater {
 
         for (TrudFeed feed : feeds) {
             LOG.info("Processing {}", feed.getName());
+
             if (feed.getUpdated() && localVersions.get(feed.getName()) != null) {
                 String oldLocalZip = WorkingDir + "/" + feed.getName() + "_" + localVersions.get(feed.getName()).asText() + ".zip";
                 LOG.info("Deleting previous archive [{}]...", oldLocalZip);
@@ -144,6 +147,7 @@ public class TrudUpdater {
                     downloadFile(feed.getDownload(), zipFile);
                 }
                 unzipArchive(zipFile, extractDir);
+                feed.runPostProcess();
             }
             updateLocalVersions(feed);
         }
@@ -242,5 +246,73 @@ public class TrudUpdater {
             }
         }
         return directoryToBeDeleted.delete();
+    }
+
+    private static void processODSTools(TrudFeed feed) {
+        LOG.info("Unzip ODSTools");
+        String path = WorkingDir + feed.getName() + "/" + feed.getRemoteVersion() + "/";
+        try {
+            unzipArchive(path + "transform.zip", path);
+            unzipArchive(path + "HSCOrgRefData_xslt.zip", path);
+        } catch (IOException e) {
+            LOG.error("Error extracting ODSTools sub archives");
+        }
+    }
+
+    private static void processODS(TrudFeed feed) {
+        String path = WorkingDir + feed.getName() + "\\" + feed.getRemoteVersion();
+        try {
+        LOG.info("Unzip ODS");
+            unzipArchive(path + "fullfile.zip", path);
+        } catch (IOException e) {
+            LOG.error("Error extracting ODS sub archive");
+        }
+
+        try {
+            LOG.info("Transforming XML to CSV...");
+            Path fullData = findFileForId(path, ".*\\HSCOrgRefData_Full_.*\\.xml");
+            String tools = WorkingDir + "ODSTOOLS\\" + localVersions.get("ODSTOOLS").asText();
+            Process proc = Runtime.getRuntime().exec(new String[]{
+                "java",
+                "-jar",
+                "\"" + tools + "\\saxon\\Java\\saxon9he.jar\"",
+                "-t",
+                "-s:" + fullData.getFileName(),
+                "-xsl:\"" + tools + "\\HSCOrgRefData_xmltocsv.xslt\"",
+                "server-name=\"" + path + "\""
+            }, null, new File(path));
+            proc.waitFor();
+
+            LOG.debug(getStreamAsString(proc.getInputStream()));
+            LOG.error(getStreamAsString(proc.getErrorStream()));
+
+
+        } catch (Exception e) {
+            LOG.error("Error transforming ODS data", e);
+        }
+    }
+
+    private static String getStreamAsString(InputStream is) throws IOException {
+        byte b[]=new byte[is.available()];
+        is.read(b,0,b.length);
+        return new String(b);
+    }
+
+    public static Path findFileForId(String path, String filePattern) throws IOException {
+        try (Stream<Path> stream = Files.find(Paths.get(path), 16, (file, attr) -> file.toString().replace("/", "\\").matches(filePattern))) {
+            List<Path> paths = stream.collect(Collectors.toList());
+
+            if (paths.size() == 1)
+                return paths.get(0);
+
+            if (paths.isEmpty())
+                throw new IOException("No files found in [" + path + "] for expression [" + filePattern + "]");
+            else {
+                for (Path p : paths) {
+                    System.err.println("Found match : " + p.toString());
+                }
+                throw new IOException("Multiple files found in [" + path + "] for expression [" + filePattern + "]");
+            }
+        }
     }
 }
