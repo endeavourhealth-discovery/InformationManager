@@ -24,7 +24,7 @@ import static org.endeavourhealth.imapi.model.tripletree.TTLiteral.literal;
 public class OdsImporter implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(OdsImporter.class);
     private static final String[] organisationFiles = {
-        ".*\\\\ODS\\\\Organisation_Details.csv"
+        ".*\\\\TRUD\\\\ODS\\\\.*\\\\Organisation_Details.csv"
     };
 
     private List<String> fieldIndex;
