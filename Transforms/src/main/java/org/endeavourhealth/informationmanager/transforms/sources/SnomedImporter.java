@@ -146,6 +146,8 @@ public class SnomedImporter implements TTImport {
         .setGraph(IM.CODE_SCHEME_DISCOVERY);
     telephone.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(IM.NAMESPACE+"71000252102"));
     document.addEntity(telephone);
+    TTEntity specific= conceptMap.get("10362801000001104");
+    specific.addObject(RDFS.SUBCLASSOF,TTIriRef.iri(SNOMED.NAMESPACE+"127489000"));
   }
 
    private void removeQualifiers(TTDocument document) {

@@ -73,6 +73,7 @@ public class TPPImporter implements TTImport {
         importTppCtv3ToSnomed(config.getFolder());
         importnhsMaps(config.getFolder());
         addEmisMaps();
+        addDiscoveryMaps();
 
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
@@ -84,6 +85,19 @@ public class TPPImporter implements TTImport {
 
         return this;
 
+    }
+
+    private void addDiscoveryMaps() {
+        TTEntity entity= new TTEntity()
+          .setIri(IM.CODE_SCHEME_TPP+"Y2a0e")
+          .setCrud(IM.ADD_QUADS)
+          .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+"1156257007"));
+        document.addEntity(entity);
+        entity= new TTEntity()
+          .setIri(IM.CODE_SCHEME_TPP+"Y29ea")
+          .setCrud(IM.ADD_QUADS)
+          .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+"1324671000000103"));
+        document.addEntity(entity);
     }
 
     private void importVaccineMaps(String folder) throws IOException {
