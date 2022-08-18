@@ -89,12 +89,12 @@ public class TPPImporter implements TTImport {
 
     private void addDiscoveryMaps() {
         TTEntity entity= new TTEntity()
-          .setIri(IM.CODE_SCHEME_TPP+"Y2a0e")
+          .setIri(IM.CODE_SCHEME_TPP.getIri()+"Y2a0e")
           .setCrud(IM.ADD_QUADS)
           .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+"1156257007"));
         document.addEntity(entity);
         entity= new TTEntity()
-          .setIri(IM.CODE_SCHEME_TPP+"Y29ea")
+          .setIri(IM.CODE_SCHEME_TPP.getIri()+"Y29ea")
           .setCrud(IM.ADD_QUADS)
           .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+"1324671000000103"));
         document.addEntity(entity);
