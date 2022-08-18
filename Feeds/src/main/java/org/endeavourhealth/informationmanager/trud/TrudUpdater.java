@@ -267,7 +267,7 @@ public class TrudUpdater {
         String path = WorkingDir + feed.getName() + "\\" + feed.getRemoteVersion();
         try {
         LOG.info("Unzip ODS");
-            unzipArchive(path + "fullfile.zip", path);
+            unzipArchive(path + "\\fullfile.zip", path);
         } catch (IOException e) {
             LOG.error("Error extracting ODS sub archive");
         }
