@@ -55,6 +55,10 @@ public class TrudUpdater {
 
         APIKey = argv[0];
         WorkingDir = argv[1];
+
+        if (!WorkingDir.endsWith("\\") && !WorkingDir.endsWith("/"))
+            WorkingDir += "/";
+
         mapper = new ObjectMapper();
 
         LOG.info("Collecting version information...");
