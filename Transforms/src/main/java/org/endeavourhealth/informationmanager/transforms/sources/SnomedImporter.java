@@ -120,8 +120,8 @@ public class SnomedImporter implements TTImport {
 
       importSubstitution(config.getFolder());
 
-     conceptMap.clear();
-     addSpecials(document);
+       addSpecials(document);
+       conceptMap.clear();
        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
            filer.fileDocument(document);
        }
