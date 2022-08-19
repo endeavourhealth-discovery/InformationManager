@@ -208,17 +208,18 @@ public class ImportApp {
                 throw new Exception("Unknown import type");
 
         }
+        if (!cfg.getImportType().equals("singlefile")) {
+            if (!cfg.isSkiptct()) {
+                TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
+                closureGenerator.generateClosure(cfg.getFolder(), cfg.isSecure());
+            }
 
-        if (!cfg.isSkiptct()) {
-            TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
-            closureGenerator.generateClosure(cfg.getFolder(), cfg.isSecure());
-        }
-
-        System.out.println("expanding value sets");
-        new SetExpander().expandAllSets();
-        if (!cfg.isSkiplucene()){
-            System.out.println("building lucene index");
-            new LuceneIndexer().buildIndexes();
+            System.out.println("expanding value sets");
+            new SetExpander().expandAllSets();
+            if (!cfg.isSkiplucene()) {
+                System.out.println("building lucene index");
+                new LuceneIndexer().buildIndexes();
+            }
         }
 
         System.out.println("Finished - " + (new Date()));
