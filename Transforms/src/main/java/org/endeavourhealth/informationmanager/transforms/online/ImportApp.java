@@ -6,10 +6,12 @@ import org.endeavourhealth.imapi.filer.TTImportByType;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
 import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
+import org.endeavourhealth.informationmanager.transforms.sources.SingleFileImporter;
 
 import java.util.Date;
 
@@ -21,16 +23,19 @@ public class ImportApp {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 3) {
-            System.err.println("Insufficient parameters supplied:");
-            System.err.println("<folder> <import type> <privacy={0 public 1 private publication 2 private authoring}> [secure|skiptct|skipsearch]");
-            System.exit(-1);
+                System.err.println("Insufficient parameters supplied:");
+                System.err.println("<folder> <import type> <privacy={0 public 1 private publication 2 private authoring}> [secure|skiptct|skipsearch]");
+                System.exit(-1);
         }
+
 
         TTImportConfig cfg = new TTImportConfig();
 
         // Mandatory/ordered args
         cfg.setFolder(args[0]);
         cfg.setImportType(args[1].toLowerCase());
+
+
 
         TTFilerFactory.setSkipDeletes("all".equals(cfg.getImportType()));
 
@@ -56,6 +61,9 @@ public class ImportApp {
                     case "privacy":
                         TTFilerFactory.setPrivacyLevel(Integer.parseInt(args[i].split("=")[1]));
                         break;
+                    case "file" :
+                        cfg.setFolder(args[i].split("=")[1]);
+                        break;
                     default:
                         if (args[i].contains("test="))
                             testDirectory= args[i].substring(args[i].lastIndexOf("=")+1);
@@ -65,12 +73,13 @@ public class ImportApp {
             }
         }
 
-         LoadDataTester.testLoadData(cfg.getFolder(), cfg.isSecure());
 
+         LoadDataTester.testLoadData(cfg.getFolder(), cfg.isSecure());
         importData(cfg);
     }
 
     private static void importData(TTImportConfig cfg) throws Exception {
+
         switch (cfg.getImportType()) {
             case "all":
                 TTImportByType importer = new Importer()
@@ -190,6 +199,10 @@ public class ImportApp {
             case "deltas":
                 importer = new Importer().validateByType(IM.GRAPH_DELTAS, cfg.getFolder());
                 importer.importByType(IM.GRAPH_DELTAS, cfg);
+                break;
+            case "singlefile" :
+                importer= new Importer().validateByType(TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter"),cfg.getFolder());
+                importer.importByType(TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter"), cfg);
                 break;
             default:
                 throw new Exception("Unknown import type");
