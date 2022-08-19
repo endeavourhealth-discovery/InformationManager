@@ -23,9 +23,11 @@ public class ImportApp {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 3) {
+            if (!args[1].toLowerCase().equals("singlefile")) {
                 System.err.println("Insufficient parameters supplied:");
                 System.err.println("<folder> <import type> <privacy={0 public 1 private publication 2 private authoring}> [secure|skiptct|skipsearch]");
                 System.exit(-1);
+            }
         }
 
 
@@ -60,9 +62,6 @@ public class ImportApp {
                         break;
                     case "privacy":
                         TTFilerFactory.setPrivacyLevel(Integer.parseInt(args[i].split("=")[1]));
-                        break;
-                    case "file" :
-                        cfg.setFolder(args[i].split("=")[1]);
                         break;
                     default:
                         if (args[i].contains("test="))
