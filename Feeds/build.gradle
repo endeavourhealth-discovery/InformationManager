@@ -12,6 +12,7 @@ dependencies {
     implementation libs.imapi
 
     implementation libs.jacksonDatabind
+    implementation libs.javaxactivation
     implementation libs.jerseyClient
     implementation libs.logbackCore
     implementation libs.logbackClassic

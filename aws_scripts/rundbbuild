@@ -6,12 +6,10 @@ git pull
 cd ..
 
 echo Checking TRUD for updates...
-java -cp Feeds-1.0-SNAPSHOT.jar org.endeavourhealth.informationmanager.trud.TrudUpdater
+java -cp Feeds-1.0-SNAPSHOT.jar org.endeavourhealth.informationmanager.trud.TrudUpdater $TRUDKEY /data/dbbuild/ImportData/
 
 echo Removing old repository...
 rm -rf ./im
 
 echo Running preload...
 java -cp Transforms-1.0-SNAPSHOT.jar org.endeavourhealth.informationmanager.transforms.preload.Preload source=/data/dbbuild/ImportData preload=/data/graphdb/bin/preload temp=/data/dbbuild/ImportData/.tmp privacy=0 cmd="systemctl start graphdb"
-
-

@@ -19,12 +19,15 @@ dependencies {
     implementation libs.jaxbApi
     implementation libs.jaxbRuntime
     implementation libs.jsonSimple
+    implementation libs.logbackCore
+    implementation libs.logbackClassic
     implementation libs.openCsv
     implementation libs.owlApiApiBinding
     implementation libs.rdf4jQuery
     implementation libs.rdf4jRepoApi
     implementation libs.rdf4jRepoHttp
     implementation libs.rdf4jRepoSail
+    implementation libs.slf4j
 
     testImplementation libs.junit
     testImplementation libs.junitEngine
