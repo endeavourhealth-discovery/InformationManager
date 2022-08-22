@@ -3,10 +3,15 @@
 echo Pulling latest data files from Git...
 cd ImportData
 git pull
+
+echo Unzip large files
+cd EMIS
+unzip emis_codes.zip
+
 cd ..
 
 echo Checking TRUD for updates...
-java -cp Feeds-1.0-SNAPSHOT.jar org.endeavourhealth.informationmanager.trud.TrudUpdater $TRUDKEY /data/dbbuild/ImportData/
+java -cp Feeds-1.0-SNAPSHOT.jar org.endeavourhealth.informationmanager.trud.TrudUpdater $TRUDKEY /data/dbbuild/ImportData/TRUD/
 
 echo Removing old repository...
 rm -rf ./im

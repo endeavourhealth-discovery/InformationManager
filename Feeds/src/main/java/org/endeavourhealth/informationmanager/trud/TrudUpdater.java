@@ -264,25 +264,25 @@ public class TrudUpdater {
     }
 
     private static void processODS(TrudFeed feed) {
-        String path = WorkingDir + feed.getName() + "\\" + feed.getRemoteVersion();
+        String path = WorkingDir + feed.getName() + "/" + feed.getRemoteVersion();
         try {
         LOG.info("Unzip ODS");
-            unzipArchive(path + "\\fullfile.zip", path);
+            unzipArchive(path + "/fullfile.zip", path);
         } catch (IOException e) {
             LOG.error("Error extracting ODS sub archive");
         }
 
         try {
             LOG.info("Transforming XML to CSV...");
-            Path fullData = findFileForId(path, ".*\\HSCOrgRefData_Full_.*\\.xml");
-            String tools = WorkingDir + "ODSTOOLS\\" + localVersions.get("ODSTOOLS").asText();
+            Path fullData = findFileForId(path, ".*\\HSCOrgRefData_Full_.*.xml");
+            String tools = WorkingDir + "ODSTOOLS/" + localVersions.get("ODSTOOLS").asText();
             Process proc = Runtime.getRuntime().exec(new String[]{
                 "java",
                 "-jar",
-                "\"" + tools + "\\saxon\\Java\\saxon9he.jar\"",
+                "\"" + tools + "/saxon/Java/saxon9he.jar\"",
                 "-t",
                 "-s:" + fullData.getFileName(),
-                "-xsl:\"" + tools + "\\HSCOrgRefData_xmltocsv.xslt\"",
+                "-xsl:\"" + tools + "/HSCOrgRefData_xmltocsv.xslt\"",
                 "server-name=\"" + path + "\""
             }, null, new File(path));
             proc.waitFor();
