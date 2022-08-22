@@ -36,3 +36,16 @@ test {
 }
 
 description = 'Transforms'
+
+jar {
+    manifest {
+        attributes "Main-Class": "org.endeavourhealth.informationmanager.transforms.preload.Preload"
+    }
+
+    from {
+        configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
