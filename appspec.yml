@@ -1,0 +1,12 @@
+version: 0.0
+os: linux
+files:
+  - source: /Transforms/build/libs/Transforms-1.0-SNAPSHOT.jar
+    destination: /data/dbbuild
+  - source: Feeds/build/libs/Feeds-1.0-SNAPSHOT.jar
+    destination: /data/dbbuild
+hooks:
+  BeforeInstall:
+    - location: aws_scripts/cleanup
+      timeout: 300
+      runas: root

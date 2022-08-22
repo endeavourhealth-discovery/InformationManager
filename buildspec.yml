@@ -18,3 +18,9 @@ phases:
       - IP=$(curl http://checkip.amazonaws.com)/32
       - echo $IP of CodeBuild Instance
       - echo Build completed on `date`
+artifacts:
+  files:
+    - appspec.yml
+    - aws_scripts/cleanup
+    - Transforms/build/libs/Transforms-1.0-SNAPSHOT.jar
+    - Feeds/build/libs/Feeds-1.0-SNAPSHOT.jar

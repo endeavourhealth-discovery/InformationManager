@@ -77,7 +77,7 @@ public class Importer implements TTImportByType {
       else if (IM.GRAPH_DELTAS.equals(importType))
          return new DeltaImporter();
       else
-         throw new Exception("Unrecognised import type");
+         throw new Exception("Unrecognised import type [" + importType.getIri() + "]");
    }
 
 
