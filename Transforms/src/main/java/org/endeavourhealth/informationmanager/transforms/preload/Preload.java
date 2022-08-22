@@ -37,7 +37,7 @@ public class Preload {
         TTImportConfig cfg = new TTImportConfig();
 
         for (int i = 0; i < args.length; i++) {
-            String arg = args[i].toLowerCase();
+            String arg = args[i];
             if (arg.startsWith("source=")) {
                 cfg.setFolder(arg.split("=")[1]);
                 TTBulkFiler.setConfigTTl(arg.split("=")[1]);

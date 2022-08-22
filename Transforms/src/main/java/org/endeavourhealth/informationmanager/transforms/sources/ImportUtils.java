@@ -32,6 +32,7 @@ public class ImportUtils {
                    try {
                        findFileForId(path, file);
                    } catch (IOException e) {
+                       System.out.println("Error finding file [" + file + "]");
                        System.err.println(e.getMessage());
                        exit.set(true);
                    }
