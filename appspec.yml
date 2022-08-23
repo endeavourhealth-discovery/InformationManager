@@ -5,6 +5,13 @@ files:
     destination: /data/dbbuild
   - source: Feeds/build/libs/Feeds-1.0-SNAPSHOT.jar
     destination: /data/dbbuild
+  - source: /Transforms/FaCTPlusPlusJNI.dll
+    destination: /data/dbbuild
+  - source: /Transforms/libFaCTPlusPlusJNI.jnilib
+    destination: /data/dbbuild
+  - source: /Transforms/libFaCTPlusPlusJNI.so
+    destination: /data/dbbuild
+
 hooks:
   BeforeInstall:
     - location: aws_scripts/cleanup

@@ -24,4 +24,7 @@ artifacts:
     - aws_scripts/cleanup
     - aws_scripts/rundbbuild
     - Transforms/build/libs/Transforms-1.0-SNAPSHOT.jar
+    - Transforms/FaCTPlusPlusJNI.dll
+    - Transforms/libFaCTPlusPlusJNI.jnilib
+    - Transforms/libFaCTPlusPlusJNI.so
     - Feeds/build/libs/Feeds-1.0-SNAPSHOT.jar
