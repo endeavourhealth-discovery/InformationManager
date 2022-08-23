@@ -15,6 +15,7 @@ dependencies {
     implementation libs.antlr
     implementation libs.commonsIO
     implementation libs.commonsCompress
+    implementation libs.factPlusPlus
     implementation libs.javaxxmlbind
     implementation libs.jaxbApi
     implementation libs.jaxbRuntime
@@ -23,6 +24,7 @@ dependencies {
     implementation libs.logbackCore
     implementation libs.logbackClassic
     implementation libs.openCsv
+    implementation libs.owlApi
     implementation libs.owlApiApiBinding
     implementation libs.rdf4jQuery
     implementation libs.rdf4jRepoApi
