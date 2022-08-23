@@ -41,6 +41,7 @@ public class TrudUpdater {
         new TrudFeed("PRIMARY","659")
     );
 
+    private static final int BUFFER_SIZE = 8192;
     private static String APIKey;
     private static String WorkingDir;
     private static ObjectMapper mapper;
@@ -65,9 +66,7 @@ public class TrudUpdater {
         try {
             getRemoteVersions();
             getLocalVersions();
-            if (versionMismatches()) {
-                downloadUpdates();
-            }
+            processFeeds();
             LOG.info("Finished");
         } catch (Exception e) {
             LOG.error("Error:");
@@ -105,58 +104,61 @@ public class TrudUpdater {
         }
     }
 
-    private static void updateLocalVersions(TrudFeed feed) throws IOException {
-        localVersions.put(feed.getName(), feed.getRemoteVersion());
-        mapper.writerWithDefaultPrettyPrinter().writeValue(new File(WorkingDir + "versions.json"), localVersions);
-    }
+    private static void processFeeds() throws IOException {
+        for (TrudFeed feed: feeds) {
+            if (versionMismatch(feed) || !downloadExists(feed))
+                downloadFeed(feed);
 
-    private static boolean versionMismatches() {
-        boolean mismatches = false;
-        for (TrudFeed feed : feeds) {
-            if (localVersions.has(feed.getName()) && feed.getRemoteVersion().equals(localVersions.get(feed.getName()).asText()))
-                LOG.info("[" + feed.getName() + "] - CURRENT");
-            else {
-                LOG.warn("[" + feed.getName() + "] - UPDATED");
-                feed.setUpdated(true);
-                mismatches = true;
-            }
-        }
-        return mismatches;
-    }
+            if (!feedUnzipped(feed))
+                unzipFeed(feed);
 
-    private static void downloadUpdates() throws IOException {
-        LOG.info("Downloading updates...");
-
-        for (TrudFeed feed : feeds) {
-            LOG.info("Processing {}", feed.getName());
-
-            if (feed.getUpdated() && localVersions.get(feed.getName()) != null) {
-                String oldLocalZip = WorkingDir + "/" + feed.getName() + "_" + localVersions.get(feed.getName()).asText() + ".zip";
-                LOG.info("Deleting previous archive [{}]...", oldLocalZip);
-                if (!new File(oldLocalZip).delete())
-                    LOG.warn("Unable to delete archive!");
-
-                String oldLocalFolder = WorkingDir + "/" + feed.getName() + "/" + localVersions.get(feed.getName()).asText();
-                LOG.info("Deleting previous folder [{}]...", oldLocalFolder);
-                if (!deleteDirectory(new File(oldLocalFolder)))
-                    LOG.warn("Unable to delete folder!");
-            }
-
-            // Does the extract dir exist?
-            String extractDir = WorkingDir + "/" + feed.getName() + "/" + feed.getRemoteVersion();
-            if (Files.notExists(Paths.get(extractDir))) {
-                // Does the zip exist?
-                String zipFile = WorkingDir + feed.getName() + "_" + feed.getRemoteVersion() + ".zip";
-                if (Files.notExists(Paths.get(extractDir))) {
-                    downloadFile(feed.getDownload(), zipFile);
-                }
-                unzipArchive(zipFile, extractDir);
-                feed.runPostProcess();
-            }
-            updateLocalVersions(feed);
+            feed.runPostProcess();
         }
     }
 
+    private static boolean versionMismatch(TrudFeed feed) {
+        if (localVersions.has(feed.getName()) && feed.getRemoteVersion().equals(localVersions.get(feed.getName()).asText())) {
+            LOG.info("[" + feed.getName() + "] - CURRENT");
+            return false;
+        } else {
+            LOG.warn("[" + feed.getName() + "] - UPDATED");
+            feed.setUpdated(true);
+            return true;
+        }
+    }
+
+    private static boolean downloadExists(TrudFeed feed) {
+        String zipFile = WorkingDir + feed.getName() + "_" + feed.getRemoteVersion() + ".zip";
+        if (Files.notExists(Paths.get(zipFile))) {
+            LOG.warn("Download missing [{}]", feed.getName());
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private static void downloadFeed(TrudFeed feed) throws IOException {
+        LOG.info("Downloading {}", feed.getName());
+
+        if (feed.getUpdated() && localVersions.get(feed.getName()) != null) {
+            String oldLocalZip = WorkingDir + "/" + feed.getName() + "_" + localVersions.get(feed.getName()).asText() + ".zip";
+            LOG.info("Deleting previous archive [{}]...", oldLocalZip);
+            if (!new File(oldLocalZip).delete())
+                LOG.warn("Unable to delete archive!");
+
+            String oldLocalFolder = WorkingDir + "/" + feed.getName() + "/" + localVersions.get(feed.getName()).asText();
+            LOG.info("Deleting previous folder [{}]...", oldLocalFolder);
+            if (!deleteDirectory(new File(oldLocalFolder)))
+                LOG.warn("Unable to delete folder!");
+        }
+
+        // Does the zip exist?
+        String zipFile = WorkingDir + feed.getName() + "_" + feed.getRemoteVersion() + ".zip";
+        if (Files.notExists(Paths.get(zipFile))) {
+            downloadFile(feed.getDownload(), zipFile);
+        }
+        updateLocalVersions(feed);
+    }
     private static void downloadFile(String sourceUrl, String destination) throws IOException {
         URL url = new URL(sourceUrl);
         URLConnection con = url.openConnection();
@@ -166,7 +168,7 @@ public class TrudUpdater {
             OutputStream outputStream = new FileOutputStream(destination + ".tmp")) {
 
             // Limiting byte written to file per loop
-            byte[] buffer = new byte[2048];
+            byte[] buffer = new byte[BUFFER_SIZE];
 
             // Increments file size
             int length;
@@ -186,11 +188,26 @@ public class TrudUpdater {
         Path dest = Paths.get(destination);
         Files.move(source, dest, StandardCopyOption.REPLACE_EXISTING);
     }
+    private static void updateLocalVersions(TrudFeed feed) throws IOException {
+        localVersions.put(feed.getName(), feed.getRemoteVersion());
+        mapper.writerWithDefaultPrettyPrinter().writeValue(new File(WorkingDir + "versions.json"), localVersions);
+    }
+
+    private static boolean feedUnzipped(TrudFeed feed) {
+        String extractDir = WorkingDir + "/" + feed.getName() + "/" + feed.getRemoteVersion();
+        return Files.exists(Paths.get(extractDir));
+    }
+
+    private static void unzipFeed(TrudFeed feed) throws IOException {
+        String extractDir = WorkingDir + "/" + feed.getName() + "/" + feed.getRemoteVersion();
+        String zipFile = WorkingDir + feed.getName() + "_" + feed.getRemoteVersion() + ".zip";
+        unzipArchive(zipFile, extractDir);
+    }
 
     private static void unzipArchive(String zipFile, String destination) throws IOException {
         LOG.info("Unzipping {}", zipFile);
         File destDir = new File(destination);
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[BUFFER_SIZE];
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
@@ -253,46 +270,70 @@ public class TrudUpdater {
     }
 
     private static void processODSTools(TrudFeed feed) {
-        LOG.info("Unzip ODSTools");
         String path = WorkingDir + feed.getName() + "/" + feed.getRemoteVersion() + "/";
-        try {
-            unzipArchive(path + "transform.zip", path);
-            unzipArchive(path + "HSCOrgRefData_xslt.zip", path);
-        } catch (IOException e) {
-            LOG.error("Error extracting ODSTools sub archives");
+
+        if (!Files.exists(Paths.get(path + "HSCOrgRefData_xslt.zip"))) {
+            LOG.info("Unzip transform.zip");
+            try {
+                unzipArchive(path + "transform.zip", path);
+            } catch (IOException e) {
+                LOG.error("Error extracting transform.zip");
+            }
+        }
+
+        if (!Files.exists(Paths.get(path + "HSCOrgRefData_xmltocsv.xslt"))) {
+            LOG.info("Unzip HSCOrgRefData_xslt.zip");
+            try {
+                unzipArchive(path + "HSCOrgRefData_xslt.zip", path);
+            } catch (IOException e) {
+                LOG.error("Error extracting HSCOrgRefData_xslt.zip");
+            }
         }
     }
 
     private static void processODS(TrudFeed feed) {
         String path = WorkingDir + feed.getName() + "/" + feed.getRemoteVersion();
+
+        boolean fullfileUnzipped;
         try {
-        LOG.info("Unzip ODS");
-            unzipArchive(path + "/fullfile.zip", path);
+            findFileForId(path, ".*\\HSCOrgRefData_Full_.*.xml");
+            fullfileUnzipped = true;
         } catch (IOException e) {
-            LOG.error("Error extracting ODS sub archive");
+            fullfileUnzipped = false;
         }
 
-        try {
-            LOG.info("Transforming XML to CSV...");
-            Path fullData = findFileForId(path, ".*\\HSCOrgRefData_Full_.*.xml");
-            String tools = WorkingDir + "ODSTOOLS/" + localVersions.get("ODSTOOLS").asText();
-            Process proc = Runtime.getRuntime().exec(new String[]{
-                "java",
-                "-jar",
-                "\"" + tools + "/saxon/Java/saxon9he.jar\"",
-                "-t",
-                "-s:" + fullData.getFileName(),
-                "-xsl:\"" + tools + "/HSCOrgRefData_xmltocsv.xslt\"",
-                "server-name=\"" + path + "\""
-            }, null, new File(path));
-            proc.waitFor();
+        if (!fullfileUnzipped) {
+            LOG.info("Unzip fullfile.zip");
+            try {
+                unzipArchive(path + "/fullfile.zip", path);
+            } catch (IOException e) {
+                LOG.error("Error extracting fullfile.zip");
+            }
+        }
 
-            LOG.debug(getStreamAsString(proc.getInputStream()));
-            LOG.error(getStreamAsString(proc.getErrorStream()));
+        if (!Files.exists(Paths.get(path + "/Organisation_Details.csv"))) {
+            try {
+                LOG.info("Transforming XML to CSV...");
+                Path fullData = findFileForId(path, ".*\\HSCOrgRefData_Full_.*.xml");
+                String tools = WorkingDir + "ODSTOOLS/" + localVersions.get("ODSTOOLS").asText();
+                Process proc = Runtime.getRuntime().exec(new String[]{
+                    "java",
+                    "-jar",
+                    "\"" + tools + "/saxon/Java/saxon9he.jar\"",
+                    "-t",
+                    "-s:" + fullData.getFileName(),
+                    "-xsl:\"" + tools + "/HSCOrgRefData_xmltocsv.xslt\"",
+                    "server-name=\"" + path + "\""
+                }, null, new File(path));
+                proc.waitFor();
+
+                LOG.debug(getStreamAsString(proc.getInputStream()));
+                LOG.error(getStreamAsString(proc.getErrorStream()));
 
 
-        } catch (Exception e) {
-            LOG.error("Error transforming ODS data", e);
+            } catch (Exception e) {
+                LOG.error("Error transforming ODS data", e);
+            }
         }
     }
 

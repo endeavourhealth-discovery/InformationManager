@@ -18,6 +18,7 @@ dependencies {
     implementation libs.javaxxmlbind
     implementation libs.jaxbApi
     implementation libs.jaxbRuntime
+    implementation libs.jerseyClient
     implementation libs.jsonSimple
     implementation libs.logbackCore
     implementation libs.logbackClassic
@@ -28,6 +29,7 @@ dependencies {
     implementation libs.rdf4jRepoHttp
     implementation libs.rdf4jRepoSail
     implementation libs.slf4j
+    implementation libs.wsrs
 
     testImplementation libs.junit
     testImplementation libs.junitEngine

@@ -16,5 +16,17 @@ java -cp Feeds-1.0-SNAPSHOT.jar org.endeavourhealth.informationmanager.trud.Trud
 echo Removing old repository...
 rm -rf ./im
 
+echo Shutting down services
+service tomcat stop
+systemctl stop nodeapi
+systemctl stop graphdb
+
 echo Running preload...
 java -cp Transforms-1.0-SNAPSHOT.jar org.endeavourhealth.informationmanager.transforms.preload.Preload source=/data/dbbuild/ImportData preload=/data/graphdb/bin/preload temp=/data/dbbuild/ImportData/.tmp privacy=0 cmd="systemctl start graphdb"
+
+echo Restarting services
+service tomcat start
+systemctl start nodeapi
+
+### ODS Transform
+### java -jar /data/dbbuild/ImportData/TRUD/ODSTOOLS/2022-06-24/saxon/Java/saxon9he.jar -t -s:/data/dbbuild/ImportData/TRUD/ODS/2022-07-29/HSCOrgRefData_Full_20220725.xml -xsl:/data/dbbuild/ImportData/TRUD/ODSTOOLS/2022-06-24/HSCOrgRefData_primaryroletransform.xslt server-name=/data/dbbuild/ImportData/TRUD/ODS/
