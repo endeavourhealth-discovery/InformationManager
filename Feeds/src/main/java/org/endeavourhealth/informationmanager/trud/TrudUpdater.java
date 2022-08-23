@@ -281,10 +281,18 @@ public class TrudUpdater {
             }
         }
 
-        if (!Files.exists(Paths.get(path + "HSCOrgRefData_xmltocsv.xslt"))) {
+        Path xsltFile = Path.of(path + "HSCOrgRefData_xmltocsv.xslt");
+        if (!Files.exists(xsltFile)) {
             LOG.info("Unzip HSCOrgRefData_xslt.zip");
             try {
                 unzipArchive(path + "HSCOrgRefData_xslt.zip", path);
+
+                // FIX XSLT TO BE CROSS PLATFORM!
+                LOG.warn("Fixing XSLT file to be cross platform compatible");
+                String xslt = Files.readString(xsltFile);
+                xslt = xslt.replace("concat('file:/\\\\',$server-name,'/',$share-name,'/')", "concat('file:///',$server-name,'/',$share-name,'/')");
+                Files.writeString(xsltFile, xslt);
+
             } catch (IOException e) {
                 LOG.error("Error extracting HSCOrgRefData_xslt.zip");
             }
