@@ -81,7 +81,7 @@ public class IM1MapImport implements TTImport {
         Path file =  ImportUtils.findFileForId(inFolder, im1Codes[0]);
         int count = 0;
         try (BufferedReader reader= new BufferedReader(new FileReader(file.toFile()))) {
-            writer= new FileWriter(file.toFile().getParentFile().toString()+"\\UnmappedConcepts.txt");
+            writer= new FileWriter(file.toFile().getParentFile().toString()+"/UnmappedConcepts.txt");
             writer.write("oldIri"+ "\t" + "term" + "\t" + "im1Scheme" + "\t" + "code" + "\t" + "description" + "\t" + "used"+ "\n");
             reader.readLine();
             String line = reader.readLine();
