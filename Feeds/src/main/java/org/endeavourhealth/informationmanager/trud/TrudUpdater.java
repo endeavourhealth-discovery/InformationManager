@@ -319,10 +319,10 @@ public class TrudUpdater {
                 Process proc = Runtime.getRuntime().exec(new String[]{
                     "java",
                     "-jar",
-                    "\"" + tools + "/saxon/Java/saxon9he.jar\"",
+                    tools + "/saxon/Java/saxon9he.jar",
                     "-t",
                     "-s:" + fullData.getFileName(),
-                    "-xsl:\"" + tools + "/HSCOrgRefData_xmltocsv.xslt\"",
+                    "-xsl:" + tools + "/HSCOrgRefData_xmltocsv.xslt",
                     "server-name=\"" + path + "\""
                 }, null, new File(path));
                 proc.waitFor();
