@@ -323,7 +323,7 @@ public class TrudUpdater {
                     "-t",
                     "-s:" + fullData.getFileName(),
                     "-xsl:" + tools + "/HSCOrgRefData_xmltocsv.xslt",
-                    "server-name=\"" + path + "\""
+                    "server-name=" + path
                 }, null, new File(path));
                 proc.waitFor();
 
