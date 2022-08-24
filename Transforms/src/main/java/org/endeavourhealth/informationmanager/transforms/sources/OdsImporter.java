@@ -135,6 +135,6 @@ public class OdsImporter implements TTImport {
 
     @Override
     public void close() throws Exception {
-        fieldIndex.clear();
+        if (fieldIndex != null) fieldIndex.clear();
     }
 }

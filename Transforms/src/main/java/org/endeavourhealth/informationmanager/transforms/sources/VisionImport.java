@@ -311,11 +311,11 @@ public class VisionImport implements TTImport {
 
     @Override
     public void close() throws Exception {
+        if (snomedCodes != null) snomedCodes.clear();
+        if (emisRead != null) emisRead.clear();
         codeToConcept.clear();
-        snomedCodes.clear();
         r2TermIdMap.clear();
         preferredId.clear();
-        emisRead.clear();
 
         importMaps.close();
 

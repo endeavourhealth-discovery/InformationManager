@@ -603,6 +603,7 @@ public class SnomedImporter implements TTImport {
 
     @Override
     public void close() throws Exception {
-        conceptMap.clear();
+       if (conceptMap != null)
+            conceptMap.clear();
     }
 }

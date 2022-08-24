@@ -157,7 +157,7 @@ public class OPCS4Importer implements TTImport {
 
     @Override
     public void close() throws Exception {
-        snomedCodes.clear();
+        if (snomedCodes != null) snomedCodes.clear();
         codeToEntity.clear();
         altCodeToEntity.clear();
 

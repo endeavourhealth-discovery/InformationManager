@@ -411,7 +411,7 @@ public class TPPImporter implements TTImport {
 
     @Override
     public void close() throws Exception {
-        emisToSnomed.clear();
+        if (emisToSnomed != null) emisToSnomed.clear();
         codeToEntity.clear();
         termCodes.clear();
 
