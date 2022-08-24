@@ -27,7 +27,7 @@ public class WinPathKingsImport implements TTImport {
 	private final ImportMaps importMaps = new ImportMaps();
 
 	@Override
-	public TTImport importData(TTImportConfig config) throws Exception {
+	public void importData(TTImportConfig config) throws Exception {
 		try (TTManager manager = new TTManager()) {
             document = manager.createDocument(IM.GRAPH_KINGS_WINPATH.getIri());
             document.addEntity(manager.createGraph(IM.GRAPH_KINGS_WINPATH.getIri(),
@@ -38,12 +38,11 @@ public class WinPathKingsImport implements TTImport {
             importWinPathKings(config.getFolder());
             if (TTFilerFactory.isTransactional()) {
                 new TTTransactionFiler(null).fileTransaction(document);
-                return this;
+                return;
             }
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
             }
-            return this;
         }
 	}
 	private void setTopLevel() {
@@ -106,9 +105,8 @@ public class WinPathKingsImport implements TTImport {
 
 
 	@Override
-	public TTImport validateFiles(String inFolder) {
+	public void validateFiles(String inFolder) {
 		ImportUtils.validateFiles(inFolder,kingsWinPath);
-		return null;
 	}
 
 

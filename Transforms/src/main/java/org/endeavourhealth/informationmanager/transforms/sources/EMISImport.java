@@ -54,7 +54,7 @@ public class EMISImport implements TTImport {
      */
 
 
-    public TTImport importData(TTImportConfig config) throws Exception {
+    public void importData(TTImportConfig config) throws Exception {
         System.out.println("Retrieving filed snomed codes");
         document = manager.createDocument(IM.GRAPH_EMIS.getIri());
         document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(), "EMIS (including Read) codes",
@@ -71,10 +71,6 @@ public class EMISImport implements TTImport {
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
-
-
-        return this;
-
     }
 
     private void importDrugs(String folder) throws IOException {
@@ -350,9 +346,8 @@ public class EMISImport implements TTImport {
     }
 
 
-    public EMISImport validateFiles(String inFolder){
+    public void validateFiles(String inFolder){
          ImportUtils.validateFiles(inFolder,emisCodes,allergies);
-        return this;
     }
 
     @Override

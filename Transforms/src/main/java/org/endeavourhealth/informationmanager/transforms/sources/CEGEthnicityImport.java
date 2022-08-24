@@ -32,7 +32,7 @@ public class CEGEthnicityImport implements TTImport {
 
 
 	@Override
-	public TTImport importData(TTImportConfig config) throws Exception {
+	public void importData(TTImportConfig config) throws Exception {
 
 		document = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 		nhsDocument= nhsManager.createDocument(IM.GRAPH_NHSDD_ETHNIC_2001.getIri());
@@ -58,8 +58,6 @@ public class CEGEthnicityImport implements TTImport {
 				filer.fileDocument(nhsDocument);
 			}
 		}
-
-		return this;
 	}
 
 
@@ -228,9 +226,8 @@ public class CEGEthnicityImport implements TTImport {
 	}
 
 	@Override
-	public TTImport validateFiles(String inFolder) throws TTFilerException {
+	public void validateFiles(String inFolder) throws TTFilerException {
 		ImportUtils.validateFiles(inFolder,lookups);
-		return this;
 	}
 
     @Override

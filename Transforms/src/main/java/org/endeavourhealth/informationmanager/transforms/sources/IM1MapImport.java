@@ -42,12 +42,11 @@ public class IM1MapImport implements TTImport {
 
 
     @Override
-	public TTImport importData(TTImportConfig config) throws Exception {
+	public void importData(TTImportConfig config) throws Exception {
         importData(config.getFolder(), config.isSecure());
-        return this;
     }
 
-    public TTImport importData(String inFolder, boolean secure) throws Exception {
+    public void importData(String inFolder, boolean secure) throws Exception {
 
         importOld(inFolder);
         used= importUsage(inFolder);
@@ -67,11 +66,6 @@ public class IM1MapImport implements TTImport {
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(statsDocument);
         }
-
-
-
-        return this;
-
     }
 
     private void importv1Codes(String inFolder) throws Exception {
@@ -839,10 +833,8 @@ public class IM1MapImport implements TTImport {
 
 
     @Override
-	public TTImport validateFiles(String inFolder)  {
-
+	public void validateFiles(String inFolder)  {
          ImportUtils.validateFiles(inFolder,im1Codes,oldIris,context,usageDbid);
-         return this;
 	}
 
     @Override

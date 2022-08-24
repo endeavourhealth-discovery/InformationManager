@@ -20,7 +20,7 @@ public class NHSTfcImport implements TTImport {
 	private TTIriRef nhsTfc;
 
 	@Override
-	public TTImport importData(TTImportConfig config) throws Exception {
+	public void importData(TTImportConfig config) throws Exception {
 		document = manager.createDocument(IM.GRAPH_NHS_TFC.getIri());
 		document.addEntity(manager.createGraph(IM.GRAPH_NHS_TFC.getIri(),
 			"NHS Data Dictionary Speciality and Treatment function codes"
@@ -30,8 +30,7 @@ public class NHSTfcImport implements TTImport {
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}
-		return this;
-	}
+    }
 
 	private void setNHSDD() {
 		nhsTfc= TTIriRef.iri(IM.GRAPH_NHS_TFC.getIri()+"NHSTfc");
@@ -75,9 +74,8 @@ public class NHSTfcImport implements TTImport {
 	}
 
 	@Override
-	public TTImport validateFiles(String inFolder) throws TTFilerException {
+	public void validateFiles(String inFolder) throws TTFilerException {
 		ImportUtils.validateFiles(inFolder,treatmentCodes);
-		return this;
 	}
 
     @Override

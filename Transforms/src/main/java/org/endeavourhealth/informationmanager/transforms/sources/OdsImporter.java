@@ -30,9 +30,8 @@ public class OdsImporter implements TTImport {
     private List<String> fieldIndex;
     private String[] fieldData;
 
-    public OdsImporter validateFiles(String inFolder) {
+    public void validateFiles(String inFolder) {
         ImportUtils.validateFiles(inFolder, organisationFiles);
-        return this;
     }
 
 
@@ -44,7 +43,7 @@ public class OdsImporter implements TTImport {
      * @throws Exception invalid document
      */
     @Override
-    public TTImport importData(TTImportConfig config) throws Exception {
+    public void importData(TTImportConfig config) throws Exception {
         LOG.info("Importing Organisation data");
 
 
@@ -80,7 +79,6 @@ public class OdsImporter implements TTImport {
                 }
             }
         }
-        return this;
     }
 
     private boolean readLine(BufferedReader reader) throws IOException {

@@ -16,9 +16,8 @@ public class DiscoveryReportsImporter implements TTImport {
 
 
 
-   public DiscoveryReportsImporter validateFiles(String inFolder){
+   public void validateFiles(String inFolder){
       ImportUtils.validateFiles(inFolder, ReportsConcepts);
-      return this;
    }
 
 
@@ -29,13 +28,12 @@ public class DiscoveryReportsImporter implements TTImport {
     * @return TTImport object builder pattern
     * @throws Exception invalid document
     */
-   public TTImport importData(TTImportConfig config) throws Exception {
+   public void importData(TTImportConfig config) throws Exception {
       System.out.println("Importing Reports concepts");
       TTDocument document= loadFile(config.getFolder());
        try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
            filer.fileDocument(document);
        }
-       return this;
    }
 
    /**

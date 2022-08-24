@@ -37,7 +37,7 @@ public class OPCS4Importer implements TTImport {
     private final Map<String,TTEntity> altCodeToEntity= new HashMap<>();
     private ImportMaps importMaps = new ImportMaps();
 
-    public TTImport importData(TTImportConfig config) throws Exception {
+    public void importData(TTImportConfig config) throws Exception {
         System.out.println("Importing OPCS4.....");
         System.out.println("Checking Snomed codes first");
         snomedCodes= importMaps.importSnomedCodes();
@@ -56,7 +56,6 @@ public class OPCS4Importer implements TTImport {
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(mapDocument);
             }
-            return this;
         }
     }
 
@@ -152,9 +151,8 @@ public class OPCS4Importer implements TTImport {
         }
     }
 
-    public OPCS4Importer validateFiles(String inFolder){
-         ImportUtils.validateFiles(inFolder,entities,chapters,maps);
-        return this;
+    public void validateFiles(String inFolder) {
+        ImportUtils.validateFiles(inFolder, entities, chapters, maps);
     }
 
     @Override

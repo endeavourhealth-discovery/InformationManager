@@ -47,7 +47,7 @@ public class BartsCernerImport implements TTImport {
 
 
 	@Override
-	public TTImport importData(TTImportConfig config) throws Exception {
+	public void importData(TTImportConfig config) throws Exception {
 
 		conn= ConnectionManager.getIMConnection();
 		System.out.println("retrieving snomed codes from IM");
@@ -65,10 +65,6 @@ public class BartsCernerImport implements TTImport {
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
-
-
-        
-		return this;
 	}
 
 	private void setUsedEventSets() {
@@ -321,11 +317,9 @@ public class BartsCernerImport implements TTImport {
 
 
     @Override
-	public TTImport validateFiles(String inFolder) {
-
-		 ImportUtils.validateFiles(inFolder, maps,used);
-			return this;
-	}
+	public void validateFiles(String inFolder) {
+        ImportUtils.validateFiles(inFolder, maps, used);
+    }
 
     @Override
     public void close() throws Exception {

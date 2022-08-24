@@ -41,7 +41,7 @@ public class CEGImporter implements TTImport {
 	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
 	public static final Map<TTIriRef,TTEntity> valueSets= new HashMap<>();
 	@Override
-	public TTImport importData(TTImportConfig config) throws Exception {
+	public void importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
 		document= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 		TTEntity graph= new TTEntity()
@@ -87,14 +87,12 @@ public class CEGImporter implements TTImport {
 		}
 		if (TTFilerFactory.isTransactional()){
 			new TTTransactionFiler(null).fileTransaction(document);
-			return this;
+			return;
 		}
 
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}
-
-		return this;
 	}
 
 
@@ -213,9 +211,8 @@ public class CEGImporter implements TTImport {
 
 
 	@Override
-	public TTImport validateFiles(String inFolder) throws TTFilerException {
+	public void validateFiles(String inFolder) throws TTFilerException {
 		 ImportUtils.validateFiles(inFolder,queries,annotations,duplicates,lookups);
-		return this;
 	}
 
 

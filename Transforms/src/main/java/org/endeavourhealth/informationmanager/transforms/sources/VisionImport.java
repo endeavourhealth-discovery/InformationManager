@@ -41,7 +41,7 @@ public class VisionImport implements TTImport {
 
 
 	@Override
-	public TTImport importData(TTImportConfig config) throws Exception {
+	public void importData(TTImportConfig config) throws Exception {
 
 		System.out.println("importing vision codes");
 		System.out.println("retrieving snomed codes from IM");
@@ -63,7 +63,6 @@ public class VisionImport implements TTImport {
                 filer.fileDocument(document);
             }
 
-            return this;
         }
 	}
 
@@ -306,9 +305,8 @@ public class VisionImport implements TTImport {
 	}
 
 	@Override
-	public TTImport validateFiles(String inFolder) {
+	public void validateFiles(String inFolder) {
 		 ImportUtils.validateFiles(inFolder,r2Terms,r2Desc,visionRead2Code,visionRead2toSnomed);
-		return this;
 	}
 
     @Override

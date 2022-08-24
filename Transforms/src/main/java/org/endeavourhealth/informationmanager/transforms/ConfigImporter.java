@@ -17,7 +17,7 @@ public class ConfigImporter implements TTImport {
     private TTDocument document;
 
     @Override
-    public TTImport importData(TTImportConfig ttImportConfig) throws Exception {
+    public void importData(TTImportConfig ttImportConfig) throws Exception {
 
         document = manager.createDocument(IM.GRAPH_CONFIG.getIri());
         document.addEntity(manager.createGraph(IM.GRAPH_CONFIG.getIri(), "Config", "Config"));
@@ -27,8 +27,6 @@ public class ConfigImporter implements TTImport {
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
-
-        return this;
     }
 
     private void importConfig(String folder) throws IOException {
@@ -37,9 +35,8 @@ public class ConfigImporter implements TTImport {
     }
 
     @Override
-    public TTImport validateFiles(String inFolder) throws TTFilerException {
+    public void validateFiles(String inFolder) throws TTFilerException {
         ImportUtils.validateFiles(inFolder,config);
-        return this;
     }
 
     @Override

@@ -27,7 +27,7 @@ public class ApexKingsImport implements TTImport {
 
 
 	@Override
-	public TTImport importData(TTImportConfig config) throws Exception {
+	public void importData(TTImportConfig config) throws Exception {
 
         try (TTManager manager = new TTManager()) {
             document = manager.createDocument(IM.GRAPH_KINGS_APEX.getIri());
@@ -39,13 +39,12 @@ public class ApexKingsImport implements TTImport {
             importApexKings(config.getFolder());
             if (TTFilerFactory.isTransactional()) {
                 new TTTransactionFiler(null).fileTransaction(document);
-                return this;
+                return;
             }
 
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
             }
-            return this;
         }
     }
 
@@ -108,9 +107,8 @@ public class ApexKingsImport implements TTImport {
 
 
 	@Override
-	public TTImport validateFiles(String inFolder) {
+	public void validateFiles(String inFolder) {
 		 ImportUtils.validateFiles(inFolder,kingsPath);
-		return null;
 	}
 
 

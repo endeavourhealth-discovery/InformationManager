@@ -26,7 +26,7 @@ public class PRSBImport implements TTImport {
 	private Map<String, TTArray> axiomMap;
 
 	@Override
-	public TTImport importData(TTImportConfig config) throws Exception {
+	public void importData(TTImportConfig config) throws Exception {
 		validateFiles(config.getFolder());
 		try (TTManager dmanager= new TTManager()) {
             document = dmanager.createDocument(IM.GRAPH_PRSB.getIri());
@@ -36,7 +36,6 @@ public class PRSBImport implements TTImport {
             //TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());
             dmanager.saveDocument(new File(config.getFolder() + "prsb.json"));
             //filer.fileDocument(document);
-            return this;
         }
 	}
 
@@ -148,9 +147,8 @@ public class PRSBImport implements TTImport {
 	}
 
 	@Override
-	public TTImport validateFiles(String inFolder) {
+	public void validateFiles(String inFolder) {
 		ImportUtils.validateFiles(inFolder,prsbEntities);
-		return this;
 	}
 
 

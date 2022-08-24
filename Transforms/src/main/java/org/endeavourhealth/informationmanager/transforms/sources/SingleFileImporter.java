@@ -27,22 +27,19 @@ public class SingleFileImporter implements TTImport{
 
 
 	@Override
-	public TTImport importData(TTImportConfig ttImportConfig) throws Exception {
+	public void importData(TTImportConfig ttImportConfig) throws Exception {
 		try (TTManager manager= new TTManager()) {
             manager.loadDocument(new File(ttImportConfig.getFolder().replaceAll("%", " ")));
             manager.setDocument(generateInferred(manager.getDocument()));
             TTTransactionFiler filer = new TTTransactionFiler();
             filer.fileTransaction(manager.getDocument());
-            return this;
         }
 	}
 
 	@Override
-	public TTImport validateFiles(String fileName) throws TTFilerException {
+	public void validateFiles(String fileName) throws TTFilerException {
 		fileName= fileName.replaceAll("%"," ");
-		if (new File(fileName).exists())
-			return this;
-		else
+		if (!new File(fileName).exists())
 			throw new TTFilerException(fileName+" not found");
 	}
 

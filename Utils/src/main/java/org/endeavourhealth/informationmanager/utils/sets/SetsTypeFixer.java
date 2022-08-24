@@ -28,7 +28,7 @@ public class SetsTypeFixer implements TTImport {
 
 
     @Override
-    public TTImport importData(TTImportConfig config) throws Exception {
+    public void importData(TTImportConfig config) throws Exception {
         List<String> setsIris = findSets();
         try (TTManager manager= new TTManager()) {
             Path file = ImportUtils.findFileForId(config.getFolder(), sets[0]);
@@ -38,7 +38,6 @@ public class SetsTypeFixer implements TTImport {
             newDocument = fixSetsTypes(setsIris, document);
             manager.setDocument(newDocument);
             manager.saveDocument(new File(config.getFolder() + sets[0].substring(2)));
-            return this;
         }
     }
 
@@ -85,9 +84,8 @@ public class SetsTypeFixer implements TTImport {
     }
 
     @Override
-    public TTImport validateFiles(String inFolder) {
+    public void validateFiles(String inFolder) {
         ImportUtils.validateFiles(inFolder,sets);
-        return this;
     }
 
     @Override

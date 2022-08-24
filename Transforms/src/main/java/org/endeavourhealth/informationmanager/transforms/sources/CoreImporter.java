@@ -33,9 +33,8 @@ public class CoreImporter implements TTImport {
 
 
 
-   public CoreImporter validateFiles(String inFolder){
+   public void validateFiles(String inFolder){
       ImportUtils.validateFiles(inFolder,coreEntities);
-      return this;
    }
 
 
@@ -46,7 +45,7 @@ public class CoreImporter implements TTImport {
     * @throws Exception invalid document
     */
    @Override
-   public TTImport importData(TTImportConfig config) throws Exception {
+   public void importData(TTImportConfig config) throws Exception {
      System.out.println("Generating inferred ontologies...");
      generateInferred(config);
      importNamespaces();
@@ -70,7 +69,6 @@ public class CoreImporter implements TTImport {
       }
       CoreQueryImporter qryImporter= new CoreQueryImporter();
       qryImporter.importData(config);
-      return this;
    }
 
 

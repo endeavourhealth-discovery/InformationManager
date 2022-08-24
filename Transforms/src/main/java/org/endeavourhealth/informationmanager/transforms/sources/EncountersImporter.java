@@ -13,10 +13,9 @@ public class EncountersImporter implements TTImport {
    private static final String[] encounters ={ ".*\\\\DiscoveryNoneCore\\\\Encounters.json"};
 
 
-   public TTImport importData(TTImportConfig config) throws Exception {
+   public void importData(TTImportConfig config) throws Exception {
       System.out.println("Importing Discovery entities");
       importNoneCoreFile(config);
-      return this;
    }
 
    private void importNoneCoreFile(TTImportConfig config) throws Exception {
@@ -28,9 +27,8 @@ public class EncountersImporter implements TTImport {
        }
    }
 
-   public EncountersImporter validateFiles(String inFolder){
+   public void validateFiles(String inFolder){
       ImportUtils.validateFiles(inFolder,encounters);
-      return this;
    }
 
 

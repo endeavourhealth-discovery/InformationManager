@@ -101,7 +101,7 @@ public class SnomedImporter implements TTImport {
     */
 
    @Override
-   public TTImport importData(TTImportConfig config) throws Exception {
+   public void importData(TTImportConfig config) throws Exception {
       validateFiles(config.getFolder());
       conceptMap = new HashMap<>();
       try (TTManager dmanager= new TTManager()) {
@@ -135,7 +135,6 @@ public class SnomedImporter implements TTImport {
           try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
               filer.fileDocument(document);
           }
-          return this;
       }
    }
 
@@ -597,11 +596,9 @@ public class SnomedImporter implements TTImport {
       return newGroup;
    }
 
-   public SnomedImporter validateFiles(String inFolder){
+   public void validateFiles(String inFolder){
        ImportUtils.validateFiles(inFolder,concepts, descriptions,
           relationships, refsets, attributeRanges, attributeDomains,substitutions,qofClusters);
-      return this;
-
    }
 
     @Override

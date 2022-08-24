@@ -25,41 +25,39 @@ public class ICD10Importer implements TTImport {
     private static final String[] chapters = {".*\\\\ICD10\\\\ICD10-Chapters.txt"};
 
 
-    private final TTIriRef icd10Codes= TTIriRef.iri(IM.CODE_SCHEME_ICD10.getIri()+"ICD10Codes");
-    private final TTManager manager= new TTManager();
+    private final TTIriRef icd10Codes = TTIriRef.iri(IM.CODE_SCHEME_ICD10.getIri() + "ICD10Codes");
+    private final TTManager manager = new TTManager();
     private Set<String> snomedCodes;
-    private final Map<String,TTEntity> startChapterMap= new HashMap<>();
-    private final List<String> startChapterList= new ArrayList<>();
+    private final Map<String, TTEntity> startChapterMap = new HashMap<>();
+    private final List<String> startChapterList = new ArrayList<>();
     private TTDocument document;
     private TTDocument mapDocument;
-    private final Map<String,TTEntity> codeToEntity= new HashMap<>();
-    private final Map<String,TTEntity> altCodeToEntity= new HashMap<>();
+    private final Map<String, TTEntity> codeToEntity = new HashMap<>();
+    private final Map<String, TTEntity> altCodeToEntity = new HashMap<>();
     private final ImportMaps importMaps = new ImportMaps();
 
     @Override
-    public TTImport importData(TTImportConfig config) throws Exception {
+    public void importData(TTImportConfig config) throws Exception {
         validateFiles(config.getFolder());
         System.out.println("Importing ICD10....");
         System.out.println("Getting snomed codes");
-        snomedCodes= importMaps.importSnomedCodes();
+        snomedCodes = importMaps.importSnomedCodes();
         document = manager.createDocument(IM.GRAPH_ICD10.getIri());
-        document.addEntity(manager.createGraph(IM.GRAPH_ICD10.getIri(),"ICD10  code scheme and graph","The ICD10 code scheme and graph including links to core"));
+        document.addEntity(manager.createGraph(IM.GRAPH_ICD10.getIri(), "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
         createTaxonomy();
-        importChapters(config.getFolder(),document);
+        importChapters(config.getFolder(), document);
         importEntities(config.getFolder(), document);
         createHierarchy();
 
 
-        mapDocument= manager.createDocument(IM.GRAPH_ICD10.getIri());
+        mapDocument = manager.createDocument(IM.GRAPH_ICD10.getIri());
         importMaps(config.getFolder());
-        try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(mapDocument);
         }
-        return this;
-
     }
 
     private void createHierarchy() {
@@ -67,21 +65,21 @@ public class ICD10Importer implements TTImport {
         for (Map.Entry<String, TTEntity> entry : codeToEntity.entrySet()) {
             String code = entry.getKey();
             TTEntity icd10Entity = entry.getValue();
-            if (code.contains(".")){
-                String qParent= code.substring(0, code.indexOf("."));
-                TTEntity parent=codeToEntity.get(qParent);
-                icd10Entity.addObject(IM.IS_CHILD_OF,TTIriRef.iri(parent.getIri()));
+            if (code.contains(".")) {
+                String qParent = code.substring(0, code.indexOf("."));
+                TTEntity parent = codeToEntity.get(qParent);
+                icd10Entity.addObject(IM.IS_CHILD_OF, TTIriRef.iri(parent.getIri()));
             } else {
-                int insertion = Collections.binarySearch(startChapterList,code);
+                int insertion = Collections.binarySearch(startChapterList, code);
                 int parentIndex;
-                if (insertion>-1)
-                    parentIndex=insertion;
+                if (insertion > -1)
+                    parentIndex = insertion;
                 else
-                    parentIndex=-(insertion+1)-1;
-                String qParent= startChapterList.get(parentIndex);
-                TTEntity parent= startChapterMap.get(qParent);
-               // System.out.println(code+" in "+ parent.getCode() +"?");
-                icd10Entity.addObject(IM.IS_CHILD_OF,TTIriRef.iri(parent.getIri()));
+                    parentIndex = -(insertion + 1) - 1;
+                String qParent = startChapterList.get(parentIndex);
+                TTEntity parent = startChapterMap.get(qParent);
+                // System.out.println(code+" in "+ parent.getCode() +"?");
+                icd10Entity.addObject(IM.IS_CHILD_OF, TTIriRef.iri(parent.getIri()));
             }
 
         }
@@ -89,14 +87,14 @@ public class ICD10Importer implements TTImport {
     }
 
     private void createTaxonomy() {
-        TTEntity icd10= new TTEntity()
-          .setIri(icd10Codes.getIri())
-          .setName("ICD10 5th edition classification codes")
-          .addType(IM.CONCEPT)
-          .setCode("ICD10Codes")
-          .setScheme(IM.GRAPH_ICD10)
-          .setDescription("ICD1O classification used in backward maps from Snomed");
-        icd10.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+        TTEntity icd10 = new TTEntity()
+            .setIri(icd10Codes.getIri())
+            .setName("ICD10 5th edition classification codes")
+            .addType(IM.CONCEPT)
+            .setCode("ICD10Codes")
+            .setScheme(IM.GRAPH_ICD10)
+            .setDescription("ICD1O classification used in backward maps from Snomed");
+        icd10.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
         document.addEntity(icd10);
 
     }
@@ -104,15 +102,15 @@ public class ICD10Importer implements TTImport {
     public void importMaps(String folder) throws IOException, DataFormatException {
 
         validateFiles(folder);
-        Path file =  ImportUtils.findFileForId(folder,maps[0]);
-         ComplexMapImporter mapImport= new ComplexMapImporter();
-        mapImport.importMap(file.toFile(),mapDocument,altCodeToEntity,"999002271000000101",snomedCodes);
+        Path file = ImportUtils.findFileForId(folder, maps[0]);
+        ComplexMapImporter mapImport = new ComplexMapImporter();
+        mapImport.importMap(file.toFile(), mapDocument, altCodeToEntity, "999002271000000101", snomedCodes);
     }
 
 
     private void importChapters(String folder, TTDocument document) throws IOException {
 
-        Path file =  ImportUtils.findFileForId(folder, chapters[0]);
+        Path file = ImportUtils.findFileForId(folder, chapters[0]);
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
             reader.readLine();  // NOSONAR - Skipping header
             String line = reader.readLine();
@@ -123,19 +121,19 @@ public class ICD10Importer implements TTImport {
                     System.out.println("Processed " + count + " records");
                 }
                 String[] fields = line.split("\t");
-                String iri= IM.CODE_SCHEME_ICD10.getIri()+fields[1];
-                String code= fields[1];
-                String label = "Chapter " + fields[0]+ ": "+ fields[2];
+                String iri = IM.CODE_SCHEME_ICD10.getIri() + fields[1];
+                String code = fields[1];
+                String label = "Chapter " + fields[0] + ": " + fields[2];
                 TTEntity c = new TTEntity()
-                  .setCode(code)
-                  .setName(label)
-                  .setIri(iri)
-                  .setScheme(IM.CODE_SCHEME_ICD10)
-                  .setStatus(IM.ACTIVE)
-                  .addType(IM.CONCEPT);
-                c.addObject(IM.IS_CHILD_OF,icd10Codes);
-                startChapterMap.put(code.substring(0,code.indexOf("-")),c);
-                startChapterList.add(code.substring(0,code.indexOf("-")));
+                    .setCode(code)
+                    .setName(label)
+                    .setIri(iri)
+                    .setScheme(IM.CODE_SCHEME_ICD10)
+                    .setStatus(IM.ACTIVE)
+                    .addType(IM.CONCEPT);
+                c.addObject(IM.IS_CHILD_OF, icd10Codes);
+                startChapterMap.put(code.substring(0, code.indexOf("-")), c);
+                startChapterList.add(code.substring(0, code.indexOf("-")));
                 document.addEntity(c);
                 line = reader.readLine();
             }
@@ -147,7 +145,7 @@ public class ICD10Importer implements TTImport {
 
     private void importEntities(String folder, TTDocument document) throws IOException {
 
-        Path file =  ImportUtils.findFileForId(folder, entities[0]);
+        Path file = ImportUtils.findFileForId(folder, entities[0]);
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
             reader.readLine();  // NOSONAR - Skipping header
             String line = reader.readLine();
@@ -159,20 +157,20 @@ public class ICD10Importer implements TTImport {
                 }
                 String[] fields = line.split("\t");
                 TTEntity c = new TTEntity()
-                  .setCode(fields[0])
-                  .setScheme(IM.CODE_SCHEME_ICD10)
-                  .setIri(IM.CODE_SCHEME_ICD10.getIri() + (fields[0].replace(".","")))
-                  .addType(IM.CONCEPT);
-                if(fields[4].length()>250){
-                    c.setName(fields[4].substring(0,200));
+                    .setCode(fields[0])
+                    .setScheme(IM.CODE_SCHEME_ICD10)
+                    .setIri(IM.CODE_SCHEME_ICD10.getIri() + (fields[0].replace(".", "")))
+                    .addType(IM.CONCEPT);
+                if (fields[4].length() > 250) {
+                    c.setName(fields[4].substring(0, 200));
                     c.setDescription(fields[4]);
-                }else {
+                } else {
                     c.setName(fields[4]);
                 }
 
 
-                codeToEntity.put(fields[0],c);
-                altCodeToEntity.put(fields[1],c);
+                codeToEntity.put(fields[0], c);
+                altCodeToEntity.put(fields[1], c);
                 document.addEntity(c);
                 line = reader.readLine();
             }
@@ -182,9 +180,8 @@ public class ICD10Importer implements TTImport {
 
     }
 
-    public TTImport validateFiles(String path){
-         ImportUtils.validateFiles(path,entities,maps,chapters);
-        return this;
+    public void validateFiles(String path) {
+        ImportUtils.validateFiles(path, entities, maps, chapters);
     }
 
     @Override

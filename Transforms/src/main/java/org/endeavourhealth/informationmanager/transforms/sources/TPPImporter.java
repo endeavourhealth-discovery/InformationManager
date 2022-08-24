@@ -46,7 +46,7 @@ public class TPPImporter implements TTImport {
     private ImportMaps importMaps = new ImportMaps();
 
 
-    public TTImport importData(TTImportConfig config) throws Exception {
+    public void importData(TTImportConfig config) throws Exception {
 
 
         System.out.println("Looking for Snomed codes");
@@ -83,7 +83,6 @@ public class TPPImporter implements TTImport {
                 filer.fileDocument(vDocument);
             }
 
-            return this;
         }
     }
 
@@ -361,9 +360,8 @@ public class TPPImporter implements TTImport {
     }
 
     @Override
-    public TTImport validateFiles(String inFolder) {
+    public void validateFiles(String inFolder) {
          ImportUtils.validateFiles(inFolder,concepts,descriptions,dcf,terms,hierarchies,tppCtv3Lookup,tppCtv3ToSnomed,nhsMap,vaccineMaps);
-        return this;
     }
 
 

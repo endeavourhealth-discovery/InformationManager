@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class CoreQueryImporter implements TTImport {
 
 	@Override
-	public TTImport importData(TTImportConfig config) throws Exception {
+	public void importData(TTImportConfig config) throws Exception {
 		TTManager manager = new TTManager();
 		TTDocument document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
 		output(document);
@@ -32,9 +32,7 @@ public class CoreQueryImporter implements TTImport {
 		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 			filer.fileDocument(document);
 		}
-
-		return null;
-	}
+    }
 
 	private void addCurrentReg(TTDocument document,String outFolder) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		TTEntity qry = new TTEntity().addType(IM.QUERY);
@@ -91,8 +89,7 @@ public class CoreQueryImporter implements TTImport {
 
 
 	@Override
-	public TTImport validateFiles(String inFolder) throws TTFilerException {
-		return null;
+	public void validateFiles(String inFolder) throws TTFilerException {
 	}
 
 
