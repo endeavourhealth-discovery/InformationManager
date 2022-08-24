@@ -17,11 +17,14 @@ public class WikiGenerator {
 
 	public  StringBuilder generateTable(TTManager manager){
 		this.manager= manager;
+		table.append("The grammar and syntax below is presented in the form of classes and fields."+
+			"<br>The actual syntax in use would be JSON with the value object content of the fields conforming to the class definitions."+
+		"<br> This documentation is auto generated from the SHACL shapes in the information model\n\n");
 		table.append("{| class=\"wikitable\"\n" +
 			"|+\n" +
 			"!Class\n" +
 			"!colspan=\"2\"|Field\n" +
-			"!colspan=\"2\"|Card.\n"+
+			"!Card.\n"+
 			"!Type\n"+
 			"!Comment\n"+
 			"|-\n");

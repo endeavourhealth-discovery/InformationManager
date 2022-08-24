@@ -107,7 +107,7 @@ public class ModelShapes {
 		select(getEntity(IM.NAMESPACE+"SelectClause"));
 		match(getEntity(IM.NAMESPACE+"MatchClause"));
 		function(getEntity(IM.NAMESPACE+"Function"));
-		parameter(getEntity(IM.NAMESPACE+""))
+		parameter(getEntity(IM.NAMESPACE+"Parameter"));
 		functionClause(getEntity(IM.NAMESPACE+"FunctionClause"));
 		propertySelect(getEntity(IM.NAMESPACE+"PropertySelectClause"));
 		orderLimit(getEntity(IM.NAMESPACE+"OrderLimitClause"));
@@ -123,7 +123,11 @@ public class ModelShapes {
 		setOrs(shape,List.of("datatype","class"),1,1);
 	}
 
-	private static void functionClause(TTEntity entity) {
+	private static void functionClause(TTEntity shape) {
+		setLabels(shape);
+		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriRef"));
+		addProperty(shape,"argument",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"Argument"),0,null,"Arguments to pass into the function. They should match the "+
+			"parameter definitions of the function");
 	}
 
 	private static void function(TTEntity shape) {
@@ -134,7 +138,7 @@ public class ModelShapes {
 
 	private static void conceptReference(TTEntity shape) {
 		setLabels(shape);
-		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"Entity"));
+		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriRef"));
 		addProperty(shape,"includeSubtypes",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether to include the subtypes of the entites selected or matched");
 		addProperty(shape,"includeSupertypes",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether to include the supertypes of the entity in a match clause."+
 			" Used for ascending the hierarch to look for properties inherited");
