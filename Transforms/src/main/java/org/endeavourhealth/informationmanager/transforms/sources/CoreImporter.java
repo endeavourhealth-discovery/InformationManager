@@ -114,5 +114,8 @@ public class CoreImporter implements TTImport {
       return manager.loadDocument(file.toFile());
    }
 
+    @Override
+    public void close() throws Exception {
 
+    }
 }

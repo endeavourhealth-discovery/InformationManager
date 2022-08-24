@@ -23,17 +23,19 @@ public class Importer implements TTImportByType {
    @Override
    public TTImportByType importByType(TTIriRef importType, TTImportConfig config) throws Exception {
       System.out.println("Importing "+ importType.getIri());
-      TTImport importer= getImporter(importType);
-      importer.validateFiles(config.getFolder());
-      importer.importData(config);
-      return this;
+      try (TTImport importer= getImporter(importType)) {
+          importer.validateFiles(config.getFolder());
+          importer.importData(config);
+          return this;
+      }
    }
 
    @Override
    public TTImportByType validateByType(TTIriRef importType, String inFolder) throws Exception {
-      TTImport importer= getImporter(importType);
-      importer.validateFiles(inFolder);
-      return this;
+      try (TTImport importer= getImporter(importType)) {
+          importer.validateFiles(inFolder);
+          return this;
+      }
    }
 
 

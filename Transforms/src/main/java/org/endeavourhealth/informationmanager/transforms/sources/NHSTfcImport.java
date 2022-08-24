@@ -79,4 +79,9 @@ public class NHSTfcImport implements TTImport {
 		ImportUtils.validateFiles(inFolder,treatmentCodes);
 		return this;
 	}
+
+    @Override
+    public void close() throws Exception {
+        manager.close();
+    }
 }

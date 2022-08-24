@@ -233,6 +233,20 @@ public class CEGEthnicityImport implements TTImport {
 		return this;
 	}
 
+    @Override
+    public void close() throws Exception {
+        ethnicCensusMap.clear();
+        raceMap.clear();
+        nhsCatmap.clear();
+        cegCatMap.clear();
+        spellMaps.clear();
+        dropWords.clear();
+        census2001.clear();
+
+        importMaps.close();
+        manager.close();
+        nhsManager.close();
+    }
 }
 
 

@@ -29,23 +29,24 @@ public class ApexKingsImport implements TTImport {
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 
-        TTManager manager = new TTManager();
-        document = manager.createDocument(IM.GRAPH_KINGS_APEX.getIri());
-				document.addEntity(manager.createGraph(IM.GRAPH_KINGS_APEX.getIri(),"Kings Apex pathology code scheme and graph",
-					"The Kings Apex LIMB local code scheme and graph"));
+        try (TTManager manager = new TTManager()) {
+            document = manager.createDocument(IM.GRAPH_KINGS_APEX.getIri());
+            document.addEntity(manager.createGraph(IM.GRAPH_KINGS_APEX.getIri(), "Kings Apex pathology code scheme and graph",
+                "The Kings Apex LIMB local code scheme and graph"));
 
-        importR2Matches();
-        setTopLevel();
-        importApexKings(config.getFolder());
-				if (TTFilerFactory.isTransactional()){
-					new TTTransactionFiler(null).fileTransaction(document);
-					return this;
-				}
+            importR2Matches();
+            setTopLevel();
+            importApexKings(config.getFolder());
+            if (TTFilerFactory.isTransactional()) {
+                new TTTransactionFiler(null).fileTransaction(document);
+                return this;
+            }
 
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
+            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                filer.fileDocument(document);
+            }
+            return this;
         }
-        return this;
     }
 
 	private void setTopLevel() {
@@ -113,4 +114,10 @@ public class ApexKingsImport implements TTImport {
 	}
 
 
+    @Override
+    public void close() throws Exception {
+        readToSnomed.clear();
+        apexToRead.clear();
+        importMaps.close();
+    }
 }

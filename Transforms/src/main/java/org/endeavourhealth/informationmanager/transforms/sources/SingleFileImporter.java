@@ -28,12 +28,13 @@ public class SingleFileImporter implements TTImport{
 
 	@Override
 	public TTImport importData(TTImportConfig ttImportConfig) throws Exception {
-		TTManager manager= new TTManager();
-		manager.loadDocument(new File(ttImportConfig.getFolder().replaceAll("%"," ")));
-		manager.setDocument(generateInferred(manager.getDocument()));
-		TTTransactionFiler filer= new TTTransactionFiler();
-		filer.fileTransaction(manager.getDocument());
-		return this;
+		try (TTManager manager= new TTManager()) {
+            manager.loadDocument(new File(ttImportConfig.getFolder().replaceAll("%", " ")));
+            manager.setDocument(generateInferred(manager.getDocument()));
+            TTTransactionFiler filer = new TTTransactionFiler();
+            filer.fileTransaction(manager.getDocument());
+            return this;
+        }
 	}
 
 	@Override
@@ -44,4 +45,9 @@ public class SingleFileImporter implements TTImport{
 		else
 			throw new TTFilerException(fileName+" not found");
 	}
+
+    @Override
+    public void close() throws Exception {
+
+    }
 }

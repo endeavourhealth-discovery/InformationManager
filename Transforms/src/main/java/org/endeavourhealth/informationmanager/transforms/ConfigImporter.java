@@ -41,4 +41,9 @@ public class ConfigImporter implements TTImport {
         ImportUtils.validateFiles(inFolder,config);
         return this;
     }
+
+    @Override
+    public void close() throws Exception {
+        manager.close();
+    }
 }

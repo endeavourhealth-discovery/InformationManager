@@ -34,6 +34,8 @@ public class EncountersImporter implements TTImport {
    }
 
 
+    @Override
+    public void close() throws Exception {
 
-
+    }
 }

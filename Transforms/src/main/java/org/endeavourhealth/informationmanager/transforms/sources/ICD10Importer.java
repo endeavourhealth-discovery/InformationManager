@@ -182,12 +182,18 @@ public class ICD10Importer implements TTImport {
 
     }
 
-
-
-
     public TTImport validateFiles(String path){
          ImportUtils.validateFiles(path,entities,maps,chapters);
         return this;
     }
 
+    @Override
+    public void close() throws Exception {
+        startChapterMap.clear();
+        startChapterList.clear();
+        codeToEntity.clear();
+        altCodeToEntity.clear();
+        importMaps.close();
+        manager.close();
+    }
 }

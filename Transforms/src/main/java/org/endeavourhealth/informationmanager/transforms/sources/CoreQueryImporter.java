@@ -128,4 +128,9 @@ public class CoreQueryImporter implements TTImport {
 		}
 
 	}
+
+    @Override
+    public void close() throws Exception {
+
+    }
 }

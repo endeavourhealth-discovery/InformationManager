@@ -52,5 +52,8 @@ public class DiscoveryReportsImporter implements TTImport {
 
    }
 
+    @Override
+    public void close() throws Exception {
 
+    }
 }

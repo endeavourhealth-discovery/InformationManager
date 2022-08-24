@@ -24,7 +24,7 @@ import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import java.io.IOException;
 import java.util.*;
 
-public class ImportMaps {
+public class ImportMaps implements AutoCloseable {
 	private FileRepository fileRepo= new FileRepository(TTBulkFiler.getDataPath());
 	private ValueFactory valueFactory= new ValidatingValueFactory(SimpleValueFactory.getInstance());
 	private Map<String,String> cachedNames= new HashMap<>();
@@ -395,4 +395,9 @@ public class ImportMaps {
 		else
 			return new EntityRepository2().getReferenceFromTermCode(originalCode,iri);
 	}
+
+    @Override
+    public void close() throws Exception {
+        cachedNames.clear();
+    }
 }

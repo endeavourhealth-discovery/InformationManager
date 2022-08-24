@@ -50,33 +50,34 @@ public class OdsImporter implements TTImport {
 
         boolean graphCreated = false;
         for (String orgFile : organisationFiles) {
-            TTManager manager = new TTManager();
-            TTDocument doc = manager.createDocument();
-            doc.setCrud(IM.UPDATE_ALL);
-            if (!graphCreated) {
-                doc.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(), "ODS Organisational code scheme and graph", "Official ODS code scheme and graph"));
-                graphCreated = true;
-            }
-
-            Path file = ImportUtils.findFileForId(config.getFolder(), orgFile);
-
-            LOG.info("Processing organisations in {}", file.getFileName());
-            int i = 0;
-            try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-                readLine(reader);
-                processHeaders();
-
-                while (readLine(reader)) {
-                    processLine(doc);
-                    i++;
-                    if (i % 25000 == 0)
-                        LOG.info("Processed {} lines", i);
-
+            try (TTManager manager = new TTManager()) {
+                TTDocument doc = manager.createDocument();
+                doc.setCrud(IM.UPDATE_ALL);
+                if (!graphCreated) {
+                    doc.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(), "ODS Organisational code scheme and graph", "Official ODS code scheme and graph"));
+                    graphCreated = true;
                 }
-            }
 
-            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-                filer.fileDocument(doc);
+                Path file = ImportUtils.findFileForId(config.getFolder(), orgFile);
+
+                LOG.info("Processing organisations in {}", file.getFileName());
+                int i = 0;
+                try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+                    readLine(reader);
+                    processHeaders();
+
+                    while (readLine(reader)) {
+                        processLine(doc);
+                        i++;
+                        if (i % 25000 == 0)
+                            LOG.info("Processed {} lines", i);
+
+                    }
+                }
+
+                try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                    filer.fileDocument(doc);
+                }
             }
         }
         return this;
@@ -134,4 +135,8 @@ public class OdsImporter implements TTImport {
         return this.fieldData[i];
     }
 
+    @Override
+    public void close() throws Exception {
+        fieldIndex.clear();
+    }
 }

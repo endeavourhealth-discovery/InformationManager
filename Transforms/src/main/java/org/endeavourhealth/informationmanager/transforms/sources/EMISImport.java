@@ -355,5 +355,14 @@ public class EMISImport implements TTImport {
         return this;
     }
 
-
+    @Override
+    public void close() throws Exception {
+        emisToEntity.clear();
+        codeIdToEntity.clear();
+        snomedToEmis.clear();
+        termToEmis.clear();
+        parentMap.clear();
+        remaps.clear();
+        manager.close();
+    }
 }

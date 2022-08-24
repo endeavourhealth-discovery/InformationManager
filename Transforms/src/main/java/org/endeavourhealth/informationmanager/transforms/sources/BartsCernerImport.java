@@ -327,7 +327,14 @@ public class BartsCernerImport implements TTImport {
 			return this;
 	}
 
-
-
-
+    @Override
+    public void close() throws Exception {
+        codeToConcept.clear();
+        codeToSet.clear();
+        termToSet.clear();
+        usedSets.clear();
+        childToParent.clear();
+        entityMap.clear();
+        manager.close();
+    }
 }

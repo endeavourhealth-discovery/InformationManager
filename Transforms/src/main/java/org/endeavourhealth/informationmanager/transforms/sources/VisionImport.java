@@ -34,7 +34,6 @@ public class VisionImport implements TTImport {
 	private TTDocument document;
 	private final Map<String,TTEntity> r2TermIdMap= new HashMap<>();
 	private final Set<String> preferredId = new HashSet<>();
-	private final TTManager manager= new TTManager();
 	private  Map<String,TTEntity> emisRead;
 	private final ImportMaps importMaps = new ImportMaps();
 
@@ -46,24 +45,26 @@ public class VisionImport implements TTImport {
 
 		System.out.println("importing vision codes");
 		System.out.println("retrieving snomed codes from IM");
-		snomedCodes= importMaps.importSnomedCodes();
-		document= manager.createDocument(IM.GRAPH_VISION.getIri());
-		document.addEntity(manager.createGraph(IM.GRAPH_VISION.getIri(),"Vision (including Read) codes",
-			"The Vision local code scheme and graph including Read 2 and Vision local codes"));
+        try (TTManager manager= new TTManager()) {
+            snomedCodes = importMaps.importSnomedCodes();
+            document = manager.createDocument(IM.GRAPH_VISION.getIri());
+            document.addEntity(manager.createGraph(IM.GRAPH_VISION.getIri(), "Vision (including Read) codes",
+                "The Vision local code scheme and graph including Read 2 and Vision local codes"));
 
-		importEmis();
-		importR2Desc(config.getFolder());
-		importR2Terms(config.getFolder());
-		importVisionCodes(config.getFolder());
-		addMoreReadCodes();
-		createHierarchy();
-		addVisionMaps(config.getFolder());
-		addMissingMaps();
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
+            importEmis();
+            importR2Desc(config.getFolder());
+            importR2Terms(config.getFolder());
+            importVisionCodes(config.getFolder());
+            addMoreReadCodes();
+            createHierarchy();
+            addVisionMaps(config.getFolder());
+            addMissingMaps();
+            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                filer.fileDocument(document);
+            }
+
+            return this;
         }
-
-		return this;
 	}
 
 	private void addMoreReadCodes() throws TTFilerException {
@@ -310,5 +311,15 @@ public class VisionImport implements TTImport {
 		return this;
 	}
 
+    @Override
+    public void close() throws Exception {
+        codeToConcept.clear();
+        snomedCodes.clear();
+        r2TermIdMap.clear();
+        preferredId.clear();
+        emisRead.clear();
 
+        importMaps.close();
+
+    }
 }

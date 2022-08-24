@@ -104,38 +104,39 @@ public class SnomedImporter implements TTImport {
    public TTImport importData(TTImportConfig config) throws Exception {
       validateFiles(config.getFolder());
       conceptMap = new HashMap<>();
-      TTManager dmanager= new TTManager();
+      try (TTManager dmanager= new TTManager()) {
 
-      document= dmanager.createDocument(SNOMED.GRAPH_SNOMED.getIri());
-      document.addEntity(dmanager.createGraph(SNOMED.GRAPH_SNOMED.getIri(), "Snomed-CT code scheme and graph",
-        "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions"));
+          document = dmanager.createDocument(SNOMED.GRAPH_SNOMED.getIri());
+          document.addEntity(dmanager.createGraph(SNOMED.GRAPH_SNOMED.getIri(), "Snomed-CT code scheme and graph",
+              "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions"));
 
-      importConceptFiles(config.getFolder());
-      importDescriptionFiles(config.getFolder());
-     // removeQualifiers(document);
-      importMRCMRangeFiles(config.getFolder());
-      importMRCMDomainFiles(config.getFolder());
-     // importStatedFiles(config.folder); No longer bothers with OWL axioms;
-      importRelationshipFiles(config.getFolder());
+          importConceptFiles(config.getFolder());
+          importDescriptionFiles(config.getFolder());
+          // removeQualifiers(document);
+          importMRCMRangeFiles(config.getFolder());
+          importMRCMDomainFiles(config.getFolder());
+          // importStatedFiles(config.folder); No longer bothers with OWL axioms;
+          importRelationshipFiles(config.getFolder());
 
-      importSubstitution(config.getFolder());
+          importSubstitution(config.getFolder());
 
-       addSpecials(document);
-       conceptMap.clear();
-       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-           filer.fileDocument(document);
-       }
+          addSpecials(document);
+          conceptMap.clear();
+          try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+              filer.fileDocument(document);
+          }
 
-     document= dmanager.createDocument(SNOMED.GRAPH_SNOMED.getIri());
-     setRefSetRoot();
-     importRefsetFiles(config.getFolder());
-     importQof(config.getFolder());
+          document = dmanager.createDocument(SNOMED.GRAPH_SNOMED.getIri());
+          setRefSetRoot();
+          importRefsetFiles(config.getFolder());
+          importQof(config.getFolder());
 
-     conceptMap.clear();
-     try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-       filer.fileDocument(document);
-     }
-      return this;
+          conceptMap.clear();
+          try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+              filer.fileDocument(document);
+          }
+          return this;
+      }
    }
 
   private void addSpecials(TTDocument document) {
@@ -603,4 +604,8 @@ public class SnomedImporter implements TTImport {
 
    }
 
+    @Override
+    public void close() throws Exception {
+        conceptMap.clear();
+    }
 }

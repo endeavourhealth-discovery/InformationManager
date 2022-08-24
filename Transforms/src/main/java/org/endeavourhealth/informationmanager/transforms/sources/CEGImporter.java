@@ -219,4 +219,9 @@ public class CEGImporter implements TTImport {
 	}
 
 
+    @Override
+    public void close() throws Exception {
+        allEntities.clear();
+        valueSets.clear();
+    }
 }

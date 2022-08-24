@@ -38,7 +38,6 @@ public class TPPImporter implements TTImport {
     private static final String[] vaccineMaps = {".*\\\\TPP\\\\VaccineMaps.json"};
     private static final String[] tppCtv3Lookup = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_lookup_2.csv"};
     private static final String[] tppCtv3ToSnomed = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_to_snomed.csv"};
-    private final TTManager manager= new TTManager();
     private Map<String,Set<String>> emisToSnomed;
     private TTDocument document;
     private TTDocument vDocument;
@@ -51,40 +50,41 @@ public class TPPImporter implements TTImport {
 
 
         System.out.println("Looking for Snomed codes");
+        try (TTManager manager= new TTManager()) {
 
-        document = manager.createDocument(IM.GRAPH_TPP.getIri());
-        document.addEntity(manager.createGraph(IM.GRAPH_TPP.getIri(),"TPP (including CTV3) codes",
-          "The TPP local code scheme and graph including CTV3 and TPP local codes"));
+            document = manager.createDocument(IM.GRAPH_TPP.getIri());
+            document.addEntity(manager.createGraph(IM.GRAPH_TPP.getIri(), "TPP (including CTV3) codes",
+                "The TPP local code scheme and graph including CTV3 and TPP local codes"));
 
-        //Gets the emis read 2 codes from the IM to use as look up as some are missing
-       // importEmis();
-        importEMISMaps();
+            //Gets the emis read 2 codes from the IM to use as look up as some are missing
+            // importEmis();
+            importEMISMaps();
 
-        addTPPTopLevel();
-        inportTPPConcepts(config.getFolder());
-        importTPPTerms(config.getFolder());
-        importTPPDescriptions(config.getFolder());
-        importTPPDcf(config.getFolder());
-        importLocals(config.getFolder());
+            addTPPTopLevel();
+            inportTPPConcepts(config.getFolder());
+            importTPPTerms(config.getFolder());
+            importTPPDescriptions(config.getFolder());
+            importTPPDcf(config.getFolder());
+            importLocals(config.getFolder());
 
-        importCV3Hierarchy(config.getFolder());
+            importCV3Hierarchy(config.getFolder());
 
-        //Imports the tpp terms from the tpp look up table
-        importTppCtv3ToSnomed(config.getFolder());
-        importnhsMaps(config.getFolder());
-        addEmisMaps();
-        addDiscoveryMaps();
+            //Imports the tpp terms from the tpp look up table
+            importTppCtv3ToSnomed(config.getFolder());
+            importnhsMaps(config.getFolder());
+            addEmisMaps();
+            addDiscoveryMaps();
 
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
+            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                filer.fileDocument(document);
+            }
+            importVaccineMaps(manager, config.getFolder());
+            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                filer.fileDocument(vDocument);
+            }
+
+            return this;
         }
-        importVaccineMaps(config.getFolder());
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(vDocument);
-        }
-
-        return this;
-
     }
 
     private void addDiscoveryMaps() {
@@ -100,7 +100,7 @@ public class TPPImporter implements TTImport {
         document.addEntity(entity);
     }
 
-    private void importVaccineMaps(String folder) throws IOException {
+    private void importVaccineMaps(TTManager manager, String folder) throws IOException {
         Path file =  ImportUtils.findFileForId(folder, vaccineMaps[0]);
         vDocument= manager.loadDocument(file.toFile());
 
@@ -411,5 +411,12 @@ public class TPPImporter implements TTImport {
         return fields;
     }
 
+    @Override
+    public void close() throws Exception {
+        emisToSnomed.clear();
+        codeToEntity.clear();
+        termCodes.clear();
 
+        importMaps.close();
+    }
 }

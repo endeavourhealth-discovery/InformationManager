@@ -28,7 +28,6 @@ public class OPCS4Importer implements TTImport {
     private static final String[] chapters = {".*\\\\OPCS4\\\\OPCSChapters.txt"};
     private static final String[] maps = {".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
 
-    private TTManager manager= new TTManager();
     private TTDocument document;
     private TTDocument mapDocument;
     private TTIriRef opcscodes= TTIriRef.iri(IM.GRAPH_ICD10.getIri()+"OPCS49Classification");
@@ -42,21 +41,23 @@ public class OPCS4Importer implements TTImport {
         System.out.println("Importing OPCS4.....");
         System.out.println("Checking Snomed codes first");
         snomedCodes= importMaps.importSnomedCodes();
-        document = manager.createDocument(IM.GRAPH_OPCS4.getIri());
-        document.addEntity(manager.createGraph(IM.GRAPH_OPCS4.getIri(),"OPCS4 code scheme and graph","OPCS4-9 official code scheme and graph"));
-        importChapters(config.getFolder(),document);
-        importEntities(config.getFolder(),document);
+        try (TTManager manager= new TTManager()) {
+            document = manager.createDocument(IM.GRAPH_OPCS4.getIri());
+            document.addEntity(manager.createGraph(IM.GRAPH_OPCS4.getIri(), "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
+            importChapters(config.getFolder(), document);
+            importEntities(config.getFolder(), document);
 
-        mapDocument= manager.createDocument(IM.GRAPH_OPCS4.getIri());
-        importMaps(config.getFolder());
-        //Important to file after maps set
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
+            mapDocument = manager.createDocument(IM.GRAPH_OPCS4.getIri());
+            importMaps(config.getFolder());
+            //Important to file after maps set
+            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                filer.fileDocument(document);
+            }
+            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                filer.fileDocument(mapDocument);
+            }
+            return this;
         }
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(mapDocument);
-        }
-        return this;
     }
 
     public TTDocument importMaps(String folder) throws IOException, DataFormatException {
@@ -156,4 +157,12 @@ public class OPCS4Importer implements TTImport {
         return this;
     }
 
+    @Override
+    public void close() throws Exception {
+        snomedCodes.clear();
+        codeToEntity.clear();
+        altCodeToEntity.clear();
+
+        importMaps.close();
+    }
 }

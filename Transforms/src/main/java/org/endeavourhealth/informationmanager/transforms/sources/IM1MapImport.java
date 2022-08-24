@@ -36,9 +36,7 @@ public class IM1MapImport implements TTImport {
     private final Map<String,String> oldIriTerm= new HashMap<>();
     private final Map<String,String> oldIriSnomed = new HashMap<>();
     private final Map<String,Integer> IdToDbid = new HashMap<>();
-    private final Map<String, TTNode> oldIriContext= new HashMap<>();
     private final Set<String> contexts = new HashSet<>();
-    private final Set<TTEntity> valueSets= new HashSet<>();
     private final Map<String,TTEntity> iriToSet= new HashMap<>();
 
 
@@ -847,5 +845,17 @@ public class IM1MapImport implements TTImport {
          return this;
 	}
 
-
+    @Override
+    public void close() throws Exception {
+        iriToCore.clear();
+        used.clear();
+        usedDbid.clear();
+        numericConcepts.clear();
+        oldIriTerm.clear();
+        oldIriSnomed.clear();
+        IdToDbid.clear();
+        contexts.clear();
+        iriToSet.clear();
+        importMaps.close();
+    }
 }

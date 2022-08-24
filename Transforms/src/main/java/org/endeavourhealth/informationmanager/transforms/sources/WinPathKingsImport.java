@@ -24,29 +24,27 @@ public class WinPathKingsImport implements TTImport {
 	private static final String[] kingsWinPath = {".*\\\\Kings\\\\Winpath.txt"};
 	private TTDocument document;
 	private Map<String, Set<String>> readToSnomed = new HashMap<>();
-	private final Map<String, List<String>> snomedToWinpath = new HashMap<>();
 	private final ImportMaps importMaps = new ImportMaps();
 
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
-		TTManager manager = new TTManager();
-		document= manager.createDocument(IM.GRAPH_KINGS_WINPATH.getIri());
-		document.addEntity(manager.createGraph(IM.GRAPH_KINGS_WINPATH.getIri(),"Kings Winpath pathology code scheme and graph",
-			"The Kings pathology Winpath LIMB local code scheme and graph"));
-		TTManager backManager = new TTManager();
-		TTManager vsetManager = new TTManager();
-		setTopLevel();
-		importR2Matches();
-		importWinPathKings(config.getFolder());
-		if (TTFilerFactory.isTransactional()){
-			new TTTransactionFiler(null).fileTransaction(document);
-			return this;
-		}
-		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
-		}
-		return this;
-
+		try (TTManager manager = new TTManager()) {
+            document = manager.createDocument(IM.GRAPH_KINGS_WINPATH.getIri());
+            document.addEntity(manager.createGraph(IM.GRAPH_KINGS_WINPATH.getIri(),
+                "Kings Winpath pathology code scheme and graph",
+                "The Kings pathology Winpath LIMB local code scheme and graph"));
+            setTopLevel();
+            importR2Matches();
+            importWinPathKings(config.getFolder());
+            if (TTFilerFactory.isTransactional()) {
+                new TTTransactionFiler(null).fileTransaction(document);
+                return this;
+            }
+            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                filer.fileDocument(document);
+            }
+            return this;
+        }
 	}
 	private void setTopLevel() {
 		TTEntity kings= new TTEntity()
@@ -113,4 +111,10 @@ public class WinPathKingsImport implements TTImport {
 		return null;
 	}
 
+
+    @Override
+    public void close() throws Exception {
+        readToSnomed.clear();
+        importMaps.close();
+    }
 }

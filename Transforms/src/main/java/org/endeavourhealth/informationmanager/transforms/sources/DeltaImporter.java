@@ -27,4 +27,9 @@ public class DeltaImporter implements TTImport {
 				throw new TTFilerException(("No files found in [" + inFolder + "\\Deltas"+ "]"));
 		return this;
 	}
+
+    @Override
+    public void close() throws Exception {
+
+    }
 }

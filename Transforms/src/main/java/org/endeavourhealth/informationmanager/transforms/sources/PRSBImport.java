@@ -28,15 +28,16 @@ public class PRSBImport implements TTImport {
 	@Override
 	public TTImport importData(TTImportConfig config) throws Exception {
 		validateFiles(config.getFolder());
-		TTManager dmanager= new TTManager();
-		document= dmanager.createDocument(IM.GRAPH_PRSB.getIri());
-		document.addEntity(dmanager.createGraph(IM.GRAPH_PRSB.getIri(),"PRSB code scheme and graph"
-		,"The professional records standards board code scheme and graph"));
-		importEntityFiles(config.getFolder());
-		//TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());
-		dmanager.saveDocument(new File(config.getFolder() + "prsb.json"));
-		//filer.fileDocument(document);
-		return this;
+		try (TTManager dmanager= new TTManager()) {
+            document = dmanager.createDocument(IM.GRAPH_PRSB.getIri());
+            document.addEntity(dmanager.createGraph(IM.GRAPH_PRSB.getIri(), "PRSB code scheme and graph"
+                , "The professional records standards board code scheme and graph"));
+            importEntityFiles(config.getFolder());
+            //TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());
+            dmanager.saveDocument(new File(config.getFolder() + "prsb.json"));
+            //filer.fileDocument(document);
+            return this;
+        }
 	}
 
 	private void initializeMaps() {
@@ -153,6 +154,8 @@ public class PRSBImport implements TTImport {
 	}
 
 
-
-
+    @Override
+    public void close() throws Exception {
+        axiomMap.clear();
+    }
 }
