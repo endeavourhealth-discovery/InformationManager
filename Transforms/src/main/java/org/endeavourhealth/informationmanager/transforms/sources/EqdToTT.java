@@ -263,8 +263,9 @@ public class EqdToTT {
 	private void convertListReport(EQDOCListReport eqListReport, Query shape) throws DataFormatException, IOException {
 		for (EQDOCListReport.ColumnGroups eqColGroups : eqListReport.getColumnGroups()) {
 			EQDOCListColumnGroup eqColGroup = eqColGroups.getColumnGroup();
+			Select topSelect= shape.getSelect();
 			Select selectGroup = new Select();
-			shape.addSubselect(selectGroup);
+			topSelect.addSubselect(selectGroup);
 			convertListGroup(eqColGroup, selectGroup);
 		}
 	}
@@ -302,7 +303,6 @@ public class EqdToTT {
 	private void convertEventColumns(EQDOCListColumnGroup eqColGroup, String eqTable, Select mainSelect) throws DataFormatException, IOException {
 		Match mainMatch = new Match();
 		mainSelect.addMatch(mainMatch);
-		mainSelect.addPathTo(new ConceptRef().setIri(getIri(IM.NAMESPACE+"hasEntry").getIri()));
 		convertCriteria(eqColGroup.getCriteria(), mainMatch);
 		EQDOCListColumns eqCols = eqColGroup.getColumnar();
 		for (EQDOCListColumn eqCol : eqCols.getListColumn()) {
