@@ -22,22 +22,17 @@ public class ImportApp {
     public static String testDirectory;
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 3) {
-            if (!args[1].toLowerCase().equals("singlefile")) {
-                System.err.println("Insufficient parameters supplied:");
-                System.err.println("<folder> <import type> <privacy={0 public 1 private publication 2 private authoring}> [secure|skiptct|skipsearch]");
-                System.exit(-1);
-            }
+        if (args.length < 2) {
+            System.err.println("Insufficient parameters supplied:");
+            System.err.println("<source> <import type> <privacy={0 public 1 private publication 2 private authoring}> [secure|skiptct|skipsearch]");
+            System.exit(-1);
         }
-
 
         TTImportConfig cfg = new TTImportConfig();
 
         // Mandatory/ordered args
         cfg.setFolder(args[0]);
         cfg.setImportType(args[1].toLowerCase());
-
-
 
         TTFilerFactory.setSkipDeletes("all".equals(cfg.getImportType()));
 
