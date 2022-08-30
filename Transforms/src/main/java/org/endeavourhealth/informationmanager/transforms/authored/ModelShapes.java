@@ -147,9 +147,9 @@ public class ModelShapes {
 		addProperty(shape,"notInSet",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,null,"The value of the property must NOT be in the concept set IRI."+
 			"<br> Note that this is not negation of the entire match, only the negation of this entry instance when tested. Equivalent to SPARQL filter not in."+
 			"<br> For testing simple lists of concepts use isNotConcept");
-		addProperty(shape,"isConcept",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,null,"The value of the property be this concept (and otionally its sub types)."+
+		addProperty(shape,"isConcept",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,null,"The value of the property be this concept (and optionally its sub types)."+
 			"<br> Used for inline sets or single concepts");
-		addProperty(shape,"isConcept",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,null,"The value of the property be this concept (and otionally its sub types)."+
+		addProperty(shape,"isConcept",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,null,"The value of the property be this concept (and optionally its sub types)."+
 			"<br> Used for inline sets or single concepts");
 		addProperty(shape,"isNotConcept",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,null,"The value of the property must NOT be this concept (and otionally its sub types)."+
 			"<br> Used for inline sets or single concepts."+
@@ -159,8 +159,9 @@ public class ModelShapes {
 		addProperty(shape,"valueMatch",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"MatchClause"),1,1,"The match clause operating on the property value object."+
 			"<br> Equivalent to a join in SQL or '.' in sparql");
 
-		addProperty(shape,"displayText",SHACL.DATATYPE,XSD.STRING,0,1,"Optional text for display in query viewer if dfferent from the match clause name");
+		addProperty(shape,"displayText",SHACL.DATATYPE,XSD.STRING,0,1,"Optional text for display in query viewer if different from the match clause name");
 		setOrs(shape,List.of("value","inSet","notInSet","isConcept","isNotConcept","inRange","valueMatch"),0,1);
+
 
 
 
@@ -246,7 +247,7 @@ public class ModelShapes {
 		addProperty(shape,"argument",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"Argument"),null,null,"arguments to pass in to the query as parameters. Parameter name and value pairs. Values ,may be strings, numbers or IRIs");
 		addProperty(shape,"query",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"QueryDefinition"),1,1,"The query definition for an inline dynamic query. If the query is already defined, use the queryIri. Arguments may be used in eoither approach");
 		addProperty(shape,"queryIri",SHACL.CLASS,IM.QUERY,1,1,"The IRI of a predefined query in the information model. i.e. request the system to run query X");
-		addProperty(shape,"referenceDate",SHACL.DATATYPE,TTIriRef.iri(IM.NAMESPACE+"DateTime"),null,1,"reference date for date ranges that use reference date. Note that it could be passed in as an argeument");
+		addProperty(shape,"referenceDate",SHACL.DATATYPE,TTIriRef.iri(IM.NAMESPACE+"DateTime"),null,1,"reference date for date ranges that use reference date. Note that it could be passed in as an argument");
 		setOrs(shape,List.of("query","queryIri"),1,1);
 
 	}
@@ -280,10 +281,10 @@ public class ModelShapes {
 	private static void conceptReference(TTEntity shape) {
 		setLabels(shape);
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriAlias"));
-		addProperty(shape,"includeSubtypes",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether to include the subtypes of the entites selected or matched");
+		addProperty(shape,"includeSubtypes",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether to include the subtypes of the entities selected or matched");
 		addProperty(shape,"includeSupertypes",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether to include the supertypes of the entity in a match clause."+
 			" Used for ascending the hierarch to look for properties inherited");
-		addProperty(shape,"excludeSelf",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether to exclude this entity when either include supbtypes or include suprtypes is set."+
+		addProperty(shape,"excludeSelf",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether to exclude this entity when either include subtypes or include supertypes is set."+
 			" Rarely used but sometimes found in ECL definitions");
 
 	}
@@ -321,7 +322,7 @@ public class ModelShapes {
 
 	private static void select(TTEntity shape){
 		setLabels(shape);
-		shape.setDescription("Defines the objects and properties to retrieve from a graph, subject to a mach clause. Supports graphql type nesting and subselsects for column groups");
+		shape.setDescription("Defines the objects and properties to retrieve from a graph, subject to a mach clause. Supports graphql type nesting and sub selects for column groups");
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"ClauseHeading"));
 		addProperty(shape,"count",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"If the query result is simply a sum of the main entities found. equivalent to COUNT(id)");
 		addProperty(shape,"property",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"PropertySelectClause"),1,null,"Information about a  property or field to include"+
@@ -331,13 +332,13 @@ public class ModelShapes {
 		addProperty(shape,"distinct",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether the entity objects returned should be distinct");
 		addProperty(shape,"entityType",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,1,"The entity type for instances this select clause operates on."+
 			" Options include including subtypes.");
-		addProperty(shape,"entityId",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,1,"An instance of an enttu for which this select clause operates." +
+		addProperty(shape,"entityId",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,1,"An instance of an entity for which this select clause operates." +
 			" As in entity type, optionally to include subtypes, where the entity id is a concept");
-		addProperty(shape,"entityIn",SHACL.CLASS,RDFS.RESOURCE,1,1,"The consept set, value set, or query result set that forms the base population of instances "+
+		addProperty(shape,"entityIn",SHACL.CLASS,RDFS.RESOURCE,1,1,"The concept set, value set, or query result set that forms the base population of instances "+
 			"on which the select clause operates. e.g. a parent cohort.");
 		addProperty(shape,"groupBy",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"PropertySelectClause"),0,null,"If the results need to be grouped, the grouping properties.");
 		addProperty(shape,"orderLimit",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"OrderLimitClause"),0,null,
-			"Ordering of instances via a property value and limiting th enumber returned.");
+			"Ordering of instances via a property value and limiting the number returned.");
 		addProperty(shape,"pathToTarget",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"PathTargetClause"),1,1,"Special function for path query."+
 			" Information about the target entity when the query is looking to return paths between a source and a target. Both are likely to be passed in as parameters");
 		addProperty(shape,"subselect",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"SelectClause"),0,null,
@@ -372,11 +373,11 @@ public class ModelShapes {
 		addProperty(shape,"orProperty",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"PropertyValueClause"),2,null,
 			"Properties and their values one of which is required to match (or not match), including any nesting of objects (joins).");
 		addProperty(shape,"notExist",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Negation indicator for this entire clause. i.e. for the instance to be included it must NOT match.");
-		addProperty(shape,"orderLimit",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"OrderLimitClause"),0,1,"Ability to order and limit the match before the select or matchstatement operates."
+		addProperty(shape,"orderLimit",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"OrderLimitClause"),0,1,"Ability to order and limit the match before the select or match statement operates."
 		+"<br> Crucially, this is processed before the application of a test or check, enabling things like latest or earliest, max or min");
 		addProperty(shape,"testProperty",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"PropertyValueClause"),0,null,"Further test applied to the result of an ordered limited match."+
 			"<br> The rest of the match clause then becomes a sub select query on which these tests operate. Implicit operator is AND");
-		addProperty(shape,"displayText",SHACL.DATATYPE,XSD.STRING,0,1,"Optional text for display in query viewer if dfferent from the match clause name");
+		addProperty(shape,"displayText",SHACL.DATATYPE,XSD.STRING,0,1,"Optional text for display in query viewer if different from the match clause name");
 
 		setOrs(shape,List.of("or","and"),0,1);
 		setOrs(shape,List.of("entityType","entityId"),0,1);
@@ -404,8 +405,8 @@ public class ModelShapes {
 		setLabels(shape);
 		shape.setDescription("A named parameter and a value for passing into a function");
 		addProperty(shape,SHACL.PARAMETER,SHACL.DATATYPE,XSD.STRING,1,1,"Parameter name for a function or the parameter name for an argument");
-		addProperty(shape,"valueData",SHACL.DATATYPE,XSD.STRING,1,1,"Vaue that is a literal such as a string or number");
-		addProperty(shape,"valueVariable",SHACL.DATATYPE,XSD.STRING,1,1,"argumenT value which is a variable name to be resolved at run time");
+		addProperty(shape,"valueData",SHACL.DATATYPE,XSD.STRING,1,1,"Value that is a literal such as a string or number");
+		addProperty(shape,"valueVariable",SHACL.DATATYPE,XSD.STRING,1,1,"argument value which is a variable name to be resolved at run time");
 		addProperty(shape,"valueSelect",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"SelectClause"),1,1,"Argument value that is the result of a select query");
 		addProperty(shape,"valueIri",SHACL.CLASS,TTIriRef.iri(IM.NAMESPACE+"IriRef"),1,1,"Argument value that is an iri");
 		setOrs(shape,List.of("valueData","valueVariable","valueSelect","valueIri"),1,1);
