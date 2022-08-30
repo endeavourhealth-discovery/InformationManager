@@ -12,10 +12,13 @@ class WikiGeneratorTest {
 
 	@Test
 	void generateDocsFromCore() throws IOException, DataFormatException {
+		/*
 		WikiGenerator generator = new WikiGenerator();
 		String documentation = generator.generateDocs();
 		try (FileWriter wr = new FileWriter("c:\\temp\\abnf.txt")) {
 			wr.write(documentation);
 		}
+
+		 */
 	}
 }
