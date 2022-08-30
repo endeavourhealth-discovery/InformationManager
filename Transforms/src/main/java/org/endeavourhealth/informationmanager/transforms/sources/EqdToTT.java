@@ -568,7 +568,7 @@ public class EqdToTT {
 		sort.orderBy(ob -> ob
 			.setIri(orderField)
 			.setAlias(predicatePath+varCounter))
-			.setCount(1);
+			.setLimit(1);
 		EQDOCFilterRestriction restrict = eqCriterion.getFilterAttribute().getRestriction();
 		if (restrict.getColumnOrder().getColumns().get(0).getDirection() == VocOrderDirection.ASC)
 			sort.setDirection(Order.ASCENDING);
@@ -872,11 +872,10 @@ public class EqdToTT {
 		VocRangeFromOperator eqOp = eqRel.getRangeValue().getRangeFrom().getOperator();
 		String value = eqRel.getRangeValue().getRangeFrom().getValue().getValue();
 		Function function = getTimeDiff(units,dateAlias, testPv.getAlias());
-		testPv.within(w -> w
-			.setFunction(function)
-			.setCompare(new Compare()
+		testPv.setFunction(function);
+		testPv.setValue(new Compare()
 				.setComparison((Comparison) vocabMap.get(eqOp))
-				.setValueData(value)));
+				.setValueData(value));
 
 	}
 
