@@ -23,7 +23,7 @@ ext {
             rdf4j               : '3.7.3',
             slf4j               : '1.7.32',
             snomed              : '1.2.0',
-            wsrs                : '2.0.1',
+            wsrs                : '2.1.1',
     ]
     libs = [
             imapi               : "org.endeavourhealth.imapi:api:1.0-SNAPSHOT",
