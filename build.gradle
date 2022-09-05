@@ -9,7 +9,7 @@ repositories {
     gradlePluginPortal()
 }
 
-apply from: "gradle/dependencies.gradle"
+apply from: "dependencies.gradle"
 
 def sonarLogin= System.getenv('SONAR_LOGIN')
 

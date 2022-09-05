@@ -4,7 +4,7 @@ ext {
             antlr               : '4.9.2',
             collections4        : '4.4',
             commonsIO           : '2.8.0',
-            commonsCompress     : '1.20',
+            commonsCompress     : '1.21',
             csv                 : '1.4',
             factPlusPlus        : '1.6.5',
             guava               : '10.0.1',
