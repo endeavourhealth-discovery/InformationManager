@@ -8,7 +8,7 @@ ext {
             csv                 : '1.4',
             factPlusPlus        : '1.6.5',
             guava               : '10.0.1',
-            jackson             : '2.11.4',
+            jackson             : '2.13.4',
             javaxactivation     : '1.1.1',
             jaxb                : '2.3.1',
             jersey              : '2.25.1',
