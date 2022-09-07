@@ -57,6 +57,8 @@ ext {
             owlApiApiBinding    : "net.sourceforge.owlapi:owlapi-apibinding:$versions.owlApi",
             owlApiDistribution  : "net.sourceforge.owlapi:owlapi-distribution:$versions.owlApi",
             rdf4jQuery          : "org.eclipse.rdf4j:rdf4j-query:$versions.rdf4j",
+            rdf4jCommon         : "org.eclipse.rdf4j:rdf4j-common-io:$versions.rdf4j",
+            rdf4jIterator       : "org.eclipse.rdf4j:rdf4j-common-iterator:$versions.rdf4j",
             rdf4jRepoApi        : "org.eclipse.rdf4j:rdf4j-repository-api:$versions.rdf4j",
             rdf4jRepoHttp       : "org.eclipse.rdf4j:rdf4j-repository-http:$versions.rdf4j",
             rdf4jRepoSail       : "org.eclipse.rdf4j:rdf4j-repository-sail:$versions.rdf4j",
