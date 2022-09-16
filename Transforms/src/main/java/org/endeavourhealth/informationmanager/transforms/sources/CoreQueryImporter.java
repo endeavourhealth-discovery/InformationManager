@@ -5,8 +5,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.cdm.ProvActivity;
-import org.endeavourhealth.imapi.model.cdm.ProvAgent;
-import org.endeavourhealth.imapi.model.sets.*;
+import org.endeavourhealth.imapi.model.iml.*;
+
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.TTToClassObject;
@@ -18,6 +18,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class CoreQueryImporter implements TTImport {
 
@@ -42,39 +43,35 @@ public class CoreQueryImporter implements TTImport {
 			.setDescription("For any registration period,a registration start date before the reference date and no end date," +
 				"or an end date after the reference date.");
 		Query prof= new Query();
-		prof.setMainEntity(TTIriRef.iri(IM.NAMESPACE+"Patient"));
 		prof.setIri(qry.getIri());
 		prof.setName(qry.getName());
 		prof.setDescription(qry.getDescription());
-		prof.setSelect(new Select()
-				.setEntityType(TTIriRef.iri(IM.NAMESPACE+"Patient").setName("Patient"))
-			.addMatch(new Match()
-				.addPathTo(new ConceptRef(IM.NAMESPACE+"hasEntry").setName("has GP registration"))
-				.setName(prof.getName())
-			.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
-			.property(pv-> pv
-				.setName("patient type is regular GMS Patient")
-				.setIri(IM.NAMESPACE + "patientType")
-				.addIsConcept(ConceptRef.iri(IM.GMS_PATIENT.getIri(),"Regular GMS patient")))
-			.property(pv->pv
-				.setIri(IM.NAMESPACE + "effectiveDate")
-				.setName("start of registration is before the reference date")
-				.setValue(Comparison.LESS_THAN_OR_EQUAL, "$ReferenceDate"))
-			.orProperty(pv-> pv
-				.setNotExist(true)
-				.setName("the registration has not ended ")
-					.setIri(IM.NAMESPACE + "endDate"))
-			.orProperty(pv-> pv
-				.setIri(IM.NAMESPACE + "endDate")
-				.setName("the end of registration is after the reference date")
-				.setValue(Comparison.GREATER_THAN, "$ReferenceDate"))));
+		prof.setWith(new With()
+				.addType(TTAlias.iri(IM.NAMESPACE+"Patient").setName("Patient")))
+			.setWhere(new Where()
+				.setProperty(IM.NAMESPACE+"gpRegistration")
+				.and(pv->pv
+					.setProperty(IM.NAMESPACE+"patientType")
+				.setIs(new TTAlias().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+				.and(pv->pv
+				.setProperty(IM.NAMESPACE+"startDate")
+					.setComparison("<=")
+				.setValueVariable("$ReferenceDate"))
+			.or(pv-> pv
+				.notExist(not->not
+				.setProperty(IM.NAMESPACE+"endDate")))
+				.or(pv->pv
+					.setProperty(IM.NAMESPACE+"endDate")
+					.setComparison(">")
+					.setValueVariable("$referenceDate")
+				));
 
 		qry.set(IM.QUERY_DEFINITION,TTLiteral.literal(prof.getJson()));
 		qry.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_StandardCohorts"));
 		document.addEntity(qry);
 		document.setContext(TTUtil.getDefaultContext());
 		setProvenance(qry,document);
-		outputQuery(new TTToClassObject().getObject(qry,QueryEntity.class));
+		outputQuery(prof);
 	}
 
 	private void setProvenance(TTEntity rdf,TTDocument document) {
@@ -110,7 +107,7 @@ public class CoreQueryImporter implements TTImport {
 	}
 
 
-	private void outputQuery(QueryEntity qry) throws IOException {
+	private void outputQuery(Query qry) throws IOException {
 		if ( ImportApp.testDirectory!=null) {
 			String directory = ImportApp.testDirectory.replace("%", " ");
 			try (FileWriter writer = new FileWriter(directory + "\\Core-qry.json")) {

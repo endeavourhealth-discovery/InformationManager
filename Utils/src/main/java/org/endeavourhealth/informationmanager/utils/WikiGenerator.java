@@ -1,13 +1,10 @@
 package org.endeavourhealth.informationmanager.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.endeavourhealth.imapi.logic.service.EntityService;
 import org.endeavourhealth.imapi.logic.service.SearchService;
-import org.endeavourhealth.imapi.model.sets.ConceptRef;
-import org.endeavourhealth.imapi.model.sets.QueryRequest;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.model.tripletree.TTNode;
-import org.endeavourhealth.imapi.model.tripletree.TTValue;
+import org.endeavourhealth.imapi.model.iml.QueryRequest;
+import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
@@ -26,6 +23,7 @@ public class WikiGenerator {
 	private final List<String> shapesDone= new ArrayList<>();
 	private final List<String> veto= new ArrayList<>();
 
+
 	public String generateDocs() throws DataFormatException, JsonProcessingException {
 		StringBuilder documentation = new StringBuilder();
 		veto.add(IM.NAMESPACE+"Organisation");
@@ -37,7 +35,9 @@ public class WikiGenerator {
 			documentation.append("== ").append(heading.getName()).append(" ==\n");
 			documentation.append(heading.getDescription()).append("\n");
 			List<TTEntity> ordered= getFolderContent(folderIri);
-			documentation.append(generateTable(ordered));
+			for (TTEntity shape:ordered) {
+				documentation.append(generateTable(shape));
+			}
 			documentation.append("\n");
 
 		}
@@ -45,7 +45,7 @@ public class WikiGenerator {
 	}
 
 
-	public  String generateTable(List<TTEntity> shapes) throws DataFormatException, JsonProcessingException {
+	public  String generateTable(TTEntity shape) throws DataFormatException, JsonProcessingException {
 		table= new StringBuilder();
 		table.append("{| class=\"wikitable\"\n" +
 			"|+\n" +
@@ -55,7 +55,6 @@ public class WikiGenerator {
 			"!Value type\n"+
 			"!Comment\n"+
 			"|-\n");
-		for (TTEntity shape:shapes) {
 
 			processClass(shape.getIri());
 
@@ -63,7 +62,7 @@ public class WikiGenerator {
 				processClass(shapesToDo.get(i));
 				table.append("\n|-\n");
 			}
-		}
+
 		table.append("\n|}\n");
 		return table.toString();
 	}
@@ -91,7 +90,7 @@ public class WikiGenerator {
 		if (shapesDone.contains(iri))
 			return;
 		shapesDone.add(iri);
-		TTEntity shape = getShape(iri);
+		TTEntity shape = getEntity(iri);
 		String name= shape.getIri().substring(shape.getIri().lastIndexOf("#")+1);
 		TTIriRef target= null;
 		if (shape.get(SHACL.TARGETCLASS)!=null)
@@ -276,40 +275,28 @@ public class WikiGenerator {
 	}
 
 	private TTEntity getEntity(String iri) throws DataFormatException, JsonProcessingException {
-		QueryRequest qr= new QueryRequest()
-			.query(q->q
-				.select(s->s
-					.setEntityId(ConceptRef.iri(iri))));
-		List<TTEntity> result= new SearchService().entityQuery(qr);
-		return result.get(0);
+		TTBundle bundle = new EntityService().getFullEntity(iri);
+		return bundle.getEntity();
 	}
 
-	private TTEntity getShape(String iri) throws DataFormatException, JsonProcessingException {
-		QueryRequest qr= new QueryRequest()
-			.query(q->q
-				.select(s->s
-					.setEntityId(ConceptRef.iri(iri))));
-		List<TTEntity> result= new SearchService().entityQuery(qr);
-		return result.get(0);
-	}
+
 
 	private List<TTEntity> getFolderContent(String iri) throws DataFormatException, JsonProcessingException {
 		QueryRequest qr= new QueryRequest()
 			.query(q->q
 				.select(s->s
-					.property(p->p
-						.setIri(RDFS.LABEL))
-					.property(p->p
-						.setIri(RDFS.COMMENT))
-					.property(p->p
-						.setIri(IM.ORDER))
-					.match(m->m
-						.property(p->p
-							.setIri(IM.IS_CONTAINED_IN)
-							.addIsConcept(TTIriRef.iri(iri))))));
-		List<TTEntity> queryResult = new SearchService().entityQuery(qr);
-		queryResult.sort(Comparator.comparing((TTNode p) -> p.get(IM.ORDER).asLiteral().intValue()));
-		return queryResult;
+					.setProperty(RDFS.LABEL))
+				.select (s->s
+						.setProperty(RDFS.COMMENT))
+				.select(s ->s
+						.setProperty(IM.ORDER))
+					.where(m->m
+						.setProperty(IM.IS_CONTAINED_IN)
+							.setIs(TTAlias.iri(iri))));
+		TTDocument queryResult = new SearchService().queryIM(qr);
+		List<TTEntity> entities= queryResult.getEntities();
+		entities.sort(Comparator.comparing((TTNode p) -> p.get(IM.ORDER).asLiteral().intValue()));
+		return entities;
 	}
 
 

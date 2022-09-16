@@ -1,7 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.authored;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.endeavourhealth.imapi.model.sets.*;
+
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.TTToObjectNode;
@@ -45,13 +45,24 @@ public class ModelShapes {
 		functionClause(getEntity(IM.NAMESPACE+"FunctionClause"));
 		propertySelect(getEntity(IM.NAMESPACE+"PropertySelectClause"));
 		orderLimit(getEntity(IM.NAMESPACE+"OrderLimitClause"));
-		pathTarget(getEntity(IM.NAMESPACE+"PathTargetClause"));
 		alias(getEntity(IM.NAMESPACE+"IriAlias"));
 		conceptReference(getEntity(IM.NAMESPACE+"ConceptReference"));
 		propertyNode(getEntity(IM.NAMESPACE+"PropertyNodeShape"));
 		transactionEntity(getEntity(IM.NAMESPACE+"EntityFileTransaction"));
 		transactionDocument(getEntity(IM.NAMESPACE+"EntityDocument"));
+		pathQuery(getEntity(IM.NAMESPACE+"PathQueryShape"));
 		saveDocument(sourcePath+"\\CoreOntology.json");
+	}
+
+	private static void pathQuery(TTEntity shape) {
+		setLabels(shape);
+		shape.set(SHACL.TARGETCLASS,TTIriRef.iri(IM.NAMESPACE+"PathQuery"));
+		shape.set(IM.ORDER,TTLiteral.literal(4));
+		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
+		shape.setDescription("A query that returns a set pf paths between a source and target entity, traversing to a certain level");
+		addProperty(shape,"source",SHACL.CLASS,RDFS.RESOURCE,1,1,"the source entity at the start of the path.");
+		addProperty(shape,"target",SHACL.CLASS,RDFS.RESOURCE,1,1,"the target entity at the end of the path.");
+		addProperty(shape,"depth",SHACL.DATATYPE,XSD.INTEGER,0,1,"How many hops to be taken in the graph between source and target");
 	}
 
 	private static void query(TTEntity shape) {
@@ -222,17 +233,12 @@ public class ModelShapes {
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"ClauseHeading"));
 		shape.set(IM.ORDER,TTLiteral.literal(2));
-		addProperty(shape,"resultFormat",SHACL.DATATYPE,XSD.STRING,0,1,
-			"Whether the result set is required flat select style json or a nested graphql json object style 'RELATIONAL' or 'OBJECT."+
-			" Default is OBJECT");
 		addProperty(shape,"usePrefixes",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"true if you want the results to use IRI prefixes");
 		addProperty(shape,"activeOnly",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether only active entities are included in the match clauses or select clauses");
 		addProperty(shape,"select",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"SelectClause"),1,1,
 			"Select query clause logically similar to SQL/SPARQL select but with GraphQL nesting ability");
 
 		addProperty(shape,"ask",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"MatchClause"),0,1,"If the query is a boolean true or false use match clauses as an ask");
-		addProperty(shape,"mainEntity",SHACL.CLASS,SHACL.NODESHAPE,0,1,"The main entity to which all matches must be related e.g. Patient or organisation"+
-			". i.e. the IRI of a data model entity (SHACL shape)");
 		setOrs(shape,List.of("select","ask"),1,1);
 	}
 
@@ -289,12 +295,7 @@ public class ModelShapes {
 
 	}
 
-	private static void pathTarget(TTEntity shape) {
-		setLabels(shape);
-		shape.setDescription("Information about the target of a path query, including the IRI of the target and the number of hops processed.");
-		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriRef"));
-		addProperty(shape,"depth",SHACL.DATATYPE,XSD.INTEGER,0,1,"How many hops to be taken in the graph between source and target");
-	}
+
 
 	private static void orderLimit(TTEntity shape) {
 		setLabels(shape);
@@ -329,7 +330,6 @@ public class ModelShapes {
 			"in the results. Property select supports nesting with selects for the objects that may be values of the property");
 		addProperty(shape,"match",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"MatchClause"),0,null,"The match pattern to which the select clause must comply."+
 			" Equivalent to a where/filter in SPARQL and JOIN/WHERE in SQL");
-		addProperty(shape,"distinct",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether the entity objects returned should be distinct");
 		addProperty(shape,"entityType",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,1,"The entity type for instances this select clause operates on."+
 			" Options include including subtypes.");
 		addProperty(shape,"entityId",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ConceptReference"),1,1,"An instance of an entity for which this select clause operates." +
@@ -339,8 +339,6 @@ public class ModelShapes {
 		addProperty(shape,"groupBy",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"PropertySelectClause"),0,null,"If the results need to be grouped, the grouping properties.");
 		addProperty(shape,"orderLimit",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"OrderLimitClause"),0,null,
 			"Ordering of instances via a property value and limiting the number returned.");
-		addProperty(shape,"pathToTarget",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"PathTargetClause"),1,1,"Special function for path query."+
-			" Information about the target entity when the query is looking to return paths between a source and a target. Both are likely to be passed in as parameters");
 		addProperty(shape,"subselect",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"SelectClause"),0,null,
 			"For a query with column groups such as a list report, the select query for each group");
 		setOrs(shape,List.of("property","pathToTarget"),0,1);

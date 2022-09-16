@@ -5,13 +5,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.model.sets.QueryDocument;
-import org.endeavourhealth.imapi.model.sets.QueryDocument;
-import org.endeavourhealth.imapi.model.sets.QueryEntity;
-import org.endeavourhealth.imapi.model.sets.SetFactory;
-import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.imapi.model.iml.Query;
+import org.endeavourhealth.imapi.model.iml.QueryDocument;
+import org.endeavourhealth.imapi.model.tripletree.TTDocument;
+import org.endeavourhealth.imapi.model.tripletree.TTEntity;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
+import org.endeavourhealth.imapi.model.tripletree.TTValue;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.transforms.TTToClassObject;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
@@ -56,7 +56,7 @@ public class CEGImporter implements TTImport {
 		ethnicImport.importData(config);
 		createFolders();
 
-
+		//Import queries
 		loadAndConvert(config.getFolder());
 		WrapAsJson();
 		Map<String,TTEntity> vsetFolderMap= new HashMap<>();
@@ -163,7 +163,7 @@ public class CEGImporter implements TTImport {
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(new FileReader(fileEntry));
-					EqdToTT converter= new EqdToTT();
+					EqdToIMQ converter= new EqdToIMQ();
 					converter.convertDoc(document,mainFolder,fieldGroupFolder,valueSetFolder,eqd,
 						TTIriRef.iri(owner.getIri()),dataMap,
 						labels);
@@ -176,6 +176,7 @@ public class CEGImporter implements TTImport {
 	}
 
 	private void output(File fileEntry) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+		ObjectMapper om= new ObjectMapper();
 		if ( ImportApp.testDirectory!=null) {
 			String directory = ImportApp.testDirectory.replace("%", " ");
 			TTManager manager = new TTManager();
@@ -185,14 +186,15 @@ public class CEGImporter implements TTImport {
 				qDocument.addEntity(entity);
 				if (!allEntities.contains(entity)) {
 					if (entity.isType(IM.QUERY)){
-						hql.addQuery(new TTToClassObject().getObject(entity,QueryEntity.class));
+						String json= entity.get(IM.QUERY_DEFINITION).asLiteral().getValue();
+						hql.addQuery(om.readValue(json, Query.class));
 						allEntities.add(entity);
 					}
 				}
 			}
 
 			manager.setDocument(qDocument);
-			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-ld.json"));
+			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-new--LD.json"));
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
@@ -201,7 +203,7 @@ public class CEGImporter implements TTImport {
 			//try (FileWriter wr= new FileWriter(directory+"\\"+ fileEntry.getName().replace(".xml","") + ".json")){
 			//	wr.write(json);
 			//}
-			try (FileWriter wr= new FileWriter(directory + fileEntry.getName().replace(".xml","") + ".json")){
+			try (FileWriter wr= new FileWriter(directory + fileEntry.getName().replace(".xml","") + "-NEW.json")){
 				wr.write(json);
 			}
 
