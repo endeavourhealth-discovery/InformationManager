@@ -14,7 +14,7 @@ public class EqdAuditToIMQ {
 
 	public void convertReport(EQDOCReport eqReport, Query query,EqdResources resources) throws DataFormatException {
 		this.resources= resources;
-		this.resources.setQuery(query);
+
 		if (eqReport.getParent().getSearchIdentifier()!=null) {
 			String id = eqReport.getParent().getSearchIdentifier().getReportGuid();
 			resources.setWith(query, TTIriRef.iri("urn:uuid:" + id).setName(resources.reportNames.get(id)));
@@ -34,8 +34,8 @@ public class EqdAuditToIMQ {
 		for (
 			EQDOCAggregateGroup group : agg.getGroup()) {
 			for (String eqColum : group.getGroupingColumn()) {
-				TTAlias predicate = resources.getPath(eqTable + "/" + eqColum);
-				select.addGroupBy(predicate);
+				String predicate = resources.getPath(eqTable + "/" + eqColum);
+				select.addGroupBy(new TTAlias().setIri(predicate));
 			}
 		}
 	}

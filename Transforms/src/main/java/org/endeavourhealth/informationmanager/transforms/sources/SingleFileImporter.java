@@ -4,9 +4,9 @@ import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.filer.TTTransactionFiler;
-import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.informationmanager.transforms.reasoner.Reasoner;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 import java.io.File;

@@ -115,6 +115,8 @@ public class Preload {
         TTBulkFiler.createRepository();
         startGraph(graphdb);
 
+
+
         LOG.info("Filing into live graph starting with CEG");
         TTFilerFactory.setBulk(false);
         TTFilerFactory.setTransactional(true);

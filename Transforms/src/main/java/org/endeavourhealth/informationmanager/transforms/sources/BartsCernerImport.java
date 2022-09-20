@@ -1,7 +1,5 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.endeavourhealth.imapi.dataaccess.helpers.ConnectionManager;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
@@ -40,7 +38,7 @@ public class BartsCernerImport implements TTImport {
 	Map<String,Set<String>> childToParent= new HashMap<>();
 	private TTDocument document;
 
-	private RepositoryConnection conn;
+
 	private final TTManager manager= new TTManager();
 
 	private final Map<String,TTEntity> entityMap = new HashMap<>();
@@ -48,8 +46,6 @@ public class BartsCernerImport implements TTImport {
 
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
-
-		conn= ConnectionManager.getIMConnection();
 		System.out.println("retrieving snomed codes from IM");
 		document= manager.createDocument(IM.GRAPH_BARTS_CERNER.getIri());
 		document.addEntity(manager.createGraph(IM.GRAPH_BARTS_CERNER.getIri(),"Barts Cerner code scheme and graph"

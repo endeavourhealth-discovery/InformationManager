@@ -52,7 +52,7 @@ public class EqdToIMQ {
 				throw new DataFormatException("No report id");
 			if (eqReport.getName() == null)
 				throw new DataFormatException("No report name");
-
+			System.out.println(eqReport.getName());
 			TTEntity qry = convertReport(eqReport);
 			resources.getDocument().addEntity(qry);
 			setProvenance(qry.getIri(), "CEG");

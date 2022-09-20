@@ -55,15 +55,19 @@ public class CoreQueryImporter implements TTImport {
 				.setIs(new TTAlias().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
 				.and(pv->pv
 				.setProperty(IM.NAMESPACE+"startDate")
-					.setComparison("<=")
-				.setValueVariable("$ReferenceDate"))
+					.setValue(new Value()
+						.setComparison("<=")
+						.relativeTo(c->c
+						.setVariable("$ReferenceDate"))))
 			.or(pv-> pv
 				.notExist(not->not
 				.setProperty(IM.NAMESPACE+"endDate")))
 				.or(pv->pv
 					.setProperty(IM.NAMESPACE+"endDate")
-					.setComparison(">")
-					.setValueVariable("$referenceDate")
+					.setValue(new Value()
+						.setComparison(">")
+						.relativeTo(c ->c
+					.setVariable("$referenceDate")))
 				));
 
 		qry.set(IM.QUERY_DEFINITION,TTLiteral.literal(prof.getJson()));

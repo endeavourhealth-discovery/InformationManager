@@ -1,9 +1,9 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.iml.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
@@ -24,23 +24,12 @@ public class EqdResources {
 	private Properties labels;
 	private String activeReport;
 	private TTDocument document;
-	private TTContext prefixes= TTManager.getDefaultContext();
 	private final Map<String,Set<TTIriRef>> valueMap= new HashMap<>();
-	private Query query;
 	private int counter=0;
+	private int whereCount=0;
 
-	public Query getQuery() {
-		return query;
-	}
 
-	public ImportMaps getImportMaps() {
-		return importMaps;
-	}
 
-	public EqdResources setQuery(Query query) {
-		this.query = query;
-		return this;
-	}
 
 	public TTDocument getDocument() {
 		return document;
@@ -63,9 +52,7 @@ public class EqdResources {
 		setVocabMaps();
 	}
 
-	public Properties getDataMap() {
-		return dataMap;
-	}
+
 
 	public void setDataMap(Properties dataMap) {
 		this.dataMap = dataMap;
@@ -127,16 +114,11 @@ public class EqdResources {
 	}
 
 
-		private String getAlias(String term){
-		return term.replaceAll(" ","")
-			.replaceAll(">","Over")
-			.replaceAll("<","Under");
-		}
-
 
 
 
 	private void convertCriterion(EQDOCCriterion eqCriterion, Where match) throws DataFormatException, IOException {
+		Where negatationWhere=match;
 		if (eqCriterion.isNegation()){
 			Where notWhere= new Where();
 			match.setNotExist(notWhere);
@@ -152,70 +134,98 @@ public class EqdResources {
 		else {
 			convertColumns(eqCriterion, match);
 		}
+		if (eqCriterion.isNegation()){
+			negatationWhere.setAlias(summarise(negatationWhere,null));
+		}
+
 	}
 
 
 
 	private void convertLinkedCriterion(EQDOCCriterion eqCriterion, Where topWhere) throws DataFormatException, IOException {
-		Where targetWhere = new Where();
-		topWhere.addAnd(targetWhere);
-		Where bestTarget= targetWhere;
-		convertColumns(eqCriterion, targetWhere);
+		Where targetWhere;
 		if (eqCriterion.getFilterAttribute().getRestriction() != null) {
-			setRestriction(eqCriterion, targetWhere);
 			if (eqCriterion.getFilterAttribute().getRestriction().getTestAttribute() != null) {
-				Where testWhere= new Where();
-				testWhere.setFrom(targetWhere.getAlias());
-				List<EQDOCColumnValue> cvs= eqCriterion.getFilterAttribute().getRestriction().getTestAttribute().getColumnValue();
-				if (cvs.size()==1){
-					Where pv = new Where();
-					testWhere.setWhere(pv);
-					setMainCriterion(eqCriterion.getTable(), cvs.get(0), pv);
-				}
-				else {
-
-					for (EQDOCColumnValue cv : cvs) {
-						Where pv = new Where();
-						testWhere.addAnd(pv);
-						setMainCriterion(eqCriterion.getTable(), cv, pv);
-					}
-				}
-				testWhere.setAlias(targetWhere.getAlias() + testWhere.getAlias());
-				bestTarget = testWhere;
+				convertRestrictionCriterion(eqCriterion, topWhere);
+			}
+			else {
+				targetWhere= new Where();
+				topWhere.addAnd(targetWhere);
+				convertRestrictionCriterion(eqCriterion,targetWhere);
 			}
 		}
-		String targetPath;
-		Where linkWhere= new Where();
-		topWhere.addAnd(linkWhere);
-		EQDOCRelationship eqRel = eqCriterion.getLinkedCriterion().getRelationship();
+		else {
+			targetWhere = new Where();
+			topWhere.addAnd(targetWhere);
+			convertColumns(eqCriterion, targetWhere);
+		}
+		targetWhere= topWhere.getAnd().get(topWhere.getAnd().size()-1);
+		Where linkWhere;
+		EQDOCLinkedCriterion eqLinked= eqCriterion.getLinkedCriterion();
+		EQDOCCriterion eqLinkedCriterion= eqLinked.getCriterion();
+		if (eqLinkedCriterion.getFilterAttribute().getRestriction() != null) {
+			if (eqLinkedCriterion.getFilterAttribute().getRestriction().getTestAttribute() != null) {
+				convertRestrictionCriterion(eqLinkedCriterion, topWhere);
+
+			} else {
+				linkWhere = new Where();
+				topWhere.addAnd(linkWhere);
+				convertColumns(eqCriterion, linkWhere);
+			}
+		}
+		else {
+			linkWhere = new Where();
+			topWhere.addAnd(linkWhere);
+			convertColumns(eqCriterion, linkWhere);
+		}
+		Where relationWhere;
+		Where lastLinkWhere= topWhere.getAnd().get(topWhere.getAnd().size()-1);
+		if (lastLinkWhere.getAnd()==null){
+			topWhere.getAnd().remove(lastLinkWhere);
+			relationWhere= new Where();
+			topWhere.addAnd(relationWhere);
+			relationWhere.setPath(lastLinkWhere.getPath());
+			relationWhere.setFrom(lastLinkWhere.getFrom());
+			lastLinkWhere.setPath(null);
+			lastLinkWhere.setFrom(null);
+			relationWhere.addAnd(lastLinkWhere);
+		}
+		else
+			relationWhere= lastLinkWhere;
+		EQDOCRelationship eqRel = eqLinked.getRelationship();
 		if (eqRel.getParentColumn().contains("DATE")){
-			targetPath= bestTarget.getAlias()+ "->date";
+			Where compareWhere= new Where();
+			relationWhere.addAnd(compareWhere);
+			compareWhere.setProperty(new TTAlias().setIri(IM.NAMESPACE+"date"));
+			Value value= new Value();
+			compareWhere.setValue(value);
+			Where finalTargetWhere = targetWhere;
+			value
+			.setComparison(vocabMap.get(eqRel.getRangeValue().getRangeFrom().getOperator()))
+				.setValue(eqRel.getRangeValue().getRangeFrom().getValue().getValue())
+				.relativeTo(c ->c
+					.setAlias(finalTargetWhere.getAlias())
+			.setProperty(new TTAlias().setIri(IM.NAMESPACE+"date")));
+			compareWhere.addArgument(new Argument()
+				.setParameter("units")
+				.setValueData(eqRel.getRangeValue().getRangeFrom().getValue().getUnit().value()));
+			compareWhere.setAlias(summarise(compareWhere,null));
 		}
 		else
 			throw new DataFormatException("Only date link fields supported at the moment");
 
-		EQDOCCriterion eqTargetCriterion = eqCriterion.getLinkedCriterion().getCriterion();
-		convertColumns(eqCriterion, linkWhere);
-		if (eqTargetCriterion.getFilterAttribute().getRestriction() != null) {
-			restrictionTest(eqCriterion, topWhere, linkWhere);
-		}
-		Where compareWhere= new Where();
-		topWhere.addAnd(compareWhere);
-		Where pv= new Where();
-		compareWhere.setWhere(pv);
-		Compare compare= new Compare()
-			.setTarget(targetPath)
-			.setComparison(vocabMap.get(eqRel.getRangeValue().getRangeFrom().getOperator()))
-			.setSource("date");
-		pv.setCompare(compare);
 
 	}
 
 
 	private void convertRestrictionCriterion(EQDOCCriterion eqCriterion, Where topWhere) throws DataFormatException, IOException {
-		Where restrictionWhere= new Where();
-		restrictionWhere.setAlias(getLabel(eqCriterion));
-		topWhere.addAnd(restrictionWhere);
+		Where restrictionWhere;
+		if (eqCriterion.getFilterAttribute().getRestriction().getTestAttribute()!=null) {
+			restrictionWhere = new Where();
+			topWhere.addAnd(restrictionWhere);
+		}
+		else
+			restrictionWhere= topWhere;
 		if (eqCriterion.getDescription() != null)
 			restrictionWhere.setName(eqCriterion.getDescription());
 		convertColumns(eqCriterion, restrictionWhere);
@@ -231,18 +241,19 @@ public class EqdResources {
 				testWhere.setFrom(restrictionWhere.getAlias());
 				List<EQDOCColumnValue> cvs= testAtt.getColumnValue();
 				if (cvs.size()==1){
-					setMainCriterion(eqCriterion.getTable(), cvs.get(0), testWhere);
+					setMainCriterion(eqCriterion.getTable(), cvs.get(0), testWhere,"");
 					if (testWhere.getAlias()==null)
-						testWhere.setAlias(summarise(testWhere,restrictionWhere,testAtt));
+						testWhere.setAlias(summarise(testWhere,testAtt.getColumnValue().get(0)));
 				}
 				else {
 					for (EQDOCColumnValue cv : cvs) {
 						Where pv = new Where();
 						testWhere.addAnd(pv);
-						setMainCriterion(eqCriterion.getTable(), cv, pv);
+						setMainCriterion(eqCriterion.getTable(), cv, pv,"");
 						if (pv.getAlias()==null)
-							pv.setAlias(summarise(pv,restrictionWhere,testAtt));
+							pv.setAlias(summarise(pv,cv));
 					}
+					testWhere.setAlias(summarise(testWhere,null));
 				}
 
 			}
@@ -252,52 +263,45 @@ public class EqdResources {
 	private void convertColumns(EQDOCCriterion eqCriterion, Where match) throws DataFormatException, IOException {
 		match.setAlias(getLabel(eqCriterion));
 		EQDOCFilterAttribute filterAttribute = eqCriterion.getFilterAttribute();
-		TTAlias entityPath= getPath(eqCriterion.getTable());
-		if (entityPath!=null)
-			match.setProperty(entityPath);
-		if (labels.get(eqCriterion.getId()) != null) {
-				match.setAlias(getAlias(labels.get(eqCriterion.getId()).toString()));
-		}
+		String entityPath= getPath(eqCriterion.getTable());
 		List<EQDOCColumnValue> cvs= filterAttribute.getColumnValue();
 		if (cvs.size()==1){
-			Where pv;
-			if (entityPath==null)
-				pv= match;
-			else {
-				pv = new Where();
-				match.setWhere(pv);
-			}
-			setMainCriterion(eqCriterion.getTable(), cvs.get(0),pv);
-			if (pv.getAlias()==null)
-				if (labels.get(cvs.get(0).getId())!=null)
-					pv.setAlias(labels.get(cvs.get(0).getId()).toString());
+			setMainCriterion(eqCriterion.getTable(), cvs.get(0),match,entityPath);
+			match.setAlias(summarise(match,cvs.get(0)));
 		}
 		else {
+			if (!entityPath.equals(""))
+				match.setPath(entityPath);
 			for (EQDOCColumnValue cv : filterAttribute.getColumnValue()) {
 				Where pv = new Where();
 				match.addAnd(pv);
-				setMainCriterion(eqCriterion.getTable(), cv, pv);
-				if (pv.getAlias()==null)
-				 if (labels.get(cv.getId())!=null)
-				  	pv.setAlias(labels.get(cv.getId()).toString());
+				setMainCriterion(eqCriterion.getTable(), cv, pv,"");
+				pv.setAlias(summarise(pv,cv));
 			}
 		}
-
 	}
 
 
 
 
-	private void setMainCriterion(String eqTable, EQDOCColumnValue cv, Where pv) throws DataFormatException, IOException {
+	private void setMainCriterion(String eqTable, EQDOCColumnValue cv, Where pv,String mainPath) throws DataFormatException, IOException {
 		String eqColumn= String.join("/",cv.getColumn());
-		setWhere(cv, eqTable, eqColumn, pv);
+		setWhere(cv, eqTable, eqColumn, pv,mainPath);
 	}
 
 
 
 	private void setWhere(EQDOCColumnValue cv, String eqTable, String eqColumn,
-																Where pv) throws DataFormatException, IOException {
-		pv.setProperty(getPath(eqTable+"/"+ eqColumn));
+																Where pv,String mainPath) throws DataFormatException, IOException {
+		String subPath= getPath(eqTable+"/"+ eqColumn);
+		if (!mainPath.equals(""))
+			subPath= mainPath+" "+ subPath;
+		if (subPath.contains(" ")) {
+			pv.setPath(subPath.substring(0, subPath.lastIndexOf(" ") ));
+			pv.setProperty(new TTAlias().setIri(subPath.substring(subPath.indexOf(" ")+1)));
+		}
+		else
+			pv.setProperty(new TTAlias().setIri(subPath));
 		VocColumnValueInNotIn in = cv.getInNotIn();
 		boolean notIn = (in == VocColumnValueInNotIn.NOTIN);
 		if (!cv.getValueSet().isEmpty()) {
@@ -312,21 +316,12 @@ public class EqdResources {
 					pv.setIn(getExceptionSet(vs.getAllValues()));
 				} else {
 					if (!notIn) {
-						if (isValueSet(vs)) {
-							pv.setIn(getValueSet(vs));
-						} else
 							pv.setIn(getInlineValues(vs));
 					}
 					else {
-						if (isValueSet(vs)) {
-							pv.setNot(true);
-							pv.setIn(getValueSet(vs));
-						}
-						else {
 							pv.setNot(true);
 							pv.setIn(getInlineValues(vs));
 						}
-					}
 				}
 			}
 		} else if (!CollectionUtils.isEmpty(cv.getLibraryItem())) {
@@ -349,20 +344,20 @@ public class EqdResources {
 
 	}
 
-	public TTAlias getPath(String eqdPath) throws DataFormatException {
+	public String getPath(String eqdPath) throws DataFormatException {
 		Object target = dataMap.get(eqdPath);
 		if (target == null)
 			throw new DataFormatException("unknown map : " + eqdPath);
 		String targetPath= (String) target;
 		if (targetPath.equals(""))
-			return null;
+			return "";
 		String[] paths = targetPath.split("/");
 		List<String> pathList = Arrays.stream(paths).map(p-> IM.NAMESPACE+p).collect(Collectors.toList());
 		if (pathList.size()==1){
-			return new TTAlias().setIri(pathList.get(0));
+			return pathList.get(0);
 		}
 		else {
-			return new TTAlias().setPath(String.join(" ",pathList));
+			return String.join(" ",pathList);
 		}
 	}
 
@@ -371,9 +366,7 @@ public class EqdResources {
 		String eqTable = eqCriterion.getTable();
 		String linkColumn = eqCriterion.getFilterAttribute().getRestriction()
 			.getColumnOrder().getColumns().get(0).getColumn().get(0);
-
-		String predicatePath = ((String) dataMap.get(eqTable + "/" + linkColumn)).replaceAll("/"," ");
-		match.addOrderBy(getPath(eqTable + "/" + linkColumn));
+		match.addOrderBy(new TTAlias().setIri(getPath(eqTable + "/" + linkColumn)));
 		match.setLimit(1);
 		EQDOCFilterRestriction restrict = eqCriterion.getFilterAttribute().getRestriction();
 		if (restrict.getColumnOrder().getColumns().get(0).getDirection() == VocOrderDirection.ASC) {
@@ -424,31 +417,35 @@ public class EqdResources {
 	private void setCompare(Where pv, String comp, String value, String units, VocRelation relation,
 													boolean from) throws DataFormatException {
 		if (relation == VocRelation.RELATIVE) {
-			String first = from ? "$this" : "$referenceDate";
-			String second = from ? "$referenceDate" : "$this";
-			Function function = getTimeDiff(units, first, second);
+			Function function = getTimeDiff();
+			pv.addArgument(new Argument().setParameter("units").setValueData(units));
 			pv.setFunction(function);
 			if (from) {
 				comp = reverseComp(comp);
 				value = String.valueOf(-Integer.parseInt(value));
 			}
+			String finalComp = comp;
+			String finalValue = value;
 			pv
-				.setComparison(comp)
-				.setValue(value);
-
+				.value(v->v
+				.setComparison(finalComp)
+				.setValue(finalValue)
+					.setRelativeTo(new Compare().setVariable("$referenceDate")));
 		} else {
+			String finalComp1 = comp;
+			String finalValue1 = value;
 			pv
-				.setComparison(comp)
-				.setValue(value);
+				.value(v -> v
+					.setComparison(finalComp1)
+					.setValue(finalValue1));
 			if (pv.getProperty().getIri().contains("age")) {
 				if (units == null)
 					throw new DataFormatException("missing units from age");
-			}
-		}
-		if (units!=null)
 				pv.addArgument(new Argument()
 					.setParameter("units")
 					.setValueData(units));
+			}
+		}
 
 	}
 
@@ -485,12 +482,9 @@ public class EqdResources {
 	}
 
 
-	private Function getTimeDiff(String units, String first, String second) {
+	private Function getTimeDiff() {
 		Function function = new Function().setIri(TTIriRef.iri(IM.NAMESPACE + "TimeDifference")
 			.setName("Time Difference"));
-		function.addArgument(new Argument().setParameter("units").setValueData(units));
-		function.addArgument(new Argument().setParameter("firstDate").setValueVariable(first));
-		function.addArgument(new Argument().setParameter("secondDate").setValueVariable(second));
 		return function;
 	}
 
@@ -507,10 +501,13 @@ public class EqdResources {
 		if (rFrom.getValue().getUnit() != null)
 			units = rFrom.getValue().getUnit().value();
 		if (rFrom.getValue().getRelation() != null && rFrom.getValue().getRelation() == VocRelation.RELATIVE) {
-			Function function = getTimeDiff(units, "$this", "$referenceDate");
+
+			Function function = getTimeDiff();
+			pv.addArgument(new Argument().setParameter("units").setValueData(units));
 			range.setFrom(new Value()
 				.setComparison(fromComp)
-				.setValue(fromValue));
+				.setValue(fromValue)
+				.setRelativeTo(new Compare().setVariable("$referenceDate")));
 			pv.setFunction(function);
 		} else {
 			range.setFrom(new Value()
@@ -535,10 +532,13 @@ public class EqdResources {
 		if (rTo.getValue().getUnit() != null)
 			units = rTo.getValue().getUnit().value();
 		if (rTo.getValue().getRelation() != null && rTo.getValue().getRelation() == VocRelation.RELATIVE) {
-			Function function = getTimeDiff(units, "$referenceDate", "$this");
+
 			range.setTo(new Value()
 				.setComparison(toComp)
-				.setValue(toValue));
+				.setValue(toValue)
+				.setRelativeTo(new Compare().setVariable("$referenceDate")));
+			Function function = getTimeDiff();
+			pv.addArgument(new Argument().setParameter("units").setValueData(units));
 			pv.setFunction(function);
 		} else {
 			range.setTo(new Value()
@@ -566,15 +566,7 @@ public class EqdResources {
 		return valueSet;
 	}
 
-	private boolean isValueSet(EQDOCValueSet vs) {
-		VocCodeSystemEx scheme = vs.getCodeSystem();
-		if (scheme == VocCodeSystemEx.EMISINTERNAL) {
-			return false;
-		}
-		if (vs.getValues() != null)
-			return vs.getValues().size() >2;
-		return true;
-	}
+
 
 	private List<TTIriRef> getInlineValues(EQDOCValueSet vs) throws DataFormatException, IOException {
 		List<TTIriRef> setContent = new ArrayList<>();
@@ -795,9 +787,12 @@ public class EqdResources {
 		return "NoAlias_"+counter;
 	}
 
-	private String summarise(Where match,Where context,EQDOCTestAttribute testAtt){
+	private String summarise(Where match,EQDOCColumnValue cv){
 		StringBuilder summary= new StringBuilder();
-		for (EQDOCColumnValue cv:testAtt.getColumnValue()){
+		if (cv!=null) {
+			if (labels.get(cv.getId()) != null) {
+				return labels.get(cv.getId()).toString();
+			}
 			if (cv.getValueSet() != null) {
 				StringBuilder setIds = new StringBuilder();
 				int i = 0;
@@ -810,12 +805,12 @@ public class EqdResources {
 				if (labels.get(setIds.toString()) != null)
 					summary.append((String) labels.get(setIds.toString()));
 			}
-			if (cv.getLibraryItem()!=null){
+			if (cv.getLibraryItem() != null) {
 				StringBuilder setIds = new StringBuilder();
 				int i = 0;
-				for (String item:cv.getLibraryItem()){
+				for (String item : cv.getLibraryItem()) {
 					i++;
-					if (i>1)
+					if (i > 1)
 						setIds.append(",");
 					setIds.append(item);
 				}
@@ -823,48 +818,107 @@ public class EqdResources {
 					summary.append((String) labels.get(setIds.toString()));
 			}
 		}
-		if (match.getWhere()!=null) {
-				summariseWhere(match.getWhere(),summary,context);
-				if (match.getWhere().getAnd()!=null){
-				for (Where where : match.getWhere().getAnd()) {
-					summariseWhere(where, summary, context);
-				}
-			}
 			if (summary.toString().isEmpty())
-					summary.append("No Label yet");
+					summariseWhere(match,summary);
+			if (summary.toString().isEmpty()) {
+				whereCount++;
+				summary.append("Criteria_").append(whereCount);
 			}
 			return summary.toString();
 	}
 
-	private void summariseWhere(Where where,StringBuilder summary,Where context) {
-		if (where.getValue() != null) {
-			if (summary.toString().isEmpty())
-				summary.append(context.getAlias());
-			summary.append(compTerm(where.getComparison(), where.getValue()));
+	private void summariseWhere(Where where,StringBuilder summary) {
+		if (where.getNotExist()!=null) {
+			summary.append("Not ");
+			summary.append(where.getNotExist().getAlias());
 		}
-		else if (where.getRange() != null) {
-			if (summary.toString().isEmpty())
-				summary.append(context.getAlias());
-			summary.append("From").append(compTerm(where.getRange().getFrom().getComparison(),
-				where.getRange().getFrom().getValue()));
-			summary.append("To").append(compTerm(where.getRange().getTo().getComparison(),
-				where.getRange().getTo().getValue()));
+		if (where.isNot())
+			summary.append("not in ");
+		String path="";
+		if (where.getPath()!=null)
+			path= localName(where.getPath());
+		if (where.getProperty()!=null) {
+			String property = localName(where.getProperty().getIri());
+			String fullPath = (!path.equals("")) ? path + " " + property : property;
+			if (where.getValue() != null) {
+				summary.append(fullPath);
+				summary.append(" ").append(summariseValue(where.getValue()));
+				if (where.getArgument()!=null){
+					if (where.getArgument().get(0).getValueData()!=null)
+					 summary.append(" ").append(where.getArgument().get(0).getValueData().toLowerCase(Locale.ROOT));
+				}
+				if (where.getValue().getRelativeTo()!=null)
+					summary.append(summariseCompare(where.getValue().getRelativeTo()));
+			} else if (where.getRange() != null) {
+				if (summary.toString().isEmpty())
+					summary.append(fullPath).append(" ");
+				summary.append("From").append(summariseValue(where.getRange().getFrom()));
+				summary.append(" To").append(summariseValue(where.getRange().getTo()));
+				if (where.getRange().getRelativeTo()!=null)
+					summary.append(summariseCompare(where.getRange().getRelativeTo()));
+			}
+			if (where.getArgument()!=null)
+				summary.append(summariseArguments(where.getArgument()));
+
+
+			if (where.getIn()!=null){
+				int i=0;
+				for (TTIriRef in:where.getIn()){
+					i++;
+					if (i==1){
+						if (in.getName()!=null)
+							summary.append(in.getName());
+					}
+					if (i==2)
+						summary.append(" (and more) ");
+				}
+
+			}
+
+
+		}
+		else if( where.getAnd()!=null){
+			List<String> ands= where.getAnd().stream().map(Where::getAlias).collect(Collectors.toList());
+			summary.append(String.join("+",ands));
 		}
 	}
 
-	private String compTerm(String comp,String value) {
-		switch (comp) {
-			case ">=":
-				return value+"OrOver";
-			case ">":
-				return "Over"+value;
-			case "<":
-				return "LessThan"+value;
-			case "<=":
-				return value+"OrLess";
+	private String summariseCompare(Compare compare) {
+		if (compare.getVariable()!=null){
+			if (compare.getVariable().equals("$referenceDate"))
+				return " between date and ref date";
 		}
-		return comp;
+		return "";
 	}
+
+	private String summariseArguments(List<Argument> arguments) {
+		StringBuilder summary= new StringBuilder();
+		for (Argument arg:arguments){
+			if (arg.getParameter().equals("units"))
+				summary.append(" ").append(arg.getParameter().toLowerCase(Locale.ROOT));
+		}
+		return summary.toString();
+
+	}
+
+
+	private String localName(String path){
+		if (!path.contains(" "))
+			return path.substring(path.lastIndexOf("#")+1);
+		else {
+			String[] iris= path.split(" ");
+			List<String> locals= Arrays.stream(iris).sequential().map(i-> i.substring(i.lastIndexOf("#")+1)).collect(Collectors.toList());
+			return String.join(", ",locals);
+		}
+	}
+
+
+	private String summariseValue(Value value){
+		return value.getComparison() + " " +
+			value.getValue();
+	}
+
+
 
 
 

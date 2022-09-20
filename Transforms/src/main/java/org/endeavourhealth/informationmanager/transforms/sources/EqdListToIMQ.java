@@ -16,7 +16,6 @@ public class EqdListToIMQ {
 
 	public void convertReport(EQDOCReport eqReport,Query query,EqdResources resources) throws DataFormatException, IOException {
 		this.resources= resources;
-		this.resources.setQuery(query);
 		String id = eqReport.getParent().getSearchIdentifier().getReportGuid();
 		resources.setWith(query, TTIriRef.iri("urn:uuid:" + id).setName(resources.reportNames.get(id)));
 		for (EQDOCListReport.ColumnGroups eqColGroups : eqReport.getListReport().getColumnGroups()) {
@@ -30,7 +29,7 @@ public class EqdListToIMQ {
 
 	private void convertListGroup(EQDOCListColumnGroup eqColGroup, Query subQuery) throws DataFormatException, IOException {
 		String eqTable = eqColGroup.getLogicalTableName();
-
+		subQuery.setName(eqColGroup.getDisplayName());
 		if (eqColGroup.getCriteria() == null) {
 			convertPatientColumns(eqColGroup, eqTable, subQuery);
 		} else {
@@ -45,8 +44,9 @@ public class EqdListToIMQ {
 			Select select= new Select();
 			subQuery.addSelect(select);
 			String eqColumn= String.join("/",eqCol.getColumn());
-			TTAlias property = resources.getPath(eqTable + "/" + eqColumn);
-			select.setProperty(property);
+			String property = resources.getPath(eqTable + "/" + eqColumn);
+			select.setProperty(new TTAlias().setIri(property));
+			select.getProperty().setAlias(eqCol.getDisplayName());
 		}
 
 	}
@@ -57,13 +57,20 @@ public class EqdListToIMQ {
 		resources.convertCriteria(eqColGroup.getCriteria(), match);
 		Select select = new Select();
 		subQuery.addSelect(select);
+		String mainPath= resources.getPath(eqTable);
 		select.setProperty(resources.getPath(eqTable));
 		EQDOCListColumns eqCols = eqColGroup.getColumnar();
 		for (EQDOCListColumn eqCol : eqCols.getListColumn()) {
 			String eqColumn = String.join("/", eqCol.getColumn());
-			TTAlias predicatePath = resources.getPath(eqTable + "/" + eqColumn);
-			select.select(s->s
-				.setProperty(predicatePath));
+			String predicatePath = resources.getPath(eqTable + "/" + eqColumn);
+			String fullPath= mainPath.equals("") ? predicatePath : mainPath+" "+ predicatePath;
+			if (fullPath.contains(" ")) {
+				select.setPath(fullPath.substring(0, fullPath.lastIndexOf(" ")));
+				select.setProperty(new TTAlias().setIri(fullPath.substring(fullPath.lastIndexOf(" ")+1)));
+			}
+			else
+				select.setProperty(new TTAlias().setIri(fullPath));
+			select.getProperty().setAlias(eqCol.getDisplayName());
 		}
 	}
 

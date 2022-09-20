@@ -2,6 +2,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.apache.commons.text.CaseUtils;
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
@@ -28,7 +29,7 @@ public class IM1MapImport implements TTImport {
     private static TTDocument statsDocument;
     private static Map<String,Set<String>> entities;
     private static final Map<String,TTEntity> iriToCore= new HashMap<>();
-    private static final  ImportMaps importMaps = new ImportMaps();
+    private static final ImportMaps importMaps = new ImportMaps();
     private static Map<String,Integer> used= new HashMap<>();
     private static final Map<Integer,Integer> usedDbid= new HashMap<>();
     private static final Set<Integer> numericConcepts= new HashSet<>();

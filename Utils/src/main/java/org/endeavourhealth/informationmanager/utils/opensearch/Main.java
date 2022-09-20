@@ -1,5 +1,7 @@
 package org.endeavourhealth.informationmanager.utils.opensearch;
 
+import org.endeavourhealth.imapi.dataaccess.OpenSearchSender;
+
 import java.io.IOException;
 
 public class Main {
