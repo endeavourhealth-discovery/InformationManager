@@ -1,8 +1,6 @@
-package org.endeavourhealth.informationmanager.utils;
+package org.endeavourhealth.informationmanager.transforms.authored;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.endeavourhealth.imapi.logic.service.EntityService;
-import org.endeavourhealth.imapi.logic.service.SearchService;
 import org.endeavourhealth.imapi.model.iml.QueryRequest;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -11,6 +9,8 @@ import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.imapi.vocabulary.XSD;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -22,9 +22,11 @@ public class WikiGenerator {
 	private final List<String> shapesToDo= new ArrayList<>();
 	private final List<String> shapesDone= new ArrayList<>();
 	private final List<String> veto= new ArrayList<>();
+	private String coreOntology;
 
 
-	public String generateDocs() throws DataFormatException, JsonProcessingException {
+	public String generateDocs(String coreOntology) throws DataFormatException, IOException {
+		this.coreOntology= coreOntology;
 		StringBuilder documentation = new StringBuilder();
 		veto.add(IM.NAMESPACE+"Organisation");
 		veto.add(IM.NAMESPACE+"ComputerSystem");
@@ -36,7 +38,7 @@ public class WikiGenerator {
 			documentation.append(heading.getDescription()).append("\n");
 			List<TTEntity> ordered= getFolderContent(folderIri);
 			for (TTEntity shape:ordered) {
-				documentation.append(generateTable(shape));
+				documentation.append(generateClass(shape));
 			}
 			documentation.append("\n");
 
@@ -44,26 +46,75 @@ public class WikiGenerator {
 		return documentation.toString();
 	}
 
+	public String generateHeader(TTEntity shape) throws DataFormatException, IOException {
+		StringBuilder classText= new StringBuilder();
 
-	public  String generateTable(TTEntity shape) throws DataFormatException, JsonProcessingException {
+		String name= shape.getIri().substring(shape.getIri().lastIndexOf("#")+1);
+		TTIriRef target= null;
+		if (shape.get(SHACL.TARGETCLASS)!=null)
+			target= shape.get(SHACL.TARGETCLASS).asIriRef();
+		String link;
+		if (target!=null) {
+			name= target.getIri().substring(target.getIri().lastIndexOf("#")+1);
+			link= getLink(target.getIri());
+		}
+		else
+			link= getLink(shape.getIri());
+		classText.append("=== ").append("[")
+			.append(link).append(" ").append(name).append("] ===\n");
+
+
+		if (shape.get(RDFS.SUBCLASSOF)!=null){
+			TTEntity superShape=  getEntity(shape.get(RDFS.SUBCLASSOF).asIriRef().getIri());
+			classText.append("\nIs a subtype of " + "[[#class_").append(superShape.getName()).append("|").append(superShape.getName()).append("]]\n\n");
+			shapesToDo.add(superShape.getIri());
+		}
+
+		classText.append(shape.getDescription()).append("\n");
+		return classText.toString();
+
+
+	}
+
+
+	public  String generateClass(TTEntity shape) throws DataFormatException, IOException {
+		if (shapesDone.contains(shape.getIri()))
+			return "";
+		shapesDone.add(shape.getIri());
+		StringBuilder classText= new StringBuilder();
+		classText.append(generateHeader(shape));
+		classText.append(getTable(shape));
+		if (shape.get(IM.EXAMPLE)!=null){
+			classText.append("{{Note| Example <br>");
+			classText.append(shape.get(IM.EXAMPLE).asLiteral().getValue()).append(" }}\n");
+		}
+
+
+		for (int i = 0; i < shapesToDo.size(); i++) {
+			String iri = shapesToDo.get(i);
+			if (iri.contains("/im#")) {
+				TTEntity toDo = getEntity(shapesToDo.get(i));
+				if (!shapesDone.contains(toDo.getIri()))
+					classText.append(generateClass(toDo));
+			}
+		}
+
+		return classText.toString();
+	}
+
+	private String getTable(TTEntity shape) throws DataFormatException, IOException {
 		table= new StringBuilder();
 		table.append("{| class=\"wikitable\"\n" +
 			"|+\n" +
-			"!Shape \n" +
-			"!colspan=\"2\"|Property\n" +
-			"!Card.\n"+
-			"!Value type\n"+
-			"!Comment\n"+
+			"|colspan=\"2\"|Property\n" +
+			"|Card.\n"+
+			"|Value type\n"+
+			"|Description\n"+
 			"|-\n");
 
-			processClass(shape.getIri());
-
-			for (int i = 0; i < shapesToDo.size(); i++) {
-				processClass(shapesToDo.get(i));
-				table.append("\n|-\n");
-			}
-
+		processProperties(shape);
 		table.append("\n|}\n");
+		//table.append("\n|-\n");
 		return table.toString();
 	}
 
@@ -86,42 +137,15 @@ public class WikiGenerator {
 		return rowSpan;
 	}
 
-	private void processClass(String iri) throws DataFormatException, JsonProcessingException {
-		if (shapesDone.contains(iri))
-			return;
-		shapesDone.add(iri);
-		TTEntity shape = getEntity(iri);
-		String name= shape.getIri().substring(shape.getIri().lastIndexOf("#")+1);
-		TTIriRef target= null;
-		if (shape.get(SHACL.TARGETCLASS)!=null)
-			target= shape.get(SHACL.TARGETCLASS).asIriRef();
-		String link;
-		if (target!=null) {
-			name= target.getIri().substring(target.getIri().lastIndexOf("#")+1);
-			link= getLink(target.getIri());
-		}
-		else
-			link= getLink(iri);
+	private void processProperties(TTEntity shape) throws DataFormatException, IOException {
+
+
 		int rowSpan=0;
 		if (shape.get(SHACL.PROPERTY)!=null)
 			rowSpan= getRowSpan(shape);
 		if (rowSpan>0)
-			table.append("|rowspan=\"").append(rowSpan + 1).append("\"");
-		table.append("|").append("<span id=\"class_").append(name).append("\">").append("[")
-			.append(link).append(" ").append(" <span style=\"color:navy\"> '''")
-			.append(name).append("'''</span>]");
-		if (shape.get(RDFS.SUBCLASSOF)!=null){
-			TTEntity superShape=  getEntity(shape.get(RDFS.SUBCLASSOF).asIriRef().getIri());
-			table.append("<br> (subtype of " + "[[#class_").append(superShape.getName()).append("|").append(superShape.getName()).append("]])");
-			shapesToDo.add(superShape.getIri());
-		}
-		table.append("</span>");
 
-		table.append("\n|colspan=\"4\"|");
-		table.append("\n|");
-		table.append(shape.getDescription());
-		table.append("\n|-");
-		table.append("\n|");
+
 		if (shape.get(SHACL.PROPERTY)==null){
 			table.append("\n|-");
 		}
@@ -141,7 +165,7 @@ public class WikiGenerator {
 					processType(property);
 					processComment(property);
 				} else {
-					table.append("rowspan=\"").append(property.get(SHACL.OR).size()).append("\"|");
+					table.append("|rowspan=\"").append(property.get(SHACL.OR).size()).append("\"|");
 					String card= getCardinality(property);
 					table.append("or<br>").append(card).append("\n|");
 					int orCount = 0;
@@ -160,16 +184,17 @@ public class WikiGenerator {
 							table.append("\n|\n");
 					}
 				}
-				if (propCount < properties.size())
-					table.append("\n|");
+
 			}
 		}
+
+
 	}
 
 
 
 
-	private void processType(TTNode prop) throws DataFormatException, JsonProcessingException {
+	private void processType(TTNode prop) throws DataFormatException, IOException {
 		TTIriRef type=null;
 		String title="";
 		for (TTIriRef test : List.of(SHACL.NODE, SHACL.NODE_KIND, SHACL.DATATYPE,SHACL.CLASS)) {
@@ -207,7 +232,7 @@ public class WikiGenerator {
 		return link+escaped+"/";
 	}
 
-	private String getTitle(TTIriRef iri) throws DataFormatException, JsonProcessingException {
+	private String getTitle(TTIriRef iri) throws DataFormatException, IOException {
 		if (iri.equals(SHACL.IRI))
 			return "international resource identifier";
 		else if (iri.equals(XSD.STRING))
@@ -254,9 +279,9 @@ public class WikiGenerator {
 		table.append(card).append("\n|");
 	}
 
-	private void processField(TTNode property,int colspan) throws DataFormatException, JsonProcessingException {
+	private void processField(TTNode property,int colspan) throws DataFormatException, IOException {
 		if (colspan > 1)
-			table.append("colspan=\"").append(colspan).append("\"|");
+			table.append("|colspan=\"").append(colspan).append("\"|");
 		String link= getLink(property.get(SHACL.PATH).asIriRef().getIri());
 		String title= getTitle(property.get(SHACL.PATH).asIriRef());
 		String fieldName = localName(property.get(SHACL.PATH).asIriRef().getIri());
@@ -274,30 +299,29 @@ public class WikiGenerator {
 		table.append(comment).append("\n|-\n");
 	}
 
-	private TTEntity getEntity(String iri) throws DataFormatException, JsonProcessingException {
-		TTBundle bundle = new EntityService().getFullEntity(iri);
-		return bundle.getEntity();
+	private TTEntity getEntity(String iri) throws DataFormatException, IOException {
+
+		TTManager manager= new TTManager();
+			manager.loadDocument(new File(coreOntology));
+			return manager.getEntity(iri);
 	}
 
 
 
-	private List<TTEntity> getFolderContent(String iri) throws DataFormatException, JsonProcessingException {
-		QueryRequest qr= new QueryRequest()
-			.query(q->q
-				.select(s->s
-					.setProperty(RDFS.LABEL))
-				.select (s->s
-						.setProperty(RDFS.COMMENT))
-				.select(s ->s
-						.setProperty(IM.ORDER))
-					.where(m->m
-						.setProperty(IM.IS_CONTAINED_IN)
-							.setIs(TTAlias.iri(iri))));
-		TTDocument queryResult = new SearchService().queryIM(qr);
-		List<TTEntity> entities= queryResult.getEntities();
-		entities.sort(Comparator.comparing((TTNode p) -> p.get(IM.ORDER).asLiteral().intValue()));
-		return entities;
+	private List<TTEntity> getFolderContent(String iri) throws IOException {
+		TTManager manager= new TTManager();
+		manager.loadDocument(new File(coreOntology));
+		List<TTEntity> folders= new ArrayList<>();
+		for (TTEntity entity:manager.getDocument().getEntities()) {
+			if (entity.get(IM.IS_CONTAINED_IN) != null) {
+				for (TTValue value : entity.get(IM.IS_CONTAINED_IN).getElements()) {
+					if (value.asIriRef().getIri().equals(iri))
+						folders.add(entity);
+				}
+			}
+		}
+		folders.sort(Comparator.comparing((TTNode p) -> p.get(IM.ORDER).asLiteral().intValue()));
+		return folders;
 	}
-
 
 }

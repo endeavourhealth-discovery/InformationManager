@@ -227,7 +227,7 @@ public class EqdResources {
 		else
 			restrictionWhere= topWhere;
 		if (eqCriterion.getDescription() != null)
-			restrictionWhere.setName(eqCriterion.getDescription());
+			restrictionWhere.setDescription(eqCriterion.getDescription());
 		convertColumns(eqCriterion, restrictionWhere);
 		restrictionTest(eqCriterion, topWhere, restrictionWhere);
 	}
