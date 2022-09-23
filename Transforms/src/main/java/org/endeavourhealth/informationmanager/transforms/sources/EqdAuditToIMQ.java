@@ -17,14 +17,14 @@ public class EqdAuditToIMQ {
 
 		if (eqReport.getParent().getSearchIdentifier()!=null) {
 			String id = eqReport.getParent().getSearchIdentifier().getReportGuid();
-			resources.setWith(query, TTIriRef.iri("urn:uuid:" + id).setName(resources.reportNames.get(id)));
+			resources.setFrom(query, TTIriRef.iri("urn:uuid:" + id).setName(resources.reportNames.get(id)));
 		}
 		else
-			resources.setWith(query,TTIriRef.iri(IM.NAMESPACE+"Patient","Patient"));
+			resources.setFrom(query,TTIriRef.iri(IM.NAMESPACE+"Patient","Patient"));
 		for (String popId : eqReport.getAuditReport().getPopulation()) {
 			Query subQuery = new Query();
 			query.addSubQuery(subQuery);
-			resources.setWith(subQuery, TTIriRef.iri("urn:uuid:" + popId).setName(resources.reportNames.get(popId)));
+			resources.setFrom(subQuery, TTIriRef.iri("urn:uuid:" + popId).setName(resources.reportNames.get(popId)));
 		}
 		EQDOCAggregateReport agg = eqReport.getAuditReport().getCustomAggregate();
 		Select select = new Select();

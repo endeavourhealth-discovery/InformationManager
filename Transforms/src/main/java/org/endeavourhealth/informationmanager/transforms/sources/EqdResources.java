@@ -58,9 +58,8 @@ public class EqdResources {
 		this.dataMap = dataMap;
 	}
 
-	public EqdResources setLabels(Properties labels) {
+	public void setLabels(Properties labels) {
 		this.labels = labels;
-		return this;
 	}
 
 	private void setVocabMaps() {
@@ -87,14 +86,12 @@ public class EqdResources {
 			}
 		}
 	}
-	public void setWith(Query query, TTIriRef parent) {
-		query.setWith(new With());
-		Query withQuery= new Query();
-		withQuery.setIri(parent.getIri());
+	public void setFrom(Query query, TTIriRef parent) {
+		From from = new From();
+		from.setSet(TTAlias.iri(parent.getIri()));
 		if (parent.getName()!=null)
-			withQuery.setName(parent.getName());
-		query.getWith().setQuery(withQuery);
-
+			from.getInstance().setName(parent.getName());
+		query.addFrom(from);
 	}
 
 
@@ -105,9 +102,9 @@ public class EqdResources {
 
 		if ((eqCriteria.getPopulationCriterion() != null)) {
 			EQDOCSearchIdentifier srch = eqCriteria.getPopulationCriterion();
-			where.setProperty(IM.IN_RESULT_SET);
-			where.setIs(new TTAlias().setIri("urn:uuid:" + srch.getReportGuid())
-				.setName(reportNames.get(srch.getReportGuid())));
+			where.from(f->f
+				.setSet(new TTAlias().setIri("urn:uuid:" + srch.getReportGuid())
+				.setName(reportNames.get(srch.getReportGuid()))));
 		} else {
 			convertCriterion(eqCriteria.getCriterion(),where);
 		}
@@ -238,7 +235,8 @@ public class EqdResources {
 		if (testAtt != null) {
 				Where testWhere= new Where();
 				topWhere.addAnd(testWhere);
-				testWhere.setFrom(restrictionWhere.getAlias());
+				testWhere.from(f->f
+					.setAlias(restrictionWhere.getAlias()));
 				List<EQDOCColumnValue> cvs= testAtt.getColumnValue();
 				if (cvs.size()==1){
 					setMainCriterion(eqCriterion.getTable(), cvs.get(0), testWhere,"");
@@ -329,7 +327,7 @@ public class EqdResources {
 				String vsetName = "Unknown code set";
 				if (labels.get(vset) != null)
 					vsetName = (String) labels.get(vset);
-				TTIriRef iri = TTIriRef.iri("urn:uuid:" + vset).setName(vsetName);
+				TTAlias iri = TTAlias.iri("urn:uuid:" + vset).setName(vsetName);
 				if (!notIn)
 					pv.addIn(iri);
 				else {
@@ -483,9 +481,8 @@ public class EqdResources {
 
 
 	private Function getTimeDiff() {
-		Function function = new Function().setIri(TTIriRef.iri(IM.NAMESPACE + "TimeDifference")
+		return new Function().setIri(TTIriRef.iri(IM.NAMESPACE + "TimeDifference")
 			.setName("Time Difference"));
-		return function;
 	}
 
 	private void setRangeCompare(Where pv, EQDOCRangeFrom rFrom, EQDOCRangeTo rTo) throws DataFormatException {
@@ -552,11 +549,11 @@ public class EqdResources {
 
 
 
-	private List<TTIriRef> getExceptionSet(EQDOCException set) throws DataFormatException, IOException {
-		List<TTIriRef> valueSet = new ArrayList<>();
+	private List<TTAlias> getExceptionSet(EQDOCException set) throws DataFormatException, IOException {
+		List<TTAlias> valueSet = new ArrayList<>();
 		VocCodeSystemEx scheme = set.getCodeSystem();
 		for (EQDOCExceptionValue ev : set.getValues()) {
-			Set<TTIriRef> values = getValue(scheme, ev.getValue(), ev.getDisplayName(), ev.getLegacyValue());
+			Set<TTAlias> values = getValue(scheme, ev.getValue(), ev.getDisplayName(), ev.getLegacyValue());
 			if (values != null) {
 				valueSet.addAll(new ArrayList<>(values));
 			} else
@@ -568,14 +565,14 @@ public class EqdResources {
 
 
 
-	private List<TTIriRef> getInlineValues(EQDOCValueSet vs) throws DataFormatException, IOException {
-		List<TTIriRef> setContent = new ArrayList<>();
+	private List<TTAlias> getInlineValues(EQDOCValueSet vs) throws DataFormatException, IOException {
+		List<TTAlias> setContent = new ArrayList<>();
 		VocCodeSystemEx scheme = vs.getCodeSystem();
 		for (EQDOCValueSetValue ev : vs.getValues()) {
-			Set<TTIriRef> concepts = getValue(scheme, ev);
+			Set<TTAlias> concepts = getValue(scheme, ev);
 			if (concepts != null) {
-				for (TTIriRef iri : concepts) {
-					TTIriRef conRef = new TTIriRef(iri.getIri(), iri.getName());
+				for (TTAlias iri : concepts) {
+					TTAlias conRef = new TTAlias().setIri(iri.getIri()).setName(iri.getName());
 					setContent.add(conRef);
 				}
 			} else
@@ -586,8 +583,8 @@ public class EqdResources {
 	}
 
 
-	private List<TTIriRef> getValueSet(EQDOCValueSet vs) throws DataFormatException, IOException {
-		List<TTIriRef> setContent = new ArrayList<>();
+	private List<TTAlias> getValueSet(EQDOCValueSet vs) throws DataFormatException, IOException {
+		List<TTAlias> setContent = new ArrayList<>();
 		StringBuilder vsetName = new StringBuilder();
 		VocCodeSystemEx scheme = vs.getCodeSystem();
 		if (labels.get(vs.getId())!=null){
@@ -598,7 +595,7 @@ public class EqdResources {
 		int i = 0;
 		for (EQDOCValueSetValue ev : vs.getValues()) {
 			i++;
-			Set<TTIriRef> concepts = getValue(scheme, ev);
+			Set<TTAlias> concepts = getValue(scheme, ev);
 			if (concepts != null) {
 				setContent.addAll(new ArrayList<>(concepts));
 					if (i==1) {
@@ -616,7 +613,7 @@ public class EqdResources {
 		}
 
 		storeValueSet(vs, setContent, vsetName.toString());
-		setContent.add(TTIriRef.iri("urn:uuid:" + vs.getId()).setName(vsetName.toString()));
+		setContent.add(TTAlias.iri("urn:uuid:" + vs.getId()).setName(vsetName.toString()));
 		return setContent;
 	}
 
@@ -633,7 +630,7 @@ public class EqdResources {
 		}
 	}
 
-	private void storeValueSet(EQDOCValueSet vs, List<TTIriRef> valueSet, String vSetName) {
+	private void storeValueSet(EQDOCValueSet vs, List<TTAlias> valueSet, String vSetName) {
 		if (vs.getId() != null) {
 			TTIriRef iri = TTIriRef.iri("urn:uuid:" + vs.getId()).setName(vSetName);
 			if (!CEGImporter.valueSets.containsKey(iri)) {
@@ -644,7 +641,7 @@ public class EqdResources {
 				conceptSet.addObject(IM.IS_CONTAINED_IN, valueSetFolder);
 				TTNode ors = new TTNode();
 				conceptSet.addObject(IM.DEFINITION, ors);
-				for (TTIriRef member : valueSet)
+				for (TTAlias member : valueSet)
 					ors.addObject(SHACL.OR, member);
 				document.addEntity(conceptSet);
 				CEGImporter.valueSets.put(iri, conceptSet);
@@ -653,21 +650,21 @@ public class EqdResources {
 		}
 	}
 
-	private Set<TTIriRef> getValue(VocCodeSystemEx scheme, EQDOCValueSetValue ev) throws DataFormatException, IOException {
+	private Set<TTAlias> getValue(VocCodeSystemEx scheme, EQDOCValueSetValue ev) throws DataFormatException, IOException {
 		return getValue(scheme, ev.getValue(), ev.getDisplayName(), ev.getLegacyValue());
 	}
 
-	private Set<TTIriRef> getValue(VocCodeSystemEx scheme, String originalCode,
+	private Set<TTAlias> getValue(VocCodeSystemEx scheme, String originalCode,
 																	 String originalTerm, String legacyCode) throws DataFormatException, IOException {
 		if (scheme == VocCodeSystemEx.EMISINTERNAL) {
 			String key = "EMISINTERNAL/" + originalCode;
 			Object mapValue = dataMap.get(key);
 			if (mapValue != null) {
-				TTIriRef iri = getIri(mapValue.toString());
+				TTAlias iri = new TTAlias(getIri(mapValue.toString()));
 				String name = importMaps.getCoreName(iri.getIri());
 				if (name != null)
 					iri.setName(name);
-				Set<TTIriRef> result = new HashSet<>();
+				Set<TTAlias> result = new HashSet<>();
 				result.add(iri);
 				return result;
 			} else
@@ -694,7 +691,9 @@ public class EqdResources {
 				if (snomed != null)
 					valueMap.put(originalCode, snomed);
 			}
-			return snomed;
+			if (snomed!=null)
+				return snomed.stream().map(TTAlias::new).collect(Collectors.toSet());
+			else return null;
 		} else
 			throw new DataFormatException("code scheme not recognised : " + scheme.value());
 

@@ -46,10 +46,10 @@ public class CoreQueryImporter implements TTImport {
 		prof.setIri(qry.getIri());
 		prof.setName(qry.getName());
 		prof.setDescription(qry.getDescription());
-		prof.setWith(new With()
-				.addType(TTAlias.iri(IM.NAMESPACE+"Patient").setName("Patient")))
+		prof.from(f->f
+				.setType(TTAlias.iri(IM.NAMESPACE+"Patient").setName("Patient")))
 			.setWhere(new Where()
-				.setProperty(IM.NAMESPACE+"gpRegistration")
+				.setPath(IM.NAMESPACE+"gpRegistration")
 				.and(pv->pv
 					.setProperty(IM.NAMESPACE+"patientType")
 				.setIs(new TTAlias().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
@@ -59,9 +59,9 @@ public class CoreQueryImporter implements TTImport {
 						.setComparison("<=")
 						.relativeTo(c->c
 						.setVariable("$ReferenceDate"))))
-			.or(pv-> pv
-				.notExist(not->not
-				.setProperty(IM.NAMESPACE+"endDate")))
+				.or(pv-> pv
+					.notExist(not->not
+						.setProperty(IM.NAMESPACE+"endDate")))
 				.or(pv->pv
 					.setProperty(IM.NAMESPACE+"endDate")
 					.setValue(new Value()
@@ -70,7 +70,7 @@ public class CoreQueryImporter implements TTImport {
 					.setVariable("$referenceDate")))
 				));
 
-		qry.set(IM.QUERY_DEFINITION,TTLiteral.literal(prof.getJson()));
+		qry.set(IM.DEFINITION,TTLiteral.literal(prof));
 		qry.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_StandardCohorts"));
 		document.addEntity(qry);
 		document.setContext(TTUtil.getDefaultContext());

@@ -17,7 +17,7 @@ public class EqdListToIMQ {
 	public void convertReport(EQDOCReport eqReport,Query query,EqdResources resources) throws DataFormatException, IOException {
 		this.resources= resources;
 		String id = eqReport.getParent().getSearchIdentifier().getReportGuid();
-		resources.setWith(query, TTIriRef.iri("urn:uuid:" + id).setName(resources.reportNames.get(id)));
+		resources.setFrom(query, TTIriRef.iri("urn:uuid:" + id).setName(resources.reportNames.get(id)));
 		for (EQDOCListReport.ColumnGroups eqColGroups : eqReport.getListReport().getColumnGroups()) {
 			EQDOCListColumnGroup eqColGroup = eqColGroups.getColumnGroup();
 			Query subQuery = new Query();

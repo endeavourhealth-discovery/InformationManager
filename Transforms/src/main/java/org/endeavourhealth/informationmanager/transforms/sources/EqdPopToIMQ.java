@@ -21,12 +21,12 @@ public class EqdPopToIMQ {
 		this.activeReport= eqReport.getId();
 		this.resources= resources;
 		if (eqReport.getParent().getParentType() == VocPopulationParentType.ACTIVE) {
-			resources.setWith(query, TTIriRef.iri(IM.NAMESPACE + "Q_RegisteredGMS").setName("Registered with GP for GMS services on the reference date"));
+			resources.setFrom(query, TTIriRef.iri(IM.NAMESPACE + "Q_RegisteredGMS").setName("Registered with GP for GMS services on the reference date"));
 		}
 		else {
 			if (eqReport.getParent().getParentType() == VocPopulationParentType.POP) {
 				String id = eqReport.getParent().getSearchIdentifier().getReportGuid();
-				resources.setWith(query, TTIriRef.iri("urn:uuid:" + id).setName(resources.reportNames.get(id)));
+				resources.setFrom(query, TTIriRef.iri("urn:uuid:" + id).setName(resources.reportNames.get(id)));
 			}
 		}
 		Where mainWhere= new Where();

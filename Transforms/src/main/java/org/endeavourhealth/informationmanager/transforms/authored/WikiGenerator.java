@@ -49,24 +49,22 @@ public class WikiGenerator {
 	public String generateHeader(TTEntity shape) throws DataFormatException, IOException {
 		StringBuilder classText= new StringBuilder();
 
-		String name= shape.getIri().substring(shape.getIri().lastIndexOf("#")+1);
+		String name= shape.getName();
 		TTIriRef target= null;
 		if (shape.get(SHACL.TARGETCLASS)!=null)
 			target= shape.get(SHACL.TARGETCLASS).asIriRef();
-		String link;
-		if (target!=null) {
-			name= target.getIri().substring(target.getIri().lastIndexOf("#")+1);
-			link= getLink(target.getIri());
-		}
-		else
-			link= getLink(shape.getIri());
+		String link= getLink(shape.getIri());
+
 		classText.append("=== ").append("[")
 			.append(link).append(" ").append(name).append("] ===\n");
+		if (target!=null) {
+			classText.append("Defines the target class : ").append(getEntity(target.getIri())).append("\n");
+		}
 
 
 		if (shape.get(RDFS.SUBCLASSOF)!=null){
 			TTEntity superShape=  getEntity(shape.get(RDFS.SUBCLASSOF).asIriRef().getIri());
-			classText.append("\nIs a subtype of " + "[[#class_").append(superShape.getName()).append("|").append(superShape.getName()).append("]]\n\n");
+			classText.append("\nIs a subtype of " + "[[#").append(superShape.getName()).append("|").append(superShape.getName()).append("]]\n\n");
 			shapesToDo.add(superShape.getIri());
 		}
 
@@ -80,6 +78,7 @@ public class WikiGenerator {
 	public  String generateClass(TTEntity shape) throws DataFormatException, IOException {
 		if (shapesDone.contains(shape.getIri()))
 			return "";
+		System.out.println("Generating "+ shape.getIri());
 		shapesDone.add(shape.getIri());
 		StringBuilder classText= new StringBuilder();
 		classText.append(generateHeader(shape));

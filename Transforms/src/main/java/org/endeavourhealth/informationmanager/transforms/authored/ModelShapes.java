@@ -77,12 +77,13 @@ public class ModelShapes {
 
 	private void query(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
+		shape.setName("Query /Set shape");
 		shape.setDescription("A query that is stored as an entity in a query library");
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"EntityShape"));
 		shape.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
 		shape.set(IM.ORDER,TTLiteral.literal(1));
 		shape.set(SHACL.TARGETCLASS,IM.QUERY);
-		addProperty(shape,"query",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"QueryDefinition"),0,1,"The query definition itself");
+		addProperty(shape,"definition",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"QueryDefinition"),0,1,"The query definition itself");
 	}
 
 	private void transactionDocument(TTEntity shape) throws JsonProcessingException {
@@ -206,6 +207,7 @@ public class ModelShapes {
 	private void queryDef(TTEntity shape) throws JsonProcessingException {
 		shape.addType(SHACL.NODESHAPE);
 		shape.addType(OWL.CLASS);
+		shape.setName("Query /Set definition");
 		shape.setDescription("A set definition holding the logical definition of a set. Usually referred to as a Query as these are used to retrieve data."+
 			"<br>Includes most of  the main logical query constructs used in mainstream query languages, thus is a constrained version of mainstream languages that is schema independent.");
 		shape.addObject(IM.IS_CONTAINED_IN,IMA);
@@ -321,7 +323,7 @@ public class ModelShapes {
 		shape.setDescription("A clause defining a base cohort, or set , or a base type(s), or an object instance, on which the query operates");
 		addProperty(shape,"type",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),1,null,"If the query is derived from instances of certain type (or types) then these are the types.");
 		addProperty(shape,"instance",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),1,1,"If the query is based on a single instance then this is the id of the instance");
-		addProperty(shape,"query",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"QueryDefinition"),1,1,"If the query is based on the result set of another query then this is define here either as an iri or an inline definition");
+		addProperty(shape,"definition",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"QueryDefinition"),1,1,"If the query is based on the result set of another query then this is define here either as an iri or an inline definition");
 
 		setOrs(shape,List.of("type","instance","query"),1,1);
 

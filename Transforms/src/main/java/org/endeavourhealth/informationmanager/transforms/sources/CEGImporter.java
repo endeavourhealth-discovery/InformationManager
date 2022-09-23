@@ -58,7 +58,6 @@ public class CEGImporter implements TTImport {
 
 		//Import queries
 		loadAndConvert(config.getFolder());
-		WrapAsJson();
 		Map<String,TTEntity> vsetFolderMap= new HashMap<>();
 		Set<TTEntity> vsetFolders= new HashSet<>();
 		for (TTEntity entity:document.getEntities()){
@@ -97,15 +96,6 @@ public class CEGImporter implements TTImport {
 
 
 
-
-	private void WrapAsJson() throws JsonProcessingException {
-		for (TTEntity entity:document.getEntities()){
-			if (entity.isType(IM.QUERY))
-				if (entity.get(IM.QUERY_DEFINITION)!=null)
-					TTManager.wrapRDFAsJson(entity);
-
-		}
-	}
 
 
 	private void createFolders() {
@@ -186,7 +176,7 @@ public class CEGImporter implements TTImport {
 				qDocument.addEntity(entity);
 				if (!allEntities.contains(entity)) {
 					if (entity.isType(IM.QUERY)){
-						String json= entity.get(IM.QUERY_DEFINITION).asLiteral().getValue();
+						String json= entity.get(IM.DEFINITION).asLiteral().getValue();
 						hql.addQuery(om.readValue(json, Query.class));
 						allEntities.add(entity);
 					}

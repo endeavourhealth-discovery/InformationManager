@@ -148,7 +148,7 @@ public class EqdToIMQ {
 		objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 		objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 		String json = objectMapper.writeValueAsString(query);
-		entity.set(IM.QUERY_DEFINITION, TTLiteral.literal(json));
+		entity.set(IM.DEFINITION, TTLiteral.literal(query));
 		return entity;
 	}
 

@@ -402,36 +402,44 @@ public class IM1MapImport implements TTImport {
                 if (core != null) {
                     addIM1id(core.getIri(), oldIri);
                 }
+                else
+                    createUnassigned(scheme,lname,im1Scheme,term,code,oldIri,description);
             } else {
-                TTEntity unassigned = new TTEntity();
-                unassigned.setGraph(TTIriRef.iri(scheme));
-                unassigned.setIri(scheme + lname);
-                unassigned.setStatus(IM.UNASSIGNED);
-                unassigned.set(IM.IM1ID, TTLiteral.literal(oldIri));
-                unassigned.setName(term);
-                if (description != null)
-                    unassigned.setDescription(description);
-                if (code != null) {
-                    unassigned.set(IM.CODE, TTLiteral.literal(code));
-                    unassigned.setScheme(TTIriRef.iri(scheme));
-                }
-                unassigned.set(IM.IM1SCHEME, TTLiteral.literal(im1Scheme));
-                if (scheme.equals(IM.CODE_SCHEME_ENCOUNTERS.getIri()))
-                    unassigned.set(IM.PRIVACY_LEVEL, TTLiteral.literal(1));
-                if (used.get(oldIri) != null)
-                    if (used.get(oldIri) > 0)
-                        unassigned.set(IM.USAGE_TOTAL, TTLiteral.literal(used.get(oldIri)));
-                if (scheme.equals(IM.NAMESPACE)) {
-                    if (oldIri.startsWith("DM_")) {
-                        unassigned.set(RDF.TYPE, RDF.PROPERTY);
-                    } else
-                        unassigned.set(RDF.TYPE, IM.CONCEPT);
-                } else
-                    unassigned.set(RDF.TYPE, IM.CONCEPT);
-                document.addEntity(unassigned);
-                writer.write(oldIri + "\t" + term + "\t" + im1Scheme + "\t" + code + "\t" + description + "\t" + (used.getOrDefault(oldIri, 0)) + "\n");
+                createUnassigned(scheme,lname,im1Scheme,term,code,oldIri,description);
+
             }
         }
+
+    }
+    private void createUnassigned(String scheme, String lname, String im1Scheme,String term, String code, String oldIri,
+                             String description) throws IOException {
+        TTEntity unassigned = new TTEntity();
+        unassigned.setGraph(TTIriRef.iri(scheme));
+        unassigned.setIri(scheme + lname);
+        unassigned.setStatus(IM.UNASSIGNED);
+        unassigned.set(IM.IM1ID, TTLiteral.literal(oldIri));
+        unassigned.setName(term);
+        if (description != null)
+            unassigned.setDescription(description);
+        if (code != null) {
+            unassigned.set(IM.CODE, TTLiteral.literal(code));
+            unassigned.setScheme(TTIriRef.iri(scheme));
+        }
+        unassigned.set(IM.IM1SCHEME, TTLiteral.literal(im1Scheme));
+        if (scheme.equals(IM.CODE_SCHEME_ENCOUNTERS.getIri()))
+            unassigned.set(IM.PRIVACY_LEVEL, TTLiteral.literal(1));
+        if (used.get(oldIri) != null)
+            if (used.get(oldIri) > 0)
+                unassigned.set(IM.USAGE_TOTAL, TTLiteral.literal(used.get(oldIri)));
+        if (scheme.equals(IM.NAMESPACE)) {
+            if (oldIri.startsWith("DM_")) {
+                unassigned.set(RDF.TYPE, RDF.PROPERTY);
+            } else
+                unassigned.set(RDF.TYPE, IM.CONCEPT);
+        } else
+            unassigned.set(RDF.TYPE, IM.CONCEPT);
+        document.addEntity(unassigned);
+        writer.write(oldIri + "\t" + term + "\t" + im1Scheme + "\t" + code + "\t" + description + "\t" + (used.getOrDefault(oldIri, 0)) + "\n");
 
     }
 
