@@ -211,7 +211,7 @@ public class WikiGenerator {
 				if (!shapesToDo.contains(type.getIri())) {
 					shapesToDo.add(type.getIri());
 				}
-			table.append("<span title=\"").append(title).append("\">[[#class_").append(localType).append("|").append(localType).append("]]</span>\n|");
+			table.append("<span title=\"").append(title).append("\">[[#").append(localType).append("|").append(localType).append("]]</span>\n|");
 			}
 			else
 				table.append("<span title=\"").append(title).append("\">").append("[").append(link).append(" ").append(getShort(type.getIri())).append("]</span>\n|");

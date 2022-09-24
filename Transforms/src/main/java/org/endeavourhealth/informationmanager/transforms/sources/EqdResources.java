@@ -88,9 +88,10 @@ public class EqdResources {
 	}
 	public void setFrom(Query query, TTIriRef parent) {
 		From from = new From();
-		from.setSet(TTAlias.iri(parent.getIri()));
+		from.setSet(true);
+		from.setIri(parent.getIri());
 		if (parent.getName()!=null)
-			from.getInstance().setName(parent.getName());
+			from.setName(parent.getName());
 		query.addFrom(from);
 	}
 
@@ -103,8 +104,10 @@ public class EqdResources {
 		if ((eqCriteria.getPopulationCriterion() != null)) {
 			EQDOCSearchIdentifier srch = eqCriteria.getPopulationCriterion();
 			where.from(f->f
-				.setSet(new TTAlias().setIri("urn:uuid:" + srch.getReportGuid())
-				.setName(reportNames.get(srch.getReportGuid()))));
+					.setSet(true)
+					.setIri("urn:uuid:" + srch.getReportGuid())
+					.setName(reportNames.get(srch.getReportGuid()))
+				);
 		} else {
 			convertCriterion(eqCriteria.getCriterion(),where);
 		}

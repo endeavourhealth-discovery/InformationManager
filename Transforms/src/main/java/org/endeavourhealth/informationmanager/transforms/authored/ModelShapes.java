@@ -34,7 +34,7 @@ public class ModelShapes {
 		pageInformation(getEntity(IM.NAMESPACE+"PageInformation"));
 		argument(getEntity(IM.NAMESPACE+"Argument"));
 		queryDef(getEntity(IM.NAMESPACE+"QueryDefinition"));
-		with(getEntity(IM.NAMESPACE+"WithClause"));
+		from(getEntity(IM.NAMESPACE+"FromClause"));
 		query(getEntity(IM.NAMESPACE+"QueryShape"));
 		select(getEntity(IM.NAMESPACE+"SelectClause"));
 		where(getEntity(IM.NAMESPACE+"WhereClause"));
@@ -216,8 +216,8 @@ public class ModelShapes {
 		shape.set(IM.ORDER,TTLiteral.literal(2));
 		addProperty(shape,"description",SHACL.DATATYPE,XSD.STRING,0,1,"Optional description of the query definition for support purposes.");
 
-		addProperty(shape,"With",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"WithClause"),0,1,"The base type, or base population/ set , or single object instance that this query is operating on."+
-			"<br>The result of the query contains subsets of this set.");
+		addProperty(shape,"from",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"FromClause"),0,null,"The base cohort/ set or type, or instance on which all the subsequent where or filter clauses operate. If more than one"+
+			" this is treated as an OR list.");
 		addProperty(shape,"where",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"WhereClause"),0,1,
 			"Tests properties and property paths and applies filters. Equivalent to SQL Join/ Where and SPARQL Where"+
 			"<br>Bollean where clauses supported.");
@@ -318,14 +318,15 @@ public class ModelShapes {
 
 	}
 
-	private void with(TTEntity shape) throws JsonProcessingException, DataFormatException {
+	private void from(TTEntity shape) throws JsonProcessingException, DataFormatException {
 		setLabels(shape);
-		shape.setDescription("A clause defining a base cohort, or set , or a base type(s), or an object instance, on which the query operates");
-		addProperty(shape,"type",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),1,null,"If the query is derived from instances of certain type (or types) then these are the types.");
-		addProperty(shape,"instance",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),1,1,"If the query is based on a single instance then this is the id of the instance");
-		addProperty(shape,"definition",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"QueryDefinition"),1,1,"If the query is based on the result set of another query then this is define here either as an iri or an inline definition");
-
-		setOrs(shape,List.of("type","instance","query"),1,1);
+		shape.setName("From clause");
+		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriAlias"));
+		shape.setDescription("A clause defining a base set , or a base type(s), or an object instance, on which the where clause operates."+
+			"<br>Set the alias if derived from a result set in the same query. Set the iri if derived from an external result. by default the iri refers to an instance. For querying instances of a type set the is type property as true and for a base cohort, set isSet as true");
+		addProperty(shape,"isType",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"If the query results are derived from instances of certain type (or types) then set this flag to true.");
+		addProperty(shape,"isSet",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"If the query results derived the result set of a concept set, value set or query result then set this flag to true.");
+		setOrs(shape,List.of("isType","isSet"),1,1);
 
 	}
 	private void where(TTEntity shape) throws JsonProcessingException {
@@ -334,8 +335,10 @@ public class ModelShapes {
 			"<br>Supports graph traversal filtering and inference for subsumption query");
 		addProperty(shape,"alias",SHACL.DATATYPE,XSD.STRING,0,1,"Used to define the clause with a readable term and also used in other clauses for further refinement");
 		addProperty(shape,"description",SHACL.DATATYPE,XSD.STRING,0,1,"Optional description for clause");
-		addProperty(shape,"from",SHACL.DATATYPE,XSD.STRING,0,1,"Refers to the alias of another where clause to indicate the set of objects defined by the referenced clause, which will be further refined by this where clause."+
-			"<br>Equivalent to accessing a temporary or derived table in SQL");
+		addProperty(shape,"from",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"FromClause"),0,null,"Refers to the alias of another where clause to indicate the set of objects defined by the referenced clause, which will be further refined by this where clause."+
+			"<br>Equivalent to accessing a temporary or derived table in SQL."+
+			"<br>Also used to refer to an instance object, or instances of a certain type, or external result set (e.g. a base cohort population)"+
+			"<br>If more than one it is considered an OR List");
 		addProperty(shape,"graph",SHACL.CLASS,IM.GRAPH,0,1,"The iri of a graph if the query is limited to a particular data set");
 		addProperty(shape,"path",SHACL.CLASS,RDFS.RESOURCE,0,1,"A property path made up of space delimited iri strings, from the outer entity to the entity on which this clause operates."+
 			"<br>Equivalent to an inner join in SQL");
