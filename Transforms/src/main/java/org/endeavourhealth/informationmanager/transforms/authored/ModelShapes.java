@@ -24,6 +24,7 @@ public class ModelShapes {
 	public static void main(String[] args) throws Exception {
 		String sourcePath= args[0].replace("%"," ");
 		new ModelShapes().createShapes(sourcePath);
+		new StandardQueries().buildQueries();
 	}
 
 
