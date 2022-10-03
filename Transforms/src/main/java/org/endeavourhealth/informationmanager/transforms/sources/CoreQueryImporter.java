@@ -47,7 +47,7 @@ public class CoreQueryImporter implements TTImport {
 		prof.setName(qry.getName());
 		prof.setDescription(qry.getDescription());
 		prof.from(f->f
-				.setType(TTAlias.iri(IM.NAMESPACE+"Patient").setName("Patient")))
+				.setIri(IM.NAMESPACE+"Patient").setName("Patient").setIsType(true))
 			.setWhere(new Where()
 				.setPath(IM.NAMESPACE+"gpRegistration")
 				.and(pv->pv

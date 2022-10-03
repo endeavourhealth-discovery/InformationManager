@@ -153,7 +153,7 @@ public class StandardQueries {
 				.setDescription("'using property domains get the allowable properties from the supertypes of this concept")
 				.setActiveOnly(true)
 				.from(f ->f
-					.setType(IM.CONCEPT))
+					.setIri(IM.CONCEPT.getIri()).setIsType(true))
 				.select(IM.CODE.getIri())
 				.select(RDFS.LABEL.getIri())
 				.where(w->w
@@ -172,7 +172,7 @@ public class StandardQueries {
 				.setDescription("'using property domains get the allowable properties from the supertypes of this concept")
 				.setActiveOnly(true)
 			.from(f ->f
-				.setType(IM.CONCEPT).setIncludeSubtypes(true))
+				.setIri(IM.CONCEPT.getIri()).setIsType(true).setIncludeSubtypes(true))
 			.select(IM.CODE.getIri())
 			.select(RDFS.LABEL.getIri())
 			.where(w->w
@@ -189,7 +189,7 @@ public class StandardQueries {
 				.setActiveOnly(true)
 				.setName("Search for concepts")
 				.from(w->w
-					.setType(IM.CONCEPT))));
+					.setIri(IM.CONCEPT.getIri()).setIsType(true))));
 	}
 
 	private void getIsas() throws JsonProcessingException {

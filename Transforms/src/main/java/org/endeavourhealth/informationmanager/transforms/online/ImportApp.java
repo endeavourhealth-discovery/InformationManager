@@ -207,9 +207,10 @@ public class ImportApp {
                 TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
                 closureGenerator.generateClosure(cfg.getFolder(), cfg.isSecure());
             }
-
-            System.out.println("expanding value sets");
-            new SetExpander().expandAllSets();
+            if (cfg.getImportType().equals("all")||cfg.getImportType().equals("core")) {
+                System.out.println("expanding value sets");
+                new SetExpander().expandAllSets();
+            }
             if (!cfg.isSkiplucene()) {
                 System.out.println("building lucene index");
                 new LuceneIndexer().buildIndexes();

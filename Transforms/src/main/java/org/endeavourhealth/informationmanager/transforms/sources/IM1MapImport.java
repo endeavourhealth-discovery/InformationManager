@@ -202,6 +202,8 @@ public class IM1MapImport implements TTImport {
 
                         if (scheme.equals(IM.CODE_SCHEME_TPP.getIri())) {
                             lname = lname.replace(".", "_");
+                            if (lname.contains("65MZ1"))
+                                System.out.println("65MZ1");
                             if (entities.containsKey(scheme+lname)) {
                                 checkEntity(scheme, lname, im1Scheme, term, code, oldIri,description);
                             }

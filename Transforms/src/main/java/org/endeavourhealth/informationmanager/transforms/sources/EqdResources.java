@@ -87,7 +87,7 @@ public class EqdResources {
 		}
 	}
 	public void setFrom(Query query, TTIriRef parent) {
-		From from = new From();
+		TTAlias from = new TTAlias();
 		from.setIsSet(true);
 		from.setIri(parent.getIri());
 		if (parent.getName()!=null)

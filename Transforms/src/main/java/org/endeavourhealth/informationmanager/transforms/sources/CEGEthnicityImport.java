@@ -1,12 +1,13 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
+import org.endeavourhealth.imapi.model.iml.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.SHACL;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -155,7 +156,7 @@ public class CEGEthnicityImport implements TTImport {
 		}
 	}
 
-    private void processEthnicGroupLine(int count, String line) {
+    private void processEthnicGroupLine(int count, String line) throws JsonProcessingException {
         String[] fields;
         if(count %50000 == 0){
             System.out.println("Processed " + count +" terms");
@@ -180,13 +181,14 @@ public class CEGEthnicityImport implements TTImport {
                 .setScheme(IM.GRAPH_CEG_QUERY)
                 .setDescription("QMUL CEG 16+ Ethnic category "+cat16)
 				.set(IM.IS_SUBSET_OF,TTIriRef.iri(cegSet.getIri()))
-                .set(IM.DEFINITION,new TTNode().set(SHACL.OR, new TTArray()));
+                .set(IM.DEFINITION,TTLiteral.literal(new Query()));
             document.addEntity(cegSubset);
             cegCatMap.put(cat16,cegSubset);
 
         }
-
-        cegSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+				Query query= cegSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
+				query.addFrom(TTAlias.iri(SNOMED.NAMESPACE+snomed));
+				cegSubset.set(IM.DEFINITION,TTLiteral.literal(query));
         if (cegSubset.get(IM.HAS_TERM_CODE)==null)
             TTManager.addTermCode(cegSubset,catTerm,null);
         if (!UNCLASSIFIED.equals(snoNhs)){
@@ -199,13 +201,16 @@ public class CEGEthnicityImport implements TTImport {
 				.setName("Concept set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
                 .setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
 				.set(IM.IS_SUBSET_OF,TTIriRef.iri(nhsSet.getIri()))
-				.set(IM.DEFINITION,new TTNode().set(SHACL.OR,new TTArray()));
+				.set(IM.DEFINITION,TTLiteral.literal(new Query()));
                 nhsDocument.addEntity(nhsSubset);
                 nhsCatmap.put(snoNhs, nhsSubset);
             }
             if (nhsSubset.get(IM.HAS_TERM_CODE)==null)
                 TTManager.addTermCode(nhsSubset,nhsTerm,null);
-            nhsSubset.get(IM.DEFINITION).asNode().get(SHACL.OR).add(TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+						query=
+            nhsSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
+						query.addFrom(TTAlias.iri(SNOMED.NAMESPACE+snomed));
+						nhsSubset.set(IM.DEFINITION,TTLiteral.literal(query));
         }
     }
 

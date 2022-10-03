@@ -4,8 +4,9 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.model.iml.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.ECLToTT;
+import org.endeavourhealth.imapi.transforms.ECLToIML;
 import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
@@ -20,7 +21,7 @@ import java.util.zip.DataFormatException;
 public class SnomedImporter implements TTImport {
 
    private Map<String, TTEntity> conceptMap;
-   private final ECLToTT eclConverter = new ECLToTT();
+   private final ECLToIML eclConverter = new ECLToIML();
    private TTDocument document;
    private Integer counter;
 
@@ -251,6 +252,7 @@ public class SnomedImporter implements TTImport {
                    c.addType(IM.CONCEPT);
                    c.setStatus(IM.INACTIVE);
                    c.setCode(old);
+                   c.setScheme(SNOMED.GRAPH_SNOMED);
                   }
                   addRelationship(c,0,REPLACED_BY,replacedBy);
 
@@ -479,22 +481,13 @@ public class SnomedImporter implements TTImport {
        if(ecl.matches("^[a-zA-Z].*")){
            return;
        }
-      TTValue expression= eclConverter.getClassExpression(ecl);
-      if (expression.isIriRef())
-         op.addObject(RDFS.RANGE,expression);
-      else if (expression.isNode()){
-         if (expression.asNode().get(SHACL.OR)!=null){
-            for (TTValue or:expression.asNode().get(SHACL.OR).iterator()){
-               if (or.isIriRef())
-                  op.addObject(RDFS.RANGE,or);
-              //Code level range not supported
-            }
-         } else
-            throw new DataFormatException("Unrecognised juntion type in MRCM range files");
-
-      } else
-         throw new DataFormatException("Snomed importer does not support intersections in the MRCM range file");
-
+      Query expression= eclConverter.getQueryFromECL(ecl);
+       for (TTAlias range:expression.getWhere().getFrom()) {
+         op.addObject(RDFS.RANGE, TTIriRef.iri(range.getIri()));
+       }
+       if (expression.getWhere().getPath()!=null|| expression.getWhere().getAnd()!=null
+       ||expression.getWhere().getNotExist()!=null)
+         throw new DataFormatException("Snomed MCRM range converter does not support compound or refined ecl");
    }
 
 

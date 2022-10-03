@@ -75,14 +75,12 @@ public class TPPImporter implements TTImport {
             importnhsMaps(config.getFolder());
             addEmisMaps();
             addDiscoveryMaps();
+            importVaccineMaps(manager, config.getFolder());
 
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
             }
-            importVaccineMaps(manager, config.getFolder());
-            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-                filer.fileDocument(vDocument);
-            }
+
 
         }
     }
@@ -103,6 +101,24 @@ public class TPPImporter implements TTImport {
     private void importVaccineMaps(TTManager manager, String folder) throws IOException {
         Path file =  ImportUtils.findFileForId(folder, vaccineMaps[0]);
         vDocument= manager.loadDocument(file.toFile());
+        for (TTEntity vaccine:vDocument.getEntities()) {
+            String iri = vaccine.getIri();
+            String code = iri.substring(iri.lastIndexOf("#") + 1);
+            TTEntity entity = codeToEntity.get(code);
+            if (entity == null) {
+                entity = new TTEntity()
+                  .setIri(vaccine.getIri())
+                  .setCrud(IM.ADD_QUADS)
+                  .setCode(code)
+                  .setScheme(IM.CODE_SCHEME_TPP)
+                  .set(IM.MATCHED_TO, vaccine.get(IM.MATCHED_TO));
+                document.addEntity(entity);
+
+            }
+            for (TTValue match : vaccine.get(IM.MATCHED_TO).getElements()) {
+                entity.addObject(IM.MATCHED_TO, match);
+            }
+        }
 
     }
 
@@ -385,6 +401,7 @@ public class TPPImporter implements TTImport {
                 if (tpp==null){
                     tpp = new TTEntity().setIri(IM.CODE_SCHEME_TPP.getIri()+code.replace(".","_"));
                     tpp.setCode(code);
+                    tpp.setScheme(IM.CODE_SCHEME_TPP);
                     tpp.setName("TPP local code. name unknown");
                     tpp.addType(IM.CONCEPT);
                     codeToEntity.put(code, tpp);

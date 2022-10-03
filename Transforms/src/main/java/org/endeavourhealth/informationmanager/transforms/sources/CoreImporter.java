@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
@@ -89,6 +90,7 @@ public class CoreImporter implements TTImport {
         manager.setDocument(inferred);
         String inferredFile = path.toString().substring(0, path.toString().indexOf(".json")) + INFERRED_SUFFIX;
         manager.saveDocument(new File(inferredFile));
+
       }
 
     }
