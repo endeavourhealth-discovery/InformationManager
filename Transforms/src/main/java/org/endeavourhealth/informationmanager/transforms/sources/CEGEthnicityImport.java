@@ -3,15 +3,21 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
+import org.endeavourhealth.imapi.logic.service.SetService;
 import org.endeavourhealth.imapi.model.iml.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class CEGEthnicityImport implements TTImport {
 	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
@@ -29,6 +35,7 @@ public class CEGEthnicityImport implements TTImport {
 	private TTEntity nhsSet;
 	private TTEntity cegSet;
 	private ImportMaps importMaps = new ImportMaps();
+	private SetService setService= new SetService();
 
 	Map<String,Set<String>> census2001;
 
@@ -188,7 +195,7 @@ public class CEGEthnicityImport implements TTImport {
         }
 				Query query= cegSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
 				query.addFrom(TTAlias.iri(SNOMED.NAMESPACE+snomed));
-				cegSubset.set(IM.DEFINITION,TTLiteral.literal(query));
+				cegSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(query)));
         if (cegSubset.get(IM.HAS_TERM_CODE)==null)
             TTManager.addTermCode(cegSubset,catTerm,null);
         if (!UNCLASSIFIED.equals(snoNhs)){
@@ -210,7 +217,7 @@ public class CEGEthnicityImport implements TTImport {
 						query=
             nhsSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
 						query.addFrom(TTAlias.iri(SNOMED.NAMESPACE+snomed));
-						nhsSubset.set(IM.DEFINITION,TTLiteral.literal(query));
+						nhsSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(query)));
         }
     }
 

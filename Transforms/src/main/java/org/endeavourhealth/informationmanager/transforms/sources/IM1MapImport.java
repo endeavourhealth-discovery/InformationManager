@@ -623,21 +623,7 @@ public class IM1MapImport implements TTImport {
         }
     }
 
-    private void bindToSet(String propertyIri, String iri) {
-        if (propertyIri.equals(IM.NAMESPACE+"concept"))
-            return;
-        String lname= propertyIri.substring(propertyIri.lastIndexOf("#")+1);
-        String setIri= 	IM.NAMESPACE+ "VSET_"+ (lname.substring(0, 1).toUpperCase() + lname.substring(1));
-        TTEntity valueSet= iriToSet.get(setIri);
-        if (valueSet==null){
-            valueSet= new TTEntity()
-              .setCrud(IM.ADD_QUADS);
-            valueSet.set(IM.DEFINITION,new TTNode());
-            document.addEntity(valueSet);
-        }
-        valueSet.get(IM.DEFINITION).asNode().addObject(SHACL.OR,TTIriRef.iri(iri));
 
-    }
 
     private void addContext(TTNode context, String publisher, String system, String schema, String table, String field, String sourceValue, String regex, String headerCode,TTIriRef propertyIri) {
         context.set(IM.SOURCE_PUBLISHER,TTLiteral.literal(publisher));

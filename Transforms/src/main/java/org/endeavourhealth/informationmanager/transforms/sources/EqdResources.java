@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.iml.*;
@@ -633,7 +634,7 @@ public class EqdResources {
 		}
 	}
 
-	private void storeValueSet(EQDOCValueSet vs, List<TTAlias> valueSet, String vSetName) {
+	private void storeValueSet(EQDOCValueSet vs, List<TTAlias> valueSet, String vSetName) throws JsonProcessingException {
 		if (vs.getId() != null) {
 			TTIriRef iri = TTIriRef.iri("urn:uuid:" + vs.getId()).setName(vSetName);
 			if (!CEGImporter.valueSets.containsKey(iri)) {
@@ -642,10 +643,11 @@ public class EqdResources {
 					.addType(IM.CONCEPT_SET)
 					.setName(vSetName);
 				conceptSet.addObject(IM.IS_CONTAINED_IN, valueSetFolder);
-				TTNode ors = new TTNode();
-				conceptSet.addObject(IM.DEFINITION, ors);
+				Query definition= new Query();
+
 				for (TTAlias member : valueSet)
-					ors.addObject(SHACL.OR, member);
+					definition.addFrom(member);
+				conceptSet.set(IM.DEFINITION,TTLiteral.literal(definition) );
 				document.addEntity(conceptSet);
 				CEGImporter.valueSets.put(iri, conceptSet);
 			}
