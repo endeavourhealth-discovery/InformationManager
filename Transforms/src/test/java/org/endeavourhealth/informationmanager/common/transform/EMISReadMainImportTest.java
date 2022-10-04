@@ -24,6 +24,7 @@ class EMISReadMainImportTest {
         assertEquals(expected, actual);
     }
 
+
     @Test
     void getEmisCode_00() {
         String expected = "H33z";
