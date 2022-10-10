@@ -35,7 +35,6 @@ public class ModelShapes {
 		pageInformation(getEntity(IM.NAMESPACE+"PageInformation"));
 		argument(getEntity(IM.NAMESPACE+"Argument"));
 		queryDef(getEntity(IM.NAMESPACE+"QueryDefinition"));
-		from(getEntity(IM.NAMESPACE+"FromClause"));
 		query(getEntity(IM.NAMESPACE+"QueryShape"));
 		select(getEntity(IM.NAMESPACE+"SelectClause"));
 		where(getEntity(IM.NAMESPACE+"WhereClause"));
@@ -135,7 +134,7 @@ public class ModelShapes {
 		setOrs(shape,List.of("class","datatype","node"),1,1);
 	}
 
-	private void alias(TTEntity shape) throws JsonProcessingException {
+	private void alias(TTEntity shape) throws JsonProcessingException, DataFormatException {
 		setLabels(shape);
 		shape.setDescription("An IRI with a name and an optional alias  and a variable name when the iri is passed in as an argument (e.g. $this");
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"BasicShapes"));
@@ -147,6 +146,9 @@ public class ModelShapes {
 		addProperty(shape,"inverse",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"When  used as a property, whether this is an inverse object property i.e. an inbound connection to this entity");
 		addProperty(shape,"includeSubtypes",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"When used in a with or where clause, whether to include the subtypes of this entity");
 		addProperty(shape,"includeSupertypes",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"When used in a with or where clause, whether to include the supertypes of this entity e.g. when ascending a hierrchy to look for a property");
+		addProperty(shape,"isType",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"If the query results are derived from instances of certain type (or types) then set this flag to true.");
+		addProperty(shape,"isSet",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"If the query results derived the result set of a concept set, value set or query result then set this flag to true.");
+		setOrs(shape,List.of("isType","isSet"),0,1);
 
 	}
 
@@ -217,7 +219,7 @@ public class ModelShapes {
 		shape.set(IM.ORDER,TTLiteral.literal(2));
 		addProperty(shape,"description",SHACL.DATATYPE,XSD.STRING,0,1,"Optional description of the query definition for support purposes.");
 
-		addProperty(shape,"from",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"FromClause"),0,null,"The base cohort/ set or type, or instance on which all the subsequent where or filter clauses operate. If more than one"+
+		addProperty(shape,"from",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),0,null,"The base cohort/ set or type(s), or instance(s) on which all the subsequent where or filter clauses operate. If more than one"+
 			" this is treated as an OR list.");
 		addProperty(shape,"where",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"WhereClause"),0,1,
 			"Tests properties and property paths and applies filters. Equivalent to SQL Join/ Where and SPARQL Where"+
@@ -336,10 +338,13 @@ public class ModelShapes {
 			"<br>Supports graph traversal filtering and inference for subsumption query");
 		addProperty(shape,"alias",SHACL.DATATYPE,XSD.STRING,0,1,"Used to define the clause with a readable term and also used in other clauses for further refinement");
 		addProperty(shape,"description",SHACL.DATATYPE,XSD.STRING,0,1,"Optional description for clause");
-		addProperty(shape,"from",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"FromClause"),0,null,"Refers to the alias of another where clause to indicate the set of objects defined by the referenced clause, which will be further refined by this where clause."+
+		addProperty(shape,"from",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),0,null,"Refers <br> a) to the alias of another where clause to indicate the set of objects defined by the referenced clause, which will be further refined by this where clause."+
 			"<br>Equivalent to accessing a temporary or derived table in SQL."+
-			"<br>Also used to refer to an instance object, or instances of a certain type, or external result set (e.g. a base cohort population)"+
-			"<br>If more than one it is considered an OR List");
+			"<br>(b) One or more instance objects to test properties of"+
+			"<br>(c) or instances of a certain type(s)"+
+			"<br>(d) external result set (e.g. a base cohort population)"+
+			"<br>If more than one it is considered an OR List."+
+			"<br>Represents a subject of a triple or entity. Should be used with caution in IM query");
 		addProperty(shape,"graph",SHACL.CLASS,IM.GRAPH,0,1,"The iri of a graph if the query is limited to a particular data set");
 		addProperty(shape,"path",SHACL.CLASS,RDFS.RESOURCE,0,1,"A property path made up of space delimited iri strings, from the outer entity to the entity on which this clause operates."+
 			"<br>Equivalent to an inner join in SQL");

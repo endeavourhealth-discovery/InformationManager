@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.authored;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.endeavourhealth.imapi.logic.service.EntityService;
 import org.endeavourhealth.imapi.model.iml.QueryRequest;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -22,11 +23,11 @@ public class WikiGenerator {
 	private final List<String> shapesToDo= new ArrayList<>();
 	private final List<String> shapesDone= new ArrayList<>();
 	private final List<String> veto= new ArrayList<>();
-	private String coreOntology;
+	private String importFolder;
 
 
-	public String generateDocs(String coreOntology) throws DataFormatException, IOException {
-		this.coreOntology= coreOntology;
+	public String generateDocs(String importFolder) throws DataFormatException, IOException {
+		this.importFolder = importFolder;
 		StringBuilder documentation = new StringBuilder();
 		veto.add(IM.NAMESPACE+"Organisation");
 		veto.add(IM.NAMESPACE+"ComputerSystem");
@@ -58,7 +59,9 @@ public class WikiGenerator {
 		classText.append("=== ").append("[")
 			.append(link).append(" ").append(name).append("] ===\n");
 		if (target!=null) {
-			classText.append("Defines the target class : ").append(getEntity(target.getIri())).append("\n");
+			TTEntity targetClass= getEntity(target.getIri());
+			classText.append("Defines the shape of an instance of the target class : ").append("[")
+				.append(getLink(targetClass.getIri())).append(" ").append(targetClass.getName()).append("]\n");
 		}
 
 
@@ -299,17 +302,29 @@ public class WikiGenerator {
 	}
 
 	private TTEntity getEntity(String iri) throws DataFormatException, IOException {
-
-		TTManager manager= new TTManager();
-			manager.loadDocument(new File(coreOntology));
-			return manager.getEntity(iri);
+		for (String document:List.of("/DiscoveryCore/CoreOntology","/SemanticWeb/RDFOntology","/SemanticWeb/RDFSOntology",
+			"/SemanticWeb/SHACLOntology","/SemanticWeb/OWLOntology","/DiscoveryCore/Sets")){
+			String file= importFolder+document+".json";
+			TTManager manager= new TTManager();
+			manager.loadDocument(new File(file));
+			TTEntity entity= manager.getEntity(iri);
+			if (entity!=null)
+				return entity;
+		}
+		EntityService es= new EntityService();
+		TTBundle bundle = es.getFullEntity(iri);
+		TTEntity entity= bundle.getEntity();
+		if (entity!=null)
+			return entity;
+		else
+			throw new DataFormatException("Unknown entity :"+ iri);
 	}
 
 
 
 	private List<TTEntity> getFolderContent(String iri) throws IOException {
 		TTManager manager= new TTManager();
-		manager.loadDocument(new File(coreOntology));
+		manager.loadDocument(new File(importFolder+"/DiscoveryCore/CoreOntology.json"));
 		List<TTEntity> folders= new ArrayList<>();
 		for (TTEntity entity:manager.getDocument().getEntities()) {
 			if (entity.get(IM.IS_CONTAINED_IN) != null) {

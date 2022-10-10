@@ -15,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
@@ -121,10 +123,11 @@ public class Reasoner {
                addExpression(entity, superClass);
             }
          }
-      } else if (entity.get(OWL.EQUIVALENTCLASS) != null) {
-         for (TTValue superClass : entity.get(OWL.EQUIVALENTCLASS).iterator()) {
-            if (!superClass.isIriRef()) {
-               addExpression(entity, superClass);
+      }
+      if (entity.get(OWL.EQUIVALENTCLASS) != null) {
+         for (TTValue equClass : entity.get(OWL.EQUIVALENTCLASS).iterator()) {
+            if (!equClass.isIriRef()) {
+               addExpressionRoles(entity, equClass);
             }
          }
       }
@@ -162,6 +165,60 @@ public class Reasoner {
                LOG.debug("Only one level of nesting supported. ");
        } else
            throw new DataFormatException("Unrecognised owl expression format");
+   }
+
+
+   private void addExpressionRoles(TTEntity entity,TTValue expression) throws DataFormatException {
+      if (expression.isNode()) {
+         if (expression.asNode().get(OWL.INTERSECTIONOF) != null) {
+            for (TTValue subExp : expression.asNode().get(OWL.INTERSECTIONOF).iterator()) {
+               if (subExp.isNode()) {
+                  if (subExp.asNode().get(OWL.ONPROPERTY) != null) {
+                     TTIriRef property = subExp.asNode().get(OWL.ONPROPERTY).asIriRef();
+                     TTArray value = subExp.asNode().get(OWL.SOMEVALUESFROM);
+                     if (entity.get(IM.ROLE_GROUP) == null) {
+                        TTNode roleGroup = new TTNode();
+                        roleGroup.set(IM.GROUP_NUMBER, TTLiteral.literal(1));
+                        entity.addObject(IM.ROLE_GROUP, roleGroup);
+                     }
+                     if (value.isIriRef()) {
+                        entity.get(IM.ROLE_GROUP).asNode().set(property, value);
+                     }
+                     else {
+                        TTNode subGroup= new TTNode();
+                        entity.get(IM.ROLE_GROUP).asNode().set(property, subGroup);
+                        addSubRole(subGroup,value.asNode());
+                     }
+
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   private void addSubRole(TTNode subGroup,TTNode subExp) {
+      if (subExp.get(OWL.INTERSECTIONOF)!=null) {
+         for (TTValue and:subExp.get(OWL.INTERSECTIONOF).getElements()){
+            if (and.isNode()){
+               addSubRole(subGroup,and.asNode());
+            }
+         }
+      }
+      else {
+
+         TTIriRef property = subExp.get(OWL.ONPROPERTY).asIriRef();
+
+         TTArray value = subExp.asNode().get(OWL.SOMEVALUESFROM);
+         if (value.isIriRef()) {
+            subGroup.set(property, value);
+         } else {
+            TTNode subSub = new TTNode();
+            subGroup.set(property, subSub);
+            addSubRole(subGroup, value.asNode());
+         }
+      }
+
    }
 
    private void addRole(TTNode node, TTNode restriction) throws DataFormatException {
@@ -214,7 +271,7 @@ public class Reasoner {
     * @throws DataFormatException for invalid owl content
     */
 
-   public TTDocument classify(TTDocument document) throws OWLOntologyCreationException, DataFormatException {
+   public TTDocument classify(TTDocument document) throws OWLOntologyCreationException, DataFormatException{
       manager= new TTManager();
       manager.setDocument(document);
       if (document.getEntities() == null)
@@ -290,12 +347,14 @@ public class Reasoner {
                         addSubClassOf(c,iri);}
                      );
                   }
+                  /*
                   Node<OWLClass> equClasses= owlReasoner.getEquivalentClasses(owlClass);
                equClasses.forEach(sup -> {if (sup.isOWLClass()){
                   TTIriRef superIri= TTIriRef.iri(sup.getIRI().toString());
                   if (!superIri.equals(TTIriRef.iri(c.getIri())))
                      addSubClassOf(c,superIri);}
                });
+               */
 
             }
 

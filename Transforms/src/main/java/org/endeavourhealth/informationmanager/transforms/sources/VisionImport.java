@@ -158,8 +158,10 @@ public class VisionImport implements TTImport {
 						if (!Character.isLowerCase(code.charAt(0))) {
 						TTEntity readConcept = codeToConcept.get(code);
 						if (readConcept == null) {
+							String lname = code.replaceAll("[.&/'| ()^]", "_");
+							lname = lname.replace("[", "_").replace("]", "_");
 							readConcept = new TTEntity()
-								.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".",""))
+								.setIri(IM.CODE_SCHEME_VISION.getIri() +lname)
 								.setCode(code)
 								.setStatus(IM.ACTIVE)
 								.setScheme(IM.CODE_SCHEME_VISION)
@@ -207,6 +209,7 @@ public class VisionImport implements TTImport {
 			.setScheme(IM.GRAPH_VISION)
 			.setDescription("Vision and read 2 codes mapped to core");
 		vision.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+		document.addEntity(vision);
 		for (TTEntity entity:document.getEntities()){
 			String shortCode = entity.getCode();
 			if (shortCode!=null) {
@@ -240,9 +243,11 @@ public class VisionImport implements TTImport {
 				String term = fields[1];
 				code = code.replace("\"", "");
 				term = term.substring(1, term.length() - 1);
+				String lname = code.replaceAll("[.&/'| ()^]", "_");
+				lname = lname.replace("[", "_").replace("]", "_");
 				if (!code.startsWith(".") && !Character.isLowerCase(code.charAt(0)) && codeToConcept.get(code) == null) {
                     TTEntity c = new TTEntity();
-                    c.setIri(IM.CODE_SCHEME_VISION.getIri() + code.replace(".", ""));
+                    c.setIri(IM.CODE_SCHEME_VISION.getIri() + lname);
                     c.setName(term);
                     c.setCode(code);
 										c.setScheme(IM.CODE_SCHEME_VISION);
