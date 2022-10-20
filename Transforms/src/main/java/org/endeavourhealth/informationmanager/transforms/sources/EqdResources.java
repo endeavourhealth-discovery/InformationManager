@@ -368,17 +368,21 @@ public class EqdResources {
 		String eqTable = eqCriterion.getTable();
 		String linkColumn = eqCriterion.getFilterAttribute().getRestriction()
 			.getColumnOrder().getColumns().get(0).getColumn().get(0);
-		match.addOrderBy(new TTAlias().setIri(getPath(eqTable + "/" + linkColumn)));
+
 		match.setLimit(1);
 		EQDOCFilterRestriction restrict = eqCriterion.getFilterAttribute().getRestriction();
+		String direction;
 		if (restrict.getColumnOrder().getColumns().get(0).getDirection() == VocOrderDirection.ASC) {
-			match.setDirection("ASC");
+			direction= "ASC";
 			match.setAlias("Earliest"+ match.getAlias());
 		}
 		else {
-			match.setDirection("DESC");
+			direction= "DESC";
 			match.setAlias("Latest" + match.getAlias());
 		}
+		match.addOrderBy(new OrderBy()
+			.setIri(getPath(eqTable + "/" + linkColumn))
+			.setDirection(direction));
 	}
 
 
