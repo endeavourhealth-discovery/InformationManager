@@ -31,6 +31,9 @@ public class ModelShapes {
 	public void createShapes(String sourcePath) throws IOException, DataFormatException {
 		this.sourcePath= sourcePath;
 		loadDocument(sourcePath+"\\CoreOntology.json");
+		transformMapShape(getEntity(IM.NAMESPACE+"TransformMapShape"));
+		mapGroup(getEntity(IM.NAMESPACE+"MapGroup"));
+
 		queryRequest(getEntity(IM.NAMESPACE+"QueryRequest"));
 		pageInformation(getEntity(IM.NAMESPACE+"PageInformation"));
 		argument(getEntity(IM.NAMESPACE+"Argument"));
@@ -45,6 +48,8 @@ public class ModelShapes {
 		parameter(getEntity(IM.NAMESPACE+"Parameter"));
 		functionClause(getEntity(IM.NAMESPACE+"FunctionClause"));
 		alias(getEntity(IM.NAMESPACE+"IriAlias"));
+		context(getEntity(IM.NAMESPACE+"SourceContext"));
+		variable(getEntity(IM.NAMESPACE+"IriVariable"));
 		conceptReference(getEntity(IM.NAMESPACE+"ConceptReference"));
 		propertyNode(getEntity(IM.NAMESPACE+"PropertyNodeShape"));
 		transactionEntity(getEntity(IM.NAMESPACE+"EntityFileTransaction"));
@@ -54,6 +59,60 @@ public class ModelShapes {
 		saveDocument(sourcePath+"\\CoreOntology.json");
 	}
 
+	private void context(TTEntity shape) throws JsonProcessingException {
+		setLabels(shape);
+		shape.setDescription("Provides information about the source context of an entity, property or value, required for context sensitive mappings. Not all properties are required. Only sufficient to provide context");
+		addProperty(shape,"sourcePublisher",SHACL.DATATYPE,XSD.STRING,0,1,"A reference identifier (usually an iri) to a source publisher");
+		addProperty(shape,"sourceSystem",SHACL.DATATYPE,XSD.STRING,0,1,"A reference identifier (usually an iri) to a source IT system, perhaps name and version. This needs only be sufficient for context");
+		addProperty(shape,"sourceSchema",SHACL.DATATYPE,XSD.STRING,0,1,"A reference identifier (usually an iri) to a source schema or extract model. This needs only be sufficient for context, not meant to be an 'official' data model");
+		addProperty(shape,"sourceScheme",SHACL.DATATYPE,XSD.STRING,0,1,"A reference identifier (usually an iri) to a source code scheme. This needs only be sufficient for context, not meant to be an 'official' code scheme");
+		addProperty(shape,"sourceTable",SHACL.DATATYPE,XSD.STRING,0,1,"A reference identifier (usually an iri) to a source table or message or resource. This needs only be sufficient for context, not meant to be an 'official' reference");
+		addProperty(shape,"sourceField",SHACL.DATATYPE,XSD.STRING,0,1,"A reference identifier (usually an iri) to a source field, or property. This needs only be sufficient for context");
+		addProperty(shape,"sourceRegex",SHACL.DATATYPE,XSD.STRING,0,1,"Regex pattern to apply to any text entry that may not be coded");
+		addProperty(shape,"sourceValue",SHACL.DATATYPE,XSD.STRING,0,1,"A field coded relevant to context when used with a text entry, for example an entry for 'negative' may have the context of the text");
+	}
+
+	private void mapGroup(TTEntity shape) throws JsonProcessingException {
+		setLabels(shape);
+		shape.setName("Transform map group");
+
+		shape.setDescription("A named group containing one or more transformation rules. The group can be called by a map, a group, or a target transform from a path. Their names are in contect and are variables within the scope of a map and its imports");
+		addProperty(shape,"name",SHACL.DATATYPE,XSD.STRING,0,1,"The name of a group by its variable");
+		addProperty(shape,"extends",SHACL.DATATYPE,XSD.STRING,0,1,"The name of a group that this group inherits rules from");
+		addProperty(shape,"description",SHACL.DATATYPE,XSD.STRING,0,1,"A description of what the group does");
+		addProperty(shape,"source",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),1,null,"Input parameter representing one or more source objects. Usually a variable name from an outer group or map, and may or may not be typed");
+		addProperty(shape,"target",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),1,null,"Input parameter representing one or more target objects. Usually a variable name from an outer group or map, and may or may not be typed."+
+			"<br> The net result of a group is the population of the target objects with data. Targets are not modelled as return values and therefore should be pre-created unless the rule creates an instance as a property value of a group object");
+		addProperty(shape,"rule",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"MapRule"),0,null,"A list of rules within the group that does the actual transformation.  Rules may call groups creating a hierarchy or modularisation.");
+
+	}
+
+	private void transformMapShape(TTEntity shape) throws JsonProcessingException {
+		setLabels(shape);
+		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"EntityShape"));
+		shape.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE+"TransformMapShapes"));
+		shape.set(IM.ORDER,TTLiteral.literal(1));
+		shape.set(SHACL.TARGETCLASS,IM.TRANSFORM_MAP);
+		addProperty(shape,"definition",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"TransformMapDefinition"),0,1,"The map definition itself");
+	}
+
+	private void transformMapDef(TTEntity shape) throws JsonProcessingException {
+		setLabels(shape);
+		shape.setName("Transform map definition shape");
+		shape.set(IM.ORDER,TTLiteral.literal(1));
+		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"TransformMapShapes"));
+		shape.addObject(RDFS.SUBCLASSOF,TTIriRef.iri("IriRef"));
+		shape.setDescription("A map that describes how one set of source objects can be transformed to a set of target objects, subject to source and target objects being directed acyclic graphs (in any physical format)."+
+			"<br> The design has been heavily influenced by FHIR Mapping language <a href=\"https://build.fhir.org/mapping-language\">https://build.fhir.org/mapping-language</a>   and "+
+			"RML <a href=\"https://rml.io/specs/rml/\">https://rml.io/specs/rml/<a>");
+		addProperty(shape,"source",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),1,null,"Meta data for the map (e.g. to enable caching). One or more source types (class/ structured definition etc) identified by their iri.");
+		addProperty(shape,"target",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),1,null,"Meta data for the map (e.g to enable caching). One or more target types (class/ structured definition etc) identified by their iri."+
+			"<br> At run time actual sources and targets are passed in by reference, so instances created in the engine under map instructions must have a means of adding the new instances to an outer object.");
+		addProperty(shape,"imports",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),0,null,"Map imports so that groups from other maps can be used directly");
+		addProperty(shape,"rule",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"MapRule"),1,null,"A rule that transforms something to something" );
+		addProperty(shape,"group",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"MapGroup"),0,null,"A named reusable set of transformation maps rules executed in order");
+	}
+
 	private void prefix(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
 		shape.setName("Prefix shape");
@@ -61,6 +120,7 @@ public class ModelShapes {
 		shape.setDescription("The model of a class containing an iri prefix map");
 		addProperty(shape,"prefix",SHACL.DATATYPE,XSD.STRING,1,1,"Prefixe used in the rest of the document");
 		addProperty(shape,"iri",SHACL.DATATYPE,XSD.STRING,1,1,"The iri or namespace or graph iri this prefix refers to");
+
 
 	}
 
@@ -152,6 +212,16 @@ public class ModelShapes {
 
 	}
 
+	private void variable(TTEntity shape) throws JsonProcessingException, DataFormatException {
+		setLabels(shape);
+		shape.setDescription("A variable, usually passed in as a parameter to a function, with an optional IRI and whether the iri is an instance or type iri (if ambiguous)");
+		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"BasicShapes"));
+		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriRef"));
+		shape.set(IM.ORDER,TTLiteral.literal(3));
+		addProperty(shape,"variable",SHACL.DATATYPE,XSD.STRING,0,1,"The name of a variable, passed as an argument to a function. Assumed to be a collection");
+		addProperty(shape,"isType",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"In cases where it is ambiguous whether an iri refers to an instance or type, then set this to true if a type");
+	}
+
 
 	private static void loadDocument(String file) throws IOException {
 		manager.loadDocument(new File(file));
@@ -190,6 +260,7 @@ public class ModelShapes {
 	}
 	private void compare(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
+		shape.setDescription("When comparing a value to another variable's value this defines the target to compare against. Might be property, alias of a property, or a variable value");
 		addProperty(shape,"alias",SHACL.DATATYPE,XSD.STRING,0,1,"The alias of the result set from another where clause");
 		addProperty(shape,"property",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),0,1,"The property of the objects in the result set (as indicated by the alias) to test");
 		addProperty(shape,"variable",SHACL.DATATYPE,XSD.STRING,0,1,"If a value is being compared against a variable passed in as an argument, the name of the variable");
@@ -258,6 +329,7 @@ public class ModelShapes {
 
 	private void parameter(TTEntity shape) throws JsonProcessingException, DataFormatException {
 		setLabels(shape);
+		shape.setDescription("Models a named parameter used in function or other clauses. The parameter name and data type of the parameter (if literal) or class (if on object) ");
 		addProperty(shape,RDFS.LABEL,SHACL.DATATYPE,XSD.STRING,1,1,"The name of the parameter");
 		addProperty(shape,SHACL.DATATYPE,SHACL.CLASS,RDFS.RESOURCE,1,1,"The iri of The data type of the parameter when the data type is a literal");
 		addProperty(shape,SHACL.CLASS,SHACL.CLASS,RDFS.RESOURCE,1,1,"The iri of the class of the parameter when the argument is an object");
@@ -274,6 +346,7 @@ public class ModelShapes {
 
 	private void function(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
+		shape.setDescription("Data model of a function i.e. models the parameters. A query that calls a function uses a function clause that uses this function definition to name each argument passed in");
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"EntityShape"));
 		shape.set(IM.ORDER,TTLiteral.literal(2));

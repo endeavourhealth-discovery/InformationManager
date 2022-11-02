@@ -31,12 +31,13 @@ public class WikiGenerator {
 		StringBuilder documentation = new StringBuilder();
 		veto.add(IM.NAMESPACE+"Organisation");
 		veto.add(IM.NAMESPACE+"ComputerSystem");
-		List<String> folders=List.of("BasicShapes","QueryShapes","DataModelShapes","ConceptShapes","TransactionalShapes");
+		List<String> folders=List.of("BasicShapes","QueryShapes","DataModelShapes","ConceptShapes","TransformMapShapes","TransactionalShapes");
 		for (String folder:folders) {
 			String folderIri = IM.NAMESPACE + folder;
 			TTEntity heading = getEntity(folderIri);
 			documentation.append("== ").append(heading.getName()).append(" ==\n");
-			documentation.append(heading.getDescription()).append("\n");
+			String description= convertHtml(heading.getDescription());
+			documentation.append(description).append("\n");
 			List<TTEntity> ordered= getFolderContent(folderIri);
 			for (TTEntity shape:ordered) {
 				documentation.append(generateClass(shape));
@@ -71,10 +72,38 @@ public class WikiGenerator {
 			shapesToDo.add(superShape.getIri());
 		}
 
-		classText.append(shape.getDescription()).append("\n");
+		String description= convertHtml(shape.getDescription());
+
+		classText.append(description).append("\n");
 		return classText.toString();
 
 
+	}
+
+	private String convertHtml(String description) {
+		if (description==null)
+			return null;
+		String[] markups= description.split("<a");
+		if (markups.length==1)
+			return description;
+		StringBuilder result= new StringBuilder();
+		for (String markup:markups){
+			if (!markup.startsWith(" href"))
+				result.append(markup);
+			else {
+				result.append("[");
+				String url= markup.split(" href=\"")[1].split("\">")[0];
+				String rest= markup.split(" href=\"")[1].split("\">")[1];
+				String[] extraText= rest.split("</a>");
+				String text=extraText[0];
+				result.append(url).append(" ");
+				result.append(text).append("]");
+				for (int i=1; i<extraText.length; i++)
+					result.append(extraText[i]);
+
+			}
+		}
+		return result.toString();
 	}
 
 
