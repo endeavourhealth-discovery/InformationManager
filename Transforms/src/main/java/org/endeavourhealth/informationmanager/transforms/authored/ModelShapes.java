@@ -31,9 +31,7 @@ public class ModelShapes {
 	public void createShapes(String sourcePath) throws IOException, DataFormatException {
 		this.sourcePath= sourcePath;
 		loadDocument(sourcePath+"\\CoreOntology.json");
-		transformMapShape(getEntity(IM.NAMESPACE+"TransformMapShape"));
 		mapGroup(getEntity(IM.NAMESPACE+"MapGroup"));
-
 		queryRequest(getEntity(IM.NAMESPACE+"QueryRequest"));
 		pageInformation(getEntity(IM.NAMESPACE+"PageInformation"));
 		argument(getEntity(IM.NAMESPACE+"Argument"));
@@ -87,14 +85,7 @@ public class ModelShapes {
 
 	}
 
-	private void transformMapShape(TTEntity shape) throws JsonProcessingException {
-		setLabels(shape);
-		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"EntityShape"));
-		shape.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE+"TransformMapShapes"));
-		shape.set(IM.ORDER,TTLiteral.literal(1));
-		shape.set(SHACL.TARGETCLASS,IM.TRANSFORM_MAP);
-		addProperty(shape,"definition",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"TransformMapDefinition"),0,1,"The map definition itself");
-	}
+
 
 	private void transformMapDef(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
