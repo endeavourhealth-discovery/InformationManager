@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 import static org.endeavourhealth.imapi.model.tripletree.TTLiteral.literal;
@@ -99,8 +100,8 @@ public class OdsImporter implements TTImport {
 
     private void processLine(TTDocument doc) {
         String odsCode = fieldByName("OrganisationId");
-        String orgIri = IM.ORGANISATION_NAMESPACE + odsCode;
-        String addIri = IM.LOCATION_NAMESPACE + odsCode;
+        String orgIri = IM.ORGANISATION_NAMESPACE +  UUID.randomUUID();
+        String addIri = IM.LOCATION_NAMESPACE + UUID.randomUUID();
 
         TTEntity org = new TTEntity(orgIri);
         org.setName(fieldByName("Name"));
