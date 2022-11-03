@@ -23,7 +23,7 @@ public class IM1MapImport implements TTImport {
     private static final String[] oldIris= {  ".*\\\\IMv1\\\\oldiris.txt"};
     private static final String[] context= {  ".*\\\\IMv1\\\\ContextMaps.txt"};
     private static final String[] usageDbid = {".*\\\\DiscoveryLive\\\\stats1.txt",".*\\\\DiscoveryLive\\\\stats2.txt"
-    ,".*\\\\DiscoveryLive\\\\stats3.txt"};
+    ,".*\\\\DiscoveryLive\\\\stats3.txt",".*\\\\DiscoveryLive\\\\stats4.txt"};
     private static final Map<String,TTEntity> oldIriEntity = new HashMap<>();
     private static TTDocument document;
     private static TTDocument statsDocument;
@@ -49,7 +49,7 @@ public class IM1MapImport implements TTImport {
     public void importData(String inFolder, boolean secure) throws Exception {
 
         importOld(inFolder);
-        used= importUsage(inFolder);
+        importUsage(inFolder);
         LOG.info("Retrieving all entities and matches...");
         entities= importMaps.getAllPlusMatches();
         TTManager manager = new TTManager();
@@ -88,6 +88,8 @@ public class IM1MapImport implements TTImport {
                 String oldIri = fields[1];
                 if (oldIri.equals("CM_DidNotAttendEncounter"))
                     LOG.info("");
+                if (usedDbid.get(dbid)!=null)
+                    used.put(oldIri,usedDbid.get(dbid));
                 IdToDbid.put(oldIri,dbid);
                 String term=fields[2];
                 String description= fields[3];
@@ -525,7 +527,7 @@ public class IM1MapImport implements TTImport {
         Integer usedCount=0;
         if (used.containsKey(oldIri)){
             if (im1.get(IM.USAGE_TOTAL)!=null)
-            usedCount= im1.get(IM.USAGE_TOTAL).asLiteral().intValue();
+              usedCount= im1.get(IM.USAGE_TOTAL).asLiteral().intValue();
         }
         if (used.get(oldIri)!=null)
             usedCount= used.get(oldIri);
@@ -545,7 +547,7 @@ public class IM1MapImport implements TTImport {
         document.addEntity(im1);
     }
 
-    private Map<String,Integer> importUsage(String inFolder) throws IOException {
+    private void importUsage(String inFolder) throws IOException {
 
         for (String statsFile : usageDbid) {
             Path file = ImportUtils.findFilesForId(inFolder, statsFile).get(0);
@@ -567,8 +569,6 @@ public class IM1MapImport implements TTImport {
             }
         }
 
-
-        return used;
     }
 
 
