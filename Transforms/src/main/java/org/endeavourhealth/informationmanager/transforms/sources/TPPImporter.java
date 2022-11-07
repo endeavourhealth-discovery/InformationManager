@@ -131,7 +131,7 @@ public class TPPImporter implements TTImport {
                     if (emisToSnomed.get(scode) != null) {
                         for (String snomed : emisToSnomed.get(scode)) {
                             if (!alreadyMapped(entity, snomed)) {
-                                entity.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + snomed));
+                                entity.addObject(IM.MATCHED_TO, iri(snomed));
                             }
                         }
                     }
