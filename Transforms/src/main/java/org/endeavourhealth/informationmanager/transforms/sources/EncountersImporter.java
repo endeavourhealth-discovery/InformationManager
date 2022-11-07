@@ -14,7 +14,7 @@ public class EncountersImporter implements TTImport {
 
 
    public void importData(TTImportConfig config) throws Exception {
-      System.out.println("Importing Discovery entities");
+      System.out.println("Importing Discovery encounters");
       importNoneCoreFile(config);
    }
 

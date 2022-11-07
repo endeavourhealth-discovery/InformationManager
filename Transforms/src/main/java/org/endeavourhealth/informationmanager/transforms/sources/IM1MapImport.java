@@ -22,8 +22,12 @@ public class IM1MapImport implements TTImport {
     private static final String[] im1Codes = {".*\\\\IMv1\\\\concepts.txt"};
     private static final String[] oldIris= {  ".*\\\\IMv1\\\\oldiris.txt"};
     private static final String[] context= {  ".*\\\\IMv1\\\\ContextMaps.txt"};
-    private static final String[] usageDbid = {".*\\\\DiscoveryLive\\\\stats1.txt",".*\\\\DiscoveryLive\\\\stats2.txt"
-    ,".*\\\\DiscoveryLive\\\\stats3.txt",".*\\\\DiscoveryLive\\\\stats4.txt"};
+    private static final String[] usageDbid = {
+        ".*\\\\DiscoveryLive\\\\stats1.txt",
+        ".*\\\\DiscoveryLive\\\\stats2.txt",
+        ".*\\\\DiscoveryLive\\\\stats3.txt",
+        ".*\\\\DiscoveryLive\\\\stats4.txt"
+    };
     private static final Map<String,TTEntity> oldIriEntity = new HashMap<>();
     private static TTDocument document;
     private static TTDocument statsDocument;
@@ -194,7 +198,7 @@ public class IM1MapImport implements TTImport {
                         default:
                             if (code.startsWith("DM_"))
                                 LOG.info("data model property");
-                            LOG.error(im1Scheme + " :" + code + " : " + oldIri);
+                            LOG.error("Scheme [{}], Code [{}], Iri [{}]", im1Scheme, code, oldIri);
                             scheme = "X";
                     }
                     if (scheme == null)
