@@ -31,7 +31,7 @@ public class WikiGenerator {
 		StringBuilder documentation = new StringBuilder();
 		veto.add(IM.NAMESPACE+"Organisation");
 		veto.add(IM.NAMESPACE+"ComputerSystem");
-		List<String> folders=List.of("BasicShapes","QueryShapes","DataModelShapes","ConceptShapes","TransformMapShapes","TransactionalShapes");
+		List<String> folders=List.of("BasicShapes","DataModelShapes","ConceptShapes","QueryShapes","TransformMapShapes","TransactionalShapes");
 		for (String folder:folders) {
 			String folderIri = IM.NAMESPACE + folder;
 			TTEntity heading = getEntity(folderIri);

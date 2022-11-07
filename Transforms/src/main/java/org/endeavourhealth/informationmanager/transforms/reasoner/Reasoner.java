@@ -301,7 +301,7 @@ public class Reasoner {
             c.getPredicateMap().remove(RDFS.SUBPROPERTYOF);
             if (c.get(OWL.EQUIVALENTCLASS)!=null)
                c.set(IM.DEFINITIONAL_STATUS,IM.SUFFICIENTLY_DEFINED);
-            if (c.isType(OWL.OBJECTPROPERTY)) {
+            if (c.isType(OWL.OBJECTPROPERTY)||c.isType(RDF.PROPERTY)||c.isType(OWL.DATATYPEPROPERTY)) {
                OWLObjectPropertyExpression ope = dataFactory.getOWLObjectProperty(IRI.create(c.getIri()));
                NodeSet<OWLObjectPropertyExpression> superOb = owlReasoner.getSuperObjectProperties(ope, true);
                if (superOb != null) {

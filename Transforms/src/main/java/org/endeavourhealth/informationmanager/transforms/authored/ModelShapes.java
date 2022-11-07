@@ -36,7 +36,6 @@ public class ModelShapes {
 		pageInformation(getEntity(IM.NAMESPACE+"PageInformation"));
 		argument(getEntity(IM.NAMESPACE+"Argument"));
 		queryDef(getEntity(IM.NAMESPACE+"QueryDefinition"));
-		query(getEntity(IM.NAMESPACE+"QueryShape"));
 		select(getEntity(IM.NAMESPACE+"SelectClause"));
 		where(getEntity(IM.NAMESPACE+"WhereClause"));
 		compare(getEntity(IM.NAMESPACE+"CompareClause"));
@@ -49,10 +48,8 @@ public class ModelShapes {
 		context(getEntity(IM.NAMESPACE+"SourceContext"));
 		variable(getEntity(IM.NAMESPACE+"IriVariable"));
 		conceptReference(getEntity(IM.NAMESPACE+"ConceptReference"));
-		propertyNode(getEntity(IM.NAMESPACE+"PropertyNodeShape"));
 		transactionEntity(getEntity(IM.NAMESPACE+"EntityFileTransaction"));
 		transactionDocument(getEntity(IM.NAMESPACE+"EntityDocument"));
-		pathQuery(getEntity(IM.NAMESPACE+"PathQueryShape"));
 		prefix(getEntity(IM.NAMESPACE+"PrefixShape"));
 		saveDocument(sourcePath+"\\CoreOntology.json");
 	}
@@ -90,7 +87,7 @@ public class ModelShapes {
 	private void transformMapDef(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
 		shape.setName("Transform map definition shape");
-		shape.set(IM.ORDER,TTLiteral.literal(1));
+		shape.set(SHACL.ORDER,TTLiteral.literal(1));
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"TransformMapShapes"));
 		shape.addObject(RDFS.SUBCLASSOF,TTIriRef.iri("IriRef"));
 		shape.setDescription("A map that describes how one set of source objects can be transformed to a set of target objects, subject to source and target objects being directed acyclic graphs (in any physical format)."+
@@ -115,34 +112,15 @@ public class ModelShapes {
 
 	}
 
-	private void pathQuery(TTEntity shape) throws JsonProcessingException {
-		setLabels(shape);
-		shape.set(SHACL.TARGETCLASS,TTIriRef.iri(IM.NAMESPACE+"PathQuery"));
-		shape.set(IM.ORDER,TTLiteral.literal(4));
-		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
-		shape.setDescription("A query that returns a set pf paths between a source and target entity, traversing to a certain level");
-		addProperty(shape,"source",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriRef"),1,1,"the source entity at the start of the path.");
-		addProperty(shape,"target",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriRef"),1,1,"the target entity at the end of the path.");
-		addProperty(shape,"depth",SHACL.DATATYPE,XSD.INTEGER,0,1,"How many hops to be taken in the graph between source and target");
-	}
 
-	private void query(TTEntity shape) throws JsonProcessingException {
-		setLabels(shape);
-		shape.setName("Query /Set shape");
-		shape.setDescription("A query that is stored as an entity in a query library");
-		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"EntityShape"));
-		shape.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
-		shape.set(IM.ORDER,TTLiteral.literal(1));
-		shape.set(SHACL.TARGETCLASS,IM.QUERY);
-		addProperty(shape,"definition",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"QueryDefinition"),0,1,"The query definition itself");
-	}
+
 
 	private void transactionDocument(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
 		shape.setDescription("A document containing any number of triples to file as a batch."+
 			"<br>Note that if the document is sent as Json-LD with prefixed iris, a @context object will be required");
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"TransactionalShapes"));
-		shape.set(IM.ORDER,TTLiteral.literal(1));
+		shape.set(SHACL.ORDER,TTLiteral.literal(1));
 		addProperty(shape,"crud",SHACL.CLASS, TTIriRef.iri(IM.NAMESPACE+"CrudOperation"),1,1,"Indicates the nature of the default CRUD transaction for entities in this"+
 		"document. Thes can be overridden in each entity. Must be  one of:"+
 			" im:DeleteAll, im:AddQuads (adds in additional triples), im:UpdateAll (replaces all the predicates for this entity in the graph with te ones submitted), im:UpdatePredicates "+
@@ -159,7 +137,7 @@ public class ModelShapes {
 		setLabels(shape);
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"TransactionalShapes"));
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"EntityShape"));
-		shape.set(IM.ORDER,TTLiteral.literal(1));
+		shape.set(SHACL.ORDER,TTLiteral.literal(1));
 		shape.setDescription("An entity with the additional CRUD indicators to enable deletes updates, adding quads etc");
 		addProperty(shape,"crud",SHACL.CLASS, TTIriRef.iri(IM.NAMESPACE+"CrudOperation"),1,1,"Indicates the nature of the CRUD transaction which must be one of"+
 			" im:DeleteAll, im:AddQuads (adds in additional triples), im:UpdateAll (replaces all the predicates for this entity in the graph with te ones submitted), im:UpdatePredicates "+
@@ -168,29 +146,14 @@ public class ModelShapes {
 			"<br>This means you can add predicates to any entity without affecting the original authored entity, those predicates belonging only to this module or graph");
 	}
 
-	private void propertyNode(TTEntity shape) throws JsonProcessingException, DataFormatException {
-		setLabels(shape);
-		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"EntityShape"));
-		shape.setDescription("The data model of a shacl node shape describing a property of a data model entity");
-		addProperty(shape,SHACL.PATH,SHACL.CLASS,RDF.PROPERTY,1,1,"The iri of the property");
-		addProperty(shape,SHACL.MINCOUNT,SHACL.DATATYPE,XSD.INTEGER,0,1,"Minimum cardinality,if null assuming any number including zero");
-		addProperty(shape,SHACL.MAXCOUNT,SHACL.DATATYPE,XSD.INTEGER,0,1,"The maximum number allowed. If null then any number");
-		addProperty(shape,SHACL.CLASS,SHACL.CLASS,RDFS.RESOURCE,1,1,"The iri for the class range of the property. The range of this property is a subclass of this class");
-		addProperty(shape,SHACL.DATATYPE,SHACL.CLASS,RDFS.RESOURCE,1,1,"The range of the property is a data type of this type");
-		addProperty(shape,SHACL.NODE,SHACL.CLASS,RDFS.RESOURCE,1,1,"The property points to a node shape");
-		addProperty(shape,RDFS.COMMENT,SHACL.DATATYPE,XSD.STRING,0,1,"Description of the property");
-		addProperty(shape,SHACL.NAME,SHACL.DATATYPE,XSD.STRING,0,1,"The name of the property used for ease of recognition");
-		addProperty(shape,SHACL.ORDER,SHACL.DATATYPE,XSD.INTEGER,0,1,"The property order for display");
-		addProperty(shape,IM.INHERITED_FROM,SHACL.NODE,SHACL.NODESHAPE,0,1,"The shape that this property is inherited from (used in the inferred instance of the information model");
-		setOrs(shape,List.of("class","datatype","node"),1,1);
-	}
+
 
 	private void alias(TTEntity shape) throws JsonProcessingException, DataFormatException {
 		setLabels(shape);
 		shape.setDescription("An IRI with a name and an optional alias  and a variable name when the iri is passed in as an argument (e.g. $this");
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"BasicShapes"));
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriRef"));
-		shape.set(IM.ORDER,TTLiteral.literal(2));
+		shape.set(SHACL.ORDER,TTLiteral.literal(2));
 		addProperty(shape,"alias",SHACL.DATATYPE,XSD.STRING,0,1,"The column name in a select clause for this property, or a variable used to reference the result set "+
 			"of the values matched");
 		addProperty(shape,"variable",SHACL.DATATYPE,XSD.STRING,0,1,"The name of a variable, passed as an argument to the query, which is resolved to the IRI");
@@ -208,7 +171,7 @@ public class ModelShapes {
 		shape.setDescription("A variable, usually passed in as a parameter to a function, with an optional IRI and whether the iri is an instance or type iri (if ambiguous)");
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"BasicShapes"));
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriRef"));
-		shape.set(IM.ORDER,TTLiteral.literal(3));
+		shape.set(SHACL.ORDER,TTLiteral.literal(3));
 		addProperty(shape,"variable",SHACL.DATATYPE,XSD.STRING,0,1,"The name of a variable, passed as an argument to a function. Assumed to be a collection");
 		addProperty(shape,"isType",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"In cases where it is ambiguous whether an iri refers to an instance or type, then set this to true if a type");
 	}
@@ -278,7 +241,7 @@ public class ModelShapes {
 		shape.addObject(IM.IS_CONTAINED_IN,IMA);
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriAlias"));
-		shape.set(IM.ORDER,TTLiteral.literal(2));
+		shape.set(SHACL.ORDER,TTLiteral.literal(2));
 		addProperty(shape,"description",SHACL.DATATYPE,XSD.STRING,0,1,"Optional description of the query definition for support purposes.");
 
 		addProperty(shape,"from",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),0,null,"The base cohort/ set or type(s), or instance(s) on which all the subsequent where or filter clauses operate. If more than one"+
@@ -307,7 +270,7 @@ public class ModelShapes {
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"TransactionalShapes"));
 		shape.setDescription("A request for data sent as a  body (json in local name format) to the /queryIM API.<br>Contains a query as an iri or inline query with run time variable values as arguments for use in the query");
 		shape.setName("Query Request");
-		shape.set(IM.ORDER,TTLiteral.literal(3));
+		shape.set(SHACL.ORDER,TTLiteral.literal(3));
 		addProperty(shape,"name",SHACL.DATATYPE, XSD.STRING,null,1,"optional name for debugging purposes. Is not used in the query process");
 		addProperty(shape,"page",SHACL.NODE, TTIriRef.iri(IM.NAMESPACE+"PageInformation"),null,1,"optional page number and size if the client is looking for paged results");
 		addProperty(shape,"textSearch",SHACL.DATATYPE, XSD.STRING,null,1,"If a free text search is part of the query");
@@ -340,7 +303,7 @@ public class ModelShapes {
 		shape.setDescription("Data model of a function i.e. models the parameters. A query that calls a function uses a function clause that uses this function definition to name each argument passed in");
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"EntityShape"));
-		shape.set(IM.ORDER,TTLiteral.literal(2));
+		shape.set(SHACL.ORDER,TTLiteral.literal(2));
 		shape.set(SHACL.TARGETCLASS,IM.FUNCTION);
 		addProperty(shape,SHACL.PARAMETER,SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"Parameter"),0,null,"A list of parameters and data types used in this function");
 	}

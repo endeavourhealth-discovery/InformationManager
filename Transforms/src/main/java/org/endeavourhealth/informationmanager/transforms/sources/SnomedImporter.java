@@ -301,7 +301,7 @@ public class SnomedImporter implements TTImport {
               c.set(IM.DEFINITIONAL_STATUS,IM.SUFFICIENTLY_DEFINED);
            c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
            if (fields[0].equals("138875005")) { // snomed root
-               c.set(RDFS.SUBCLASSOF, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "Concept")));
+               c.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "HealthModelOntology")));
            }
            document.addEntity(c);
            conceptMap.put(fields[0], c);
