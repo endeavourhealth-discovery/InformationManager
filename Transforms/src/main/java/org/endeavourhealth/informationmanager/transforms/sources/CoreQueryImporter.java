@@ -80,7 +80,6 @@ public class CoreQueryImporter implements TTImport {
 
     private void setProvenance(TTEntity rdf, TTDocument document) {
         ProvActivity activity = new ProvActivity()
-            .setGraph(IM.GRAPH_PROV)
             .setIri(IM.NAMESPACE + "Q_RegisteredGMS")
             .setActivityType(IM.PROV_CREATION)
             .setEffectiveDate(LocalDateTime.now().toString())
