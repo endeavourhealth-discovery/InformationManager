@@ -306,6 +306,11 @@ public class SnomedImporter implements TTImport {
            document.addEntity(c);
            conceptMap.put(fields[0], c);
         }
+        else {
+          TTEntity c= conceptMap.get(fields[0]);
+          c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
+
+        }
     }
 
     private void importRefsetFiles(String path) throws IOException {
