@@ -63,7 +63,6 @@ public class IM1MapImport implements TTImport {
         importv1Codes(inFolder);
         importContext(inFolder);
         calculateWeightings();
-       TTFilerFactory.setSkipDeletes(true);
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
            filer.fileDocument(document);
         }

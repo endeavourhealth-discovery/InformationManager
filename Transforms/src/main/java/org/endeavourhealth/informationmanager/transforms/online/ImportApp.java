@@ -11,7 +11,6 @@ import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
-import org.endeavourhealth.informationmanager.transforms.sources.SingleFileImporter;
 
 import java.util.Date;
 
@@ -34,8 +33,6 @@ public class ImportApp {
         cfg.setFolder(args[0]);
         cfg.setImportType(args[1].toLowerCase());
 
-        TTFilerFactory.setSkipDeletes("all".equals(cfg.getImportType()));
-
         // Optional switch args
         if (args.length >= 3) {
             for (int i = 2; i < args.length; i++) {
@@ -51,9 +48,6 @@ public class ImportApp {
                         break;
                     case "skiplucene":
                         cfg.setSkiplucene(true);
-                        break;
-                    case "skipdeletes":
-                        TTFilerFactory.setSkipDeletes(true);
                         break;
                     case "privacy":
                         TTFilerFactory.setPrivacyLevel(Integer.parseInt(args[i].split("=")[1]));
