@@ -5,6 +5,7 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
 import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
+import org.endeavourhealth.imapi.vocabulary.FHIR;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
@@ -91,10 +92,12 @@ public class Preload {
             .validateByType(IM.GRAPH_ODS, cfg.getFolder())
             .validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
             .validateByType(IM.GRAPH_CEG_QUERY, cfg.getFolder())
-            .validateByType(IM.GRAPH_IM1, cfg.getFolder());
+            .validateByType(IM.GRAPH_IM1, cfg.getFolder())
+            .validateByType(FHIR.GRAPH_FHIR,cfg.getFolder());
 
         LOG.info("Importing files...");
         importer.importByType(IM.GRAPH_DISCOVERY, cfg);
+        importer.importByType(FHIR.GRAPH_FHIR,cfg);
         importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
         importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
         importer.importByType(IM.GRAPH_EMIS, cfg);
@@ -106,6 +109,7 @@ public class Preload {
         importer.importByType(IM.GRAPH_ODS, cfg);
         importer.importByType(IM.GRAPH_NHS_TFC, cfg);
         importer.importByType(IM.GRAPH_IM1, cfg);
+
 
         LOG.info("Generating closure...");
         TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();

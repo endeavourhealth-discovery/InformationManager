@@ -31,7 +31,7 @@ public class ModelShapes {
 	public void createShapes(String sourcePath) throws IOException, DataFormatException {
 		this.sourcePath= sourcePath;
 		loadDocument(sourcePath+"\\CoreOntology.json");
-		mapGroup(getEntity(IM.NAMESPACE+"MapGroup"));
+		dataMap(getEntity(IM.NAMESPACE+"DataMap"));
 		queryRequest(getEntity(IM.NAMESPACE+"QueryRequest"));
 		pageInformation(getEntity(IM.NAMESPACE+"PageInformation"));
 		argument(getEntity(IM.NAMESPACE+"Argument"));
@@ -54,7 +54,7 @@ public class ModelShapes {
 		saveDocument(sourcePath+"\\CoreOntology.json");
 	}
 
-	private void context(TTEntity shape) throws JsonProcessingException {
+	private void context(TTEntity shape) throws JsonProcessingException, DataFormatException {
 		setLabels(shape);
 		shape.setDescription("Provides information about the source context of an entity, property or value, required for context sensitive mappings. Not all properties are required. Only sufficient to provide context");
 		addProperty(shape,"sourcePublisher",SHACL.DATATYPE,XSD.STRING,0,1,"A reference identifier (usually an iri) to a source publisher");
@@ -64,13 +64,17 @@ public class ModelShapes {
 		addProperty(shape,"sourceTable",SHACL.DATATYPE,XSD.STRING,0,1,"A reference identifier (usually an iri) to a source table or message or resource. This needs only be sufficient for context, not meant to be an 'official' reference");
 		addProperty(shape,"sourceField",SHACL.DATATYPE,XSD.STRING,0,1,"A reference identifier (usually an iri) to a source field, or property. This needs only be sufficient for context");
 		addProperty(shape,"sourceRegex",SHACL.DATATYPE,XSD.STRING,0,1,"Regex pattern to apply to any text entry that may not be coded");
-		addProperty(shape,"sourceValue",SHACL.DATATYPE,XSD.STRING,0,1,"A field coded relevant to context when used with a text entry, for example an entry for 'negative' may have the context of the text");
+		addProperty(shape,"sourceCode",SHACL.DATATYPE,XSD.STRING,0,1,"A code relevant to context when used with a text entry, for example an entry for 'negative' which ");
+		addProperty(shape,"sourceCodeVariable",SHACL.DATATYPE,XSD.STRING,0,1,"When used in a data map, the variable holdoing the value of the code");
+		addProperty(shape,"sourceQualifier",SHACL.DATATYPE,XSD.STRING,0,1,"Text that may affect the meaning of the concept, often derived from another field value");
+		addProperty(shape,"sourceQualifierVariable",SHACL.DATATYPE,XSD.STRING,0,1,"When used in a data map, the variable holdoing the value of the test qualifier string");
+   	setOrs(shape,List.of("sourceCode","sourceCodeVariable"),null,1);
+		setOrs(shape,List.of("sourceQualifier","sourceQualifierVariable"),null,1);
 	}
 
-	private void mapGroup(TTEntity shape) throws JsonProcessingException {
+	private void dataMap(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
 		shape.setName("Transform map group");
-
 		shape.setDescription("A named group containing one or more transformation rules. The group can be called by a map, a group, or a target transform from a path. Their names are in contect and are variables within the scope of a map and its imports");
 		addProperty(shape,"name",SHACL.DATATYPE,XSD.STRING,0,1,"The name of a group by its variable");
 		addProperty(shape,"extends",SHACL.DATATYPE,XSD.STRING,0,1,"The name of a group that this group inherits rules from");
@@ -423,6 +427,7 @@ public class ModelShapes {
 		addProperty(shape,"valueData",SHACL.DATATYPE,XSD.STRING,1,1,"Value that is a literal such as a string or number");
 		addProperty(shape,"valueVariable",SHACL.DATATYPE,XSD.STRING,1,1,"argument value which is a variable name to be resolved at run time");
 		addProperty(shape,"valueFrom",SHACL.DATATYPE,XSD.STRING,1,1,"Passes in the result set from a previous where clause");
+		addProperty(shape,"valueObject",SHACL.DATATYPE,XSD.STRING,0,1,"Function specific paylod object, normally a json object deserialized to object as determined by the function");
 
 		setOrs(shape,List.of("valueData","valueVariable","valueSelect","valueIri"),1,1);
 	}

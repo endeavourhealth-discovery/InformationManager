@@ -154,8 +154,8 @@ public class StandardQueries {
 				.setActiveOnly(true)
 				.from(f ->f
 					.setIri(IM.CONCEPT.getIri()).setIsType(true))
-				.select(IM.CODE.getIri())
-				.select(RDFS.LABEL.getIri())
+				.select(s->s.setProperty(IM.CODE))
+				.select(s->s.setProperty(RDFS.LABEL))
 				.where(w->w
 					.setProperty(new TTAlias(RDFS.RANGE).setInverse(true))
 					.setIs(new TTAlias().setVariable("$this").setIncludeSupertypes(true).setIncludeSubtypes(true))
@@ -173,8 +173,8 @@ public class StandardQueries {
 				.setActiveOnly(true)
 			.from(f ->f
 				.setIri(IM.CONCEPT.getIri()).setIsType(true).setIncludeSubtypes(true))
-			.select(IM.CODE.getIri())
-			.select(RDFS.LABEL.getIri())
+			.select(s->s.setProperty(IM.CODE))
+			.select(s->s.setProperty(RDFS.LABEL))
 			.where(w->w
 					.setProperty(new TTAlias(RDFS.DOMAIN))
 					.setIs(new TTAlias().setVariable("$this").setIncludeSupertypes(true))
