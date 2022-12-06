@@ -125,12 +125,15 @@ public class EqdResources {
 			match.setNotExist(notWhere);
 			match= notWhere;
 		}
+		String entityPath= getPath(eqCriterion.getTable());
+		if (!entityPath.equals(""))
+			match.setPath(entityPath);
 
 		if (eqCriterion.getLinkedCriterion() != null) {
 			convertLinkedCriterion(eqCriterion, match);
 		}
 		else if (eqCriterion.getFilterAttribute().getRestriction() != null) {
-			convertRestrictionCriterion(eqCriterion, match);
+			convertRestrictionCriterion(eqCriterion, match,null);
 		}
 		else {
 			convertColumns(eqCriterion, match);
@@ -144,73 +147,58 @@ public class EqdResources {
 
 
 	private void convertLinkedCriterion(EQDOCCriterion eqCriterion, Where topWhere) throws DataFormatException, IOException {
-		Where targetWhere;
-		if (eqCriterion.getFilterAttribute().getRestriction() != null) {
-			if (eqCriterion.getFilterAttribute().getRestriction().getTestAttribute() != null) {
-				convertRestrictionCriterion(eqCriterion, topWhere);
-			}
-			else {
-				targetWhere= new Where();
-				topWhere.addAnd(targetWhere);
-				convertRestrictionCriterion(eqCriterion,targetWhere);
-			}
+		Where targetWhere= topWhere;
+		Select targetSelect;
+		if (eqCriterion.getFilterAttribute().getRestriction().getTestAttribute()!=null){
+			targetSelect= new Select();
+			topWhere.setSelect(targetSelect);
+			targetWhere = new Where();
+			targetSelect.setWhere(targetWhere);
+			convertRestrictionCriterion(eqCriterion, targetWhere,IM.NAMESPACE+"Date");
+		}
+		else if (eqCriterion.getFilterAttribute().getRestriction() != null) {
+			convertRestrictionCriterion(eqCriterion, topWhere,IM.NAMESPACE+"Date");
+			targetSelect= topWhere.getSelect();
 		}
 		else {
+			targetSelect= new Select();
+			topWhere.setSelect(targetSelect);
 			targetWhere = new Where();
-			topWhere.addAnd(targetWhere);
+			targetSelect.setWhere(targetWhere);
+			targetSelect.setProperty(IM.NAMESPACE+"Date");
+			targetSelect.setAlias("Date of "+ targetWhere.getAlias());
 			convertColumns(eqCriterion, targetWhere);
 		}
-		targetWhere= topWhere.getAnd().get(topWhere.getAnd().size()-1);
-		Where linkWhere;
+
+		Where linkWhere= new Where();
+		topWhere.addAnd(linkWhere);
+
 		EQDOCLinkedCriterion eqLinked= eqCriterion.getLinkedCriterion();
 		EQDOCCriterion eqLinkedCriterion= eqLinked.getCriterion();
 		if (eqLinkedCriterion.getFilterAttribute().getRestriction() != null) {
-			if (eqLinkedCriterion.getFilterAttribute().getRestriction().getTestAttribute() != null) {
-				convertRestrictionCriterion(eqLinkedCriterion, topWhere);
-
-			} else {
-				linkWhere = new Where();
-				topWhere.addAnd(linkWhere);
+				convertRestrictionCriterion(eqLinkedCriterion, linkWhere,null);
+			}
+			else {
 				convertColumns(eqCriterion, linkWhere);
 			}
-		}
-		else {
-			linkWhere = new Where();
-			topWhere.addAnd(linkWhere);
-			convertColumns(eqCriterion, linkWhere);
-		}
-		Where relationWhere;
-		Where lastLinkWhere= topWhere.getAnd().get(topWhere.getAnd().size()-1);
-		if (lastLinkWhere.getAnd()==null){
-			topWhere.getAnd().remove(lastLinkWhere);
-			relationWhere= new Where();
-			topWhere.addAnd(relationWhere);
-			relationWhere.setPath(lastLinkWhere.getPath());
-			relationWhere.setFrom(lastLinkWhere.getFrom());
-			lastLinkWhere.setPath(null);
-			lastLinkWhere.setFrom(null);
-			relationWhere.addAnd(lastLinkWhere);
-		}
-		else
-			relationWhere= lastLinkWhere;
+		Where relationWhere = new Where();
+		topWhere.addAnd(relationWhere);
+		relationWhere.setFunction(new Function().setIri(IM.NAMESPACE+"TimeDifference"));
 		EQDOCRelationship eqRel = eqLinked.getRelationship();
 		if (eqRel.getParentColumn().contains("DATE")){
-			Where compareWhere= new Where();
-			relationWhere.addAnd(compareWhere);
-			compareWhere.setProperty(new TTAlias().setIri(IM.NAMESPACE+"date"));
+			relationWhere.setProperty(new TTAlias().setIri(IM.NAMESPACE+"date"));
 			Value value= new Value();
-			compareWhere.setValue(value);
-			Where finalTargetWhere = targetWhere;
+			relationWhere.setValue(value);
 			value
 			.setComparison(vocabMap.get(eqRel.getRangeValue().getRangeFrom().getOperator()))
 				.setValue(eqRel.getRangeValue().getRangeFrom().getValue().getValue())
 				.relativeTo(c ->c
-					.setAlias(finalTargetWhere.getAlias())
+					.setAlias(targetSelect.getAlias())
 			.setProperty(new TTAlias().setIri(IM.NAMESPACE+"date")));
-			compareWhere.addArgument(new Argument()
+			relationWhere.addArgument(new Argument()
 				.setParameter("units")
 				.setValueData(eqRel.getRangeValue().getRangeFrom().getValue().getUnit().value()));
-			compareWhere.setAlias(summarise(compareWhere,null));
+			relationWhere.setAlias(summarise(relationWhere,null));
 		}
 		else
 			throw new DataFormatException("Only date link fields supported at the moment");
@@ -219,28 +207,27 @@ public class EqdResources {
 	}
 
 
-	private void convertRestrictionCriterion(EQDOCCriterion eqCriterion, Where topWhere) throws DataFormatException, IOException {
-		Where restrictionWhere;
-		if (eqCriterion.getFilterAttribute().getRestriction().getTestAttribute()!=null) {
-			restrictionWhere = new Where();
-			topWhere.addAnd(restrictionWhere);
+	private void convertRestrictionCriterion(EQDOCCriterion eqCriterion, Where topWhere,String selectWhat) throws DataFormatException, IOException {
+		Select select= new Select();
+		if (selectWhat!=null) {
+			select.setProperty(selectWhat);
 		}
-		else
-			restrictionWhere= topWhere;
+		topWhere.setSelect(select);
+		Where restrictionWhere= new Where();
+		select.setWhere(restrictionWhere);
 		if (eqCriterion.getDescription() != null)
 			restrictionWhere.setDescription(eqCriterion.getDescription());
 		convertColumns(eqCriterion, restrictionWhere);
-		restrictionTest(eqCriterion, topWhere, restrictionWhere);
+		setRestriction(eqCriterion, select,restrictionWhere);
+		restrictionTest(eqCriterion, select, topWhere);
+		if (selectWhat!=null){
+			select.setAlias("Date of "+ restrictionWhere.getAlias());
+		}
 	}
 
-	private void restrictionTest(EQDOCCriterion eqCriterion, Where topWhere, Where restrictionWhere) throws IOException, DataFormatException {
-		setRestriction(eqCriterion, restrictionWhere);
+	private void restrictionTest(EQDOCCriterion eqCriterion, Select select, Where testWhere) throws IOException, DataFormatException {
 		EQDOCTestAttribute testAtt= eqCriterion.getFilterAttribute().getRestriction().getTestAttribute();
 		if (testAtt != null) {
-				Where testWhere= new Where();
-				topWhere.addAnd(testWhere);
-				testWhere.from(f->f
-					.setAlias(restrictionWhere.getAlias()));
 				List<EQDOCColumnValue> cvs= testAtt.getColumnValue();
 				if (cvs.size()==1){
 					setMainCriterion(eqCriterion.getTable(), cvs.get(0), testWhere,"");
@@ -272,8 +259,6 @@ public class EqdResources {
 			match.setAlias(summarise(match,cvs.get(0)));
 		}
 		else {
-			if (!entityPath.equals(""))
-				match.setPath(entityPath);
 			for (EQDOCColumnValue cv : filterAttribute.getColumnValue()) {
 				Where pv = new Where();
 				match.addAnd(pv);
@@ -364,23 +349,23 @@ public class EqdResources {
 	}
 
 
-	private void setRestriction(EQDOCCriterion eqCriterion, Where match) throws DataFormatException {
+	private void setRestriction(EQDOCCriterion eqCriterion, Select select,Where restrictionWhere) throws DataFormatException {
 		String eqTable = eqCriterion.getTable();
 		String linkColumn = eqCriterion.getFilterAttribute().getRestriction()
 			.getColumnOrder().getColumns().get(0).getColumn().get(0);
 
-		match.setLimit(1);
+		select.setLimit(1);
 		EQDOCFilterRestriction restrict = eqCriterion.getFilterAttribute().getRestriction();
 		String direction;
 		if (restrict.getColumnOrder().getColumns().get(0).getDirection() == VocOrderDirection.ASC) {
 			direction= "ASC";
-			match.setAlias("Earliest"+ match.getAlias());
+			select.setAlias("Earliest"+ restrictionWhere.getAlias());
 		}
 		else {
 			direction= "DESC";
-			match.setAlias("Latest" + match.getAlias());
+			select.setAlias("Latest" + restrictionWhere.getAlias());
 		}
-		match.addOrderBy(new OrderBy()
+		select.addOrderBy(new OrderBy()
 			.setIri(getPath(eqTable + "/" + linkColumn))
 			.setDirection(direction));
 	}
@@ -701,7 +686,7 @@ public class EqdResources {
 					valueMap.put(originalCode, snomed);
 			}
 			if (snomed!=null)
-				return snomed.stream().map(TTAlias::new).collect(Collectors.toSet());
+				return snomed.stream().map(e-> TTAlias.iri(e.getIri()).setName(e.getName())).collect(Collectors.toSet());
 			else return null;
 		} else
 			throw new DataFormatException("code scheme not recognised : " + scheme.value());
@@ -849,6 +834,8 @@ public class EqdResources {
 			String property = localName(where.getProperty().getIri());
 			String fullPath = (!path.equals("")) ? path + " " + property : property;
 			if (where.getValue() != null) {
+				if (where.getValue().getRelativeTo()!=null)
+					summary.append("within ");
 				summary.append(fullPath);
 				summary.append(" ").append(summariseValue(where.getValue()));
 				if (where.getArgument()!=null){
@@ -857,7 +844,8 @@ public class EqdResources {
 				}
 				if (where.getValue().getRelativeTo()!=null)
 					summary.append(summariseCompare(where.getValue().getRelativeTo()));
-			} else if (where.getRange() != null) {
+			}
+			else if (where.getRange() != null) {
 				if (summary.toString().isEmpty())
 					summary.append(fullPath).append(" ");
 				summary.append("From").append(summariseValue(where.getRange().getFrom()));
@@ -865,7 +853,7 @@ public class EqdResources {
 				if (where.getRange().getRelativeTo()!=null)
 					summary.append(summariseCompare(where.getRange().getRelativeTo()));
 			}
-			if (where.getArgument()!=null)
+			else if (where.getArgument()!=null)
 				summary.append(summariseArguments(where.getArgument()));
 
 
@@ -894,7 +882,12 @@ public class EqdResources {
 	private String summariseCompare(Compare compare) {
 		if (compare.getVariable()!=null){
 			if (compare.getVariable().equals("$referenceDate"))
-				return " between date and ref date";
+				return " of ref date";
+			else
+				return " of "+compare.getVariable();
+		}
+		if (compare.getAlias()!=null){
+			return " of "+compare.getAlias();
 		}
 		return "";
 	}
@@ -902,8 +895,12 @@ public class EqdResources {
 	private String summariseArguments(List<Argument> arguments) {
 		StringBuilder summary= new StringBuilder();
 		for (Argument arg:arguments){
-			if (arg.getParameter().equals("units"))
-				summary.append(" ").append(arg.getParameter().toLowerCase(Locale.ROOT));
+			if (arg.getValueData()!=null) {
+				if (arg.getParameter().equals("units")) {
+					summary.append(" ").append(arg.getValueData().toLowerCase(Locale.ROOT));
+				} else
+					summary.append(" ").append(arg.getParameter() + " = " + arg.getValueData());
+			}
 		}
 		return summary.toString();
 

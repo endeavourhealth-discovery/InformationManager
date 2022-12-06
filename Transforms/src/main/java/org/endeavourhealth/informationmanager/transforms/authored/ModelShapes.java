@@ -40,6 +40,7 @@ public class ModelShapes {
 		where(getEntity(IM.NAMESPACE+"WhereClause"));
 		compare(getEntity(IM.NAMESPACE+"CompareClause"));
 		value(getEntity(IM.NAMESPACE+"ValueClause"));
+		having(getEntity(IM.NAMESPACE+"HavingClause"));
 		range(getEntity(IM.NAMESPACE+"RangeClause"));
 		function(getEntity(IM.NAMESPACE+"FunctionShape"));
 		parameter(getEntity(IM.NAMESPACE+"Parameter"));
@@ -262,6 +263,8 @@ public class ModelShapes {
 			"direction of ordering (DESC or ASC) .");
 		addProperty(shape,"limit",SHACL.DATATYPE,XSD.INTEGER,0,1,
 			"Number of entities to return. Normally used with order by");
+		addProperty(shape,"having",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"HavingClause"),0,1,
+			"Tests an aggregate result from the group clause for a value");
 		addProperty(shape,"subQuery",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"QueryDefinition"),0,null,"SubQueries used to group columns in multi group reports. The sub queries are all subsets of the main query clauses");
 		addProperty(shape,"prefix",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"PrefixShape"),0,0,"list of prefix to namespace expansion to enable readability of iris");
 		addProperty(shape,"usePrefixes",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"true if you want the results to use IRI prefixes");
@@ -332,7 +335,6 @@ public class ModelShapes {
 		setLabels(shape);
 		shape.setDescription("Defines the objects and properties to retrieve from a graph, subject to a mach clause. Supports graphql type nesting and sub selects for column groups");
 		shape.getPredicateMap().remove(RDFS.SUBCLASSOF);
-		addProperty(shape,"count",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"If the query result is simply a sum of the main entities found. equivalent to COUNT(id)");
 		addProperty(shape,"path",SHACL.CLASS,RDFS.RESOURCE,0,1,"A property path made up of space delimited iri strings, from the outer entity to the entity on which this clause operates."+
 				"<br> Shortcut for nested selects");
 		addProperty(shape,"property",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),1,1,"Information about a  property or field to include"+
@@ -341,26 +343,31 @@ public class ModelShapes {
 			" Note that if the value is null then this select would be absent");
 		addProperty(shape,"where",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"WhereClause"),0,null,"Nested where clause operating on the values of this select's property"+
 			"<br>Enables multi- level filtering as used in JOIN where clauses in SQL");
-		addProperty(shape,"sum",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether the result is a summation of this property's values");
-		addProperty(shape,"average",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether the result is an average of this property's values");
-		addProperty(shape,"max",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"Whether the result is the maximum of this property's values");
+		addProperty(shape,"groupBy",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),0,null,"If the results need to be grouped, the grouping properties.");
+		addProperty(shape,"orderBy",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),0,null,
+			"Ordering of instances via a property value returned.");
+		addProperty(shape,"direction",SHACL.DATATYPE,XSD.STRING,0,1,
+			"direction of ordering (DESC or ASC) .");
+		addProperty(shape,"limit",SHACL.DATATYPE,XSD.INTEGER,0,1,
+			"Number of entities to return. Normally used with order by");
+		addProperty(shape,"having",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"HavingClause"),0,1,
+			"Tests an aggregate result from the group clause for a value");
+		addProperty(shape,"aggregate",SHACL.DATATYPE,XSD.STRING,0,1,"Name of an aggregate function to operate on the property");
 		addProperty(shape,"function",SHACL.CLASS,IM.FUNCTION,0,1,"The iri of a function indicating that"+
 			" the result is the result of a function operating on the property values, and any arguments passed in");
 		addProperty(shape,"argument",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"Argument"),0,null,"Arguments to pass into the function");
 		setOrs(shape,List.of("sum","average","max"),0,1);
 
-
 	}
 
-	private void from(TTEntity shape) throws JsonProcessingException, DataFormatException {
+	private void having(TTEntity shape) throws JsonProcessingException, DataFormatException {
 		setLabels(shape);
-		shape.setName("From clause");
-		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriAlias"));
-		shape.setDescription("A clause defining a base set , or a base type(s), or an object instance, on which the where clause operates."+
-			"<br>Set the alias if derived from a result set in the same query. Set the iri if derived from an external result. by default the iri refers to an instance. For querying instances of a type set the is type property as true and for a base cohort, set isSet as true");
-		addProperty(shape,"isType",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"If the query results are derived from instances of certain type (or types) then set this flag to true.");
-		addProperty(shape,"isSet",SHACL.DATATYPE,XSD.BOOLEAN,0,1,"If the query results derived the result set of a concept set, value set or query result then set this flag to true.");
-		setOrs(shape,List.of("isType","isSet"),1,1);
+		shape.setName("Having clause");
+		shape.setDescription("A clause testing an aggregate function on a property usually one that is grouped");
+		addProperty(shape,"aggregate",SHACL.DATATYPE,XSD.STRING,0,1,"Name of the aggregate function e.g. MAX,MIN,COUNT,SUM, AVERAGE");
+		addProperty(shape,"property",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlas"),0,1,"The property on which the aggregate function operates");
+		addProperty(shape,"value",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ValueClause"),0,1,"The value of the aggregate result to be tested");
+
 
 	}
 	private void where(TTEntity shape) throws JsonProcessingException {

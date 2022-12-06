@@ -86,8 +86,6 @@ public class EqdPopToIMQ {
 	}
 
 	private void convertGroup(EQDOCCriteriaGroup eqGroup, Where topWhere) throws DataFormatException, IOException {
-		if (eqGroup.getId().contains("990f1c0b-1676-45f0-b321-d2e710dd7336"))
-			System.out.println("");
 		VocMemberOperator memberOp = eqGroup.getDefinition().getMemberOperator();
 		if (eqGroup.getDefinition().getCriteria().size()==1){
 			resources.convertCriteria(eqGroup.getDefinition().getCriteria().get(0),topWhere);
@@ -110,6 +108,9 @@ public class EqdPopToIMQ {
 		if (oldWhere.getProperty()!=null){
 			return;
 		}
+		if (oldWhere.getSelect()!=null){
+			return;
+		}
 		if (oldWhere.getAnd()!=null){
 			for (Where oldAnd:oldWhere.getAnd()){
 				flattenAnds(flatWhere,oldAnd);
@@ -126,7 +127,7 @@ public class EqdPopToIMQ {
 	}
 
 	private void flattenOrs(Where flatWhere, Where oldWhere) {
-		if (oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPath()!=null){
+		if (oldWhere.getSelect()!=null|| oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPath()!=null){
 			flatWhere.addOr(oldWhere);
 		}
 		else if (oldWhere.getNotExist() != null) {
@@ -139,12 +140,12 @@ public class EqdPopToIMQ {
 		}
 		else {
 			for (Where oldOr:oldWhere.getOr())
-				flattenOrs(oldWhere,oldOr);
+				flattenOrs(flatWhere,oldOr);
 		}
 	}
 
 	private void flattenAnds(Where flatWhere,Where oldWhere){
-		if (oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPath()!=null){
+		if (oldWhere.getSelect()!=null|| oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPath()!=null){
 			flatWhere.addAnd(oldWhere);
 		}
 		else if (oldWhere.getNotExist() != null) {
