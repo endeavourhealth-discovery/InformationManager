@@ -127,7 +127,7 @@ public class EqdResources {
 		}
 		String entityPath= getPath(eqCriterion.getTable());
 		if (!entityPath.equals(""))
-			match.setPath(entityPath);
+			match.setPathTo(entityPath);
 
 		if (eqCriterion.getLinkedCriterion() != null) {
 			convertLinkedCriterion(eqCriterion, match);
@@ -284,7 +284,7 @@ public class EqdResources {
 		if (!mainPath.equals(""))
 			subPath= mainPath+" "+ subPath;
 		if (subPath.contains(" ")) {
-			pv.setPath(subPath.substring(0, subPath.lastIndexOf(" ") ));
+			pv.setPathTo(subPath.substring(0, subPath.lastIndexOf(" ") ));
 			pv.setProperty(new TTAlias().setIri(subPath.substring(subPath.indexOf(" ")+1)));
 		}
 		else
@@ -828,8 +828,8 @@ public class EqdResources {
 		if (where.isNot())
 			summary.append("not in ");
 		String path="";
-		if (where.getPath()!=null)
-			path= localName(where.getPath());
+		if (where.getPathTo()!=null)
+			path= localName(where.getPathTo());
 		if (where.getProperty()!=null) {
 			String property = localName(where.getProperty().getIri());
 			String fullPath = (!path.equals("")) ? path + " " + property : property;

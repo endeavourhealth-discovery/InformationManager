@@ -82,6 +82,9 @@ public class IM1MapImport implements TTImport {
             reader.readLine();
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
+                if (line.toLowerCase().contains("accurx")){
+                    System.out.println(line);
+                }
                 String[] fields = line.split("\t");
                 while (fields.length<6) {
                     line = line + reader.readLine();

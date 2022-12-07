@@ -490,7 +490,7 @@ public class SnomedImporter implements TTImport {
        for (TTAlias range:expression.getWhere().getFrom()) {
          op.addObject(RDFS.RANGE, TTIriRef.iri(range.getIri()));
        }
-       if (expression.getWhere().getPath()!=null|| expression.getWhere().getAnd()!=null
+       if (expression.getWhere().getPathTo()!=null|| expression.getWhere().getAnd()!=null
        ||expression.getWhere().getNotExist()!=null)
          throw new DataFormatException("Snomed MCRM range converter does not support compound or refined ecl");
    }

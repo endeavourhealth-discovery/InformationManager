@@ -256,9 +256,11 @@ public class EMISImport implements TTImport {
                 if (notFound(emisConcept, IM.IS_CHILD_OF, iri(EMIS + "EMISUnlinkedCodes")))
                      emisConcept.addObject(IM.IS_CHILD_OF, iri(EMIS + "EMISUnlinkedCodes"));
             }
-        } else {
-            if (notFoundTermCode(emisConcept, IM.HAS_TERM_CODE, IM.CODE, conceptId))
-                TTManager.addTermCode(emisConcept, null, conceptId);
+        }
+        else {
+            emisConcept.addObject(IM.ALTERNATIVE_CODE,TTLiteral.literal(conceptId));
+            //if (notFoundTermCode(emisConcept, IM.HAS_TERM_CODE, IM.CODE, conceptId))
+              //  TTManager.addTermCode(emisConcept, null, conceptId);
         }
         if (descid != null)
             if(!isSnomed(descid))

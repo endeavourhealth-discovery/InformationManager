@@ -127,7 +127,7 @@ public class EqdPopToIMQ {
 	}
 
 	private void flattenOrs(Where flatWhere, Where oldWhere) {
-		if (oldWhere.getSelect()!=null|| oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPath()!=null){
+		if (oldWhere.getSelect()!=null|| oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPathTo()!=null){
 			flatWhere.addOr(oldWhere);
 		}
 		else if (oldWhere.getNotExist() != null) {
@@ -145,7 +145,7 @@ public class EqdPopToIMQ {
 	}
 
 	private void flattenAnds(Where flatWhere,Where oldWhere){
-		if (oldWhere.getSelect()!=null|| oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPath()!=null){
+		if (oldWhere.getSelect()!=null|| oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPathTo()!=null){
 			flatWhere.addAnd(oldWhere);
 		}
 		else if (oldWhere.getNotExist() != null) {
