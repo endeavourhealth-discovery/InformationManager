@@ -245,6 +245,7 @@ public class EMISImport implements TTImport {
         }
         termToEmis.put(term, emisConcept);
         codeIdToEntity.put(codeId, emisConcept);
+        emisConcept.addObject(IM.ALTERNATIVE_CODE,TTLiteral.literal(conceptId));
         if (isSnomed(conceptId)) {
             if (remaps.get(code) != null)
                 conceptId = remaps.get(code);
@@ -256,11 +257,6 @@ public class EMISImport implements TTImport {
                 if (notFound(emisConcept, IM.IS_CHILD_OF, iri(EMIS + "EMISUnlinkedCodes")))
                      emisConcept.addObject(IM.IS_CHILD_OF, iri(EMIS + "EMISUnlinkedCodes"));
             }
-        }
-        else {
-            emisConcept.addObject(IM.ALTERNATIVE_CODE,TTLiteral.literal(conceptId));
-            //if (notFoundTermCode(emisConcept, IM.HAS_TERM_CODE, IM.CODE, conceptId))
-              //  TTManager.addTermCode(emisConcept, null, conceptId);
         }
         if (descid != null)
             if(!isSnomed(descid))
