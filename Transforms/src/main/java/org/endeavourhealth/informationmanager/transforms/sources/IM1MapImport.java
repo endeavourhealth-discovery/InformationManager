@@ -22,6 +22,7 @@ public class IM1MapImport implements TTImport {
     private static final String[] im1Codes = {".*\\\\IMv1\\\\concepts.txt"};
     private static final String[] oldIris= {  ".*\\\\IMv1\\\\oldiris.txt"};
     private static final String[] context= {  ".*\\\\IMv1\\\\ContextMaps.txt"};
+    private static final String[] emisCodes = {".*\\\\EMIS\\\\emis_codes.txt"};
     private static final String[] usageDbid = {
         ".*\\\\DiscoveryLive\\\\stats1.txt",
         ".*\\\\DiscoveryLive\\\\stats2.txt",
@@ -42,6 +43,8 @@ public class IM1MapImport implements TTImport {
     private final Map<String,String> oldIriSnomed = new HashMap<>();
     private final Map<String,Integer> IdToDbid = new HashMap<>();
     private final Map<String,TTEntity> iriToSet= new HashMap<>();
+    private final Map<String,String> oldCodeToNew= new HashMap<>();
+    private final Map<String,String> emisTermToCode= new HashMap<>();
 
 
 
@@ -52,8 +55,11 @@ public class IM1MapImport implements TTImport {
 
     public void importData(String inFolder, boolean secure) throws Exception {
 
+        LOG.info("Loading emis look ups....");
+        importEMISCodes(inFolder);
         importOld(inFolder);
         importUsage(inFolder);
+
         LOG.info("Retrieving all entities and matches...");
         entities= importMaps.getAllPlusMatches();
         TTManager manager = new TTManager();
@@ -216,8 +222,6 @@ public class IM1MapImport implements TTImport {
 
                         if (scheme.equals(IM.CODE_SCHEME_TPP.getIri())) {
                             lname = lname.replace(".", "_");
-                            if (lname.contains("65MZ1"))
-                                System.out.println("65MZ1");
                             if (entities.containsKey(scheme+lname)) {
                                 checkEntity(scheme, lname, im1Scheme, term, code, oldIri,description);
                             }
@@ -237,19 +241,34 @@ public class IM1MapImport implements TTImport {
                             if (".....".equals(code)) {
                                 LOG.warn("Skipping READ [.....]");
                             } else {
-                                lname = lname.replaceAll("[&/' |()^]", "_");
-                                lname = lname.replace("[", "_").replace("]", "_");
-                                if (im1Scheme.equals("READ2"))
-                                    lname = lname.replace(".", "");
-                                else
-                                    lname = lname.replace(".", "_");
-                                if (entities.containsKey(scheme + lname)) {
-                                    checkEntity(scheme, lname, im1Scheme, term, code, oldIri, description);
-                                } else if (term.startsWith("[")) {
-                                    String suffix = term.substring(1, term.indexOf("]"));
-                                    String realName = lname.replace("_", "") + "-" + suffix;
-                                    if (entities.containsKey(scheme + realName)) {
-                                        addIM1id(scheme + realName, oldIri);
+                                String conceptId= oldCodeToNew.get(code);
+                                if (conceptId==null) {
+                                    String oldCode = code;
+                                    oldCode = oldCode.replaceAll("[.]", "");
+                                    conceptId = oldCodeToNew.get(oldCode);
+                                    if (conceptId == null) {
+                                        if (term.startsWith("[")) {
+                                            String suffix = term.substring(1, term.indexOf("]"));
+                                            oldCode = oldCode.replace("_", "") + "-" + suffix;
+                                            conceptId = oldCodeToNew.get(oldCode);
+                                        }
+                                    }
+                                    if (conceptId == null) {
+                                        conceptId = emisTermToCode.get(term);
+                                    }
+                                    if (conceptId == null){
+                                        //if (!Character.isLowerCase(code.charAt(0)))
+                                          //  if (!code.startsWith("Z"))
+                                            //    System.out.println(code + "  " + line);
+                                        }
+                                }
+                                if (conceptId!=null){
+                                    if (entities.containsKey(scheme + conceptId)) {
+                                        checkEntity(scheme, conceptId, im1Scheme, term, code, oldIri, description);
+                                    } else
+                                        throw new DataFormatException("missing emis code");
+                                }
+                              /*
 
                                     } else if (entities.containsKey(scheme + code.replace(".", ""))) {
                                         realName = code.replace(".", "");
@@ -257,6 +276,8 @@ public class IM1MapImport implements TTImport {
                                     } else
                                         checkEntity(scheme, lname, im1Scheme, term, code, oldIri, description);
                                 }
+
+                                 */
                             }
                         }
 
@@ -851,6 +872,32 @@ public class IM1MapImport implements TTImport {
 
     }
 
+    private void importEMISCodes(String folder) throws IOException {
+        Path file =  ImportUtils.findFileForId(folder, emisCodes[0]);
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            reader.readLine();
+            int count = 0;
+            String line = reader.readLine();
+            while (line != null && !line.isEmpty()) {
+                String[] fields = line.split("\t");
+                count++;
+                if (count % 100000== 0)
+                    LOG.info("found {} old emis codes ", count);
+
+               String oldCode= fields[3];
+               String conceptId= fields[4];
+               String term= fields[2];
+               oldCodeToNew.put(oldCode,conceptId);
+               emisTermToCode.put(term,conceptId);
+                line = reader.readLine();
+            }
+            LOG.info("{} codes imported",count);
+        }
+
+    }
+
+
+
 
     @Override
 	public void validateFiles(String inFolder)  {
@@ -868,5 +915,6 @@ public class IM1MapImport implements TTImport {
         IdToDbid.clear();
         iriToSet.clear();
         importMaps.close();
+        oldCodeToNew.clear();
     }
 }

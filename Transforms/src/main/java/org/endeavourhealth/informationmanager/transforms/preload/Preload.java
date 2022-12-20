@@ -178,8 +178,8 @@ public class Preload {
 
     private static boolean pingGraphServer() {
         Client client = ClientBuilder.newClient();
-        client.property("jersey.config.client.connectTimeout", 5000);
-        client.property("jersey.config.client.readTimeout", 5000);
+        client.property("jersey.config.client.connectTimeout", 10000);
+        client.property("jersey.config.client.readTimeout", 10000);
 
         WebTarget resource = client.target("http://localhost:7200/protocol");
 

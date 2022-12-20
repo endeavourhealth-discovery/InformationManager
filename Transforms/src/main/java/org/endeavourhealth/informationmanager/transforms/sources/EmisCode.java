@@ -7,6 +7,16 @@ public class EmisCode {
 	String conceptId;
 	String descid;
 	String parentId;
+	String snomedDescripton;
+
+	public String getSnomedDescripton() {
+		return snomedDescripton;
+	}
+
+	public EmisCode setSnomedDescripton(String snomedDescripton) {
+		this.snomedDescripton = snomedDescripton;
+		return this;
+	}
 
 	public String getCodeId() {
 		return codeId;

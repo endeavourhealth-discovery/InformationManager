@@ -7,6 +7,7 @@ import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +16,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.Connection;
 import java.util.*;
-import java.util.zip.DataFormatException;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -28,15 +27,15 @@ public class EMISImport implements TTImport {
     private static final String[] emisCodes = {".*\\\\EMIS\\\\emis_codes.txt"};
     private static final String[] allergies = {".*\\\\EMIS\\\\Allergies.json"};
     private static final String[] drugIds = {".*\\\\EMIS\\\\EMISDrugs.txt"};
-    private final Map<String, TTEntity> emisToEntity = new HashMap<>();
     private final Map<String, TTEntity> codeIdToEntity = new HashMap<>();
+    private final Map<String,TTEntity> oldCodeToEntity = new HashMap<>();
+    private final Map<String, TTEntity> conceptIdToEntity = new HashMap<>();
     private final Map<String, TTEntity> snomedToEmis = new HashMap<>();
     private final Map<String, TTEntity> termToEmis = new HashMap<>();
     private final Map<String, List<String>> parentMap = new HashMap<>();
     private final Map<String, String> remaps = new HashMap<>();
     List<String> emisNs=Arrays.asList("1000006","1000033","1000034","1000035");
 
-    private Connection conn;
     private final TTManager manager = new TTManager();
     private TTDocument document;
 
@@ -64,9 +63,9 @@ public class EMISImport implements TTImport {
         addEMISUnlinked();
         importEMISCodes(config.getFolder());
         importDrugs(config.getFolder());
+        manager.createIndex();
         allergyMaps(config.getFolder());
         setEmisHierarchy();
-        manager.createIndex();
         supplementary();
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
@@ -77,7 +76,6 @@ public class EMISImport implements TTImport {
         Path file =  ImportUtils.findFileForId(folder, drugIds[0]);
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
             reader.readLine();
-            int count = 0;
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
                 String[] fields = line.split("\t");
@@ -89,9 +87,9 @@ public class EMISImport implements TTImport {
                     if (emisConcept == null)
                         emisConcept = termToEmis.get(term);
                     if (emisConcept != null)
-                        TTManager.addTermCode(emisConcept, null, descid);
+                        if (notFoundValue(emisConcept,IM.HAS_TERM_CODE,IM.CODE,descid))
+                            TTManager.addTermCode(emisConcept, null, descid);
                 }
-                count++;
                 line = reader.readLine();
             }
         }
@@ -108,20 +106,22 @@ public class EMISImport implements TTImport {
     }
 
     private void addSub(String child, String parent) {
-        TTEntity childEntity = manager.getEntity(IM.GRAPH_EMIS.getIri() + child);
+        TTEntity childEntity = oldCodeToEntity.get(child);
         childEntity.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + parent));
     }
 
     private void allergyMaps(String folder) throws IOException {
         Path path =  ImportUtils.findFileForId(folder, allergies[0]);
-        TTManager allMgr = new TTManager();
-        TTDocument allDoc = allMgr.loadDocument(path.toFile());
-        for (TTEntity all : allDoc.getEntities()) {
-            TTEntity emisEntity = manager.getEntity(all.getIri());
-            for (TTValue superClass : all.get(IM.MATCHED_TO).getElements()) {
-                emisEntity.addObject(IM.MATCHED_TO, superClass);
-            }
-        }
+         TTManager allMgr = new TTManager();
+           TTDocument allDoc = allMgr.loadDocument(path.toFile());
+           for (TTEntity all : allDoc.getEntities()) {
+               String oldCode= all.getIri().substring(all.getIri().lastIndexOf("#")+1);
+               oldCode= oldCode.replaceAll("_",".");
+               TTEntity emisEntity = oldCodeToEntity.get(oldCode);
+               for (TTValue superClass : all.get(IM.MATCHED_TO).getElements()) {
+                   emisEntity.addObject(IM.MATCHED_TO, superClass);
+               }
+           }
     }
 
     private void populateRemaps() {
@@ -137,35 +137,12 @@ public class EMISImport implements TTImport {
         for (Map.Entry<String, List<String>> entry : parentMap.entrySet()) {
             String child = entry.getKey();
             TTEntity childEntity = codeIdToEntity.get(child);
-            if (isEMIS(childEntity.getCode())) {
-                if (childEntity.get(IM.MATCHED_TO) == null)
-                    setNearestCoreMatch(child, child);
-            }
             List<String> parents = entry.getValue();
             for (String parentId : parents) {
                 TTEntity parentEntity = codeIdToEntity.get(parentId);
-                if (parentEntity != null) {
-                    String parentIri = codeIdToEntity.get(parentId).getIri();
-                    TTManager.addChildOf(childEntity, iri(parentIri));
+                    TTManager.addChildOf(childEntity, TTIriRef.iri(parentEntity.getIri()));
                 }
-            }
         }
-    }
-
-    private void setNearestCoreMatch(String descendant, String child) {
-        List<String> parentIds = parentMap.get(child);
-        for (String parentId : parentIds) {
-            TTEntity parentEntity = codeIdToEntity.get(parentId);
-            if (parentEntity != null) {
-                if (parentEntity.get(IM.MATCHED_TO) != null) {
-                    for (TTValue match : parentEntity.get(IM.MATCHED_TO).iterator()) {
-                        codeIdToEntity.get(descendant).addObject(IM.MATCHED_TO, match);
-                    }
-                } else if (parentMap.get(parentId) != null)
-                    setNearestCoreMatch(descendant, parentId);
-            }
-        }
-
     }
 
 
@@ -178,7 +155,7 @@ public class EMISImport implements TTImport {
         document.addEntity(c);
     }
 
-    private void importEMISCodes(String folder) throws IOException,DataFormatException {
+    private void importEMISCodes(String folder) throws IOException {
         Path file =  ImportUtils.findFileForId(folder, emisCodes[0]);
         addEMISUnlinked();  //place holder for unlinked emis codes betlow the emis root code
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -197,10 +174,10 @@ public class EMISImport implements TTImport {
                 ec.setCode(fields[3]);
                 ec.setConceptId(fields[4]);
                 ec.setDescid(fields[5]);
+                ec.setSnomedDescripton(fields[6]);
                 if (fields.length==14)
-                  ec.setParentId(fields[13]);
-                else
-                    ec.setParentId(null);
+                    if (!fields[13].equals(""))
+                        ec.setParentId(fields[13]);
                 addConcept(ec);
                 line = reader.readLine();
             }
@@ -211,64 +188,80 @@ public class EMISImport implements TTImport {
 
 
 
-    private void addConcept( EmisCode ec) throws DataFormatException {
+    private void addConcept( EmisCode ec) {
         String codeId = ec.getCodeId();
         String term = ec.getTerm();
-        String code = ec.getCode();
+        String oldCode = ec.getCode();
         String conceptId = ec.getConceptId();
         String descid = ec.getDescid();
         String parentId = ec.getParentId();
+        String snomedDescription= ec.snomedDescripton;
+        if (conceptId.equals("1572871000006101"))
+            System.out.println();
+
+
         if (parentId!=null)
-            if (parentId.equals(""))
+            if (parentId.equals("")|parentId.equals("NULL"))
                 parentId = null;
-        if (descid.equals(""))
+        if (descid.equals("")|descid.equals("NULL"))
             descid = null;
+
 
         String name = (term.length() <= 250)
           ? term
           : (term.substring(0, 200) + "...");
-        TTEntity emisConcept = emisToEntity.get(code);
-        String lname = code.replaceAll("[.&/'| ()^]", "_");
-        lname = lname.replace("[", "_").replace("]", "_");
+        TTEntity emisConcept = conceptIdToEntity.get(conceptId);
         if (emisConcept == null) {
+            if (remaps.get(oldCode) != null)
+                conceptId = remaps.get(oldCode);
             emisConcept = new TTEntity()
-              .setIri(IM.CODE_SCHEME_EMIS.getIri() + lname)
+              .setIri(IM.CODE_SCHEME_EMIS.getIri() + conceptId)
+              .setCode(conceptId)
               .addType(IM.CONCEPT)
-              .setScheme(IM.CODE_SCHEME_EMIS)
-              .setName(name)
-              .setCode(code);
+              .setScheme(IM.CODE_SCHEME_EMIS);
+            String mainTerm= snomedDescription;
+            if (mainTerm.equals("")|mainTerm==null|mainTerm.equals("NULL"))
+                mainTerm= name;
+            emisConcept
+              .setName(mainTerm);
 
-            emisConcept.set(IM.CODE_ID, TTLiteral.literal(codeId));
+            conceptIdToEntity.put(conceptId,emisConcept);
             document.addEntity(emisConcept);
-            emisToEntity.put(code, emisConcept);
-
         }
+        emisConcept.addObject(IM.CODE_ID,codeId);
+        if (notFoundValue(emisConcept,IM.HAS_TERM_CODE,IM.CODE,descid)){
+            TTNode termCode= new TTNode();
+            termCode.set(IM.CODE,TTLiteral.literal(descid));
+            termCode.set(RDFS.LABEL,TTLiteral.literal(name));
+            emisConcept.addObject(IM.HAS_TERM_CODE,termCode);
+        }
+        if (notFoundValue(emisConcept,IM.HAS_TERM_CODE,IM.OLD_CODE,oldCode)){
+            TTNode termCode= new TTNode();
+            termCode.set(IM.OLD_CODE,TTLiteral.literal(oldCode));
+            termCode.set(RDFS.LABEL,TTLiteral.literal(name));
+            emisConcept.addObject(IM.HAS_TERM_CODE,termCode);
+        }
+
+        codeIdToEntity.put(codeId,emisConcept);
+        oldCodeToEntity.put(oldCode,emisConcept);
         termToEmis.put(term, emisConcept);
-        codeIdToEntity.put(codeId, emisConcept);
-        emisConcept.addObject(IM.ALTERNATIVE_CODE,TTLiteral.literal(conceptId));
         if (isSnomed(conceptId)) {
-            if (remaps.get(code) != null)
-                conceptId = remaps.get(code);
             if (!isBlackList(conceptId)) {
                 snomedToEmis.put(conceptId, emisConcept);
                 if (notFound(emisConcept, IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + conceptId)))
                    emisConcept.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + conceptId));
-            } else {
+            }
+            else {
                 if (notFound(emisConcept, IM.IS_CHILD_OF, iri(EMIS + "EMISUnlinkedCodes")))
                      emisConcept.addObject(IM.IS_CHILD_OF, iri(EMIS + "EMISUnlinkedCodes"));
             }
         }
-        if (descid != null)
-            if(!isSnomed(descid))
-                if (notFoundTermCode(emisConcept, IM.HAS_TERM_CODE, IM.CODE, descid))
-                    TTManager.addTermCode(emisConcept, null, descid);
-
-        if (code.equals("EMISNHH2")) {
+        if (oldCode.equals("EMISNHH2")) {
             emisConcept.setName("EMIS Read 2 and local codes");
             emisConcept.set(IM.IS_CONTAINED_IN, new TTArray()
               .add(iri(IM.NAMESPACE + "CodeBasedTaxonomies")));
         }
-        if (parentId == null && !code.equals("EMISNHH2"))
+        if (parentId == null && !oldCode.equals("EMISNHH2"))
             emisConcept.set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS + "EMISUnlinkedCodes")));
         if (parentId != null) {
             parentMap.computeIfAbsent(codeId, k -> new ArrayList<>());
@@ -276,13 +269,15 @@ public class EMISImport implements TTImport {
         }
     }
 
+
+
     private boolean notFound(TTNode node, TTIriRef predicate, TTValue value){
         if (node.get(predicate)==null)
             return true;
         return !node.get(predicate).getElements().contains(value);
     }
 
-    private boolean notFoundTermCode(TTNode node, TTIriRef predicate, TTIriRef subPredicate, String code){
+    private boolean notFoundValue(TTNode node, TTIriRef predicate, TTIriRef subPredicate, String code){
         if (node.get(predicate)==null)
             return true;
         for (TTValue subNode:node.get(predicate).getElements()){
@@ -308,16 +303,11 @@ public class EMISImport implements TTImport {
 
 
 
-    public Boolean isSnomed(String s) throws DataFormatException {
+    public Boolean isSnomed(String s) {
 
         if (getNameSpace(s).equals(""))
             return true;
         return !emisNs.contains(getNameSpace(s));
-    }
-    public Boolean isEMIS(String s){
-     if (s.length()>5)
-            return true;
-     else return s.contains("DRG") || s.contains("SHAPT") || s.contains("EMIS");
     }
 
 
@@ -325,7 +315,7 @@ public class EMISImport implements TTImport {
         if (s.length()>10)
          return s.substring(s.length()-10, s.length()-3);
         else
-        return "";
+         return "";
     }
 
     public String getEmisCode(String code, String term) {
@@ -350,7 +340,7 @@ public class EMISImport implements TTImport {
 
     @Override
     public void close() throws Exception {
-        emisToEntity.clear();
+        conceptIdToEntity.clear();
         codeIdToEntity.clear();
         snomedToEmis.clear();
         termToEmis.clear();
