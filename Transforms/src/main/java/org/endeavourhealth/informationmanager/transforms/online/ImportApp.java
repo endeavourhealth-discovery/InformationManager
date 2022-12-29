@@ -192,6 +192,10 @@ public class ImportApp {
                 importer= new Importer().validateByType(TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter"),cfg.getFolder());
                 importer.importByType(TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter"), cfg);
                 break;
+            case "qcodegroups" :
+                importer= new Importer().validateByType(TTIriRef.iri(IM.NAMESPACE+"QCodeGroups"),cfg.getFolder());
+                importer.importByType(TTIriRef.iri(IM.NAMESPACE+"QCodeGroups"), cfg);
+                break;
             default:
                 throw new Exception("Unknown import type");
 

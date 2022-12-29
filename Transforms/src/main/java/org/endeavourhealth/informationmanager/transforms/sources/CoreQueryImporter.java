@@ -29,10 +29,15 @@ public class CoreQueryImporter implements TTImport {
         output(document);
 
         addCurrentReg(document, config.getFolder());
+        addTemplates(document);
         output(document);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
+    }
+
+    private void addTemplates(TTDocument document) {
+        
     }
 
     private void addCurrentReg(TTDocument document, String outFolder) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -80,7 +85,7 @@ public class CoreQueryImporter implements TTImport {
 
     private void setProvenance(TTEntity rdf, TTDocument document) {
         ProvActivity activity = new ProvActivity()
-            .setIri(IM.NAMESPACE + "Q_RegisteredGMS")
+            .setIri(IM.NAMESPACE + "PROV_Q-RegisteredGMS")
             .setActivityType(IM.PROV_CREATION)
             .setEffectiveDate(LocalDateTime.now().toString())
             .setTargetEntity(TTIriRef.iri(rdf.getIri()));
