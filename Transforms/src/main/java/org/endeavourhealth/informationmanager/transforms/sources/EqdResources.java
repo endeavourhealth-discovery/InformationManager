@@ -167,9 +167,11 @@ public class EqdResources {
 			targetSelect.setWhere(targetWhere);
 			targetSelect.setProperty(IM.NAMESPACE+"Date");
 			targetSelect.setAlias("Date of "+ targetWhere.getAlias());
+
 			convertColumns(eqCriterion, targetWhere);
 		}
-
+		counter++;
+		targetSelect.setVariable("target_"+counter);
 		Where linkWhere= new Where();
 		topWhere.addAnd(linkWhere);
 
@@ -183,21 +185,22 @@ public class EqdResources {
 			}
 		Where relationWhere = new Where();
 		topWhere.addAnd(relationWhere);
-		relationWhere.setFunction(new Function().setIri(IM.NAMESPACE+"TimeDifference"));
+
 		EQDOCRelationship eqRel = eqLinked.getRelationship();
 		if (eqRel.getParentColumn().contains("DATE")){
-			relationWhere.setProperty(new TTAlias().setIri(IM.NAMESPACE+"date"));
+			relationWhere.setProperty(new TTAlias().setIri(IM.NAMESPACE+"effectiveDate"));
+			Within within= new Within();
+			relationWhere.setWithin(within);
 			Value value= new Value();
-			relationWhere.setValue(value);
+			within.setValue(value);
 			value
-			.setComparison(vocabMap.get(eqRel.getRangeValue().getRangeFrom().getOperator()))
-				.setValue(eqRel.getRangeValue().getRangeFrom().getValue().getValue())
-				.relativeTo(c ->c
+				.setComparison(vocabMap.get(eqRel.getRangeValue().getRangeFrom().getOperator()))
+				.setValue(eqRel.getRangeValue().getRangeFrom().getValue().getValue());
+			value.setUnitOfTime(eqRel.getRangeValue().getRangeFrom().getValue().getUnit().value());
+			within.setOf(new Compare()
 					.setAlias(targetSelect.getAlias())
-			.setProperty(new TTAlias().setIri(IM.NAMESPACE+"date")));
-			relationWhere.addArgument(new Argument()
-				.setParameter("units")
-				.setValueData(eqRel.getRangeValue().getRangeFrom().getValue().getUnit().value()));
+				.setVariable(targetSelect.getVariable())
+				.setProperty(TTIriRef.iri(IM.NAMESPACE+"effectiveDate")));
 			relationWhere.setAlias(summarise(relationWhere,null));
 		}
 		else
@@ -408,21 +411,22 @@ public class EqdResources {
 	private void setCompare(Where pv, String comp, String value, String units, VocRelation relation,
 													boolean from) throws DataFormatException {
 		if (relation == VocRelation.RELATIVE) {
-			Function function = getTimeDiff();
-			pv.addArgument(new Argument().setParameter("units").setValueData(units));
-			pv.setFunction(function);
+			Within within= new Within();
+			pv.setWithin(within);
+			within.setOf(new Compare().setVariable("$referenceDate"));
 			if (from) {
 				comp = reverseComp(comp);
 				value = String.valueOf(-Integer.parseInt(value));
 			}
 			String finalComp = comp;
 			String finalValue = value;
-			pv
+			within
 				.value(v->v
-				.setComparison(finalComp)
-				.setValue(finalValue)
-					.setRelativeTo(new Compare().setVariable("$referenceDate")));
-		} else {
+					.setComparison(finalComp)
+					.setValue(finalValue)
+					.setUnitOfTime(units));
+		}
+		else {
 			String finalComp1 = comp;
 			String finalValue1 = value;
 			pv
@@ -432,9 +436,8 @@ public class EqdResources {
 			if (pv.getProperty().getIri().contains("age")) {
 				if (units == null)
 					throw new DataFormatException("missing units from age");
-				pv.addArgument(new Argument()
-					.setParameter("units")
-					.setValueData(units));
+				pv.getValue()
+					.setUnitOfTime(units);
 			}
 		}
 
@@ -473,15 +476,11 @@ public class EqdResources {
 	}
 
 
-	private Function getTimeDiff() {
-		return new Function().setIri(TTIriRef.iri(IM.NAMESPACE + "TimeDifference")
-			.setName("Time Difference"));
-	}
 
 	private void setRangeCompare(Where pv, EQDOCRangeFrom rFrom, EQDOCRangeTo rTo) throws DataFormatException {
-		Range range = new Range();
-		pv.setRange(range);
 		String fromComp;
+		Within within= null;
+		Range range= new Range();
 		if (rFrom.getOperator() != null)
 			fromComp = vocabMap.get(rFrom.getOperator());
 		else
@@ -491,24 +490,26 @@ public class EqdResources {
 		if (rFrom.getValue().getUnit() != null)
 			units = rFrom.getValue().getUnit().value();
 		if (rFrom.getValue().getRelation() != null && rFrom.getValue().getRelation() == VocRelation.RELATIVE) {
-
-			Function function = getTimeDiff();
-			pv.addArgument(new Argument().setParameter("units").setValueData(units));
+			within= new Within();
+			pv.setWithin(within);
+			within.setRange(range);
+			within.of(w->w
+				.setVariable("$referenceDate"));
 			range.setFrom(new Value()
 				.setComparison(fromComp)
-				.setValue(fromValue)
-				.setRelativeTo(new Compare().setVariable("$referenceDate")));
-			pv.setFunction(function);
-		} else {
+				.setValue(fromValue));
+			if (units!=null)
+				range.getFrom().setUnitOfTime(units);
+		}
+		else {
+			pv.setRange(range);
 			range.setFrom(new Value()
 				.setComparison(fromComp)
 				.setValue(fromValue));
 			if (pv.getProperty().getIri().contains("age")) {
 				if (units == null)
 					throw new DataFormatException("missing units from age");
-				pv.addArgument(new Argument()
-					.setParameter("units")
-					.setValueData(units));
+				range.getFrom().setUnitOfTime(units);
 			}
 		}
 
@@ -522,15 +523,13 @@ public class EqdResources {
 		if (rTo.getValue().getUnit() != null)
 			units = rTo.getValue().getUnit().value();
 		if (rTo.getValue().getRelation() != null && rTo.getValue().getRelation() == VocRelation.RELATIVE) {
-
 			range.setTo(new Value()
 				.setComparison(toComp)
-				.setValue(toValue)
-				.setRelativeTo(new Compare().setVariable("$referenceDate")));
-			Function function = getTimeDiff();
-			pv.addArgument(new Argument().setParameter("units").setValueData(units));
-			pv.setFunction(function);
-		} else {
+				.setValue(toValue));
+			if (units!=null)
+				range.getTo().setUnitOfTime(units);
+		}
+		else {
 			range.setTo(new Value()
 				.setComparison(toComp)
 				.setValue(toValue));
@@ -833,29 +832,22 @@ public class EqdResources {
 		if (where.getProperty()!=null) {
 			String property = localName(where.getProperty().getIri());
 			String fullPath = (!path.equals("")) ? path + " " + property : property;
-			if (where.getValue() != null) {
-				if (where.getValue().getRelativeTo()!=null)
-					summary.append("within ");
-				summary.append(fullPath);
+			summary.append(fullPath);
+			if (where.getWithin()!=null){
+				Within within= where.getWithin();
+				summary.append("within ");
+				if (within.getValue()!=null)
+					summary.append(" ").append(summariseValue(within.getValue()));
+				else
+					summary.append(" ").append(summariseRange(within.getRange()));
+				summary.append(" ").append(summariseCompare(within.getOf()));
+			}
+			else if (where.getValue()!=null)
 				summary.append(" ").append(summariseValue(where.getValue()));
-				if (where.getArgument()!=null){
-					if (where.getArgument().get(0).getValueData()!=null)
-					 summary.append(" ").append(where.getArgument().get(0).getValueData().toLowerCase(Locale.ROOT));
-				}
-				if (where.getValue().getRelativeTo()!=null)
-					summary.append(summariseCompare(where.getValue().getRelativeTo()));
 			}
 			else if (where.getRange() != null) {
-				if (summary.toString().isEmpty())
-					summary.append(fullPath).append(" ");
-				summary.append("From").append(summariseValue(where.getRange().getFrom()));
-				summary.append(" To").append(summariseValue(where.getRange().getTo()));
-				if (where.getRange().getRelativeTo()!=null)
-					summary.append(summariseCompare(where.getRange().getRelativeTo()));
+				summary.append(" ").append(summariseRange(where.getRange()));
 			}
-			else if (where.getArgument()!=null)
-				summary.append(summariseArguments(where.getArgument()));
-
 
 			if (where.getIn()!=null){
 				int i=0;
@@ -870,14 +862,24 @@ public class EqdResources {
 				}
 
 			}
+			else if( where.getAnd()!=null){
+				List<String> ands= where.getAnd().stream().map(Where::getAlias).collect(Collectors.toList());
+				summary.append(String.join("+",ands));
+			}
 
 
 		}
-		else if( where.getAnd()!=null){
-			List<String> ands= where.getAnd().stream().map(Where::getAlias).collect(Collectors.toList());
-			summary.append(String.join("+",ands));
-		}
+
+	private String summariseRange(Range range) {
+		String result="from "+ summariseValue(range.getFrom());
+		if (range.getFrom().getUnitOfTime()!=null)
+		result =result+"to "+ summariseValue((range.getTo()));
+		if (range.getTo().getUnitOfTime()!=null)
+			result= result+" "+range.getTo().getUnitOfTime();
+		return result;
 	}
+
+
 
 	private String summariseCompare(Compare compare) {
 		if (compare.getVariable()!=null){
@@ -919,8 +921,11 @@ public class EqdResources {
 
 
 	private String summariseValue(Value value){
-		return value.getComparison() + " " +
+		String result= value.getComparison() + " " +
 			value.getValue();
+		if (value.getUnitOfTime()!=null)
+			result=result+" "+ value.getUnitOfTime();
+		return result;
 	}
 
 

@@ -37,8 +37,18 @@ public class CoreQueryImporter implements TTImport {
     }
 
     private void addTemplates(TTDocument document) {
-        
+       document
+         .addEntity(addTemplate(IM.NAMESPACE+"QT_RegisteredGMS",IM.NAMESPACE+"Q_RegisteredGMS","from",1000));
     }
+
+    private TTEntity addTemplate(String iri,String value, String path, int weighting) {
+        TTEntity template= new TTEntity()
+          .setIri(iri)
+          .set(IM.WEIGHTING,TTLiteral.literal(weighting))
+          .set(IM.PATH_TO,TTLiteral.literal(path));
+        return template;
+    }
+
 
     private void addCurrentReg(TTDocument document, String outFolder) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         TTEntity qry = new TTEntity().addType(IM.QUERY);
@@ -62,17 +72,16 @@ public class CoreQueryImporter implements TTImport {
                     .setProperty(IM.NAMESPACE + "startDate")
                     .setValue(new Value()
                         .setComparison("<=")
-                        .relativeTo(c -> c
-                            .setVariable("$ReferenceDate"))))
+                        .valueOf(v->v.setVariable("$referenceDate"))))
                 .or(pv -> pv
                     .notExist(not -> not
                         .setProperty(IM.NAMESPACE + "endDate")))
                 .or(pv -> pv
                     .setProperty(IM.NAMESPACE + "endDate")
                     .setValue(new Value()
-                        .setComparison(">")
-                        .relativeTo(c -> c
-                            .setVariable("$referenceDate")))
+                      .setComparison(">")
+                      .valueOf(v->v
+                        .setVariable("$referenceDate")))
                 ));
 
         qry.set(IM.DEFINITION, TTLiteral.literal(prof));

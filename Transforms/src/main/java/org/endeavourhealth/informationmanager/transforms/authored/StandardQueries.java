@@ -1,9 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.authored;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.endeavourhealth.imapi.model.iml.Query;
-import org.endeavourhealth.imapi.model.iml.Value;
-import org.endeavourhealth.imapi.model.iml.Where;
+import org.endeavourhealth.imapi.model.iml.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -53,8 +51,7 @@ public class StandardQueries {
 					.setProperty(IM.NAMESPACE+"startDate")
 					.setValue(new Value()
 						.setComparison("<=")
-						.relativeTo(c->c
-							.setVariable("$ReferenceDate"))))
+						.setValueOf(new Compare().setVariable("$referenceDate"))))
 				.or(pv-> pv
 					.notExist(not->not
 						.setProperty(IM.NAMESPACE+"endDate")))
@@ -62,9 +59,8 @@ public class StandardQueries {
 					.setProperty(IM.NAMESPACE+"endDate")
 					.setValue(new Value()
 						.setComparison(">")
-						.relativeTo(c ->c
-							.setVariable("$referenceDate")))
-				));
+						.setValueOf(new Compare().setVariable("$referenceDate"))))
+				);
 
 		gpRegPractice.getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE+"query"));
 		gpRegPractice

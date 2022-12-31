@@ -6,12 +6,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.endeavourhealth.imapi.dataaccess.OpenSearchSender;
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.model.iml.Query;
+import org.endeavourhealth.imapi.model.iml.Where;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
+import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +33,7 @@ public class QConceptGroups implements TTImport {
 	private final TTDocument document = new TTDocument(TTIriRef.iri(QR.NAMESPACE));
 	private final TTIriRef projectsFolder= TTIriRef.iri(QR.NAMESPACE+"QProjects");
 	private final Map<String,String> idProjectMap = new HashMap<>();
-	private final Map<String,String> idCodeGroupMap = new HashMap<>();
+	private final Map<String,TTEntity> idCodeGroupMap = new HashMap<>();
 
 	private static final Logger LOG = LoggerFactory.getLogger(QConceptGroups.class);
 	@Override
@@ -55,15 +58,31 @@ public class QConceptGroups implements TTImport {
 			for (Iterator<JsonNode> it = projects.elements(); it.hasNext(); ) {
 				JsonNode codeGroup = it.next();
 				String id= codeGroup.get("Id").asText();
-				TTEntity qGroup = new TTEntity()
-					.setIri(QR.NAMESPACE+"CSET_QCodeGroup_"+id)
-					.setName(codeGroup.get("Name").asText())
-					.addType(IM.CONCEPT_SET);
+				String version= codeGroup.get("CurrentVersion").asText();
+				TTEntity qGroup = idCodeGroupMap.get(id+"_"+version);
+				if (qGroup==null){
+					qGroup= new TTEntity()
+						.setIri(QR.NAMESPACE+"CSET_QCodeGroup_"+id+"_"+version)
+						.setName(codeGroup.get("Name").asText())
+						.addType(IM.CONCEPT_SET);
+				}
 				qGroup.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(project.getValue()));
-				qGroup.set(IM.VERSION, TTLiteral.literal(codeGroup.get("CurrentVersion")));
+				qGroup.set(IM.VERSION, TTLiteral.literal(version));
 				document.addEntity(qGroup);
-				idCodeGroupMap.put(id,qGroup.getIri());
+				idCodeGroupMap.put(id+"_"+version,qGroup);
+				importCodes(projectId,qGroup,id);
 			}
+		}
+	}
+
+	private void importCodes(String projectId, TTEntity qGroup,String groupId) throws JsonProcessingException {
+		String version = qGroup.get(IM.VERSION).asLiteral().getValue();
+		ArrayNode codes = getResults("codes_for_codegroup/" + groupId+"/"+ projectId+"/"+ version+"/");
+		for (Iterator<JsonNode> it = codes.elements(); it.hasNext(); ) {
+			JsonNode code = it.next();
+			String concept= SNOMED.NAMESPACE+ code.get("Code").asText();
+			String term= code.get("Text").asText();
+			qGroup.addObject(IM.HAS_MEMBER,TTIriRef.iri(concept));
 		}
 	}
 

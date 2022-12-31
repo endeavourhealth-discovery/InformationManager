@@ -39,6 +39,7 @@ public class ModelShapes {
 		select(getEntity(IM.NAMESPACE+"SelectClause"));
 		where(getEntity(IM.NAMESPACE+"WhereClause"));
 		compare(getEntity(IM.NAMESPACE+"CompareClause"));
+		within(getEntity(IM.NAMESPACE+"WithinClause"));
 		value(getEntity(IM.NAMESPACE+"ValueClause"));
 		having(getEntity(IM.NAMESPACE+"HavingClause"));
 		range(getEntity(IM.NAMESPACE+"RangeClause"));
@@ -203,7 +204,7 @@ public class ModelShapes {
 	private void saveDocument(String file) throws JsonProcessingException {
 		manager.saveDocument(new File(file));
 	}
-	private void value(TTEntity shape) throws JsonProcessingException {
+	private void value(TTEntity shape) throws JsonProcessingException, DataFormatException {
 		setLabels(shape);
 		shape.setDescription("Tests a value, whether equal, greater than, less than etc. optionally including a value to compare against");
 		addProperty(shape,"comparison",SHACL.DATATYPE,XSD.STRING,1,1,"Comparison operators : =," +
@@ -213,8 +214,25 @@ public class ModelShapes {
 			" >=");
 		addProperty(shape,"value",SHACL.DATATYPE,XSD.STRING,1,1,"The value of the property used in a test. This is a string which will be cast to a number or date, depending "+
 			"on the data type of the property value");
-		addProperty(shape,"relativeTo",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"CompareClause"),0,1,"The result to compare the property value against is derived from a"+
-				" variable value or property of an object (identified by its alias) defined another where clause");
+		addProperty(shape,"valueOf",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"CompareClause"),0,1,
+			"The value is the value of a variable or property set elsewhere in the query");
+		addProperty(shape,"unitOfTime",SHACL.DATATYPE,XSD.STRING,1,1,"When the target value or value of is a date "+
+			"and the value is a number then the units of time e.g. years or months as a parameter to a function");
+		setOrs(shape,List.of("value","valueOf"),1,1);
+
+	}
+
+	private void within(TTEntity shape) throws JsonProcessingException, DataFormatException {
+		setLabels(shape);
+		shape.setDescription("Tests a value against another value, either as comparison or range");
+		addProperty(shape,"value",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ValueClause"),1,1,"The test is for an actual value (including comparison "+
+			"against another value");
+		addProperty(shape,"range",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"RangeClause"),1,1,"The test is for a range of values against "+
+			"another value");
+		addProperty(shape,"of",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"CompareClause"),1,1,"The alias and property "+
+			"the value test is against");
+		setOrs(shape,List.of("value","range"),1,1);
+
 
 	}
 	private void compare(TTEntity shape) throws JsonProcessingException {
@@ -232,8 +250,6 @@ public class ModelShapes {
 		shape.setDescription("A range for use in property value testing");
 		addProperty(shape,"from",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ValueClause"),1,1,"The value comparison for lower end of the range");
 		addProperty(shape,"to",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ValueClause"),1,1,"The value comparison of upper end of the range");
-		addProperty(shape,"relativeTo",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"CompareClause"),1,1,"When the range values are relative to another value , information about the other value (e.g. variable"+
-			" or property of the results defined in another clause");
 
 	}
 
@@ -370,7 +386,7 @@ public class ModelShapes {
 
 
 	}
-	private void where(TTEntity shape) throws JsonProcessingException {
+	private void where(TTEntity shape) throws JsonProcessingException, DataFormatException {
 		setLabels(shape);
 		shape.setDescription("A clause containing criteria which the objects must conform to. Equivalent to a from/join where clause in SQL and where/filter in sparql."+
 			"<br>Supports graph traversal filtering and inference for subsumption query");
@@ -402,7 +418,7 @@ public class ModelShapes {
 		addProperty(shape,"function",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"FunctionClause"),1,1,"A function that operates on the property value (and other parameters) "+
 			"prior to a compare or range or inclusion test. For example a time difference function operating on the date and a reference date."+
 			"<br>Note that properties that ARE functions do not need functions included for example age. For these simply supply the arguments.");
-		addProperty(shape,"argument",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"Argument"),0,1,"Arguments to pass into a function when the property is a function property."+
+		addProperty(shape,"within",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"Within"),0,1,"Where the value is within a range of another value"+
 			"<br>Note that if the test is a function then the argument list would be in the function clause");
 		addProperty(shape,"value",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ValueClause"),1,1,"If testing a property value as equal greater than ete. use compare");
 		addProperty(shape,"range",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"RangeClause"),1,1,"Test foe a value being between two absolute or relative values");
@@ -414,6 +430,7 @@ public class ModelShapes {
 			"direction of ordering (DESC or ASC) .");
 		addProperty(shape,"limit",SHACL.DATATYPE,XSD.INTEGER,0,1,
 			"Number of entities to return. Normally used with order by");
+		setOrs(shape,List.of("within","value"),0,1);
 
 
 	}
