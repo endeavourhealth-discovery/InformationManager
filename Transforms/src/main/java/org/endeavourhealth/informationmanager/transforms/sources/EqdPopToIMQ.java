@@ -21,7 +21,7 @@ public class EqdPopToIMQ {
 		this.activeReport= eqReport.getId();
 		this.resources= resources;
 		if (eqReport.getParent().getParentType() == VocPopulationParentType.ACTIVE) {
-			resources.setFrom(query, TTIriRef.iri(IM.NAMESPACE + "Q_RegisteredGMS").setName("Registered with GP for GMS services on the reference date"));
+			resources.setFrom(query, TTIriRef.iri(IM.NAMESPACE+"Q_RegisteredGMS").setName("Registered with GP for GMS services on the reference date"));
 		}
 		else {
 			if (eqReport.getParent().getParentType() == VocPopulationParentType.POP) {
@@ -108,7 +108,7 @@ public class EqdPopToIMQ {
 		if (oldWhere.getProperty()!=null){
 			return;
 		}
-		if (oldWhere.getSelect()!=null){
+		if (oldWhere.getWith()!=null){
 			return;
 		}
 		if (oldWhere.getAnd()!=null){
@@ -127,7 +127,7 @@ public class EqdPopToIMQ {
 	}
 
 	private void flattenOrs(Where flatWhere, Where oldWhere) {
-		if (oldWhere.getSelect()!=null|| oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPathTo()!=null){
+		if (oldWhere.getWith()!=null|| oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPathTo()!=null){
 			flatWhere.addOr(oldWhere);
 		}
 		else if (oldWhere.getNotExist() != null) {
@@ -145,7 +145,7 @@ public class EqdPopToIMQ {
 	}
 
 	private void flattenAnds(Where flatWhere,Where oldWhere){
-		if (oldWhere.getSelect()!=null|| oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPathTo()!=null){
+		if (oldWhere.getWith()!=null|| oldWhere.getProperty()!=null||oldWhere.getFrom()!=null||oldWhere.getPathTo()!=null){
 			flatWhere.addAnd(oldWhere);
 		}
 		else if (oldWhere.getNotExist() != null) {

@@ -28,6 +28,7 @@ public class CoreImporter implements TTImport {
      ".*\\\\DiscoveryCore\\\\StatsReports.json",
      ".*\\\\DiscoveryCore\\\\FormQueries.json",
      ".*\\\\DiscoveryCore\\\\Forms.json",
+     ".*\\\\DiscoveryCore\\\\QueryHelpers.json",
      ".*\\\\DiscoveryCore\\\\Sets.json"
    };
 

@@ -43,6 +43,7 @@ public class Reasoner {
       inferred= new TTDocument();
       inferred.setContext(document.getContext());
       inferred.setGraph(document.getGraph());
+      inferred.setCrud(document.getCrud());
       classify(document);
       addDocumentRoles();
       for (TTEntity c:inferred.getEntities()){

@@ -28,9 +28,8 @@ public class EqdResources {
 	private final Map<String,Set<TTIriRef>> valueMap= new HashMap<>();
 	private int counter=0;
 	private int whereCount=0;
-
-
-
+	
+	
 
 	public TTDocument getDocument() {
 		return document;
@@ -126,8 +125,9 @@ public class EqdResources {
 			match= notWhere;
 		}
 		String entityPath= getPath(eqCriterion.getTable());
-		if (!entityPath.equals(""))
+		if (!entityPath.equals("")) {
 			match.setPathTo(entityPath);
+		}
 
 		if (eqCriterion.getLinkedCriterion() != null) {
 			convertLinkedCriterion(eqCriterion, match);
@@ -151,18 +151,18 @@ public class EqdResources {
 		Select targetSelect;
 		if (eqCriterion.getFilterAttribute().getRestriction().getTestAttribute()!=null){
 			targetSelect= new Select();
-			topWhere.setSelect(targetSelect);
+			topWhere.setWith(targetSelect);
 			targetWhere = new Where();
 			targetSelect.setWhere(targetWhere);
 			convertRestrictionCriterion(eqCriterion, targetWhere,IM.NAMESPACE+"Date");
 		}
 		else if (eqCriterion.getFilterAttribute().getRestriction() != null) {
 			convertRestrictionCriterion(eqCriterion, topWhere,IM.NAMESPACE+"Date");
-			targetSelect= topWhere.getSelect();
+			targetSelect= topWhere.getWith();
 		}
 		else {
 			targetSelect= new Select();
-			topWhere.setSelect(targetSelect);
+			topWhere.setWith(targetSelect);
 			targetWhere = new Where();
 			targetSelect.setWhere(targetWhere);
 			targetSelect.setProperty(IM.NAMESPACE+"Date");
@@ -215,7 +215,7 @@ public class EqdResources {
 		if (selectWhat!=null) {
 			select.setProperty(selectWhat);
 		}
-		topWhere.setSelect(select);
+		topWhere.setWith(select);
 		Where restrictionWhere= new Where();
 		select.setWhere(restrictionWhere);
 		if (eqCriterion.getDescription() != null)
@@ -288,7 +288,7 @@ public class EqdResources {
 			subPath= mainPath+" "+ subPath;
 		if (subPath.contains(" ")) {
 			pv.setPathTo(subPath.substring(0, subPath.lastIndexOf(" ") ));
-			pv.setProperty(new TTAlias().setIri(subPath.substring(subPath.indexOf(" ")+1)));
+			pv.setProperty(new TTAlias().setIri(subPath.substring(subPath.lastIndexOf(" ")+1)));
 		}
 		else
 			pv.setProperty(new TTAlias().setIri(subPath));
@@ -341,7 +341,7 @@ public class EqdResources {
 		String targetPath= (String) target;
 		if (targetPath.equals(""))
 			return "";
-		String[] paths = targetPath.split("/");
+		String[] paths = targetPath.split(" ");
 		List<String> pathList = Arrays.stream(paths).map(p-> IM.NAMESPACE+p).collect(Collectors.toList());
 		if (pathList.size()==1){
 			return pathList.get(0);
@@ -832,9 +832,9 @@ public class EqdResources {
 		if (where.getProperty()!=null) {
 			String property = localName(where.getProperty().getIri());
 			String fullPath = (!path.equals("")) ? path + " " + property : property;
-			summary.append(fullPath);
 			if (where.getWithin()!=null){
 				Within within= where.getWithin();
+				summary.append(property);
 				summary.append("within ");
 				if (within.getValue()!=null)
 					summary.append(" ").append(summariseValue(within.getValue()));

@@ -372,7 +372,6 @@ public class ModelShapes {
 		addProperty(shape,"function",SHACL.CLASS,IM.FUNCTION,0,1,"The iri of a function indicating that"+
 			" the result is the result of a function operating on the property values, and any arguments passed in");
 		addProperty(shape,"argument",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"Argument"),0,null,"Arguments to pass into the function");
-		setOrs(shape,List.of("sum","average","max"),0,1);
 
 	}
 
@@ -400,7 +399,8 @@ public class ModelShapes {
 			"<br>If more than one it is considered an OR List."+
 			"<br>Represents a subject of a triple or entity. Should be used with caution in IM query");
 		addProperty(shape,"graph",SHACL.CLASS,IM.GRAPH,0,1,"The iri of a graph if the query is limited to a particular data set");
-		addProperty(shape,"path",SHACL.CLASS,RDFS.RESOURCE,0,1,"A property path made up of space delimited iri strings, from the outer entity to the entity on which this clause operates."+
+		addProperty(shape,"pathTo",SHACL.CLASS,RDFS.RESOURCE,0,1,"A property type path made up of space delimited"+
+			"iri strings, from the outer entity to the entity on which this clause operates. Alternates property and type"+
 			"<br>Equivalent to an inner join in SQL");
 		addProperty(shape,"notExist",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"WhereClause"),0,1,"Points to a nested where clause. If the nested clause returns results then the entity referenced by the outer where clause is excluded."+
 			"<br>In other words, for the outer entity to be included, the nested entity must have no results. This contrasts with 'not'");

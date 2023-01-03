@@ -61,23 +61,24 @@ public class CoreQueryImporter implements TTImport {
         prof.setIri(qry.getIri());
         prof.setName(qry.getName());
         prof.setDescription(qry.getDescription());
+        qry.set(IM.WEIGHTING,TTLiteral.literal(10000));
         prof.from(f -> f
-                .setIri(IM.NAMESPACE + "Patient").setName("Patient").setIsType(true))
+                .setIri(IM.NAMESPACE+"Patient").setName("Patient").setIsType(true))
             .setWhere(new Where()
-                .setPathTo(IM.NAMESPACE + "gpRegistration")
+                .setPathTo(IM.NAMESPACE +"isSubjectOf "+ IM.NAMESPACE +"GPRegistration")
                 .and(pv -> pv
-                    .setProperty(IM.NAMESPACE + "patientType")
+                    .setProperty(IM.NAMESPACE +"patientType")
                     .setIs(new TTAlias().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
                 .and(pv -> pv
-                    .setProperty(IM.NAMESPACE + "startDate")
+                    .setProperty(IM.NAMESPACE +"startDate")
                     .setValue(new Value()
                         .setComparison("<=")
                         .valueOf(v->v.setVariable("$referenceDate"))))
                 .or(pv -> pv
                     .notExist(not -> not
-                        .setProperty(IM.NAMESPACE + "endDate")))
+                        .setProperty(IM.NAMESPACE +"endDate")))
                 .or(pv -> pv
-                    .setProperty(IM.NAMESPACE + "endDate")
+                    .setProperty(IM.NAMESPACE +"endDate")
                     .setValue(new Value()
                       .setComparison(">")
                       .valueOf(v->v
