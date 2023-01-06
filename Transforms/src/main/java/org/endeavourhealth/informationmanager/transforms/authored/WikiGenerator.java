@@ -363,7 +363,7 @@ public class WikiGenerator {
 				}
 			}
 		}
-		folders.sort(Comparator.comparing((TTNode p) -> p.get(IM.ORDER).asLiteral().intValue()));
+		folders.sort(Comparator.comparing((TTNode p) -> p.get(SHACL.ORDER).asLiteral().intValue()));
 		return folders;
 	}
 

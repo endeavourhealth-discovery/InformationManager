@@ -1,21 +1,22 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.model.iml.Query;
-import org.endeavourhealth.imapi.model.iml.QueryDocument;
+import org.endeavourhealth.imapi.model.iml.ConceptSet;
+import org.endeavourhealth.imapi.model.iml.Entity;
+import org.endeavourhealth.imapi.model.iml.ModelDocument;
+import org.endeavourhealth.imapi.model.iml.QueryEntity;
 import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
-import org.endeavourhealth.informationmanager.transforms.sources.eqd.EnquiryDocument;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -23,10 +24,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.zip.DataFormatException;
 
 public class CEGImporter implements TTImport {
-	private TTDocument document;
 	private TTEntity owner;
 	private final Set<TTEntity> allEntities = new HashSet<>();
 
@@ -36,11 +35,14 @@ public class CEGImporter implements TTImport {
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
 	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
-	public static final Map<TTIriRef,TTEntity> valueSets= new HashMap<>();
+	public Set<ConceptSet> conceptSets= new HashSet<>();
+	public Set<String> querySet= new HashSet<>();
+	public TTIriRef valueSetFolder;
+
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
-		document= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
+		TTDocument document= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 		TTEntity graph= new TTEntity()
 			.setIri(IM.GRAPH_CEG_QUERY.getIri())
 				.setName("CEG (QMUL) graph")
@@ -48,46 +50,46 @@ public class CEGImporter implements TTImport {
 						.addType(IM.GRAPH);
 			graph.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
 		document.addEntity(graph);
-		createOrg();
+		createOrg(document);
 		 CEGEthnicityImport ethnicImport= new CEGEthnicityImport();
 		ethnicImport.importData(config);
-		createFolders();
+		createFolders(document);
+
+		if (TTFilerFactory.isTransactional()){
+			new TTTransactionFiler(null).fileTransaction(document);
+		}
+		else {
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+				filer.fileDocument(document);
+			}
+		}
 
 		//Import queries
 		loadAndConvert(config.getFolder());
-		Map<String,TTEntity> vsetFolderMap= new HashMap<>();
-		Set<TTEntity> vsetFolders= new HashSet<>();
-		for (TTEntity entity:document.getEntities()){
-			//does not go in
-			if (entity.isType(IM.CONCEPT_SET)) {
-				for (TTValue usedIn:entity.get(IM.USED_IN).getElements()){
-					TTEntity report =manager.getEntity(usedIn.asIriRef().getIri());
-					TTEntity vsetFolder= vsetFolderMap.get(usedIn.asIriRef().getIri());
-					if (vsetFolder==null) {
-						String reportName = report.getName();
-						String vsetFolderIri = IM.GRAPH_CEG_QUERY.getIri() + "FOLDER_" + report.getIri();
-						vsetFolder = new TTEntity()
-							.setIri(vsetFolderIri)
-							.addType(IM.FOLDER)
-							.setName("Value sets used in " + reportName);
-						vsetFolder.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri() + "CSET_CEGConceptSets"));
-						vsetFolders.add(vsetFolder);
+
+		if (!conceptSets.isEmpty()) {
+			document = new TTDocument(IM.GRAPH_CEG_QUERY);
+			for (ConceptSet set : conceptSets) {
+				if (!querySet.contains(set.getIri())) {
+					TTEntity ttSet = new TTEntity()
+						.setIri(set.getIri())
+						.setName(set.getName());
+					if (set.getUsedIn() != null) {
+						for (TTIriRef used : set.getUsedIn())
+							ttSet.addObject(IM.USED_IN, used);
 					}
-					entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(vsetFolder.getIri()));
+					ttSet.addObject(IM.IS_CONTAINED_IN, valueSetFolder);
+					document.addEntity(ttSet);
 				}
-
 			}
-		}
-		for (TTEntity folder:vsetFolders){
-			document.addEntity(folder);
-		}
-		if (TTFilerFactory.isTransactional()){
-			new TTTransactionFiler(null).fileTransaction(document);
-			return;
-		}
+			if (TTFilerFactory.isTransactional()) {
+				new TTTransactionFiler(null).fileTransaction(document);
+				return;
+			}
 
-		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-			filer.fileDocument(document);
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+				filer.fileDocument(document);
+			}
 		}
 	}
 
@@ -95,7 +97,8 @@ public class CEGImporter implements TTImport {
 
 
 
-	private void createFolders() {
+	private void createFolders(TTDocument document) {
+		valueSetFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets");
 		TTEntity folder= new TTEntity()
 			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries")
 			.setName("QMUL CEG query library")
@@ -117,7 +120,7 @@ public class CEGImporter implements TTImport {
 
 	}
 
-	private void createOrg() {
+	private void createOrg(TTDocument document) {
 		owner= new TTEntity()
 			.setIri("http://org.endhealth.info/im#QMUL_CEG")
 			.addType(TTIriRef.iri(IM.NAMESPACE+"Organisation"))
@@ -127,7 +130,7 @@ public class CEGImporter implements TTImport {
 		document.addEntity(owner);
 	}
 
-	public void loadAndConvert(String folder) throws JAXBException, IOException, DataFormatException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public void loadAndConvert(String folder) throws Exception {
 		Properties dataMap= new Properties();
 		try (FileReader reader = new FileReader(( ImportUtils.findFileForId(folder, dataMapFile[0]).toFile()))) {
             dataMap.load(reader);
@@ -140,8 +143,6 @@ public class CEGImporter implements TTImport {
 
 		Path directory=  ImportUtils.findFileForId(folder,queries[0]);
 		TTIriRef mainFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries");
-		TTIriRef fieldGroupFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGFieldGroups");
-		TTIriRef valueSetFolder= TTIriRef.iri(IM.NAMESPACE+"CSET_CEGConceptSets");
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
 			if (!fileEntry.isDirectory()) {
 				String ext= FilenameUtils.getExtension(fileEntry.getName());
@@ -151,46 +152,71 @@ public class CEGImporter implements TTImport {
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(new FileReader(fileEntry));
 					EqdToIMQ converter= new EqdToIMQ();
-					converter.convertDoc(document,mainFolder,fieldGroupFolder,valueSetFolder,eqd,
-						TTIriRef.iri(owner.getIri()),dataMap,
+					ModelDocument qDocument= converter.convertEQD(eqd,dataMap,
 						labels);
+					TTDocument document= new TTDocument().setGraph(IM.GRAPH_CEG_QUERY);
+					if (qDocument.getFolder()!=null){
+						for (Entity qFolder:qDocument.getFolder()){
+							TTEntity ttFolder= new TTEntity()
+								.setIri(qFolder.getIri())
+								.setName(qFolder.getName())
+								.addType(qFolder.getType())
+								.setDescription(qFolder.getDescription());
+							document.addEntity(ttFolder);
+							if (qFolder.getIsContainedIn() != null) {
+								for (TTIriRef inFolder : qFolder.getIsContainedIn())
+									ttFolder.addObject(IM.IS_CONTAINED_IN, inFolder);
+							}
+							else
+								ttFolder.addObject(IM.IS_CONTAINED_IN,mainFolder);
+						}
+					}
+					if (qDocument.getQuery()!=null){
+						for (QueryEntity qq:qDocument.getQuery()){
+							querySet.add(qq.getIri());
+							TTEntity ttQuery= new TTEntity()
+								.setIri(qq.getIri())
+								.setName(qq.getName())
+								.setDescription(qq.getDescription())
+								.addType(qq.getType());
+							document.addEntity(ttQuery);
+							if (qq.getIsContainedIn()!=null){
+								for (TTIriRef inFolder:qq.getIsContainedIn()){
+									ttQuery.addObject(IM.IS_CONTAINED_IN,inFolder);
+								}
+							}
+							ttQuery.set(IM.DEFINITION,TTLiteral.literal(qq.getDefinition()));
+						}
+					}
+				  output(fileEntry,qDocument,document);
+					if (TTFilerFactory.isTransactional()){
+						new TTTransactionFiler(null).fileTransaction(document);
+						return;
+					}
 
-				  output(fileEntry);
-				}
-			}
-		}
-
-	}
-
-	private void output(File fileEntry) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-		ObjectMapper om= new ObjectMapper();
-		if ( ImportApp.testDirectory!=null) {
-			String directory = ImportApp.testDirectory.replace("%", " ");
-			TTManager manager = new TTManager();
-			QueryDocument hql = new QueryDocument();
-			TTDocument qDocument = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
-			for (TTEntity entity : document.getEntities()) {
-				qDocument.addEntity(entity);
-				if (!allEntities.contains(entity)) {
-					if (entity.isType(IM.QUERY)){
-						String json= entity.get(IM.DEFINITION).asLiteral().getValue();
-						hql.addQuery(om.readValue(json, Query.class));
-						allEntities.add(entity);
+					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+						filer.fileDocument(document);
+					}
+					this.conceptSets.addAll(converter.getValueSets().values());
 					}
 				}
 			}
+	}
 
-			manager.setDocument(qDocument);
+	private void output(File fileEntry,ModelDocument qDocument, TTDocument document) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+
+		if ( ImportApp.testDirectory!=null) {
+			String directory = ImportApp.testDirectory.replace("%", " ");
+			TTManager manager = new TTManager();
+
+			manager.setDocument(document);
 			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-new--LD.json"));
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
-			String json= objectMapper.writerWithDefaultPrettyPrinter().withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(hql);
+			String json= objectMapper.writerWithDefaultPrettyPrinter().withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(qDocument);
 		  json= json.replaceAll(IM.NAMESPACE,":");
-			//try (FileWriter wr= new FileWriter(directory+"\\"+ fileEntry.getName().replace(".xml","") + ".json")){
-			//	wr.write(json);
-			//}
 			try (FileWriter wr= new FileWriter(directory + fileEntry.getName().replace(".xml","") + "-NEW.json")){
 				wr.write(json);
 			}
@@ -209,6 +235,6 @@ public class CEGImporter implements TTImport {
     @Override
     public void close() throws Exception {
         allEntities.clear();
-        valueSets.clear();
+        conceptSets.clear();
     }
 }

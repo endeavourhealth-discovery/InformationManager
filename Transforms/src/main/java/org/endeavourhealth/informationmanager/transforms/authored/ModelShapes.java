@@ -31,7 +31,8 @@ public class ModelShapes {
 	public void createShapes(String sourcePath) throws IOException, DataFormatException {
 		this.sourcePath= sourcePath;
 		loadDocument(sourcePath+"\\CoreOntology.json");
-		dataMap(getEntity(IM.NAMESPACE+"DataMap"));
+		//dataMap(getEntity(IM.NAMESPACE+"DataMap"));
+		queryRequest(getEntity(IM.NAMESPACE+"QueryRequest"));
 		queryRequest(getEntity(IM.NAMESPACE+"QueryRequest"));
 		pageInformation(getEntity(IM.NAMESPACE+"PageInformation"));
 		argument(getEntity(IM.NAMESPACE+"Argument"));
@@ -43,7 +44,7 @@ public class ModelShapes {
 		value(getEntity(IM.NAMESPACE+"ValueClause"));
 		having(getEntity(IM.NAMESPACE+"HavingClause"));
 		range(getEntity(IM.NAMESPACE+"RangeClause"));
-		function(getEntity(IM.NAMESPACE+"FunctionShape"));
+		function(getEntity(IM.NAMESPACE+"Function"));
 		parameter(getEntity(IM.NAMESPACE+"Parameter"));
 		functionClause(getEntity(IM.NAMESPACE+"FunctionClause"));
 		alias(getEntity(IM.NAMESPACE+"IriAlias"));
@@ -134,7 +135,7 @@ public class ModelShapes {
 		addProperty(shape,"graph",SHACL.CLASS, TTIriRef.iri(IM.NAMESPACE+"Graph"),1,1,"The graph to which these entities apply by default. "+
 			"<br>This may be overridden by the entities"+
 			"<br>This means you can add predicates to any entity without affecting the original authored entity, those predicates belonging only to this module or graph");
-		addProperty(shape,"entities",SHACL.NODE, TTIriRef.iri(IM.NAMESPACE+"EntityShape"),1,null,"Set of entities to file. If the entities do not have crud or graphs of"+
+		addProperty(shape,"entities",SHACL.NODE, TTIriRef.iri(IM.NAMESPACE+"Entity"),1,null,"Set of entities to file. If the entities do not have crud or graphs of"+
 			"their own then the default from the document are used");
 
 	}
@@ -142,7 +143,7 @@ public class ModelShapes {
 	private void transactionEntity(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
 		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"TransactionalShapes"));
-		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"EntityShape"));
+		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"Entity"));
 		shape.set(SHACL.ORDER,TTLiteral.literal(1));
 		shape.setDescription("An entity with the additional CRUD indicators to enable deletes updates, adding quads etc");
 		addProperty(shape,"crud",SHACL.CLASS, TTIriRef.iri(IM.NAMESPACE+"CrudOperation"),1,1,"Indicates the nature of the CRUD transaction which must be one of"+
@@ -224,6 +225,7 @@ public class ModelShapes {
 
 	private void within(TTEntity shape) throws JsonProcessingException, DataFormatException {
 		setLabels(shape);
+		shape.setName("Within clause");
 		shape.setDescription("Tests a value against another value, either as comparison or range");
 		addProperty(shape,"value",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ValueClause"),1,1,"The test is for an actual value (including comparison "+
 			"against another value");
@@ -256,7 +258,7 @@ public class ModelShapes {
 	private void queryDef(TTEntity shape) throws JsonProcessingException {
 		shape.addType(SHACL.NODESHAPE);
 		shape.addType(OWL.CLASS);
-		shape.setName("Query /Set definition");
+		shape.setName("Query definition");
 		shape.setDescription("A set definition holding the logical definition of a set. Usually referred to as a Query as these are used to retrieve data."+
 			"<br>Includes most of  the main logical query constructs used in mainstream query languages, thus is a constrained version of mainstream languages that is schema independent.");
 		shape.addObject(IM.IS_CONTAINED_IN,IMA);
@@ -306,26 +308,31 @@ public class ModelShapes {
 
 	private void parameter(TTEntity shape) throws JsonProcessingException, DataFormatException {
 		setLabels(shape);
+		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
+		shape.set(SHACL.ORDER,TTLiteral.literal(3));
 		shape.setDescription("Models a named parameter used in function or other clauses. The parameter name and data type of the parameter (if literal) or class (if on object) ");
 		addProperty(shape,RDFS.LABEL,SHACL.DATATYPE,XSD.STRING,1,1,"The name of the parameter");
 		addProperty(shape,SHACL.DATATYPE,SHACL.CLASS,RDFS.RESOURCE,1,1,"The iri of The data type of the parameter when the data type is a literal");
 		addProperty(shape,SHACL.CLASS,SHACL.CLASS,RDFS.RESOURCE,1,1,"The iri of the class of the parameter when the argument is an object");
+		addProperty(shape,TTIriRef.iri(IM.NAMESPACE+"query"),SHACL.CLASS,IM.QUERY,0,1,"The iri of the query used to generate the value of the parameter passed as an argument");
 		setOrs(shape,List.of("datatype","class"),1,1);
 	}
 
 	private void functionClause(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
-		shape.setDescription("A function used in a query consisting of the function iri and one or more arguments to pass in at run time");
+		shape.setDescription("A call to a function used in a query consisting of the function iri and one or more arguments to pass in at run time");
+		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
 		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"IriRef"));
 		addProperty(shape,"argument",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"Argument"),0,null,"Arguments to pass into the function. They should match the "+
 			"parameter definitions of the function");
+		shape.set(SHACL.ORDER,TTLiteral.literal(20));
 	}
 
 	private void function(TTEntity shape) throws JsonProcessingException {
 		setLabels(shape);
 		shape.setDescription("Data model of a function i.e. models the parameters. A query that calls a function uses a function clause that uses this function definition to name each argument passed in");
-		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryShapes"));
-		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"EntityShape"));
+		shape.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"BasicShapes"));
+		shape.set(RDFS.SUBCLASSOF,TTIriRef.iri(IM.NAMESPACE+"Entity"));
 		shape.set(SHACL.ORDER,TTLiteral.literal(2));
 		shape.set(SHACL.TARGETCLASS,IM.FUNCTION);
 		addProperty(shape,SHACL.PARAMETER,SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"Parameter"),0,null,"A list of parameters and data types used in this function");
@@ -380,7 +387,7 @@ public class ModelShapes {
 		shape.setName("Having clause");
 		shape.setDescription("A clause testing an aggregate function on a property usually one that is grouped");
 		addProperty(shape,"aggregate",SHACL.DATATYPE,XSD.STRING,0,1,"Name of the aggregate function e.g. MAX,MIN,COUNT,SUM, AVERAGE");
-		addProperty(shape,"property",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlas"),0,1,"The property on which the aggregate function operates");
+		addProperty(shape,"property",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"IriAlias"),0,1,"The property on which the aggregate function operates");
 		addProperty(shape,"value",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ValueClause"),0,1,"The value of the aggregate result to be tested");
 
 
@@ -418,7 +425,7 @@ public class ModelShapes {
 		addProperty(shape,"function",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"FunctionClause"),1,1,"A function that operates on the property value (and other parameters) "+
 			"prior to a compare or range or inclusion test. For example a time difference function operating on the date and a reference date."+
 			"<br>Note that properties that ARE functions do not need functions included for example age. For these simply supply the arguments.");
-		addProperty(shape,"within",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"Within"),0,1,"Where the value is within a range of another value"+
+		addProperty(shape,"within",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"WithinClause"),0,1,"Where the value is within a range of another value"+
 			"<br>Note that if the test is a function then the argument list would be in the function clause");
 		addProperty(shape,"value",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"ValueClause"),1,1,"If testing a property value as equal greater than ete. use compare");
 		addProperty(shape,"range",SHACL.NODE,TTIriRef.iri(IM.NAMESPACE+"RangeClause"),1,1,"Test foe a value being between two absolute or relative values");
