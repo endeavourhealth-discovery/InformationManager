@@ -29,6 +29,7 @@ public class IM1MapImport implements TTImport {
         ".*\\\\DiscoveryLive\\\\stats3.txt",
         ".*\\\\DiscoveryLive\\\\stats4.txt"
     };
+    private static final String[] odsCodeIri = {".*\\\\.tmp\\\\CodeMap-ods#.txt"};
     private static final Map<String,TTEntity> oldIriEntity = new HashMap<>();
     private static TTDocument document;
     private static TTDocument statsDocument;
@@ -45,7 +46,17 @@ public class IM1MapImport implements TTImport {
     private final Map<String,TTEntity> iriToSet= new HashMap<>();
     private final Map<String,String> oldCodeToNew= new HashMap<>();
     private final Map<String,String> emisTermToCode= new HashMap<>();
-
+    private final Map<String,String> organisationMap= Map.of(
+            "CM_Org_Barts","RQX42",
+            "CM_Org_Imperial", "8HL46",
+            "CM_Org_CWH", "5LA19",
+            "CM_Org_THH", "RQM93",
+            "CM_Org_LNWH", "RAX0A",
+            "CM_Org_Kings", "NV178",
+            "CM_Org_BHRUT", "RF4",
+            "CM_Org_CQC", "8HN02"
+    );
+    private final Map<String,String> odsCodeIriMap = new HashMap<>();
 
 
     @Override
@@ -67,6 +78,7 @@ public class IM1MapImport implements TTImport {
         newSchemes();
         statsDocument= manager.createDocument(IM.GRAPH_STATS.getIri());
         importv1Codes(inFolder);
+        importODSCode(inFolder);
         importContext(inFolder);
         calculateWeightings();
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
@@ -681,11 +693,27 @@ public class IM1MapImport implements TTImport {
         }
     }
 
+    private void importODSCode(String inFolder) throws IOException {
+
+        Path file= ImportUtils.findFileForId(inFolder, odsCodeIri[0]);
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            String line = reader.readLine();
+            while (line != null && !line.isEmpty()) {
+                String[] fields = line.split("\t");
+                String code= fields[0];
+                String iri= fields[1];
+                odsCodeIriMap.put(code,iri);
+                line = reader.readLine();
+            }
+        }
+    }
+
 
 
     private void setContext(TTNode context, String publisher, String system, String schema, String table, String field, String sourceValue, String regex, String headerCode,TTIriRef propertyIri) {
-        context.set(IM.SOURCE_PUBLISHER,TTLiteral.literal(publisher));
-        context.set(IM.SOURCE_SYSTEM,TTLiteral.literal(system));
+        TTIriRef organisation = new TTIriRef().setIri(odsCodeIriMap.get(organisationMap.get(publisher)));
+        context.set(IM.SOURCE_PUBLISHER,organisation);
+        context.set(IM.SOURCE_SYSTEM,new TTIriRef(IM.SYSTEM_NAMESPACE + system));
         context.set(IM.SOURCE_SCHEMA,TTLiteral.literal(schema));
         context.set(IM.SOURCE_TABLE,TTLiteral.literal(table));
         context.set(IM.SOURCE_FIELD,TTLiteral.literal(field));

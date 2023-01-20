@@ -15,9 +15,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 import static org.endeavourhealth.imapi.model.tripletree.TTLiteral.literal;
@@ -30,6 +28,8 @@ public class OdsImporter implements TTImport {
 
     private List<String> fieldIndex;
     private String[] fieldData;
+    private final TTManager manager = new TTManager();
+    private TTDocument document = new TTDocument();
 
     public void validateFiles(String inFolder) {
         ImportUtils.validateFiles(inFolder, organisationFiles);
@@ -47,6 +47,7 @@ public class OdsImporter implements TTImport {
     public void importData(TTImportConfig config) throws Exception {
         LOG.info("Importing Organisation data");
 
+        document = manager.createDocument(IM.GRAPH_ODS.getIri());
 
         boolean graphCreated = false;
         for (String orgFile : organisationFiles) {
@@ -80,6 +81,9 @@ public class OdsImporter implements TTImport {
                 }
             }
         }
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            filer.fileDocument(document);
+        }
     }
 
     private boolean readLine(BufferedReader reader) throws IOException {
@@ -101,6 +105,10 @@ public class OdsImporter implements TTImport {
     private void processLine(TTDocument doc) {
         String odsCode = fieldByName("OrganisationId");
         String orgIri = IM.ORGANISATION_NAMESPACE +  UUID.randomUUID();
+        List<String> organisationList = List.of("RQX42", "8HL46", "5LA19", "RQM93", "RAX0A", "NV178", "RF4", "8HN02");
+        if(organisationList.contains(odsCode)) {
+           document.addEntity(new TTEntity().setIri(orgIri).setCode(odsCode));
+        }
         String addIri = IM.LOCATION_NAMESPACE + UUID.randomUUID();
 
         TTEntity org = new TTEntity(orgIri);
