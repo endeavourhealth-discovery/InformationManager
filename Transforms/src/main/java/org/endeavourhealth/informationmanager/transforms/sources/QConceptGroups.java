@@ -154,7 +154,7 @@ public class QConceptGroups implements TTImport {
 
 	private JsonNode getResults(String path,int page) throws JsonProcessingException {
 		String url = System.getenv("Q_URL");
-		String bearer = System.getenv("Q_AUTH");
+		String auth = System.getenv("Q_AUTH");
 
 
 		WebTarget target = client.target(url)
@@ -163,7 +163,7 @@ public class QConceptGroups implements TTImport {
 			.queryParam("PageSize",10000);
 		Response response = target
 			.request(MediaType.APPLICATION_JSON_TYPE)
-			.header("Authorization", "Bearer " + bearer)
+			.header("Ocp-Apim-Subscription-Key", auth)
 			.get();
 
 		String responseRaw = response.readEntity(String.class);
