@@ -1,0 +1,107 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX im: <http://endhealth.info/im#>
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+PREFIX sn: <http://snomed.info/sct#>
+
+INSERT DATA {
+  GRAPH im: {
+    im:FilterDefaults rdfs:label "Filter default options".
+    im:FilterDefaults rdf:type im:Folder.
+    im:FilterDefaults im:status im:Active.
+    im:FilterDefaults rdfs:comment "Filter default options".
+    im:FilterDefaults im:isContainedIn im:Miscellaneous.
+
+    im:StatusFilterDefaultOptions rdfs:label "Status filter default options".
+    im:StatusFilterDefaultOptions rdf:type im:Folder.
+    im:StatusFilterDefaultOptions im:status im:Active.
+    im:StatusFilterDefaultOptions rdfs:comment "Status filter default options".
+    im:StatusFilterDefaultOptions im:isContainedIn im:FilterDefaults.
+    im:Active im:isContainedIn im:StatusFilterDefaultOptions.
+    im:Draft im:isContainedIn im:StatusFilterDefaultOptions.
+
+    im:TypeFilterDefaultOptions rdfs:label "Type filter default options".
+    im:TypeFilterDefaultOptions rdf:type im:Folder.
+    im:TypeFilterDefaultOptions im:status im:Active.
+    im:TypeFilterDefaultOptions rdfs:comment "Type filter default options".
+    im:TypeFilterDefaultOptions im:isContainedIn im:FilterDefaults.
+    im:Concept im:isContainedIn im:TypeFilterDefaultOptions.
+    im:ValueSet im:isContainedIn im:TypeFilterDefaultOptions.
+    im:ConceptSet im:isContainedIn im:TypeFilterDefaultOptions.
+    im:dataModelProperty im:isContainedIn im:TypeFilterDefaultOptions.
+    sh:NodeShape im:isContainedIn im:TypeFilterDefaultOptions.
+    im:Query im:isContainedIn im:TypeFilterDefaultOptions.
+    rdfs:Class im:isContainedIn im:TypeFilterDefaultOptions.
+    rdf:Property im:isContainedIn im:TypeFilterDefaultOptions.
+    im:Folder im:isContainedIn im:TypeFilterDefaultOptions.
+
+    im:SchemeFilterDefaultOptions rdfs:label "Scheme filter default options".
+    im:SchemeFilterDefaultOptions rdf:type im:Folder.
+    im:SchemeFilterDefaultOptions im:status im:Active.
+    im:SchemeFilterDefaultOptions rdfs:comment "Scheme filter default options".
+    im:SchemeFilterDefaultOptions im:isContainedIn im:FilterDefaults.
+    im: im:isContainedIn im:SchemeFilterDefaultOptions.
+    sn: im:isContainedIn im:SchemeFilterDefaultOptions.
+
+    im:SortFieldFilterDefaultOptions rdfs:label "Sort field filter default options".
+    im:SortFieldFilterDefaultOptions rdf:type im:Folder.
+    im:SortFieldFilterDefaultOptions im:status im:Active.
+    im:SortFieldFilterDefaultOptions rdfs:comment "Sort field filter default options".
+    im:SortFieldFilterDefaultOptions im:isContainedIn im:FilterDefaults.
+
+    im:SortFieldUsage rdfs:label "Usage".
+    im:SortFieldUsage rdf:type im:Concept.
+    im:SortFieldUsage im:status im:Active.
+    im:SortFieldUsage rdfs:comment "Usage field sort filter".
+    im:SortFieldUsage im:isContainedIn im:SortFieldFilterDefaultOptions.
+
+    im:SortDirectionFilterDefaultOptions rdfs:label "Sort direction filter default options".
+    im:SortDirectionFilterDefaultOptions rdf:type im:Folder.
+    im:SortDirectionFilterDefaultOptions im:status im:Active.
+    im:SortDirectionFilterDefaultOptions rdfs:comment "Sort direction filter default options".
+    im:SortDirectionFilterDefaultOptions im:isContainedIn im:FilterDefaults.
+
+    im:SortDirectionDescending rdfs:label "Descending".
+    im:SortDirectionDescending im:status im:Active.
+    im:SortDirectionDescending rdf:type im:Concept.
+    im:SortDirectionDescending rdfs:comment "Descending direction sort filter".
+    im:SortDirectionDescending im:isContainedIn im:SortDirectionFilterDefaultOptions.
+
+    im:FilterOptions rdfs:label "Filter options".
+    im:FilterOptions rdf:type im:Folder.
+    im:FilterOptions im:status im:Active.
+    im:FilterOptions rdfs:comment "Filter options".
+    im:FilterOptions im:isContainedIn im:Miscellaneous.
+    
+    im:SortFieldFilterOptions rdfs:label "Sort field filter options".
+    im:SortFieldFilterOptions rdf:type im:Folder.
+    im:SortFieldFilterOptions im:status im:Active.
+    im:SortFieldFilterOptions rdfs:comment "Sort field filter options".
+    im:SortFieldFilterOptions im:isContainedIn im:FilterOptions.
+    
+    im:SortFieldUsage rdfs:label "Usage".
+    im:SortFieldUsage rdf:type im:Concept.
+    im:SortFieldUsage im:status im:Active.
+    im:SortFieldUsage rdfs:comment "Usage field sort filter".
+    im:SortFieldUsage im:isContainedIn im:SortFieldFilterOptions.
+        
+    im:SortDirectionFilterOptions rdfs:label "Sort direction filter options".
+    im:SortDirectionFilterOptions rdf:type im:Folder.
+    im:SortDirectionFilterOptions im:status im:Active.
+    im:SortDirectionFilterOptions rdfs:comment "Sort direction filter options".
+    im:SortDirectionFilterOptions im:isContainedIn im:FilterOptions.
+        
+    im:SortDirectionDescending rdfs:label "Descending".
+    im:SortDirectionDescending im:status im:Active.
+    im:SortDirectionDescending rdf:type im:Concept.
+    im:SortDirectionDescending rdfs:comment "Descending direction sort filter".
+    im:SortDirectionDescending im:isContainedIn im:SortDirectionFilterOptions.
+        
+    im:SortDirectionAscending rdfs:label "Ascending".
+    im:SortDirectionAscending im:status im:Active.
+    im:SortDirectionAscending rdf:type im:Concept.
+    im:SortDirectionAscending rdfs:comment "Ascending direction sort filter".
+    im:SortDirectionAscending im:isContainedIn im:SortDirectionFilterOptions.
+  }
+}
+
