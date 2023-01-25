@@ -160,8 +160,10 @@ public class CEGImporter implements TTImport {
 							TTEntity ttFolder= new TTEntity()
 								.setIri(qFolder.getIri())
 								.setName(qFolder.getName())
-								.addType(qFolder.getType())
 								.setDescription(qFolder.getDescription());
+							for( TTIriRef type: qFolder.getType()) {
+								ttFolder.addType(type);
+							}
 							document.addEntity(ttFolder);
 							if (qFolder.getIsContainedIn() != null) {
 								for (TTIriRef inFolder : qFolder.getIsContainedIn())
@@ -177,8 +179,10 @@ public class CEGImporter implements TTImport {
 							TTEntity ttQuery= new TTEntity()
 								.setIri(qq.getIri())
 								.setName(qq.getName())
-								.setDescription(qq.getDescription())
-								.addType(qq.getType());
+								.setDescription(qq.getDescription());
+							for( TTIriRef type: qq.getType()) {
+								ttQuery.addType(type);
+							}
 							document.addEntity(ttQuery);
 							if (qq.getIsContainedIn()!=null){
 								for (TTIriRef inFolder:qq.getIsContainedIn()){
