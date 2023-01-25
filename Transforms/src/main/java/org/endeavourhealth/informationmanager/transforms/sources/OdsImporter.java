@@ -26,6 +26,8 @@ public class OdsImporter implements TTImport {
         ".*\\\\TRUD\\\\ODS\\\\.*\\\\Organisation_Details.csv"
     };
 
+    List<String> organisationCodes = List.of("RQX42", "8HL46", "5LA19", "RQM93", "RAX0A", "NV178", "RF4", "8HN02");
+
     private List<String> fieldIndex;
     private String[] fieldData;
     private final TTManager manager = new TTManager();
@@ -105,8 +107,7 @@ public class OdsImporter implements TTImport {
     private void processLine(TTDocument doc) {
         String odsCode = fieldByName("OrganisationId");
         String orgIri = IM.ORGANISATION_NAMESPACE +  UUID.randomUUID();
-        List<String> organisationList = List.of("RQX42", "8HL46", "5LA19", "RQM93", "RAX0A", "NV178", "RF4", "8HN02");
-        if(organisationList.contains(odsCode)) {
+        if(organisationCodes.contains(odsCode)) {
            document.addEntity(new TTEntity().setIri(orgIri).setCode(odsCode));
         }
         String addIri = IM.LOCATION_NAMESPACE + UUID.randomUUID();
