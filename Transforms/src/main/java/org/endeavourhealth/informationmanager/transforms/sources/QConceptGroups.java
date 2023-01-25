@@ -12,9 +12,12 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
+import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
+import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +26,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -43,6 +47,12 @@ public class QConceptGroups implements TTImport {
 		addQFolder();
 		importQProjects();
 		importCodeGroups();
+		if ( ImportApp.testDirectory!=null) {
+			String directory = ImportApp.testDirectory.replace("%", " ");
+			TTManager manager = new TTManager();
+			manager.setDocument(document);
+			manager.saveDocument(new File(directory + "\\QCodes.json"));
+		}
 		if (!TTFilerFactory.isBulk()) {
 			TTTransactionFiler filer= new TTTransactionFiler(null);
 			filer.fileTransaction(document);
@@ -56,12 +66,12 @@ public class QConceptGroups implements TTImport {
 	private void importCodeGroups() throws JsonProcessingException {
 		for (Map.Entry<String,String> project:idProjectMap.entrySet()) {
 			String projectId = project.getKey();
-			LOG.info("Fetching  project "+projectId+"...");
+			LOG.info("Fetching  code groups for project "+projectId+"...");
 			int page=0;
 			boolean results=true;
 			while (results) {
 				page++;
-				JsonNode json= getResults("codegroups_for_project/" + projectId + "/" + page);
+				JsonNode json= getResults("codegroups_for_project/" + projectId,page);
 				ArrayNode groups= (ArrayNode) json.get("Results");
 				if (!groups.isEmpty()) {
 					for (Iterator<JsonNode> it = groups.elements(); it.hasNext(); ) {
@@ -71,11 +81,11 @@ public class QConceptGroups implements TTImport {
 						TTEntity qGroup = idCodeGroupMap.get(id + "_" + version);
 						if (qGroup == null) {
 							qGroup = new TTEntity()
-								.setIri(QR.NAMESPACE + "CSET_QCodeGroup_" + id + "_" + version)
+								.setIri(QR.NAMESPACE + "QCodeGroup_" + id)
 								.setName("Q code group "+codeGroup.get("Name").asText())
 								.addType(IM.CONCEPT_SET);
 						}
-						qGroup.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(project.getValue()));
+						qGroup.addObject(IM.IS_SUBSET_OF, TTIriRef.iri(project.getValue()));
 						qGroup.set(IM.VERSION, TTLiteral.literal(version));
 						document.addEntity(qGroup);
 						idCodeGroupMap.put(id + "_" + version, qGroup);
@@ -102,7 +112,7 @@ public class QConceptGroups implements TTImport {
 		LOG.info("Fetching  members for  "+projectId+" code group "+ qGroup.getName()+"...");
 		while (results) {
 			page++;
-			JsonNode json = getResults("codes_for_codegroup/" + groupId + "/" + projectId + "/" + version + "/" + page);
+			JsonNode json = getResults("codes_for_codegroup/" + groupId + "/" + projectId + "/" + version,page);
 			ArrayNode codes= (ArrayNode) json.get("Results");
 			if (!codes.isEmpty()) {
 				for (Iterator<JsonNode> it = codes.elements(); it.hasNext(); ) {
@@ -119,31 +129,41 @@ public class QConceptGroups implements TTImport {
 
 	private void importQProjects() throws JsonProcessingException {
 		LOG.info("Fetching Q projects ...");
-		JsonNode json = getResults("projects_list");
+		JsonNode json = getResults("projects_list",1);
 		ArrayNode projects= (ArrayNode) json.get("Results");
 		for (Iterator<JsonNode> it = projects.elements(); it.hasNext(); ) {
 			JsonNode project = it.next();
 			TTEntity qp= new TTEntity()
-				.setIri(QR.NAMESPACE+"Project_"+ project.get("Id").asText())
+				.setIri(IM.NAMESPACE+"QProject_"+ project.get("Id").asText())
 				.addType(IM.FOLDER)
 				.setName(project.get("Name").asText());
 			qp.set(IM.IS_CONTAINED_IN,projectsFolder);
 			document.addEntity(qp);
-			idProjectMap.put(project.get("Id").asText(),qp.getIri());
+			TTEntity qset= new TTEntity()
+				.setIri(QR.NAMESPACE+"QPredict_"+ project.get("Id").asText())
+				.addType(IM.CONCEPT_SET)
+				.setName(project.get("Name").asText());
+			qset.set(IM.IS_CONTAINED_IN,IM.NAMESPACE+"QProject_"+ project.get("Id").asText());
+			qset.set(SHACL.ORDER,TTLiteral.literal(1));
+			document.addEntity(qset);
+
+			idProjectMap.put(project.get("Id").asText(),qset.getIri());
 
 		}
 	}
 
-	private JsonNode getResults(String path) throws JsonProcessingException {
+	private JsonNode getResults(String path,int page) throws JsonProcessingException {
 		String url = System.getenv("Q_URL");
-		String bearer = System.getenv("Q_AUTH");
+		String auth = System.getenv("Q_AUTH");
 
 
 		WebTarget target = client.target(url)
-			.path(path);
+			.path(path)
+			.queryParam("PageNumber",page)
+			.queryParam("PageSize",10000);
 		Response response = target
 			.request(MediaType.APPLICATION_JSON_TYPE)
-			.header("Authorization", "Bearer " + bearer)
+			.header("Ocp-Apim-Subscription-Key", auth)
 			.get();
 
 		String responseRaw = response.readEntity(String.class);
