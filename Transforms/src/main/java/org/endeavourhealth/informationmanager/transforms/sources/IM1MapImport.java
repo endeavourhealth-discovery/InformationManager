@@ -698,7 +698,12 @@ public class IM1MapImport implements TTImport {
 
 
     private void setContext(TTNode context, String publisher, String system, String schema, String table, String field, String sourceValue, String regex, String headerCode,TTIriRef propertyIri) {
-        TTIriRef organisation = new TTIriRef().setIri(IM.GRAPH_ODS+organisationMap.get(publisher));
+        TTIriRef organisation;
+        if (organisationMap.get(publisher)!=null) {
+            organisation = new TTIriRef().setIri(IM.GRAPH_ODS.getIri() + organisationMap.get(publisher));
+        }
+        else
+            organisation= new TTIriRef().setIri(IM.GRAPH_ODS.getIri()+UUID.randomUUID().toString());
         context.set(IM.SOURCE_PUBLISHER,organisation);
         context.set(IM.SOURCE_SYSTEM,new TTIriRef(IM.SYSTEM_NAMESPACE + system));
         context.set(IM.SOURCE_SCHEMA,TTLiteral.literal(schema));
