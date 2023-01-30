@@ -8,6 +8,7 @@ import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
 import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
@@ -193,8 +194,8 @@ public class ImportApp {
                 importer.importByType(TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter"), cfg);
                 break;
             case "qcodegroups" :
-                importer= new Importer().validateByType(TTIriRef.iri(IM.NAMESPACE+"QCodeGroups"),cfg.getFolder());
-                importer.importByType(TTIriRef.iri(IM.NAMESPACE+"QCodeGroups"), cfg);
+                importer= new Importer().validateByType(TTIriRef.iri(QR.NAMESPACE),cfg.getFolder());
+                importer.importByType(TTIriRef.iri(QR.NAMESPACE), cfg);
                 break;
             default:
                 throw new Exception("Unknown import type");

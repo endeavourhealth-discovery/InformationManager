@@ -29,7 +29,8 @@ public class IM1MapImport implements TTImport {
         ".*\\\\DiscoveryLive\\\\stats3.txt",
         ".*\\\\DiscoveryLive\\\\stats4.txt"
     };
-    private static final String[] odsCodeIri = {".*\\\\.tmp\\\\CodeMap-ods#.txt"};
+    private static final String[] odsCodeIri = {
+      ".*\\\\TRUD\\\\ODS\\\\.*\\\\Organisation_Details.csv"};
     private static final Map<String,TTEntity> oldIriEntity = new HashMap<>();
     private static TTDocument document;
     private static TTDocument statsDocument;
@@ -78,7 +79,7 @@ public class IM1MapImport implements TTImport {
         newSchemes();
         statsDocument= manager.createDocument(IM.GRAPH_STATS.getIri());
         importv1Codes(inFolder);
-        importODSCode(inFolder);
+      //  importODSCode(inFolder);
         importContext(inFolder);
         calculateWeightings();
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
@@ -693,25 +694,11 @@ public class IM1MapImport implements TTImport {
         }
     }
 
-    private void importODSCode(String inFolder) throws IOException {
-
-        Path file= ImportUtils.findFileForId(inFolder, odsCodeIri[0]);
-        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            String line = reader.readLine();
-            while (line != null && !line.isEmpty()) {
-                String[] fields = line.split("\t");
-                String code= fields[0];
-                String iri= fields[1];
-                odsCodeIriMap.put(code,iri);
-                line = reader.readLine();
-            }
-        }
-    }
 
 
 
     private void setContext(TTNode context, String publisher, String system, String schema, String table, String field, String sourceValue, String regex, String headerCode,TTIriRef propertyIri) {
-        TTIriRef organisation = new TTIriRef().setIri(odsCodeIriMap.get(organisationMap.get(publisher)));
+        TTIriRef organisation = new TTIriRef().setIri(IM.GRAPH_ODS+organisationMap.get(publisher));
         context.set(IM.SOURCE_PUBLISHER,organisation);
         context.set(IM.SOURCE_SYSTEM,new TTIriRef(IM.SYSTEM_NAMESPACE + system));
         context.set(IM.SOURCE_SCHEMA,TTLiteral.literal(schema));
