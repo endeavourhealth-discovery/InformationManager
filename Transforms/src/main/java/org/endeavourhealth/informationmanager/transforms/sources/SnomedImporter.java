@@ -489,8 +489,10 @@ public class SnomedImporter implements TTImport {
       Query expression= eclConverter.getQueryFromECL(ecl);
        if (expression.getFrom().getIri()!=null)
          op.addObject(RDFS.RANGE,expression.getFrom());
-       for (TTAlias range:expression.getFrom().getFrom()) {
-         op.addObject(RDFS.RANGE, TTIriRef.iri(range.getIri()));
+       if (expression.getFrom().getFrom()!=null) {
+         for (TTAlias range : expression.getFrom().getFrom()) {
+           op.addObject(RDFS.RANGE, TTIriRef.iri(range.getIri()));
+         }
        }
        if (expression.getFrom().getWhere()!=null)
          throw new DataFormatException("Snomed MCRM range converter does not support compound or refined ecl");
