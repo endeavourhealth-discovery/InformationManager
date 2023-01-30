@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.logic.service.SetService;
-import org.endeavourhealth.imapi.model.iml.Query;
+import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -193,9 +193,9 @@ public class CEGEthnicityImport implements TTImport {
             cegCatMap.put(cat16,cegSubset);
 
         }
-				Query query= cegSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-				query.addFrom(TTAlias.iri(SNOMED.NAMESPACE+snomed));
-				cegSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(query)));
+				Query cegQuery= cegSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
+				cegQuery.from(f->f.setIri(SNOMED.NAMESPACE+snomed));
+				cegSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(cegQuery)));
         if (cegSubset.get(IM.HAS_TERM_CODE)==null)
             TTManager.addTermCode(cegSubset,catTerm,null);
         if (!UNCLASSIFIED.equals(snoNhs)){
@@ -214,10 +214,10 @@ public class CEGEthnicityImport implements TTImport {
             }
             if (nhsSubset.get(IM.HAS_TERM_CODE)==null)
                 TTManager.addTermCode(nhsSubset,nhsTerm,null);
-						query=
+						Query nhsQuery=
             nhsSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-						query.addFrom(TTAlias.iri(SNOMED.NAMESPACE+snomed));
-						nhsSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(query)));
+						nhsQuery.from(f->f.setIri(SNOMED.NAMESPACE+snomed));
+						nhsSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(nhsQuery)));
         }
     }
 

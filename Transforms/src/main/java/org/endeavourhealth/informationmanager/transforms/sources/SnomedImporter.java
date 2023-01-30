@@ -4,7 +4,7 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
-import org.endeavourhealth.imapi.model.iml.Query;
+import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.ECLToIML;
 import org.endeavourhealth.imapi.transforms.OWLToTT;
@@ -487,11 +487,12 @@ public class SnomedImporter implements TTImport {
            return;
        }
       Query expression= eclConverter.getQueryFromECL(ecl);
-       for (TTAlias range:expression.getWhere().getFrom()) {
+       if (expression.getFrom().getIri()!=null)
+         op.addObject(RDFS.RANGE,expression.getFrom());
+       for (TTAlias range:expression.getFrom().getFrom()) {
          op.addObject(RDFS.RANGE, TTIriRef.iri(range.getIri()));
        }
-       if (expression.getWhere().getPathTo()!=null|| expression.getWhere().getAnd()!=null
-       ||expression.getWhere().getNotExist()!=null)
+       if (expression.getFrom().getWhere()!=null)
          throw new DataFormatException("Snomed MCRM range converter does not support compound or refined ecl");
    }
 

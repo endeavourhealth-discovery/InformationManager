@@ -1,18 +1,18 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.cdm.ProvActivity;
-import org.endeavourhealth.imapi.model.iml.*;
-
+import org.endeavourhealth.imapi.model.imq.Bool;
+import org.endeavourhealth.imapi.model.imq.Operator;
+import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.transforms.TTToClassObject;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
+import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
-
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -29,6 +29,7 @@ public class CoreQueryImporter implements TTImport {
         output(document);
 
         addCurrentReg(document, config.getFolder());
+        allowableSubTypes(document);
         addTemplates(document);
         output(document);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
@@ -50,7 +51,46 @@ public class CoreQueryImporter implements TTImport {
     }
 
 
+    private static void allowableSubTypes(TTDocument document) throws IOException {
+        TTEntity allowables= new TTEntity()
+              .setIri(IM.NAMESPACE+"AllowableChildTypes")
+              .addType(IM.QUERY)
+              .setName("For a parent type, allowable child entity types and their predicates connecting to their parent");
+            allowables.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE+"IMEditorQueries"));
+            document.addEntity(allowables);
+
+        Query query= new Query();
+        query.setName("Allowable child types for editor");
+        query
+          .from(f->f
+              .where(w->w
+                .setBool(Bool.and)
+                .where(w1->w1.setIri(IM.IS_CONTAINED_IN.getIri())
+                  .addIn(IM.NAMESPACE+"EntityTypes"))
+                .where(w1->w1.setIri(SHACL.PROPERTY.getIri())
+                  .where(w2->w2
+                    .setBool(Bool.and)
+                    .where(a2->a2
+                      .setIri(SHACL.CLASS.getIri())
+                      .addIn(new TTAlias().setVariable("this")))
+                    .where(a2->a2
+                  .setIri(SHACL.PATH.getIri())
+                  .setIn(List.of(TTAlias.iri(IM.IS_CONTAINED_IN.getIri()).setAlias("predicate")
+                    ,TTAlias.iri(RDFS.SUBCLASSOF.getIri()),TTAlias.iri(IM.IS_SUBSET_OF.getIri()))))))))
+          .select(s->s
+            .setIri(RDFS.LABEL.getIri()))
+          .select(s->s
+            .setIri(SHACL.PROPERTY.getIri())
+            .select(s1->s1
+              .setIri(SHACL.PATH.getIri())));
+        allowables.set(IM.DEFINITION, TTLiteral.literal(query));
+
+    }
+
+
+
     private void addCurrentReg(TTDocument document, String outFolder) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+
         TTEntity qry = new TTEntity().addType(IM.QUERY);
         qry
             .setIri(IM.NAMESPACE + "Q_RegisteredGMS")
@@ -63,27 +103,25 @@ public class CoreQueryImporter implements TTImport {
         prof.setDescription(qry.getDescription());
         qry.set(IM.WEIGHTING,TTLiteral.literal(10000));
         prof.from(f -> f
-                .setIri(IM.NAMESPACE+"Patient").setName("Patient").setIsType(true))
-            .setWhere(new Where()
-                .setPathTo(IM.NAMESPACE +"isSubjectOf "+ IM.NAMESPACE +"GPRegistration")
-                .and(pv -> pv
-                    .setProperty(IM.NAMESPACE +"patientType")
-                    .setIs(new TTAlias().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
-                .and(pv -> pv
-                    .setProperty(IM.NAMESPACE +"startDate")
-                    .setValue(new Value()
-                        .setComparison("<=")
-                        .valueOf(v->v.setVariable("$referenceDate"))))
-                .or(pv -> pv
-                    .notExist(not -> not
-                        .setProperty(IM.NAMESPACE +"endDate")))
-                .or(pv -> pv
-                    .setProperty(IM.NAMESPACE +"endDate")
-                    .setValue(new Value()
-                      .setComparison(">")
-                      .valueOf(v->v
-                        .setVariable("$referenceDate")))
-                ));
+                .setType(TTAlias.iri(IM.NAMESPACE+"Patient").setName("Patient"))
+          .where(p->p
+            .setId("gpRegistration")
+            .where(p1->p1
+                .setId("patientType")
+                    .addIn(new TTAlias().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+            .where(pv->pv
+              .setId("effectiveDate")
+              .setOperator(Operator.lte)
+              .setRelativeTo("$referenceDate"))
+            .where(pv -> pv
+              .setBool(Bool.or)
+              .where(pv1->pv1
+                .setNotExist(true)
+                .setId("endDate"))
+              .where(pv1->pv1
+                    .setId("endDate")
+                      .setOperator(Operator.gt)
+                      .setRelativeTo("$referenceDate")))));
 
         qry.set(IM.DEFINITION, TTLiteral.literal(prof));
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
@@ -91,6 +129,7 @@ public class CoreQueryImporter implements TTImport {
         document.setContext(TTUtil.getDefaultContext());
         setProvenance(qry, document);
         outputQuery(prof);
+
     }
 
     private void setProvenance(TTEntity rdf, TTDocument document) {

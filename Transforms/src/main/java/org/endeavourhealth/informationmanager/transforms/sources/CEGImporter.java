@@ -7,7 +7,7 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.iml.ConceptSet;
 import org.endeavourhealth.imapi.model.iml.Entity;
 import org.endeavourhealth.imapi.model.iml.ModelDocument;
-import org.endeavourhealth.imapi.model.iml.QueryEntity;
+import org.endeavourhealth.imapi.model.imq.QueryEntity;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -160,6 +160,9 @@ public class CEGImporter implements TTImport {
 							TTEntity ttFolder= new TTEntity()
 								.setIri(qFolder.getIri())
 								.setName(qFolder.getName())
+								.setName(qFolder.getName());
+							qFolder.getType().forEach(ttFolder::addType);
+								ttFolder
 								.setDescription(qFolder.getDescription());
 							for( TTIriRef type: qFolder.getType()) {
 								ttFolder.addType(type);
@@ -180,9 +183,7 @@ public class CEGImporter implements TTImport {
 								.setIri(qq.getIri())
 								.setName(qq.getName())
 								.setDescription(qq.getDescription());
-							for( TTIriRef type: qq.getType()) {
-								ttQuery.addType(type);
-							}
+							qq.getType().stream().forEach(ttQuery::addType);
 							document.addEntity(ttQuery);
 							if (qq.getIsContainedIn()!=null){
 								for (TTIriRef inFolder:qq.getIsContainedIn()){
