@@ -21,7 +21,7 @@ ext {
             openCsv             : '4.6',
             openLlet            : '2.6.5',
             owlApi              : '5.1.20',
-            rdf4j               : '4.1.1',
+            rdf4j               : '4.2.2',
             slf4j               : '1.7.32',
             snomed              : '1.2.0',
             wsrs                : '2.1.1',
