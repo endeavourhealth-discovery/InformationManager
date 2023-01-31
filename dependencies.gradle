@@ -22,7 +22,7 @@ ext {
             openLlet            : '2.6.5',
             owlApi              : '5.1.20',
             rdf4j               : '4.1.1',
-            slf4j               : '1.7.32',
+            slf4j               : '2.0.6',
             snomed              : '1.2.0',
             wsrs                : '2.1.1',
     ]
