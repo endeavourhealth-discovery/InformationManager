@@ -1,10 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.authored;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.endeavourhealth.imapi.model.imq.Bool;
-import org.endeavourhealth.imapi.model.imq.Operator;
-import org.endeavourhealth.imapi.model.imq.Query;
-import org.endeavourhealth.imapi.model.imq.Where;
+import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -51,7 +48,7 @@ public class StandardQueries {
 				.setBool(Bool.and)
 				.where(pv->pv
 					.setIri(IM.NAMESPACE+"patientType")
-					.addIn(new TTAlias().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+					.addIn(new From().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
 				.where(pv->pv
 					.setIri(IM.NAMESPACE+"effectiveDate")
 					.setOperator(Operator.lte)
@@ -158,7 +155,7 @@ public class StandardQueries {
 				.where(w->w
 					.setIri(RDFS.RANGE.getIri())
 					.setInverse(true)
-					.addIn(new TTAlias().setVariable("$this").setIncludeSupertypes(true).setIncludeSubtypes(true))
+					.addIn(new From().setVariable("$this").setIncludeSupertypes(true).setIncludeSubtypes(true))
 				))));
 	}
 
@@ -178,7 +175,7 @@ public class StandardQueries {
 				.setSourceType(SourceType.type)
 			.where(w->w
 					.setIri(RDFS.DOMAIN.getIri())
-					.addIn(new TTAlias().setVariable("$this").setIncludeSupertypes(true))
+					.addIn(new From().setVariable("$this").setIncludeSupertypes(true))
 				))));
 	}
 

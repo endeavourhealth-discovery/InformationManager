@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.cdm.ProvActivity;
 import org.endeavourhealth.imapi.model.imq.Bool;
+import org.endeavourhealth.imapi.model.imq.From;
 import org.endeavourhealth.imapi.model.imq.Operator;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -72,11 +73,11 @@ public class CoreQueryImporter implements TTImport {
                     .setBool(Bool.and)
                     .where(a2->a2
                       .setIri(SHACL.CLASS.getIri())
-                      .addIn(new TTAlias().setVariable("this")))
+                      .addIn(new From().setVariable("this")))
                     .where(a2->a2
                   .setIri(SHACL.PATH.getIri())
-                  .setIn(List.of(TTAlias.iri(IM.IS_CONTAINED_IN.getIri()).setAlias("predicate")
-                    ,TTAlias.iri(RDFS.SUBCLASSOF.getIri()),TTAlias.iri(IM.IS_SUBSET_OF.getIri()))))))))
+                  .setIn(List.of(From.iri(IM.IS_CONTAINED_IN.getIri()).setAlias("predicate")
+                    ,From.iri(RDFS.SUBCLASSOF.getIri()),From.iri(IM.IS_SUBSET_OF.getIri()))))))))
           .select(s->s
             .setIri(RDFS.LABEL.getIri()))
           .select(s->s
@@ -108,7 +109,7 @@ public class CoreQueryImporter implements TTImport {
             .setId("gpRegistration")
             .where(p1->p1
                 .setId("patientType")
-                    .addIn(new TTAlias().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+                    .addIn(new From().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
             .where(pv->pv
               .setId("effectiveDate")
               .setOperator(Operator.lte)
