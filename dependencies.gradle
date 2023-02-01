@@ -14,7 +14,7 @@ ext {
             jersey              : '2.25.1',
             juneau              : '8.2.0',
             junit               : '5.8.1',
-            junitRunner         : '1.7.2',
+            junitRunner         : '1.9.2',
             json                : '20190722',
             jsonSimple          : '0.4',
             logback             : '1.4.0',
