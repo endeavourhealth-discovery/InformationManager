@@ -20,7 +20,7 @@ ext {
             logback             : '1.4.5',
             openCsv             : '4.6',
             openLlet            : '2.6.5',
-            owlApi              : '5.1.20',
+            owlApi              : '5.5.0',
             rdf4j               : '4.1.1',
             slf4j               : '1.7.32',
             snomed              : '1.2.0',
