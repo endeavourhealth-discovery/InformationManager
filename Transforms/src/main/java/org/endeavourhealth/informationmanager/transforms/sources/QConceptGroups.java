@@ -74,21 +74,22 @@ public class QConceptGroups implements TTImport {
 					for (Iterator<JsonNode> it = groups.elements(); it.hasNext(); ) {
 						JsonNode codeGroup = it.next();
 						String id = codeGroup.get("Id").asText();
+						String groupId=projectId+"_"+id;
 						String version = codeGroup.get("CurrentVersion").asText();
-						TTEntity qGroup = idCodeGroupMap.get(id + "_" + version);
+						TTEntity qGroup = idCodeGroupMap.get(groupId);
 						if (qGroup == null) {
 							qGroup = new TTEntity()
-								.setIri(QR.NAMESPACE + "QCodeGroup_" + id)
+								.setIri(QR.NAMESPACE + "QCodeGroup_" + groupId)
 								.setName("Q code group "+codeGroup.get("Name").asText())
 								.addType(IM.CONCEPT_SET);
 						}
 						qGroup.addObject(IM.IS_SUBSET_OF, TTIriRef.iri(project.getValue()));
 						qGroup.set(IM.VERSION, TTLiteral.literal(version));
 						document.addEntity(qGroup);
-						idCodeGroupMap.put(id + "_" + version, qGroup);
-						if (codeGroups.get(id)==null) {
+						idCodeGroupMap.put(groupId, qGroup);
+						if (codeGroups.get(groupId)==null) {
 							importCodes(projectId, qGroup, id);
-							codeGroups.put(id, version);
+							codeGroups.put(groupId, version);
 						}
 						else {
 							if (!codeGroups.get(id).equals(version))
@@ -102,14 +103,14 @@ public class QConceptGroups implements TTImport {
 		}
 	}
 
-	private void importCodes(String projectId, TTEntity qGroup,String groupId) throws JsonProcessingException {
+	private void importCodes(String projectId, TTEntity qGroup,String id) throws JsonProcessingException {
 		String version = qGroup.get(IM.VERSION).asLiteral().getValue();
 		int page=0;
 		boolean results=true;
 		LOG.info("Fetching  members for  "+projectId+" code group "+ qGroup.getName()+"...");
 		while (results) {
 			page++;
-			JsonNode json = getResults("codes_for_codegroup/" + groupId + "/" + projectId + "/" + version,page);
+			JsonNode json = getResults("codes_for_codegroup/" + id + "/" + projectId + "/" + version,page);
 			ArrayNode codes= (ArrayNode) json.get("Results");
 			if (!codes.isEmpty()) {
 				for (Iterator<JsonNode> it = codes.elements(); it.hasNext(); ) {
@@ -130,6 +131,7 @@ public class QConceptGroups implements TTImport {
 		ArrayNode projects= (ArrayNode) json.get("Results");
 		for (Iterator<JsonNode> it = projects.elements(); it.hasNext(); ) {
 			JsonNode project = it.next();
+			
 			TTEntity qp= new TTEntity()
 				.setIri(IM.NAMESPACE+"QProject_"+ project.get("Id").asText())
 				.addType(IM.FOLDER)

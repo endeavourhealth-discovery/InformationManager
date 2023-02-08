@@ -64,24 +64,21 @@ public class CoreQueryImporter implements TTImport {
         query.setName("Allowable child types for editor");
         query
           .from(f->f
-              .where(w->w
-                .setBool(Bool.and)
-                .where(w1->w1.setIri(IM.IS_CONTAINED_IN.getIri())
-                  .addIn(IM.NAMESPACE+"EntityTypes"))
-                .where(w1->w1.setIri(SHACL.PROPERTY.getIri())
-                  .where(w2->w2
-                    .setBool(Bool.and)
-                    .where(a2->a2
-                      .setIri(SHACL.CLASS.getIri())
-                      .addIn(new From().setVariable("this")))
-                    .where(a2->a2
-                  .setIri(SHACL.PATH.getIri())
-                  .setIn(List.of(From.iri(IM.IS_CONTAINED_IN.getIri()).setAlias("predicate")
-                    ,From.iri(RDFS.SUBCLASSOF.getIri()),From.iri(IM.IS_SUBSET_OF.getIri()))))))))
+            .where(w1->w1.setIri(IM.IS_CONTAINED_IN.getIri())
+              .addIn(IM.NAMESPACE+"EntityTypes")))
           .select(s->s
             .setIri(RDFS.LABEL.getIri()))
           .select(s->s
             .setIri(SHACL.PROPERTY.getIri())
+            .where(w1->w1
+              .setBool(Bool.and)
+              .where(a2->a2
+                .setIri(SHACL.NODE.getIri())
+                .addIn(new From().setVariable("this")))
+              .where(a2->a2
+                .setIri(SHACL.PATH.getIri())
+                .setIn(List.of(From.iri(IM.IS_CONTAINED_IN.getIri())
+                  ,From.iri(RDFS.SUBCLASSOF.getIri()),From.iri(IM.IS_SUBSET_OF.getIri())))))
             .select(s1->s1
               .setIri(SHACL.PATH.getIri())));
         allowables.set(IM.DEFINITION, TTLiteral.literal(query));
@@ -151,7 +148,7 @@ public class CoreQueryImporter implements TTImport {
     private void output(TTDocument document) throws IOException {
         if (ImportApp.testDirectory != null) {
             String directory = ImportApp.testDirectory.replace("%", " ");
-            try (FileWriter writer = new FileWriter(directory + "\\Core-qry-LD.json")) {
+            try (FileWriter writer = new FileWriter(directory + "\\CoreQueries.json")) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
                 objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
@@ -160,6 +157,7 @@ public class CoreQueryImporter implements TTImport {
                     .withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(document);
                 writer.write(doc);
             }
+
         }
 
     }

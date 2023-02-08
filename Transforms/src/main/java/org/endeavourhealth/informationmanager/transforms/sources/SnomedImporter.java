@@ -6,7 +6,7 @@ import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.ECLToIML;
+import org.endeavourhealth.informationmanager.transforms.sources.ECLToIML;
 import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
