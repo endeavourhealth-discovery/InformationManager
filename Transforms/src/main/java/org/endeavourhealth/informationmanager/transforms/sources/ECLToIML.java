@@ -8,12 +8,12 @@ import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.imq.Where;
 import org.endeavourhealth.imapi.model.tripletree.TTAlias;
 import org.endeavourhealth.imapi.model.tripletree.TTValue;
-import org.endeavourhealth.imapi.parser.ecl.ECLBaseVisitor;
-import org.endeavourhealth.imapi.parser.ecl.ECLLexer;
-import org.endeavourhealth.imapi.parser.ecl.ECLParser;
 import org.endeavourhealth.imapi.transforms.ParserErrorListener;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.parser.ecl.ECLBaseVisitor;
+import org.endeavourhealth.informationmanager.parser.ecl.ECLLexer;
+import org.endeavourhealth.informationmanager.parser.ecl.ECLParser;
 
 import java.util.UnknownFormatConversionException;
 import java.util.zip.DataFormatException;

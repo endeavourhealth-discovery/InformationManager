@@ -84,11 +84,11 @@ public class CEGImporter implements TTImport {
 			}
 			if (TTFilerFactory.isTransactional()) {
 				new TTTransactionFiler(null).fileTransaction(document);
-				return;
 			}
-
-			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-				filer.fileDocument(document);
+			else {
+				try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+					filer.fileDocument(document);
+				}
 			}
 		}
 	}

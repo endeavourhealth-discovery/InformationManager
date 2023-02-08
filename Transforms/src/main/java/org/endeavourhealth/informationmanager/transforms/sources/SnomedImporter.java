@@ -32,7 +32,8 @@ public class SnomedImporter implements TTImport {
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKEDSnapshot_.*\\.txt",
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKCRSnapshot_.*\\.txt",
        ".*\\\\PRIMARY\\\\.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_Snapshot_.*\\.txt",
-       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKDGSnapshot_.*\\.txt"
+       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKDGSnapshot_.*\\.txt",
+     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKEDSnapshot_.*\\.txt"
    };
 
    public static final String[] refsets= {
@@ -50,7 +51,8 @@ public class SnomedImporter implements TTImport {
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKEDSnapshot-en_.*\\.txt",
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKCRSnapshot-en_.*\\.txt",
        ".*\\\\PRIMARY\\\\.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_Snapshot-en_.*\\.txt",
-       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKDGSnapshot-en_.*\\.txt"
+       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKDGSnapshot-en_.*\\.txt",
+     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKEDSnapshot-en_.*\\.txt"
    };
 
 
@@ -60,7 +62,8 @@ public class SnomedImporter implements TTImport {
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKEDSnapshot_.*\\.txt",
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKCRSnapshot_.*\\.txt",
        ".*\\\\PRIMARY\\\\.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_Snapshot_.*\\.txt",
-       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKDGSnapshot_.*\\.txt"
+       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKDGSnapshot_.*\\.txt",
+     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKEDSnapshot_.*\\.txt"
    };
 
    public static final String[] substitutions = {

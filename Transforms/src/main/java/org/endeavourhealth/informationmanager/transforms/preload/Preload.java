@@ -124,7 +124,7 @@ public class Preload {
 
 
 
-        LOG.info("Filing into live graph starting with CEG");
+        LOG.info("Filing into live graph");
         TTFilerFactory.setBulk(false);
         TTFilerFactory.setTransactional(true);
         importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
@@ -182,8 +182,8 @@ public class Preload {
 
     private static boolean pingGraphServer() {
         Client client = ClientBuilder.newClient();
-        client.property("jersey.config.client.connectTimeout", 10000);
-        client.property("jersey.config.client.readTimeout", 10000);
+        client.property("jersey.config.client.connectTimeout", 20000);
+        client.property("jersey.config.client.readTimeout", 20000);
 
         WebTarget resource = client.target("http://localhost:7200/protocol");
 
