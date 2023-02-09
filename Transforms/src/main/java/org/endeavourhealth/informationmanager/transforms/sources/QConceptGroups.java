@@ -74,7 +74,7 @@ public class QConceptGroups implements TTImport {
 					for (Iterator<JsonNode> it = groups.elements(); it.hasNext(); ) {
 						JsonNode codeGroup = it.next();
 						String id = codeGroup.get("Id").asText();
-						String groupId=projectId+"_"+id;
+						String groupId=id;
 						String version = codeGroup.get("CurrentVersion").asText();
 						TTEntity qGroup = idCodeGroupMap.get(groupId);
 						if (qGroup == null) {

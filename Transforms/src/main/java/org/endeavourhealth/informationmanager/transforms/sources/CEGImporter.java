@@ -196,11 +196,11 @@ public class CEGImporter implements TTImport {
 				  output(fileEntry,qDocument,document);
 					if (TTFilerFactory.isTransactional()){
 						new TTTransactionFiler(null).fileTransaction(document);
-						return;
 					}
-
-					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-						filer.fileDocument(document);
+					else {
+						try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+							filer.fileDocument(document);
+						}
 					}
 					this.conceptSets.addAll(converter.getValueSets().values());
 					}
