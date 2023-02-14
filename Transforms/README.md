@@ -19,6 +19,8 @@ To remove specific source files from the import if they cannot be found, comment
 4. 16 gig RAM (jvm -Xmx 16 gig ideal)
 
 ### Instructions for blank bulk load
+Before running preload you should run [TRUD Updater](https://github.com/endeavourhealth-discovery/InformationManager/tree/master/Feeds).
+
 1. Place source files in the various folders under a single root folder.
 2. If not already Install and configure a Graph DB im repository with literal index, context index bur NO inference.
 3. If not already Install and configure Open Search with basic authentication
@@ -27,17 +29,25 @@ To remove specific source files from the import if they cannot be found, comment
 6. Configure the run time parameters  for the 'ImportApp' as follows:
 7. Make sure graph DB is NOT running
 8. Delete the `{im}` graph repository folder (or the bulk import will fail)
-9. run imports.Preload. This will throw errors if the source files are not present e.g. the unzipped Snomed RF2
+9. Make sure temp folder (path provided as an argument to hold the temporary data) is empty 
+10. Extract emis_codes.txt and concepts.txt in ImportData/EMIS and ImportData/IMV1
+10. run imports.Preload. This will throw errors if the source files are not present e.g. the unzipped Snomed RF2
 
 ### Program arguments  
 source={folder for importData}\
 preload={folder containing the preload tool and the config.ttl}\
 temp={folder to hold the temporary data}\
+privacy={0 public, 1 private publisher, 2 private for authoring}\
+cmd={graphdbExecutable}
 
 ### Environment variables
-none needed
+GRAPH_REPO=im\
+GRAPH_SERVER={graphdb server url - default is http://localhost:7200}\
+Q_AUTH={auth key}\
+Q_URL={auth url}
 
 ### Data files
+If you have run TRUD Updater these files have been added and unzipped in ImportData folder. If not then these files need to be downloaded and unzipped manually in ImportData folder.
 
 #### ImportData/SNOMED
 SNOMED/UK Clinical - uk_sct2cl_32.12.0_20220413000001Z.zip\
