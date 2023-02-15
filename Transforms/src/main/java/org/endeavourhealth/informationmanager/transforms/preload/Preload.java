@@ -166,8 +166,9 @@ public class Preload {
             LOG.info("Waiting for startup....");
 
             int retries = 10;
-            boolean alive = false;
+            boolean alive = pingGraphServer();
             while (!alive && retries > 0) {
+                Thread.sleep(1000);
                 LOG.info("Pinging server {} retries remaining....", retries);
                 alive = pingGraphServer();
                 retries --;
