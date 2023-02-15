@@ -19,7 +19,7 @@ To remove specific source files from the import if they cannot be found, comment
 4. 16 gig RAM (jvm -Xmx 16 gig ideal)
 
 ### Instructions for blank bulk load
-Before running preload you should run [TRUD Updater](https://github.com/endeavourhealth-discovery/InformationManager/tree/master/Feeds).
+Before running preload run [TRUD Updater](https://github.com/endeavourhealth-discovery/InformationManager/tree/master/Feeds).
 
 1. Place source files in the various folders under a single root folder.
 2. If not already Install and configure a Graph DB im repository with literal index, context index bur NO inference.
@@ -31,7 +31,7 @@ Before running preload you should run [TRUD Updater](https://github.com/endeavou
 8. Delete the `{im}` graph repository folder (or the bulk import will fail)
 9. Make sure temp folder (path provided as an argument to hold the temporary data) is empty 
 10. Extract emis_codes.txt and concepts.txt in ImportData/EMIS and ImportData/IMV1
-10. run imports.Preload. This will throw errors if the source files are not present e.g. the unzipped Snomed RF2
+11. run imports.Preload. This will throw errors if the source files are not present e.g. the unzipped Snomed RF2
 
 ### Program arguments  
 source={folder for importData}\
