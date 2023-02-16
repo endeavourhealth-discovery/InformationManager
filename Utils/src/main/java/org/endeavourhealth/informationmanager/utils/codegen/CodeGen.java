@@ -25,8 +25,6 @@ public class CodeGen {
               ZipOutputStream result = new ZipOutputStream(bos)) {
 
             new CodeGenJava().generate(result);
-            result.finish();
-            result.flush();
         }
     }
 }
