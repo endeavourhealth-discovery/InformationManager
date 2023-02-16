@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 
 import java.io.*;
+import java.util.zip.ZipOutputStream;
 
 public class CodeGen {
     private static final Logger LOG = LoggerFactory.getLogger(CodeGen.class);
@@ -19,8 +20,13 @@ public class CodeGen {
             System.exit(-1);
         }
 
-        try (PrintWriter os = new PrintWriter(args[0])) {
-            new CodeGenJava().generate(os);
+        try ( FileOutputStream fos = new FileOutputStream(args[0]);
+              BufferedOutputStream bos = new BufferedOutputStream(fos);
+              ZipOutputStream result = new ZipOutputStream(bos)) {
+
+            new CodeGenJava().generate(result);
+            result.finish();
+            result.flush();
         }
     }
 }
