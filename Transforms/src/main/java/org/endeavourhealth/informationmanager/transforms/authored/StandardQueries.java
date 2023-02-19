@@ -41,8 +41,7 @@ public class StandardQueries {
 						.setIri(IM.NAMESPACE+"Organisation")
 					.setAlias("organisation")))
 		  .from(f->f
-				.setIri(IM.NAMESPACE+"Patient").setName("Patient")
-				.setSourceType(SourceType.type)
+				.setType(IM.NAMESPACE+"Patient").setName("Patient")
 			.setWhere(new Where()
 				.setIri(IM.NAMESPACE+"gpRegistration")
 				.setBool(Bool.and)
@@ -150,12 +149,13 @@ public class StandardQueries {
 				.select(s->s.setIri(IM.CODE.getIri()))
 				.select(s->s.setIri(RDFS.LABEL.getIri()))
 				.from(f ->f
-					.setIri(IM.CONCEPT.getIri())
-					.setSourceType(SourceType.type)
+					.setType(IM.CONCEPT.getIri())
 				.where(w->w
 					.setIri(RDFS.RANGE.getIri())
 					.setInverse(true)
-					.addIn(new From().setVariable("$this").setIncludeSupertypes(true).setIncludeSubtypes(true))
+					.addIn(new From().setVariable("$this")
+						.setAncestorsOf(true)
+						.setDescendantsOrSelfOf(true))
 				))));
 	}
 
@@ -171,11 +171,10 @@ public class StandardQueries {
 				.select(s->s.setIri(IM.CODE.getIri()))
 				.select(s->s.setIri(RDFS.LABEL.getIri()))
 			.from(f ->f
-				.setIri(IM.CONCEPT.getIri())
-				.setSourceType(SourceType.type)
+				.setType(IM.CONCEPT.getIri())
 			.where(w->w
 					.setIri(RDFS.DOMAIN.getIri())
-					.addIn(new From().setVariable("$this").setIncludeSupertypes(true))
+					.addIn(new From().setVariable("$this").setAncestorsOf(true))
 				))));
 	}
 
@@ -187,8 +186,7 @@ public class StandardQueries {
 				.setActiveOnly(true)
 				.setName("Search for concepts")
 				.from(w->w
-					.setIri(IM.CONCEPT.getIri())
-					.setSourceType(SourceType.type))));
+					.setType(IM.CONCEPT.getIri()))));
 	}
 
 	private void getIsas() throws JsonProcessingException {
@@ -201,7 +199,7 @@ public class StandardQueries {
 					.setActiveOnly(true)
 				.from(w->w
 					.setVariable("$this")
-					.setIncludeSubtypes(true))
+					.setDescendantsOrSelfOf(true))
 				.select(s->s.setIri(RDFS.LABEL.getIri()))));
 	}
 

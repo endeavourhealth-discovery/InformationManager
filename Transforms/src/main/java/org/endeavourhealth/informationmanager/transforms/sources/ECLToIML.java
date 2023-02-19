@@ -150,19 +150,19 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 			conceptIri= concept;
 		if (excludeSelf) {
 			from
-				.setIri(conceptIri).setIncludeSubtypes(true).setExcludeSelf(true);
+				.setIri(conceptIri).setDescendantsOf(true);
 			if (name!=null)
 				from.setName(name);
 		}
 		else if (includeSubs){
 			from
-				.setIri(conceptIri).setIncludeSubtypes(true);
+				.setIri(conceptIri).setDescendantsOrSelfOf(true);
 			if (name!=null)
 				from.setName(name);
 		}
 		else {
 			from
-				.setIri(conceptIri).setIncludeSubtypes(false);
+				.setIri(conceptIri);
 			if (name!=null)
 				from.setName(name);
 		}
@@ -386,10 +386,9 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 			throw new DataFormatException("ECL converter can only be used for snomed codes at this stage");
 		if (entail!=null) {
 			if (entail.descendantorselfof() != null)
-				conRef.setIncludeSubtypes(true);
+				conRef.setDescendantsOrSelfOf(true);
 			else if (entail.descendantof() != null) {
-				conRef.setExcludeSelf(true);
-				conRef.setIncludeSubtypes(true);
+				conRef.setDescendantsOf(true);
 			}
 		}
 		if (name!=null)

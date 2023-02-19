@@ -101,7 +101,8 @@ public class CoreQueryImporter implements TTImport {
         prof.setDescription(qry.getDescription());
         qry.set(IM.WEIGHTING,TTLiteral.literal(10000));
         prof.from(f -> f
-                .setType(TTAlias.iri(IM.NAMESPACE+"Patient").setName("Patient"))
+            .setType(IM.NAMESPACE+"Patient")
+            .setName("Patient")
           .where(p->p
             .setId("gpRegistration")
             .where(p1->p1
