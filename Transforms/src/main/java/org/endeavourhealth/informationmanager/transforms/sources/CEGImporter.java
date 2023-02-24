@@ -212,17 +212,13 @@ public class CEGImporter implements TTImport {
 
 		if ( ImportApp.testDirectory!=null) {
 			String directory = ImportApp.testDirectory.replace("%", " ");
-			TTManager manager = new TTManager();
-
-			manager.setDocument(document);
-			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-new--LD.json"));
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 			String json= objectMapper.writerWithDefaultPrettyPrinter().withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(qDocument);
 		  json= json.replaceAll(IM.NAMESPACE,":");
-			try (FileWriter wr= new FileWriter(directory + fileEntry.getName().replace(".xml","") + "-NEW.json")){
+			try (FileWriter wr= new FileWriter(directory + fileEntry.getName().replace(".xml","") + ".json")){
 				wr.write(json);
 			}
 
