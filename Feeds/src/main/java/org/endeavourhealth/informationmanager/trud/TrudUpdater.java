@@ -19,8 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -38,7 +37,10 @@ public class TrudUpdater {
         new TrudFeed("HISTORY","276"),
         new TrudFeed("ODSTOOLS","343", TrudUpdater::processODSTools),
         new TrudFeed("ODS","341", TrudUpdater::processODS),
-        new TrudFeed("PRIMARY","659")
+        new TrudFeed("PRIMARY","659"),
+        new TrudFeed("BNF", "25", TrudUpdater::processBNF),
+        new TrudFeed("DMD", "24"),
+        new TrudFeed("DMDTOOLS", "239", TrudUpdater::transformDMDandBNF)
     );
 
     private static final int BUFFER_SIZE = 8192;
@@ -105,7 +107,7 @@ public class TrudUpdater {
     }
 
     private static void processFeeds() throws IOException {
-        for (TrudFeed feed: feeds) {
+        for (TrudFeed feed : feeds) {
             if (versionMismatch(feed) || !downloadExists(feed))
                 downloadFeed(feed);
 
@@ -159,13 +161,14 @@ public class TrudUpdater {
         }
         updateLocalVersions(feed);
     }
+
     private static void downloadFile(String sourceUrl, String destination) throws IOException {
         URL url = new URL(sourceUrl);
         URLConnection con = url.openConnection();
         long contentLength = con.getContentLengthLong();
         LOG.info("Downloading {} - {} bytes", url, contentLength);
         try (InputStream inputStream = con.getInputStream();
-            OutputStream outputStream = new FileOutputStream(destination + ".tmp")) {
+             OutputStream outputStream = new FileOutputStream(destination + ".tmp")) {
 
             // Limiting byte written to file per loop
             byte[] buffer = new byte[BUFFER_SIZE];
@@ -188,6 +191,7 @@ public class TrudUpdater {
         Path dest = Paths.get(destination);
         Files.move(source, dest, StandardCopyOption.REPLACE_EXISTING);
     }
+
     private static void updateLocalVersions(TrudFeed feed) throws IOException {
         localVersions.put(feed.getName(), feed.getRemoteVersion());
         mapper.writerWithDefaultPrettyPrinter().writeValue(new File(WorkingDir + "versions.json"), localVersions);
@@ -270,31 +274,20 @@ public class TrudUpdater {
     }
 
     private static void processODSTools(TrudFeed feed) {
-        String path = WorkingDir + feed.getName() + "/" + feed.getRemoteVersion() + "/";
+        String path = WorkingDir + feed.getName() + "/" + feed.getRemoteVersion();
 
-        if (!Files.exists(Paths.get(path + "HSCOrgRefData_xslt.zip"))) {
-            LOG.info("Unzip transform.zip");
+        testAndUnzip(path, ".*/HSCOrgRefData_xslt.zip", ".*/transform.zip");
+
+        if (testAndUnzip(path, ".*/HSCOrgRefData_xmltocsv.xslt", ".*/HSCOrgRefData_xslt.zip")) {
+            // FIX XSLT TO BE CROSS PLATFORM!
             try {
-                unzipArchive(path + "transform.zip", path);
-            } catch (IOException e) {
-                LOG.error("Error extracting transform.zip");
-            }
-        }
-
-        Path xsltFile = Path.of(path + "HSCOrgRefData_xmltocsv.xslt");
-        if (!Files.exists(xsltFile)) {
-            LOG.info("Unzip HSCOrgRefData_xslt.zip");
-            try {
-                unzipArchive(path + "HSCOrgRefData_xslt.zip", path);
-
-                // FIX XSLT TO BE CROSS PLATFORM!
+                Path xsltFile = Path.of(path + "/HSCOrgRefData_xmltocsv.xslt");
                 LOG.warn("Fixing XSLT file to be cross platform compatible");
                 String xslt = Files.readString(xsltFile);
                 xslt = xslt.replace("concat('file:/\\\\',$server-name,'/',$share-name,'/')", "concat('file:///',$server-name,'/',$share-name,'/')");
                 Files.writeString(xsltFile, xslt);
-
             } catch (IOException e) {
-                LOG.error("Error extracting HSCOrgRefData_xslt.zip");
+                LOG.error("Error fixing XSLT");
             }
         }
     }
@@ -302,58 +295,181 @@ public class TrudUpdater {
     private static void processODS(TrudFeed feed) {
         String path = WorkingDir + feed.getName() + "/" + feed.getRemoteVersion();
 
-        boolean fullfileUnzipped;
+        if (Files.exists(Paths.get(path + "/Organisation_Details.csv"))) {
+            LOG.info("Already transformed");
+            return;
+        }
+
+        testAndUnzip(path, ".*/HSCOrgRefData_Full_.*.xml", ".*/fullfile.zip");
+
         try {
-            findFileForId(path, ".*\\HSCOrgRefData_Full_.*.xml");
-            fullfileUnzipped = true;
+            LOG.info("Transforming XML to CSV...");
+            Path fullData = findFileForId(path, ".*\\HSCOrgRefData_Full_.*.xml");
+            String tools = WorkingDir + "ODSTOOLS/" + localVersions.get("ODSTOOLS").asText();
+
+            execute(path,
+                "java",
+                "-jar",
+                tools + "/saxon/Java/saxon9he.jar",
+                "-t",
+                "-s:" + fullData.getFileName(),
+                "-xsl:" + tools + "/HSCOrgRefData_xmltocsv.xslt",
+                "server-name=" + path);
+        } catch (Exception e) {
+            LOG.error("Error transforming ODS data", e);
+        }
+    }
+
+    private static void transformDMDandBNF(TrudFeed feed) {
+        String loaderPath = WorkingDir + feed.getName() + "/" + feed.getRemoteVersion() + "/dmd_extract_tool/";
+        String bnfPath = WorkingDir + "BNF/" + localVersions.get("BNF").asText();
+        String dmdPath = WorkingDir + "DMD/" + localVersions.get("DMD").asText();
+
+        if (Files.exists(Paths.get(dmdPath + "/f_vmpp_ContentType.csv"))) {
+            LOG.info("Already transformed");
+            return;
+        }
+
+        testAndUnzip(loaderPath, ".*/dmdDataLoader", ".*/dmdDataLoader.zip");
+
+        transformFile(loaderPath, bnfPath, ".*/f_bnf1_0.*.xml",
+            "f_bnf_Amp",
+            "f_bnf_Vmp");
+
+        transformFile(loaderPath, dmdPath, ".*/f_amp2_3.*.xml",
+            "f_amp_AmpType",
+            "f_amp_ApiType",
+            "f_amp_LicRouteType",
+            "f_amp_AppProdInfoType");
+
+        transformFile(loaderPath, dmdPath, ".*/f_ampp2_3.*.xml",
+            "f_ampp_AmppType",
+            "f_ampp_PackInfoType",
+            "f_ampp_ContentType",
+            "f_ampp_PrescInfoType",
+            "f_ampp_PriceInfoType",
+            "f_ampp_ReimbInfoType");
+
+        transformFile(loaderPath, dmdPath, ".*/f_vtm2_3.*.xml",
+            "f_vtm");
+
+        transformFile(loaderPath, dmdPath, ".*/f_ingredient2_3.*.xml",
+            "f_ingredient");
+
+        transformFile(loaderPath, dmdPath, ".*/f_lookup2_3.*.xml",
+            "f_lookup_CombPackIndInfoType",
+            "f_lookup_CombProdIndInfoType",
+            "f_lookup_BasisOfNameInfoType",
+            "f_lookup_NamechangeReasonInfoType",
+            "f_lookup_VirProdPresStatInfoType",
+            "f_lookup_ControlDrugCatInfoType",
+            "f_lookup_LicAuthInfoType",
+            "f_lookup_UoMHistoryInfoType",
+            "f_lookup_FormHistoryInfoType",
+            "f_lookup_OntFormRouteInfoType",
+            "f_lookup_RouteHistoryInfoType",
+            "f_lookup_DtPayCatInfoType",
+            "f_lookup_SupplierSupplierInfoType",
+            "f_lookup_FlavourInfoType",
+            "f_lookup_ColourInfoType",
+            "f_lookup_BasisOfStrengthInfoType",
+            "f_lookup_ReimbStatInfoType",
+            "f_lookup_SpecContInfoType",
+            "f_lookup_VirProdNoAvailInfoType",
+            "f_lookup_DiscIndInfoType",
+            "f_lookup_DfIndInfoType",
+            "f_lookup_PriceBasisInfoType",
+            "f_lookup_LegalCatInfoType",
+            "f_lookup_AvailRestrictInfoType",
+            "f_lookup_LicAuthChgRsnInfoType",
+            "f_lookup_DNDInfoType");
+
+        transformFile(loaderPath, dmdPath, ".*/f_vmp2_3.*.xml",
+            "f_vmp_VmpType",
+            "f_vmp_VpiType",
+            "f_vmp_OntDrugFormType",
+            "f_vmp_DrugFormType",
+            "f_vmp_DrugRouteType",
+            "f_vmp_ControlInfoType");
+
+        transformFile(loaderPath, dmdPath, ".*/f_vmpp2_3.*.xml",
+            "f_vmpp_VmppType",
+            "f_vmpp_DtInfoType",
+            "f_vmpp_ContentType");
+    }
+
+    private static void transformFile(String cmdPath, String workDir, String xmlFile, String... transforms) {
+        try {
+            Path xml = findFileForId(workDir, xmlFile);
+            for(String transform : transforms) {
+                LOG.info("Transforming [{}] using [{}]", xml.getFileName(), transform + ".xsl");
+                execute(workDir, cmdPath + "dmdDataLoader/msxsl.exe", xml.toString(), cmdPath + "xsl/" + transform + ".xsl", "-o", transform + ".csv");
+            }
         } catch (IOException e) {
-            fullfileUnzipped = false;
+            LOG.error("Unable to find [{}] in [{}]", xmlFile, workDir);
+            System.exit(-1);
         }
+    }
 
-        if (!fullfileUnzipped) {
-            LOG.info("Unzip fullfile.zip");
-            try {
-                unzipArchive(path + "/fullfile.zip", path);
-            } catch (IOException e) {
-                LOG.error("Error extracting fullfile.zip");
-            }
+    private static void execute(String path, String... params) {
+        try {
+            LOG.debug("Executing...");
+            LOG.debug(String.join(" ", params));
+            Process proc = Runtime.getRuntime().exec(params, null, new File(path));
+            proc.waitFor();
+
+            String debug = getStreamAsString(proc.getInputStream());
+            if (!debug.isEmpty())
+                LOG.debug(debug);
+
+            String error = getStreamAsString(proc.getErrorStream());
+            if (!error.isEmpty())
+                LOG.error(error);
+        } catch (Exception e) {
+            LOG.error("Failed to execute command");
+            System.exit(-1);
         }
+    }
 
-        if (!Files.exists(Paths.get(path + "/Organisation_Details.csv"))) {
+    private static void processBNF(TrudFeed feed) {
+        String path = WorkingDir + feed.getName() + "\\" + feed.getRemoteVersion();
+
+        testAndUnzip(path, ".*/f_bnf1_.*.xml", ".*/week.*-r2_3-BNF.zip");
+    }
+
+    private static boolean testAndUnzip(String path, String test, String zip) {
+        try {
+            findFileForId(path, test);
+            return false;
+        } catch (IOException e) {
             try {
-                LOG.info("Transforming XML to CSV...");
-                Path fullData = findFileForId(path, ".*\\HSCOrgRefData_Full_.*.xml");
-                String tools = WorkingDir + "ODSTOOLS/" + localVersions.get("ODSTOOLS").asText();
-                Process proc = Runtime.getRuntime().exec(new String[]{
-                    "java",
-                    "-jar",
-                    tools + "/saxon/Java/saxon9he.jar",
-                    "-t",
-                    "-s:" + fullData.getFileName(),
-                    "-xsl:" + tools + "/HSCOrgRefData_xmltocsv.xslt",
-                    "server-name=" + path
-                }, null, new File(path));
-                proc.waitFor();
-
-                LOG.debug(getStreamAsString(proc.getInputStream()));
-                LOG.error(getStreamAsString(proc.getErrorStream()));
-
-
-            } catch (Exception e) {
-                LOG.error("Error transforming ODS data", e);
+                String file = findFileForId(path, zip).toString();
+                LOG.info("Unzip [{}]", file);
+                try {
+                    unzipArchive(file, path);
+                } catch (IOException x) {
+                    LOG.error("Error extracting [{}}]", file);
+                    System.exit(-1);
+                }
+            } catch (IOException x) {
+                LOG.error("[{}] not found in [{}]", zip, path);
+                System.exit(-1);
             }
+            return true;
         }
     }
 
     private static String getStreamAsString(InputStream is) throws IOException {
-        byte b[]=new byte[is.available()];
-        is.read(b,0,b.length);
-        return new String(b);
+        byte b[] = new byte[is.available()];
+        is.read(b, 0, b.length);
+        return new String(b).trim();
     }
 
     public static Path findFileForId(String path, String filePattern) throws IOException {
-        try (Stream<Path> stream = Files.find(Paths.get(path), 16, (file, attr) -> file.toString().replace("/", "\\").matches(filePattern))) {
+        try (Stream<Path> stream = Files.list(Paths.get(path))) { //, 16, (file, attr) -> file.toString().replace("/", "\\").matches(filePattern))) {
             List<Path> paths = stream.collect(Collectors.toList());
+            paths = paths.stream().filter(f -> f.toString().replaceAll("\\\\", "/").matches(filePattern)).collect(Collectors.toList());
+
 
             if (paths.size() == 1)
                 return paths.get(0);
