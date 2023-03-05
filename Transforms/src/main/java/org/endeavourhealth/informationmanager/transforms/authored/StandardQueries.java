@@ -53,8 +53,9 @@ public class StandardQueries {
 					.setOperator(Operator.lte)
 					.setRelativeTo("$referenceDate"))
 				.where(pv->pv
-						.setNotExist(true)
-						.setIri(IM.NAMESPACE+"endDate")))
+					.setBool(Bool.not)
+						.where(pv1->pv1
+						.setIri(IM.NAMESPACE+"endDate"))))
 				.where(pv->pv
 					.setIri(IM.NAMESPACE+"endDate")
 					.setOperator(Operator.gt)
