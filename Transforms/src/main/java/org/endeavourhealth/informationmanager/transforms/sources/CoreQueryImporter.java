@@ -82,6 +82,7 @@ public class CoreQueryImporter implements TTImport {
                   .setDescription("latest BP in last 6 months is >150")
                   .setIri(IM.NAMESPACE+"observation")
                   .with(ob->ob
+                    .setDescription("Home or office based systolic in the last 6 months is >150")
                     .setBool(Bool.and)
                       .where(ww->ww
                         .setDescription("Home or office based Systolic")
