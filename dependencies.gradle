@@ -28,7 +28,6 @@ ext {
     ]
     libs = [
             imapi               : "org.endeavourhealth.imapi:api:1.0-SNAPSHOT",
-
             activation          : "javax.activation:activation:$versions.activation",
             antlr               : "org.antlr:antlr4-runtime:$versions.antlr",
             collections4        : "org.apache.commons:commons-collections4:$versions.collections4",

@@ -53,15 +53,14 @@ public class CoreQueryImporter implements TTImport {
         prof.setName(qry.getName());
         prof.from(f->f
             .setIri(IM.NAMESPACE+"Patient")
-            .where(w->w
-              .setBool(Bool.and)
-              .where(and->and
-                .setDescription("Registered for gms")
-                .setIri(IM.IS_SUBSET_OF.getIri())
-                .in(t->t.setSet(ex+"Q_RegisteredGMS")
-                  .setName("Registered for GMS services on reference date"))
-                .setValueLabel("Registered for GMS on reference date"))
-              .where(and->and
+          .where(w->w
+            .setDescription("Registered for gms")
+            .setIri(IM.IS_SUBSET_OF.getIri())
+            .in(t->t.setSet(ex+"Q_RegisteredGMS")
+              .setName("Registered for GMS services on reference date"))
+            .setValueLabel("Registered for GMS on reference date"))
+          .where(w->w
+              .setDescription("aged 65 to 70 or diabetic")
                 .setBool(Bool.or)
                 .where (or->or
                     .setDescription("aged between 65 and 70")
@@ -74,11 +73,13 @@ public class CoreQueryImporter implements TTImport {
                         .setOperator(Operator.lt)
                         .setValue("70"))))
                 .where(or->or
+                  .setDescription("Diabetic")
                   .setIri(IM.NAMESPACE+"observation")
                   .where(ob->ob
                     .setIri(IM.NAMESPACE+"concept")
-                    .addIn(new TTAlias().setSet(ex+"Q_Hypertensives")))))
-              .where(and->and
+                    .addIn(new TTAlias().setSet(ex+"Q_Diabetics"))
+                    .addIn(new TTAlias().setIri(SNOMED.NAMESPACE+"714628002").setDescendantsOf(true)))))
+          .where(w->w
                   .setDescription("latest BP in last 6 months is >150")
                   .setIri(IM.NAMESPACE+"observation")
                   .with(ob->ob
@@ -111,7 +112,7 @@ public class CoreQueryImporter implements TTImport {
                       .setDescription(">150")
                       .setOperator(Operator.gt)
                       .setValue("150"))))
-                .where(and->and
+            .where(w->w
                   .setBool(Bool.not)
                   .setDescription("not followed by screening invite or is hypertensive")
                   .where(not->not
@@ -126,14 +127,16 @@ public class CoreQueryImporter implements TTImport {
                       .where(after->after
                         .setIri(IM.NAMESPACE+"effectiveDate")
                         .setOperator(Operator.gte)
-                        .setRelativeTo("LastBP"))))
+                        .setRelativeTo("LastBP")))))
+          .where(w->w
+            .setBool(Bool.not)
                   .where(not->not
                     .setDescription("Hypertensive")
                     .setIri(IM.NAMESPACE+"observation")
                     .where(ob1->ob1
                       .setIri(IM.NAMESPACE+"concept")
                     .addIn(new TTAlias().setSet(ex+"Hypertensives")
-                      .setName("Hypertensives")))))));
+                      .setName("Hypertensives"))))));
         qry.set(IM.DEFINITION, TTLiteral.literal(prof));
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
         document.addEntity(qry);

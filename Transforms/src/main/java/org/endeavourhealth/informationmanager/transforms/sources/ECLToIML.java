@@ -15,6 +15,7 @@ import org.endeavourhealth.informationmanager.parser.ecl.ECLBaseVisitor;
 import org.endeavourhealth.informationmanager.parser.ecl.ECLLexer;
 import org.endeavourhealth.informationmanager.parser.ecl.ECLParser;
 
+
 import java.util.UnknownFormatConversionException;
 import java.util.zip.DataFormatException;
 
@@ -200,21 +201,18 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertAndRefinement(From from, ECLParser.EclrefinementContext refinement) throws DataFormatException {
-		Where where= new Where();
-		from.setWhere(where);
-		where.setBool(Bool.and);
-		Where and= new Where();
-		where.addWhere(and);
-		ECLParser.SubrefinementContext subref = refinement.subrefinement();
-		if (subref.eclattributeset() != null) {
-			convertAttributeSet(and,subref.eclattributeset());
-		}
+			Where and= new Where();
+			from.addWhere(and);
+			ECLParser.SubrefinementContext subref = refinement.subrefinement();
+			if (subref.eclattributeset() != null) {
+				convertAttributeSet(and,subref.eclattributeset());
+			}
 		else if (subref.eclattributegroup()!=null){
 			convertAttributeGroup(and,subref.eclattributegroup());
 		}
 		for (ECLParser.SubrefinementContext subOrRef : refinement.conjunctionrefinementset().subrefinement()) {
 			Where pv = new Where();
-			where.addWhere(pv);
+			from.addWhere(pv);
 			if (subOrRef.eclattributeset() != null) {
 				convertAttributeSet(pv, subOrRef.eclattributeset());
 			}
@@ -225,11 +223,11 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertOrRefinement(From from, ECLParser.EclrefinementContext refinement) throws DataFormatException {
-		Where where= new Where();
-		from.setWhere(where);
-		where.setBool(Bool.or);
 		Where or= new Where();
-		where.addWhere(or);
+		from.addWhere(or);
+		or.setBool(Bool.or);
+		Where firstOr= new Where();
+		or.addWhere(firstOr);
 		ECLParser.SubrefinementContext subref = refinement.subrefinement();
 		if (subref.eclattributeset() != null) {
 			convertAttributeSet(or,subref.eclattributeset());
@@ -239,7 +237,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 		}
 		for (ECLParser.SubrefinementContext subOrRef : refinement.disjunctionrefinementset().subrefinement()) {
 			Where pv = new Where();
-			where.addWhere(pv);
+			or.addWhere(pv);
 			if (subOrRef.eclattributeset() != null) {
 				convertAttributeSet(pv, subOrRef.eclattributeset());
 			}
@@ -252,7 +250,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 
 	private void convertSingleRefinement(From from, ECLParser.EclrefinementContext refinement) throws DataFormatException {
 		Where where= new Where();
-		from.setWhere(where);
+		from.addWhere(where);
 		ECLParser.SubrefinementContext subref = refinement.subrefinement();
 		if (subref.eclattributeset() != null) {
 			convertAttributeSet(where,subref.eclattributeset());
@@ -308,7 +306,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertConjunction(ECLParser.ConjunctionexpressionconstraintContext eclAnd,From from) throws DataFormatException {
-		from.setBool(Bool.and);
+		from.setBoolFrom(Bool.and);
 		for (ECLParser.SubexpressionconstraintContext eclInter : eclAnd.subexpressionconstraint()) {
 			From and= new From();
 			from.addFrom(and);
@@ -317,20 +315,20 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertExclusion(ECLParser.ExclusionexpressionconstraintContext eclExc,From from) throws DataFormatException {
-		from.setBool(Bool.and);
+		from.setBoolFrom(Bool.and);
 		From first= new From();
 		from.addFrom(first);
 		convertSubECContext(eclExc.subexpressionconstraint().get(0),first);
 		From notFrom= new From();
 		from.addFrom(notFrom);
-		notFrom.setBool(Bool.not);
+		notFrom.setBoolFrom(Bool.not);
 		From notExist= new From();
 		notFrom.addFrom(notExist);
 		convertSubECContext(eclExc.subexpressionconstraint().get(1),notExist);
 	}
 
 	private void convertDisjunction(ECLParser.DisjunctionexpressionconstraintContext eclOr,From from) throws DataFormatException {
-		from.setBool(Bool.or);
+		from.setBoolFrom(Bool.or);
 		for (ECLParser.SubexpressionconstraintContext eclUnion : eclOr.subexpressionconstraint()) {
 			From or= new From();
 			from.addFrom(or);

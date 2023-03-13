@@ -41,6 +41,15 @@ public class SnomedImporter implements TTImport {
      ".*\\\\PRIMARY\\\\.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleSnapshot_.*\\.txt"
      };
 
+   public static final String[] vmp= {
+     ".*\\\\DMD\\\\.*\\\\f_vmp_VmpType.csv"
+   };
+
+  public static final String[] amp= {
+    ".*\\\\DMD\\\\.*\\\\.*\\\\f_amp_AmpType.csv"
+  };
+
+
 
   public static final String[] qofClusters= {
     ".*_PCD_Refset_Content.txt"};
@@ -121,8 +130,8 @@ public class SnomedImporter implements TTImport {
           importMRCMDomainFiles(config.getFolder());
           // importStatedFiles(config.folder); No longer bothers with OWL axioms;
           importRelationshipFiles(config.getFolder());
-
           importSubstitution(config.getFolder());
+          importVmp(config.getFolder());
 
           addSpecials(document);
           conceptMap.clear();
@@ -268,7 +277,42 @@ public class SnomedImporter implements TTImport {
       System.out.println("isas added "+ counter);
    }
 
+
+
    //=================private methods========================
+
+  private void importVmp(String path) throws IOException {
+    int i = 0;
+    for (String conceptFile : vmp) {
+      Path file =  ImportUtils.findFilesForId(path, conceptFile).get(0);
+      System.out.println("Processing concepts in " + file.getFileName().toString());
+      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        reader.readLine();     // NOSONAR - Skip header
+        String line = reader.readLine();
+        while (line != null && !line.isEmpty()) {
+          processVmpLine(line);
+
+          i++;
+          line = reader.readLine();
+        }
+      }
+    }
+    System.out.println("Imported " + i + " concepts");
+  }
+
+  private void processVmpLine(String line) {
+    String[] fields = line.split("\t");
+    TTEntity c = conceptMap.get(fields[0]);
+    if (c!=null) {
+      c.set(IM.PREFERRED_NAME,TTLiteral.literal(fields[4]));
+      if (!TTManager.termUsed(c,fields[4]))
+        TTManager.addTermCode(c,fields[4],null);
+    }
+  }
+
+
+
+
 
    private void importConceptFiles(String path) throws IOException {
       int i = 0;
@@ -602,7 +646,7 @@ public class SnomedImporter implements TTImport {
 
    public void validateFiles(String inFolder){
        ImportUtils.validateFiles(inFolder,concepts, descriptions,
-          relationships, refsets, attributeRanges, attributeDomains,substitutions,qofClusters);
+          relationships, refsets, attributeRanges, attributeDomains,substitutions,qofClusters,vmp);
    }
 
     @Override

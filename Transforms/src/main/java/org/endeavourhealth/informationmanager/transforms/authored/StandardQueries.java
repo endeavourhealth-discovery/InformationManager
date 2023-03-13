@@ -42,7 +42,7 @@ public class StandardQueries {
 					.setAlias("organisation")))
 		  .from(f->f
 				.setType(IM.NAMESPACE+"Patient").setName("Patient")
-			.setWhere(new Where()
+			.where(w->w
 				.setIri(IM.NAMESPACE+"gpRegistration")
 				.setBool(Bool.and)
 				.where(pv->pv
