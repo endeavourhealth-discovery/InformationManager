@@ -301,12 +301,12 @@ public class SnomedImporter implements TTImport {
   }
 
   private void processVmpLine(String line) {
-    String[] fields = line.split("\t");
+    String[] fields = line.split("\\|");
     TTEntity c = conceptMap.get(fields[0]);
     if (c!=null) {
-      c.set(IM.PREFERRED_NAME,TTLiteral.literal(fields[4]));
-      if (!TTManager.termUsed(c,fields[4]))
-        TTManager.addTermCode(c,fields[4],null);
+      c.set(IM.PREFERRED_NAME,TTLiteral.literal(fields[5]));
+      if (!TTManager.termUsed(c,fields[5]))
+        TTManager.addTermCode(c,fields[5],null);
     }
   }
 

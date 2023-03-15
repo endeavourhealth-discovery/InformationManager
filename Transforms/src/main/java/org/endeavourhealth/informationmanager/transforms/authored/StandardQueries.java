@@ -53,13 +53,14 @@ public class StandardQueries {
 					.setOperator(Operator.lte)
 					.setRelativeTo("$referenceDate"))
 				.where(pv->pv
-					.setBool(Bool.not)
-						.where(pv1->pv1
-						.setIri(IM.NAMESPACE+"endDate"))))
-				.where(pv->pv
+					.setBool(Bool.or)
+					.where(pv1->pv1
+						.setExclude(true)
+						.setIri(IM.NAMESPACE+"endDate"))
+					.where(pv1->pv1
 					.setIri(IM.NAMESPACE+"endDate")
 					.setOperator(Operator.gt)
-						.setRelativeTo("$referenceDate")));
+						.setRelativeTo("$referenceDate")))));
 
 		gpRegPractice.getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE+"query"));
 		gpRegPractice

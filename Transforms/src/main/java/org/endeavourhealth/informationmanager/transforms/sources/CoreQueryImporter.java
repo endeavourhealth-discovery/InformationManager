@@ -113,30 +113,27 @@ public class CoreQueryImporter implements TTImport {
                       .setOperator(Operator.gt)
                       .setValue("150"))))
             .where(w->w
-                  .setBool(Bool.not)
-                  .setDescription("not followed by screening invite or is hypertensive")
-                  .where(not->not
-                    .setDescription("Invited for screening after high BP")
-                    .setIri(IM.NAMESPACE+"observation")
-                    .where(ob->ob
-                      .setDescription("Invited for Screening after high BP")
-                      .setBool(Bool.and)
-                      .where(inv->inv
+              .setExclude(true)
+              .setDescription("High BP not followed by screening invite")
+              .setIri(IM.NAMESPACE+"observation")
+              .setBool(Bool.and)
+              .where(inv->inv
+                        .setDescription("Invited for Screening after BP")
                         .setIri(IM.NAMESPACE+"concept")
                         .addIn(new TTAlias().setSet(IM.NAMESPACE+"InvitedForScreening")))
-                      .where(after->after
+              .where(after->after
+                        .setDescription("after high BP")
                         .setIri(IM.NAMESPACE+"effectiveDate")
                         .setOperator(Operator.gte)
-                        .setRelativeTo("LastBP")))))
+                        .setRelativeTo("LastBP")))
           .where(w->w
-            .setBool(Bool.not)
-                  .where(not->not
-                    .setDescription("Hypertensive")
+            .setExclude(true)
+            .setDescription("not hypertensive")
                     .setIri(IM.NAMESPACE+"observation")
                     .where(ob1->ob1
                       .setIri(IM.NAMESPACE+"concept")
                     .addIn(new TTAlias().setSet(ex+"Hypertensives")
-                      .setName("Hypertensives"))))));
+                      .setName("Hypertensives")))));
         qry.set(IM.DEFINITION, TTLiteral.literal(prof));
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
         document.addEntity(qry);
@@ -218,9 +215,8 @@ public class CoreQueryImporter implements TTImport {
             .where(pv -> pv
               .setBool(Bool.or)
               .where(pv1->pv1
-                .setBool(Bool.not)
-                .where(pv2->pv2
-                .setIri(IM.NAMESPACE+"endDate")))
+                .setExclude(true)
+                .setIri(IM.NAMESPACE+"endDate"))
               .where(pv1->pv1
                     .setIri(IM.NAMESPACE+"endDate")
                       .setOperator(Operator.gt)

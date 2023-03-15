@@ -321,7 +321,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 		convertSubECContext(eclExc.subexpressionconstraint().get(0),first);
 		From notFrom= new From();
 		from.addFrom(notFrom);
-		notFrom.setBoolFrom(Bool.not);
+		notFrom.setExclude(true);
 		From notExist= new From();
 		notFrom.addFrom(notExist);
 		convertSubECContext(eclExc.subexpressionconstraint().get(1),notExist);
