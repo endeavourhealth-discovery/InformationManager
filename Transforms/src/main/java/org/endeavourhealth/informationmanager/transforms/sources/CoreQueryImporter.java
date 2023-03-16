@@ -205,6 +205,7 @@ public class CoreQueryImporter implements TTImport {
             .setName("Patient")
           .where(p->p
             .setIri(IM.NAMESPACE+"gpRegistration")
+            .setBool(Bool.and)
             .where(p1->p1
                 .setIri(IM.NAMESPACE+"patientType")
                     .addIn(new From().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
@@ -215,8 +216,8 @@ public class CoreQueryImporter implements TTImport {
             .where(pv -> pv
               .setBool(Bool.or)
               .where(pv1->pv1
-                .setExclude(true)
-                .setIri(IM.NAMESPACE+"endDate"))
+                .setIri(IM.NAMESPACE+"endDate")
+                .setIsNull(true))
               .where(pv1->pv1
                     .setIri(IM.NAMESPACE+"endDate")
                       .setOperator(Operator.gt)
