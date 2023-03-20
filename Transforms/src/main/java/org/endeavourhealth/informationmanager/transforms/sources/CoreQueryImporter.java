@@ -68,10 +68,12 @@ public class CoreQueryImporter implements TTImport {
                     .range(r->r
                       .from(from->from
                         .setOperator(Operator.gte)
-                        .setValue("65"))
+                        .setValue("65")
+                        .setUnit("YEARS"))
                     .to(to->to
                         .setOperator(Operator.lt)
-                        .setValue("70"))))
+                        .setValue("70")
+                      .setUnit("YEARS"))))
                 .where(or->or
                   .setDescription("Diabetic")
                   .setIri(IM.NAMESPACE+"observation")
@@ -82,8 +84,6 @@ public class CoreQueryImporter implements TTImport {
           .where(w->w
                   .setDescription("latest BP in last 6 months is >150")
                   .setIri(IM.NAMESPACE+"observation")
-                  .with(ob->ob
-                    .setDescription("Home or office based systolic in the last 6 months is >150")
                     .setBool(Bool.and)
                       .where(ww->ww
                         .setDescription("Home or office based Systolic")
@@ -111,14 +111,14 @@ public class CoreQueryImporter implements TTImport {
                       .setIri(IM.NAMESPACE+"numericValue")
                       .setDescription(">150")
                       .setOperator(Operator.gt)
-                      .setValue("150"))))
+                      .setValue("150")))
             .where(w->w
               .setExclude(true)
               .setDescription("High BP not followed by screening invite")
               .setIri(IM.NAMESPACE+"observation")
               .setBool(Bool.and)
               .where(inv->inv
-                        .setDescription("Invited for Screening after BP")
+                        .setDescription("Invited for Screening")
                         .setIri(IM.NAMESPACE+"concept")
                         .addIn(new TTAlias().setSet(IM.NAMESPACE+"InvitedForScreening")))
               .where(after->after
