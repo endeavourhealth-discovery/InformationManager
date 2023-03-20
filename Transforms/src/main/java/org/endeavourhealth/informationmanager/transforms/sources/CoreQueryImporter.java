@@ -249,7 +249,7 @@ public class CoreQueryImporter implements TTImport {
 
     private void output(TTDocument document,String folder) throws IOException {
         if (ImportApp.testDirectory != null) {
-            try (FileWriter writer = new FileWriter(folder + "\\CoreQueries.json")) {
+            try (FileWriter writer = new FileWriter(folder + "\\DiscoveryCore\\CoreQueries.json")) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
                 objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
