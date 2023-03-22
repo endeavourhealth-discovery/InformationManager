@@ -4,9 +4,9 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
-import org.endeavourhealth.imapi.model.iml.Query;
+import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.ECLToIML;
+import org.endeavourhealth.informationmanager.transforms.sources.ECLToIML;
 import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
@@ -32,13 +32,23 @@ public class SnomedImporter implements TTImport {
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKEDSnapshot_.*\\.txt",
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKCRSnapshot_.*\\.txt",
        ".*\\\\PRIMARY\\\\.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_Snapshot_.*\\.txt",
-       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKDGSnapshot_.*\\.txt"
+       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKDGSnapshot_.*\\.txt",
+     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKEDSnapshot_.*\\.txt"
    };
 
    public static final String[] refsets= {
      ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleUKCRSnapshot_.*\\.txt",
      ".*\\\\PRIMARY\\\\.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleSnapshot_.*\\.txt"
      };
+
+   public static final String[] vmp= {
+     ".*\\\\DMD\\\\.*\\\\f_vmp_VmpType.csv"
+   };
+
+  public static final String[] amp= {
+    ".*\\\\DMD\\\\.*\\\\.*\\\\f_amp_AmpType.csv"
+  };
+
 
 
   public static final String[] qofClusters= {
@@ -50,7 +60,8 @@ public class SnomedImporter implements TTImport {
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKEDSnapshot-en_.*\\.txt",
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKCRSnapshot-en_.*\\.txt",
        ".*\\\\PRIMARY\\\\.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_Snapshot-en_.*\\.txt",
-       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKDGSnapshot-en_.*\\.txt"
+       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKDGSnapshot-en_.*\\.txt",
+     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKEDSnapshot-en_.*\\.txt"
    };
 
 
@@ -60,7 +71,8 @@ public class SnomedImporter implements TTImport {
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKEDSnapshot_.*\\.txt",
        ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRefsetsRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKCRSnapshot_.*\\.txt",
        ".*\\\\PRIMARY\\\\.*\\\\SnomedCT_UKPrimaryCareRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_Snapshot_.*\\.txt",
-       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKDGSnapshot_.*\\.txt"
+       ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKDGSnapshot_.*\\.txt",
+     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKEditionRF2_PRODUCTION_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKEDSnapshot_.*\\.txt"
    };
 
    public static final String[] substitutions = {
@@ -118,8 +130,8 @@ public class SnomedImporter implements TTImport {
           importMRCMDomainFiles(config.getFolder());
           // importStatedFiles(config.folder); No longer bothers with OWL axioms;
           importRelationshipFiles(config.getFolder());
-
           importSubstitution(config.getFolder());
+          importVmp(config.getFolder());
 
           addSpecials(document);
           conceptMap.clear();
@@ -265,7 +277,42 @@ public class SnomedImporter implements TTImport {
       System.out.println("isas added "+ counter);
    }
 
+
+
    //=================private methods========================
+
+  private void importVmp(String path) throws IOException {
+    int i = 0;
+    for (String conceptFile : vmp) {
+      Path file =  ImportUtils.findFilesForId(path, conceptFile).get(0);
+      System.out.println("Processing concepts in " + file.getFileName().toString());
+      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        reader.readLine();     // NOSONAR - Skip header
+        String line = reader.readLine();
+        while (line != null && !line.isEmpty()) {
+          processVmpLine(line);
+
+          i++;
+          line = reader.readLine();
+        }
+      }
+    }
+    System.out.println("Imported " + i + " concepts");
+  }
+
+  private void processVmpLine(String line) {
+    String[] fields = line.split("\\|");
+    TTEntity c = conceptMap.get(fields[0]);
+    if (c!=null) {
+      c.set(IM.PREFERRED_NAME,TTLiteral.literal(fields[5]));
+      if (!TTManager.termUsed(c,fields[5]))
+        TTManager.addTermCode(c,fields[5],null);
+    }
+  }
+
+
+
+
 
    private void importConceptFiles(String path) throws IOException {
       int i = 0;
@@ -487,11 +534,14 @@ public class SnomedImporter implements TTImport {
            return;
        }
       Query expression= eclConverter.getQueryFromECL(ecl);
-       for (TTAlias range:expression.getWhere().getFrom()) {
-         op.addObject(RDFS.RANGE, TTIriRef.iri(range.getIri()));
+       if (expression.getFrom().getIri()!=null)
+         op.addObject(RDFS.RANGE,expression.getFrom());
+       if (expression.getFrom().getFrom()!=null) {
+         for (TTAlias range : expression.getFrom().getFrom()) {
+           op.addObject(RDFS.RANGE, TTIriRef.iri(range.getIri()));
+         }
        }
-       if (expression.getWhere().getPathTo()!=null|| expression.getWhere().getAnd()!=null
-       ||expression.getWhere().getNotExist()!=null)
+       if (expression.getFrom().getWhere()!=null)
          throw new DataFormatException("Snomed MCRM range converter does not support compound or refined ecl");
    }
 
@@ -596,7 +646,7 @@ public class SnomedImporter implements TTImport {
 
    public void validateFiles(String inFolder){
        ImportUtils.validateFiles(inFolder,concepts, descriptions,
-          relationships, refsets, attributeRanges, attributeDomains,substitutions,qofClusters);
+          relationships, refsets, attributeRanges, attributeDomains,substitutions,qofClusters,vmp);
    }
 
     @Override

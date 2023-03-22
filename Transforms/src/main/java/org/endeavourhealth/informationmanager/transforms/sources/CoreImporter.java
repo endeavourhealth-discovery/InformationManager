@@ -1,15 +1,10 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
+import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.informationmanager.transforms.reasoner.Reasoner;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 import java.io.File;
@@ -70,7 +65,7 @@ public class CoreImporter implements TTImport {
           }
         }
       }
-      CoreQueryImporter qryImporter= new CoreQueryImporter();
+   CoreQueryImporter qryImporter= new CoreQueryImporter();
       qryImporter.importData(config);
    }
 
@@ -83,8 +78,8 @@ public class CoreImporter implements TTImport {
         TTManager manager = new TTManager();
         Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
         TTDocument document = manager.loadDocument(path.toFile());
-        Reasoner reasoner = new Reasoner();
         System.out.println("Generating inferred document from "+ coreFile);
+        Reasoner reasoner = new Reasoner();
         TTDocument inferred = reasoner.generateInferred(document);
         inferred= reasoner.inheritShapeProperties(inferred);
         manager = new TTManager();

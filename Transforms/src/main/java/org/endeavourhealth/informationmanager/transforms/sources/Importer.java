@@ -6,6 +6,7 @@ import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.FHIR;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 
 /**
@@ -45,8 +46,6 @@ public class Importer implements TTImportByType {
    private TTImport getImporter(TTIriRef importType) throws Exception {
       if (TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter").equals(importType))
          return new SingleFileImporter();
-      else if (TTIriRef.iri(IM.NAMESPACE+"QCodeGroups").equals(importType))
-         return new QConceptGroups();
       else if (IM.GRAPH_DISCOVERY.equals(importType))
          return new CoreImporter();
       else  if (IM.GRAPH_BARTS_CERNER.equals(importType))
@@ -83,6 +82,8 @@ public class Importer implements TTImportByType {
          return new DeltaImporter();
       else if (FHIR.GRAPH_FHIR.equals(importType))
          return new FHIRImport();
+      else if (TTIriRef.iri(QR.NAMESPACE).equals(importType))
+         return new QConceptGroups();
       else
          throw new Exception("Unrecognised import type [" + importType.getIri() + "]");
    }

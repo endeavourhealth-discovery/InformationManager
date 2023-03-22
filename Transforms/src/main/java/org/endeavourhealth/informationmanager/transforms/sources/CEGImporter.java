@@ -7,7 +7,7 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.iml.ConceptSet;
 import org.endeavourhealth.imapi.model.iml.Entity;
 import org.endeavourhealth.imapi.model.iml.ModelDocument;
-import org.endeavourhealth.imapi.model.iml.QueryEntity;
+import org.endeavourhealth.imapi.model.imq.QueryEntity;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -84,11 +84,11 @@ public class CEGImporter implements TTImport {
 			}
 			if (TTFilerFactory.isTransactional()) {
 				new TTTransactionFiler(null).fileTransaction(document);
-				return;
 			}
-
-			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-				filer.fileDocument(document);
+			else {
+				try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+					filer.fileDocument(document);
+				}
 			}
 		}
 	}
@@ -160,6 +160,9 @@ public class CEGImporter implements TTImport {
 							TTEntity ttFolder= new TTEntity()
 								.setIri(qFolder.getIri())
 								.setName(qFolder.getName())
+								.setName(qFolder.getName());
+							qFolder.getType().forEach(ttFolder::addType);
+								ttFolder
 								.setDescription(qFolder.getDescription());
 							for( TTIriRef type: qFolder.getType()) {
 								ttFolder.addType(type);
@@ -180,9 +183,7 @@ public class CEGImporter implements TTImport {
 								.setIri(qq.getIri())
 								.setName(qq.getName())
 								.setDescription(qq.getDescription());
-							for( TTIriRef type: qq.getType()) {
-								ttQuery.addType(type);
-							}
+							qq.getType().stream().forEach(ttQuery::addType);
 							document.addEntity(ttQuery);
 							if (qq.getIsContainedIn()!=null){
 								for (TTIriRef inFolder:qq.getIsContainedIn()){
@@ -195,11 +196,11 @@ public class CEGImporter implements TTImport {
 				  output(fileEntry,qDocument,document);
 					if (TTFilerFactory.isTransactional()){
 						new TTTransactionFiler(null).fileTransaction(document);
-						return;
 					}
-
-					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-						filer.fileDocument(document);
+					else {
+						try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+							filer.fileDocument(document);
+						}
 					}
 					this.conceptSets.addAll(converter.getValueSets().values());
 					}
@@ -211,17 +212,13 @@ public class CEGImporter implements TTImport {
 
 		if ( ImportApp.testDirectory!=null) {
 			String directory = ImportApp.testDirectory.replace("%", " ");
-			TTManager manager = new TTManager();
-
-			manager.setDocument(document);
-			manager.saveDocument(new File(directory + "\\"+ fileEntry.getName().replace(".xml", "") + "-new--LD.json"));
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 			String json= objectMapper.writerWithDefaultPrettyPrinter().withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(qDocument);
 		  json= json.replaceAll(IM.NAMESPACE,":");
-			try (FileWriter wr= new FileWriter(directory + fileEntry.getName().replace(".xml","") + "-NEW.json")){
+			try (FileWriter wr= new FileWriter(directory + fileEntry.getName().replace(".xml","") + ".json")){
 				wr.write(json);
 			}
 

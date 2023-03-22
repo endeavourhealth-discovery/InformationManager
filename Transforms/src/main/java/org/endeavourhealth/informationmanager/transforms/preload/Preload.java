@@ -5,8 +5,10 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
 import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.FHIR;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
@@ -93,6 +95,7 @@ public class Preload {
             .validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
             .validateByType(IM.GRAPH_CEG_QUERY, cfg.getFolder())
             .validateByType(IM.GRAPH_IM1, cfg.getFolder())
+            .validateByType(TTIriRef.iri(QR.NAMESPACE),cfg.getFolder())
             .validateByType(FHIR.GRAPH_FHIR,cfg.getFolder());
 
         LOG.info("Importing files...");
@@ -121,12 +124,13 @@ public class Preload {
 
 
 
-        LOG.info("Filing into live graph starting with CEG");
+        LOG.info("Filing into live graph");
         TTFilerFactory.setBulk(false);
         TTFilerFactory.setTransactional(true);
         importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
         importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
         importer.importByType(IM.GRAPH_CEG_QUERY, cfg);
+        importer.importByType(TTIriRef.iri(QR.NAMESPACE),cfg);
         TTImport deltaImporter = new DeltaImporter();
         deltaImporter.importData(cfg);
 
@@ -179,8 +183,8 @@ public class Preload {
 
     private static boolean pingGraphServer() {
         Client client = ClientBuilder.newClient();
-        client.property("jersey.config.client.connectTimeout", 10000);
-        client.property("jersey.config.client.readTimeout", 10000);
+        client.property("jersey.config.client.connectTimeout", 20000);
+        client.property("jersey.config.client.readTimeout", 20000);
 
         WebTarget resource = client.target("http://localhost:7200/protocol");
 

@@ -4,10 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import org.endeavourhealth.imapi.dataaccess.OpenSearchSender;
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.model.iml.Query;
-import org.endeavourhealth.imapi.model.iml.Where;
+import org.endeavourhealth.imapi.logic.service.SearchService;
+import org.endeavourhealth.imapi.model.imq.Argument;
+import org.endeavourhealth.imapi.model.imq.QueryRequest;
+import org.endeavourhealth.imapi.model.imq.Update;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
@@ -53,6 +54,14 @@ public class QConceptGroups implements TTImport {
 			manager.setDocument(document);
 			manager.saveDocument(new File(directory + "\\QCodes.json"));
 		}
+		QueryRequest qr= new QueryRequest()
+			.addArgument(new Argument()
+				.setParameter("this")
+				.setValueIri(TTIriRef.iri(QR.NAMESPACE)))
+			.setUpdate(new Update().setIri(IM.NAMESPACE+"DeleteSets"));
+
+		LOG.info("Deleting q code groups..");
+		new SearchService().updateIM(qr);
 		if (!TTFilerFactory.isBulk()) {
 			TTTransactionFiler filer= new TTTransactionFiler(null);
 			filer.fileTransaction(document);
@@ -77,21 +86,22 @@ public class QConceptGroups implements TTImport {
 					for (Iterator<JsonNode> it = groups.elements(); it.hasNext(); ) {
 						JsonNode codeGroup = it.next();
 						String id = codeGroup.get("Id").asText();
+						String groupId=id;
 						String version = codeGroup.get("CurrentVersion").asText();
-						TTEntity qGroup = idCodeGroupMap.get(id + "_" + version);
+						TTEntity qGroup = idCodeGroupMap.get(groupId);
 						if (qGroup == null) {
 							qGroup = new TTEntity()
-								.setIri(QR.NAMESPACE + "QCodeGroup_" + id)
+								.setIri(QR.NAMESPACE + "QCodeGroup_" + groupId)
 								.setName("Q code group "+codeGroup.get("Name").asText())
 								.addType(IM.CONCEPT_SET);
 						}
 						qGroup.addObject(IM.IS_SUBSET_OF, TTIriRef.iri(project.getValue()));
 						qGroup.set(IM.VERSION, TTLiteral.literal(version));
 						document.addEntity(qGroup);
-						idCodeGroupMap.put(id + "_" + version, qGroup);
-						if (codeGroups.get(id)==null) {
+						idCodeGroupMap.put(groupId, qGroup);
+						if (codeGroups.get(groupId)==null) {
 							importCodes(projectId, qGroup, id);
-							codeGroups.put(id, version);
+							codeGroups.put(groupId, version);
 						}
 						else {
 							if (!codeGroups.get(id).equals(version))
@@ -105,14 +115,14 @@ public class QConceptGroups implements TTImport {
 		}
 	}
 
-	private void importCodes(String projectId, TTEntity qGroup,String groupId) throws JsonProcessingException {
+	private void importCodes(String projectId, TTEntity qGroup,String id) throws JsonProcessingException {
 		String version = qGroup.get(IM.VERSION).asLiteral().getValue();
 		int page=0;
 		boolean results=true;
-		LOG.info("Fetching  members for  "+projectId+" code group "+ qGroup.getName()+"...");
+		LOG.info("Fetching  members for  "+projectId+" "+ qGroup.getName()+"...");
 		while (results) {
 			page++;
-			JsonNode json = getResults("codes_for_codegroup/" + groupId + "/" + projectId + "/" + version,page);
+			JsonNode json = getResults("codes_for_codegroup/" + id + "/" + projectId + "/" + version,page);
 			ArrayNode codes= (ArrayNode) json.get("Results");
 			if (!codes.isEmpty()) {
 				for (Iterator<JsonNode> it = codes.elements(); it.hasNext(); ) {
@@ -133,20 +143,22 @@ public class QConceptGroups implements TTImport {
 		ArrayNode projects= (ArrayNode) json.get("Results");
 		for (Iterator<JsonNode> it = projects.elements(); it.hasNext(); ) {
 			JsonNode project = it.next();
+			/*
 			TTEntity qp= new TTEntity()
-				.setIri(IM.NAMESPACE+"QProject_"+ project.get("Id").asText())
+				.setIri(QR.NAMESPACE+"QProject_"+ project.get("Id").asText())
 				.addType(IM.FOLDER)
 				.setName(project.get("Name").asText());
 			qp.set(IM.IS_CONTAINED_IN,projectsFolder);
 			document.addEntity(qp);
+
+			 */
 			TTEntity qset= new TTEntity()
 				.setIri(QR.NAMESPACE+"QPredict_"+ project.get("Id").asText())
 				.addType(IM.CONCEPT_SET)
 				.setName(project.get("Name").asText());
-			qset.set(IM.IS_CONTAINED_IN,IM.NAMESPACE+"QProject_"+ project.get("Id").asText());
+			qset.set(IM.IS_CONTAINED_IN,projectsFolder);
 			qset.set(SHACL.ORDER,TTLiteral.literal(1));
 			document.addEntity(qset);
-
 			idProjectMap.put(project.get("Id").asText(),qset.getIri());
 
 		}

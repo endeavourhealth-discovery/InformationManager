@@ -31,7 +31,6 @@ public class OdsImporter implements TTImport {
     private List<String> fieldIndex;
     private String[] fieldData;
     private final TTManager manager = new TTManager();
-    private TTDocument document = new TTDocument();
 
     public void validateFiles(String inFolder) {
         ImportUtils.validateFiles(inFolder, organisationFiles);
@@ -49,15 +48,14 @@ public class OdsImporter implements TTImport {
     public void importData(TTImportConfig config) throws Exception {
         LOG.info("Importing Organisation data");
 
-        document = manager.createDocument(IM.GRAPH_ODS.getIri());
 
         boolean graphCreated = false;
         for (String orgFile : organisationFiles) {
             try (TTManager manager = new TTManager()) {
-                TTDocument doc = manager.createDocument();
+                TTDocument doc = manager.createDocument(IM.GRAPH_ODS.getIri());
                 doc.setCrud(IM.UPDATE_ALL);
                 if (!graphCreated) {
-                    doc.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(), "ODS Organisational code scheme and graph", "Official ODS code scheme and graph"));
+                    doc.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(), "", "Official ODS code scheme and graph"));
                     graphCreated = true;
                 }
 
@@ -83,9 +81,7 @@ public class OdsImporter implements TTImport {
                 }
             }
         }
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
-        }
+
     }
 
     private boolean readLine(BufferedReader reader) throws IOException {
@@ -106,11 +102,11 @@ public class OdsImporter implements TTImport {
 
     private void processLine(TTDocument doc) {
         String odsCode = fieldByName("OrganisationId");
-        String orgIri = IM.ORGANISATION_NAMESPACE +  UUID.randomUUID();
+        String orgIri = IM.ORGANISATION_NAMESPACE +  odsCode;
         if(organisationCodes.contains(odsCode)) {
-           document.addEntity(new TTEntity().setIri(orgIri).setCode(odsCode));
+           doc.addEntity(new TTEntity().setIri(orgIri).setCode(odsCode));
         }
-        String addIri = IM.LOCATION_NAMESPACE + UUID.randomUUID();
+        String addIri = IM.LOCATION_NAMESPACE + "ODS_"+ odsCode;
 
         TTEntity org = new TTEntity(orgIri);
         org.setName(fieldByName("Name"));

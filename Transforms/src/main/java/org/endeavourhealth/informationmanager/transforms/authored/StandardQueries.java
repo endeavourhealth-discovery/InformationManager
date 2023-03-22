@@ -1,7 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.authored;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.endeavourhealth.imapi.model.iml.*;
+import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -36,31 +36,31 @@ public class StandardQueries {
 		query
 				.setName("GMS registered practice on reference date")
 				.select(s -> s
-					.setPath(IM.NAMESPACE+"gpRegistration")
-			  .property(p->p
-				.setIri(IM.NAMESPACE+"Organisation")
-				.setAlias("organisation")))
+					.setIri(IM.NAMESPACE+"gpRegistration")
+					.where(p->p
+						.setIri(IM.NAMESPACE+"Organisation")
+					.setAlias("organisation")))
 		  .from(f->f
-				.setIri(IM.NAMESPACE+"Patient").setName("Patient"))
-			.setWhere(new Where()
-				.setProperty(IM.NAMESPACE+"gpRegistration")
-				.and(pv->pv
-					.setProperty(IM.NAMESPACE+"patientType")
-					.setIs(new TTAlias().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
-				.and(pv->pv
-					.setProperty(IM.NAMESPACE+"startDate")
-					.setValue(new Value()
-						.setComparison("<=")
-						.setValueOf(new Compare().setVariable("$referenceDate"))))
-				.or(pv-> pv
-					.notExist(not->not
-						.setProperty(IM.NAMESPACE+"endDate")))
-				.or(pv->pv
-					.setProperty(IM.NAMESPACE+"endDate")
-					.setValue(new Value()
-						.setComparison(">")
-						.setValueOf(new Compare().setVariable("$referenceDate"))))
-				);
+				.setType(IM.NAMESPACE+"Patient").setName("Patient")
+			.where(w->w
+				.setIri(IM.NAMESPACE+"gpRegistration")
+				.setBool(Bool.and)
+				.where(pv->pv
+					.setIri(IM.NAMESPACE+"patientType")
+					.addIn(new From().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+				.where(pv->pv
+					.setIri(IM.NAMESPACE+"effectiveDate")
+					.setOperator(Operator.lte)
+					.setRelativeTo("$referenceDate"))
+				.where(pv->pv
+					.setBool(Bool.or)
+					.where(pv1->pv1
+						.setExclude(true)
+						.setIri(IM.NAMESPACE+"endDate"))
+					.where(pv1->pv1
+					.setIri(IM.NAMESPACE+"endDate")
+					.setOperator(Operator.gt)
+						.setRelativeTo("$referenceDate")))));
 
 		gpRegPractice.getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE+"query"));
 		gpRegPractice
@@ -148,14 +148,17 @@ public class StandardQueries {
 				.setName("Allowable Ranges for a property")
 				.setDescription("'using property domains get the allowable properties from the supertypes of this concept")
 				.setActiveOnly(true)
+				.select(s->s.setIri(IM.CODE.getIri()))
+				.select(s->s.setIri(RDFS.LABEL.getIri()))
 				.from(f ->f
-					.setIri(IM.CONCEPT.getIri()).setIsType(true))
-				.select(s->s.setProperty(IM.CODE))
-				.select(s->s.setProperty(RDFS.LABEL))
+					.setType(IM.CONCEPT.getIri())
 				.where(w->w
-					.setProperty(new TTAlias(RDFS.RANGE).setInverse(true))
-					.setIs(new TTAlias().setVariable("$this").setIncludeSupertypes(true).setIncludeSubtypes(true))
-				)));
+					.setIri(RDFS.RANGE.getIri())
+					.setInverse(true)
+					.addIn(new From().setVariable("$this")
+						.setAncestorsOf(true)
+						.setDescendantsOrSelfOf(true))
+				))));
 	}
 
 	private void getAllowableProperties() throws JsonProcessingException {
@@ -167,14 +170,14 @@ public class StandardQueries {
 				.setName("Allowable Properties for a concept")
 				.setDescription("'using property domains get the allowable properties from the supertypes of this concept")
 				.setActiveOnly(true)
+				.select(s->s.setIri(IM.CODE.getIri()))
+				.select(s->s.setIri(RDFS.LABEL.getIri()))
 			.from(f ->f
-				.setIri(IM.CONCEPT.getIri()).setIsType(true).setIncludeSubtypes(true))
-			.select(s->s.setProperty(IM.CODE))
-			.select(s->s.setProperty(RDFS.LABEL))
+				.setType(IM.CONCEPT.getIri())
 			.where(w->w
-					.setProperty(new TTAlias(RDFS.DOMAIN))
-					.setIs(new TTAlias().setVariable("$this").setIncludeSupertypes(true))
-				)));
+					.setIri(RDFS.DOMAIN.getIri())
+					.addIn(new From().setVariable("$this").setAncestorsOf(true))
+				))));
 	}
 
 	private void getConcepts() throws JsonProcessingException {
@@ -185,7 +188,7 @@ public class StandardQueries {
 				.setActiveOnly(true)
 				.setName("Search for concepts")
 				.from(w->w
-					.setIri(IM.CONCEPT.getIri()).setIsType(true))));
+					.setType(IM.CONCEPT.getIri()))));
 	}
 
 	private void getIsas() throws JsonProcessingException {
@@ -197,8 +200,9 @@ public class StandardQueries {
 				.setName("All subtypes of an entity, active only")
 					.setActiveOnly(true)
 				.from(w->w
-					.setVariable("$this").setIncludeSubtypes(true))
-				.select(s->s.setProperty(RDFS.LABEL))));
+					.setVariable("$this")
+					.setDescendantsOrSelfOf(true))
+				.select(s->s.setIri(RDFS.LABEL.getIri()))));
 	}
 
 	private TTEntity getQuery(String shortName) {
