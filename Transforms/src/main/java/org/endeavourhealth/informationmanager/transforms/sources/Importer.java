@@ -4,7 +4,6 @@ import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportByType;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.FHIR;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
@@ -80,8 +79,6 @@ public class Importer implements TTImportByType {
          return new NHSTfcImport();
       else if (IM.GRAPH_DELTAS.equals(importType))
          return new DeltaImporter();
-      else if (FHIR.GRAPH_FHIR.equals(importType))
-         return new FHIRImport();
       else if (TTIriRef.iri(QR.NAMESPACE).equals(importType))
          return new QConceptGroups();
       else
