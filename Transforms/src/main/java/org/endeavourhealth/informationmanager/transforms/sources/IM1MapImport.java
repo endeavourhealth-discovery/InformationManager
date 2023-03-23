@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.CaseUtils;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
@@ -58,6 +59,8 @@ public class IM1MapImport implements TTImport {
             "CM_Org_CQC", "8HN02"
     );
     private final Map<String,String> odsCodeIriMap = new HashMap<>();
+    private final Map<String,String> im1SchemeToIriTerm = new HashMap<>();
+    private List<String> valueSetsList= new ArrayList<>();
 
 
     @Override
@@ -149,43 +152,21 @@ public class IM1MapImport implements TTImport {
                             scheme = IM.CODE_SCHEME_BARTS_CERNER.getIri();
                             break;
                         case "FHIR_RFP":
-                            scheme = "X";
-                            break;
                         case "FHIR_RFT":
-                            scheme = "X";
-                            break;
                         case "FHIR_AG":
-                            scheme = "X";
-                            break;
                         case "FHIR_EC":
-                            scheme = "X";
-                            break;
                         case "FHIR_RT":
-                            scheme = "X";
-                            break;
                         case "FHIR_RS":
-                            scheme = "X";
-                            break;
                         case "FHIR_AS":
-                            scheme = "X";
-                            break;
                         case "FHIR_MSAT":
-                            scheme = "X";
-                            break;
                         case "FHIR_PRS":
-                            scheme = "X";
-                            break;
                         case "FHIR_AU":
-                            scheme = "X";
-                            break;
                         case "FHIR_CPS":
-                            scheme = "X";
-                            break;
                         case "FHIR_CPU":
-                            scheme = "X";
-                            break;
                         case "FHIR_CEP":
-                            scheme = "X";
+                        case "FHIR_FPR":
+                        case "FHIR_LANG":
+                            scheme = FHIR.GRAPH_FHIR.getIri();
                             break;
                         case "EMIS_LOCAL":
                             scheme = IM.CODE_SCHEME_EMIS.getIri();
@@ -200,21 +181,23 @@ public class IM1MapImport implements TTImport {
                             scheme = IM.CODE_SCHEME_VISION.getIri();
                             break;
                         case "CM_DiscoveryCode":
-                            scheme = IM.CODE_SCHEME_DISCOVERY.getIri();
-                            if (code.startsWith("LPV_Imp_Crn"))
-                                scheme= IM.GRAPH_IMPERIAL_CERNER.getIri();
-                            break;
-                        case "FHIR_FPR":
-                            scheme = "X";
-                            break;
-                        case "FHIR_LANG":
-                            scheme = "X";
+                            if(oldIri.startsWith("FHIR_")) {
+                                scheme = FHIR.GRAPH_FHIR.getIri();
+                            } else {
+                                scheme = IM.CODE_SCHEME_DISCOVERY.getIri();
+                                if (code.startsWith("LPV_Imp_Crn"))
+                                    scheme= IM.GRAPH_IMPERIAL_CERNER.getIri();
+                            }
                             break;
                         case "ImperialCerner":
                             scheme = "X";
                             break;
                         case "NULL":
-                            scheme = "X";
+                            if(oldIri.startsWith("FHIR_")) {
+                                scheme = FHIR.GRAPH_FHIR.getIri();
+                            } else {
+                                scheme = "X";
+                            }
                             break;
                         default:
                             if (code.startsWith("DM_"))
@@ -224,12 +207,14 @@ public class IM1MapImport implements TTImport {
                     }
                     if (scheme == null)
                         throw new IOException();
+
                     if (code.startsWith("_")){
                         if (scheme.equals("X")){
                             scheme=IM.CODE_SCHEME_ENCOUNTERS.getIri();
 
                         }
                     }
+
                     if (!scheme.equals("X")) {
                         String lname = code;
 
@@ -388,6 +373,9 @@ public class IM1MapImport implements TTImport {
 
                             }
                         }
+                        else if (scheme.equals((FHIR.GRAPH_FHIR.getIri()))) {
+                            addFhir(oldIri, term, im1Scheme, code);
+                        }
 
                         else {
                             checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
@@ -403,8 +391,88 @@ public class IM1MapImport implements TTImport {
             writer.close();
         }
         LOG.info("Process ended with " + count);
+        //valueSetsList.forEach(System.out::println);
 
 	}
+
+    private void addFhir(String oldIri, String term, String im1Scheme, String code) throws IOException {
+        String scheme = FHIR.GRAPH_FHIR.getIri() + "ValueSet/";
+        LOG.info("Writing Fhir ValueSet");
+        TTEntity entity = new TTEntity();
+
+        if("NULL".equals(code)){
+            // Is parent pseudo-scheme
+            im1SchemeToIriTerm.put(oldIri,getFhirIriTerm(term));
+            entity.setIri(scheme + im1SchemeToIriTerm.get(oldIri))
+                    .addType(IM.VALUESET);
+            entity.set(IM.IS_CONTAINED_IN, FHIR.VALUESET_FOLDER);
+            iriToSet.put(entity.getIri(), entity);
+        } else {
+            if("CM_DiscoveryCode".equals(im1Scheme)) {
+                im1SchemeToIriTerm.put(oldIri,getFhirIriTerm(term));
+                entity.setIri(scheme + im1SchemeToIriTerm.get(oldIri))
+                        .addType(IM.VALUESET);
+                entity.set(IM.IS_CONTAINED_IN, FHIR.VALUESET_FOLDER);
+                iriToSet.put(entity.getIri(), entity);
+            } else {
+                String iriTerm = im1SchemeToIriTerm.get(im1Scheme);
+                if(iriTerm == null) {
+                    System.out.println(im1Scheme);
+                    throw new IOException();
+                }
+                entity.setIri(scheme + iriTerm + "/" + code)
+                        .setCode(code)
+                        .addType(IM.CONCEPT)
+                        .set(IM.IS_MEMBER_OF, scheme + iriTerm);
+
+                TTEntity vset = iriToSet.get(scheme + iriTerm);
+                if (vset != null) {
+                    TTArray arr = vset.get(IM.HAS_MEMBER);
+                    if (arr == null) {
+                        arr = new TTArray();
+                        vset.set(IM.HAS_MEMBER, arr);
+                    }
+                    arr.add(TTIriRef.iri(entity.getIri()));
+                } else {
+                    LOG.error("Value set undefined");
+                }
+            }
+        }
+        entity.setName(term)
+                .setScheme(FHIR.GRAPH_FHIR)
+                .set(IM.IM1ID, TTLiteral.literal(oldIri));
+        if(!"NULL".equals(im1Scheme)) {
+            entity .set(IM.IM1SCHEME,TTLiteral.literal(im1Scheme));
+        }
+        document.addEntity(entity);
+    }
+
+    private static String getFhirIriTerm(String term) {
+        String[] words = term.split(" ");
+        StringBuilder iriTerm = new StringBuilder();
+        for(int i = 1; i< words.length; i++) {
+            iriTerm.append(words[i].toLowerCase());
+            if(i< words.length-1) {
+                iriTerm.append("-");
+            }
+        }
+        return iriTerm.toString();
+    }
+
+    private void getOldIriToIriTermMap(String inFolder) throws IOException {
+        Path file =  ImportUtils.findFileForId(inFolder, im1Codes[0]);
+        try (BufferedReader reader= new BufferedReader(new FileReader(file.toFile()))) {
+            reader.readLine();
+            String line = reader.readLine();
+            while (line != null && !line.isEmpty()) {
+                String[] fields = line.split("\t");
+                String oldIri = fields[1];
+                String term = fields[2];
+                String code = fields[5];
+                line = reader.readLine();
+            }
+        }
+    }
 
     private boolean checkOld(String scheme, String lname, String term, String code, String oldIri, String description,String im1Scheme) throws Exception {
         if (oldIriTerm.containsKey(lname)) {
@@ -534,7 +602,7 @@ public class IM1MapImport implements TTImport {
         if (oldIri!=null)
           entity.set(IM.IM1ID,TTLiteral.literal(oldIri));
         if (scheme!=null)
-        entity.set(IM.IM1SCHEME,TTLiteral.literal(scheme));
+          entity.set(IM.IM1SCHEME,TTLiteral.literal(scheme));
         if (matchedIri!=null) {
             entity.addObject(IM.MATCHED_TO, TTIriRef.iri(matchedIri));
             entity.setStatus(IM.DRAFT);
