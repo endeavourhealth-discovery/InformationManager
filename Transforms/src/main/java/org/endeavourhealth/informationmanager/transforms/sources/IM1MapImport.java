@@ -420,7 +420,7 @@ public class IM1MapImport implements TTImport {
                     System.out.println(im1Scheme);
                     throw new IOException();
                 }
-                entity.setIri(scheme + iriTerm + "/" + code)
+                entity.setIri(scheme + iriTerm + "/" + (code.toLowerCase().replaceAll(" ", "-")))
                         .setCode(code)
                         .addType(IM.CONCEPT)
                         .set(IM.IS_MEMBER_OF, scheme + iriTerm);
