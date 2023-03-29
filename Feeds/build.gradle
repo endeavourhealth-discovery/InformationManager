@@ -14,6 +14,7 @@ dependencies {
     implementation libs.jacksonDatabind
     implementation libs.javaxactivation
     implementation libs.jerseyClient
+    implementation libs.jerseyInject
     implementation libs.logbackCore
     implementation libs.logbackClassic
     implementation libs.slf4j

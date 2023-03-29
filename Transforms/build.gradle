@@ -20,6 +20,7 @@ dependencies {
     implementation libs.jaxbApi
     implementation libs.jaxbRuntime
     implementation libs.jerseyClient
+    implementation libs.jerseyInject
     implementation libs.jsonSimple
     implementation libs.logbackCore
     implementation libs.logbackClassic
