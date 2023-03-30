@@ -123,6 +123,7 @@ public class IM1MapImport implements TTImport {
                 String description= fields[3];
                 String im1Scheme= fields[4];
                 String code= fields[5];
+                String draft=fields[7];
                 String scheme;
 
                 if (!code.contains(",")) {
@@ -166,7 +167,10 @@ public class IM1MapImport implements TTImport {
                         case "FHIR_CEP":
                         case "FHIR_FPR":
                         case "FHIR_LANG":
-                            scheme = FHIR.GRAPH_FHIR.getIri();
+                            if ("0".equals(draft))
+                                scheme = FHIR.GRAPH_FHIR.getIri();
+                            else
+                                scheme = "X";
                             break;
                         case "EMIS_LOCAL":
                             scheme = IM.CODE_SCHEME_EMIS.getIri();
@@ -208,11 +212,8 @@ public class IM1MapImport implements TTImport {
                     if (scheme == null)
                         throw new IOException();
 
-                    if (code.startsWith("_")){
-                        if (scheme.equals("X")){
-                            scheme=IM.CODE_SCHEME_ENCOUNTERS.getIri();
-
-                        }
+                    if (code.startsWith("_") && scheme.equals("X")){
+                        scheme=IM.CODE_SCHEME_ENCOUNTERS.getIri();
                     }
 
                     if (!scheme.equals("X")) {
