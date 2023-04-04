@@ -266,7 +266,7 @@ public class IM1MapImport implements TTImport {
                                         checkEntity(scheme, conceptId, im1Scheme, term, code, oldIri, description);
                                     }
                                     else {
-                                        String oldConceptId = code.replaceAll("\\.", "").replace("-", "_").replace("\\^", "");
+                                        String oldConceptId = code.replaceAll("\\.", "").replaceAll("-", "_").replaceAll("\\^", "");
                                         if (entities.containsKey(scheme + oldConceptId)) {
                                             addIM1id(scheme + oldConceptId, oldIri);
                                         }
