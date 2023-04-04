@@ -194,7 +194,7 @@ public class CEGEthnicityImport implements TTImport {
 
         }
 				Query cegQuery= cegSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-				cegQuery.from(f->f.setIri(SNOMED.NAMESPACE+snomed));
+				cegQuery.match(f->f.setIri(SNOMED.NAMESPACE+snomed));
 				cegSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(cegQuery)));
         if (cegSubset.get(IM.HAS_TERM_CODE)==null)
             TTManager.addTermCode(cegSubset,catTerm,null);
@@ -216,7 +216,7 @@ public class CEGEthnicityImport implements TTImport {
                 TTManager.addTermCode(nhsSubset,nhsTerm,null);
 						Query nhsQuery=
             nhsSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-						nhsQuery.from(f->f.setIri(SNOMED.NAMESPACE+snomed));
+						nhsQuery.match(f->f.setIri(SNOMED.NAMESPACE+snomed));
 						nhsSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(nhsQuery)));
         }
     }

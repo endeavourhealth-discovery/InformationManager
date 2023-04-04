@@ -15,9 +15,9 @@ dependencies {
     implementation libs.owlApiApiBinding
     implementation libs.owlApiDistribution
     implementation libs.commonsIO
-    implementation libs.factPlusPlus
     implementation libs.guava
     implementation libs.snomed
+    implementation libs.antlr
 }
 
 publishing {

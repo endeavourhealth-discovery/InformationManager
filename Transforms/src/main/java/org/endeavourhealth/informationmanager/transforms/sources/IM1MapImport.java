@@ -48,6 +48,7 @@ public class IM1MapImport implements TTImport {
     private final Map<String,TTEntity> iriToSet= new HashMap<>();
     private final Map<String,String> oldCodeToNew= new HashMap<>();
     private final Map<String,String> emisTermToCode= new HashMap<>();
+    private final Map<String,String> remaps= new HashMap<>();
     private final Map<String,String> organisationMap= Map.of(
             "CM_Org_Barts","RQX42",
             "CM_Org_Imperial", "8HL46",
@@ -69,6 +70,7 @@ public class IM1MapImport implements TTImport {
     }
 
     public void importData(String inFolder, boolean secure) throws Exception {
+        EMISImport.populateRemaps(remaps);
 
         LOG.info("Loading emis look ups....");
         importEMISCodes(inFolder);
@@ -237,9 +239,7 @@ public class IM1MapImport implements TTImport {
                         }
 
                         else if (scheme.equals(IM.CODE_SCHEME_EMIS.getIri())) {
-                            if (".....".equals(code)) {
-                                LOG.warn("Skipping READ [.....]");
-                            } else {
+                            if (!(".....").equals(code)) {
                                 String conceptId= oldCodeToNew.get(code);
                                 if (conceptId==null) {
                                     String oldCode = code;
@@ -264,19 +264,22 @@ public class IM1MapImport implements TTImport {
                                 if (conceptId!=null){
                                     if (entities.containsKey(scheme + conceptId)) {
                                         checkEntity(scheme, conceptId, im1Scheme, term, code, oldIri, description);
-                                    } else
-                                        throw new DataFormatException("missing emis code");
+                                    }
+                                    else {
+                                        String oldConceptId = code.replaceAll("\\.", "").replace("-", "_").replace("\\^", "");
+                                        if (entities.containsKey(scheme + oldConceptId)) {
+                                            addIM1id(scheme + oldConceptId, oldIri);
+                                        }
+                                        else {
+                                            conceptId = remaps.get(oldConceptId);
+                                            if (conceptId != null) {
+                                                checkEntity(scheme, conceptId, im1Scheme, term, code, oldIri, description);
+                                            }
+                                            else
+                                                throw new DataFormatException("missing emis code");
+                                        }
+                                    }
                                 }
-                              /*
-
-                                    } else if (entities.containsKey(scheme + code.replace(".", ""))) {
-                                        realName = code.replace(".", "");
-                                        addIM1id(scheme + realName, oldIri);
-                                    } else
-                                        checkEntity(scheme, lname, im1Scheme, term, code, oldIri, description);
-                                }
-
-                                 */
                             }
                         }
 

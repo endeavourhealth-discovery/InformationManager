@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.cdm.ProvActivity;
-import org.endeavourhealth.imapi.model.imq.Bool;
-import org.endeavourhealth.imapi.model.imq.From;
-import org.endeavourhealth.imapi.model.imq.Operator;
-import org.endeavourhealth.imapi.model.imq.Query;
+import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -30,9 +27,7 @@ public class CoreQueryImporter implements TTImport {
         TTManager manager = new TTManager();
         TTDocument document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
         output(document,config.getFolder());
-
         addCurrentReg(document, config.getFolder());
-        allowableSubTypes(document);
         addTemplates(document);
         testQuery(document,config.getFolder());
         output(document,config.getFolder());
@@ -48,92 +43,94 @@ public class CoreQueryImporter implements TTImport {
           .setIri(IM.NAMESPACE + "Q_TestQuery")
           .setName("Test for patients either aged between 18 and 65 or with diabetes with the most recent systolic in the last 6 months >150"+
             "not followed by a screening invite, excluding hypertensives");
-        Query prof = new Query();
-        prof.setIri(qry.getIri());
-        prof.setName(qry.getName());
-        prof.from(f->f
-            .setIri(IM.NAMESPACE+"Patient")
-          .where(w->w
+        Query prof = new Query()
+          .setIri(IM.NAMESPACE + "Q_TestQuery")
+          .setName("Test for patients either aged between 18 and 65 or with diabetes with the most recent systolic in the last 6 months >150"+
+            "not followed by a screening invite, excluding hypertensives")
+          .match(f->f
+            .setType("Patient"))
+          .match(w->w
             .setDescription("Registered for gms")
-            .setIri(IM.IS_SUBSET_OF.getIri())
-            .in(t->t.setSet(ex+"Q_RegisteredGMS")
-              .setName("Registered for GMS services on reference date"))
-            .setValueLabel("Registered for GMS on reference date"))
-          .where(w->w
-              .setDescription("aged 65 to 70 or diabetic")
-                .setBool(Bool.or)
-                .where (or->or
-                    .setDescription("aged between 65 and 70")
-                   .setIri(IM.NAMESPACE+"age")
-                    .range(r->r
-                      .from(from->from
-                        .setOperator(Operator.gte)
-                        .setValue("65")
-                        .setUnit("YEARS"))
-                    .to(to->to
-                        .setOperator(Operator.lt)
-                        .setValue("70")
-                      .setUnit("YEARS"))))
-                .where(or->or
-                  .setDescription("Diabetic")
-                  .setIri(IM.NAMESPACE+"observation")
-                  .where(ob->ob
-                    .setIri(IM.NAMESPACE+"concept")
-                    .addIn(new TTAlias().setSet(ex+"Q_Diabetics"))
-                    .addIn(new TTAlias().setIri(SNOMED.NAMESPACE+"714628002").setDescendantsOf(true)))))
-          .where(w->w
-                  .setDescription("latest BP in last 6 months is >150")
-                  .setIri(IM.NAMESPACE+"observation")
-                    .setBool(Bool.and)
-                      .where(ww->ww
-                        .setDescription("Home or office based Systolic")
-                        .setIri(IM.NAMESPACE+"concept")
-                        .setName("concept")
-                        .addIn(new TTAlias()
-                          .setIri(SNOMED.NAMESPACE+"271649006")
-                          .setName("Systolic blood pressure"))
-                        .addIn(new TTAlias()
-                          .setIri(IM.CODE_SCHEME_EMIS.getIri()+"1994021000006104")
-                          .setName("Home systolic blood pressure"))
-                        .setValueLabel("Office or home systolic blood pressure"))
-                      .where(ww->ww
-                        .setDescription("Last 6 months")
-                        .setIri(IM.NAMESPACE+"effectiveDate")
-                        .setAlias("LastBP")
-                        .setOperator(Operator.gte)
-                        .setValue("-6")
-                        .setUnit("MONTHS")
-                        .setRelativeTo("$referenceDate")
-                        .setValueLabel("last 6 months"))
-                      .setOrderBy(new TTAlias().setIri(IM.NAMESPACE+"effectiveDate"))
-                      .setCount(1)
-                    .then(ww->ww
-                      .setIri(IM.NAMESPACE+"numericValue")
-                      .setDescription(">150")
-                      .setOperator(Operator.gt)
-                      .setValue("150")))
+            .setSet(IM.NAMESPACE+"Q_RegisteredGMS")
+            .setName("Registered for GMS services on reference date"))
+          .match(m->m
+            .setBoolMatch(Bool.or)
+            .match(or->or
+              .setDescription("aged between 65 and 70")
+              .where(w->w
+                .setId("age")
+                .range(r->r
+                  .from(from->from
+                    .setOperator(Operator.gte)
+                    .setValue("65"))
+                  .to(to->to
+                    .setOperator(Operator.lt)
+                    .setValue("70")))))
+            .match(or->or
+              .setDescription("Diabetic")
+              .setSet(ex+"Q_Diabetics"))
+            .match(or->or
+              .path(p->p.setId("observation"))
+              .path(p->p.setType("Observation"))
+              .where(ob->ob
+                .setId("concept")
+                .addIn(new Element().setId(SNOMED.NAMESPACE+"714628002").setDescendantsOf(true)))))
+          .match(w->w
+            .path(p->p.setId("observation"))
+            .path(p->p.setType("Observation")
+              .setVariable("latestBP"))
+            .setBool(Bool.and)
+            .where(ww->ww
+              .setDescription("Home or office based Systolic")
+              .setId("concept")
+              .setName("concept")
+              .addIn(new Element()
+                .setId(SNOMED.NAMESPACE+"271649006")
+                .setName("Systolic blood pressure"))
+              .addIn(new Element()
+                .setId(IM.CODE_SCHEME_EMIS.getIri()+"1994021000006104")
+                .setName("Home systolic blood pressure"))
+              .setValueLabel("Office or home systolic blood pressure"))
+            .where(ww->ww
+              .setDescription("Last 6 months")
+              .setId("effectiveDate")
+              .setOperator(Operator.gte)
+              .setValue("-6")
+              .setUnit("MONTHS")
+              .relativeTo(r->r.setId("$referenceDate"))
+              .setValueLabel("last 6 months"))
+            .addOrderBy(new OrderLimit()
+              .setId("effectiveDate")
+              .setNode("latestBP")
+              .setLimit(1)
+              .setDirection(Order.descending)))
+          .match(m->m
             .where(w->w
-              .setExclude(true)
-              .setDescription("High BP not followed by screening invite")
-              .setIri(IM.NAMESPACE+"observation")
-              .setBool(Bool.and)
-              .where(inv->inv
-                        .setDescription("Invited for Screening")
-                        .setIri(IM.NAMESPACE+"concept")
-                        .addIn(new TTAlias().setSet(IM.NAMESPACE+"InvitedForScreening")))
-              .where(after->after
-                        .setDescription("after high BP")
-                        .setIri(IM.NAMESPACE+"effectiveDate")
-                        .setOperator(Operator.gte)
-                        .setRelativeTo("LastBP")))
-          .where(w->w
+              .setNode("latestBP")
+              .setId(IM.NAMESPACE+"numericValue")
+              .setDescription(">150")
+              .setOperator(Operator.gt)
+              .setValue("150")))
+          .match(w->w
+            .setExclude(true)
+            .setDescription("High BP not followed by screening invite")
+            .path(p->p.setId(IM.NAMESPACE+"observation"))
+            .path(p->p.setType("Observation"))
+            .setBool(Bool.and)
+            .where(inv->inv
+              .setDescription("Invited for Screening after BP")
+              .setId(IM.NAMESPACE+"concept")
+              .addIn(new Element().setSet(IM.NAMESPACE+"InvitedForScreening")))
+            .where(after->after
+              .setDescription("after high BP")
+              .setId(IM.NAMESPACE+"effectiveDate")
+              .setOperator(Operator.gte)
+              .relativeTo(r->r.setNode("latestBP").setId("effectiveDate"))))
+          .match(w->w
             .setExclude(true)
             .setDescription("not hypertensive")
-                    .setIri(IM.NAMESPACE+"observation")
-                    .where(ob1->ob1
-                      .setIri(IM.NAMESPACE+"concept")
-                    .addIn(new TTAlias().setSet(ex+"Hypertensives")
-                      .setName("Hypertensives")))));
+            .setSet(IM.NAMESPACE+"Q_Hypertensives")
+            .setName("Hypertensives"));
         qry.set(IM.DEFINITION, TTLiteral.literal(prof));
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
         document.addEntity(qry);
@@ -154,38 +151,6 @@ public class CoreQueryImporter implements TTImport {
         return template;
     }
 
-    private static void allowableSubTypes(TTDocument document) throws IOException {
-        TTEntity allowables= new TTEntity()
-              .setIri(IM.NAMESPACE+"AllowableChildTypes")
-              .addType(IM.QUERY)
-              .setName("For a parent type, allowable child entity types and their predicates connecting to their parent");
-            allowables.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE+"IMEditorQueries"));
-            document.addEntity(allowables);
-
-        Query query= new Query();
-        query.setName("Allowable child types for editor");
-        query
-          .from(f->f
-            .where(w1->w1.setIri(IM.IS_CONTAINED_IN.getIri())
-              .addIn(IM.NAMESPACE+"EntityTypes")))
-          .select(s->s
-            .setIri(RDFS.LABEL.getIri()))
-          .select(s->s
-            .setIri(SHACL.PROPERTY.getIri())
-            .where(w1->w1
-              .setBool(Bool.and)
-              .where(a2->a2
-                .setIri(SHACL.NODE.getIri())
-                .addIn(new From().setVariable("this")))
-              .where(a2->a2
-                .setIri(SHACL.PATH.getIri())
-                .setIn(List.of(From.iri(IM.IS_CONTAINED_IN.getIri())
-                  ,From.iri(RDFS.SUBCLASSOF.getIri()),From.iri(IM.IS_SUBSET_OF.getIri())))))
-            .select(s1->s1
-              .setIri(SHACL.PATH.getIri())));
-        allowables.set(IM.DEFINITION, TTLiteral.literal(query));
-
-    }
 
     private void addCurrentReg(TTDocument document, String outFolder) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
@@ -200,28 +165,29 @@ public class CoreQueryImporter implements TTImport {
         prof.setName(qry.getName());
         prof.setDescription(qry.getDescription());
         qry.set(IM.WEIGHTING,TTLiteral.literal(10000));
-        prof.from(f -> f
-            .setType(IM.NAMESPACE+"Patient")
-            .setName("Patient")
-          .where(p->p
-            .setIri(IM.NAMESPACE+"gpRegistration")
+        prof.match(f -> f
+             .setType(IM.NAMESPACE+"Patient")
+             .setName("Patient"))
+           .match(m->m
+             .path(p->p
+               .setId("gpRegistration"))
             .setBool(Bool.and)
             .where(p1->p1
-                .setIri(IM.NAMESPACE+"patientType")
-                    .addIn(new From().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+                .setIri("patientType")
+                    .addIn(new Element().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
             .where(pv->pv
-              .setIri(IM.NAMESPACE+"effectiveDate")
+              .setIri("effectiveDate")
               .setOperator(Operator.lte)
-              .setRelativeTo("$referenceDate"))
+              .setRelativeTo(new Property().setParameter("$referenceDate")))
             .where(pv -> pv
               .setBool(Bool.or)
               .where(pv1->pv1
-                .setIri(IM.NAMESPACE+"endDate")
-                .setIsNull(true))
+                .setIri("endDate")
+                .setNull(true))
               .where(pv1->pv1
-                    .setIri(IM.NAMESPACE+"endDate")
+                    .setIri("endDate")
                       .setOperator(Operator.gt)
-                      .setRelativeTo("$referenceDate")))));
+                      .setRelativeTo(new Property().setParameter("$referenceDate")))));
 
         qry.set(IM.DEFINITION, TTLiteral.literal(prof));
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));

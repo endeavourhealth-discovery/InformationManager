@@ -1,5 +1,5 @@
 // Generated from java-escape by ANTLR 4.11.1
-package org.endeavourhealth.informationmanager.parser.ecl;
+package org.endeavourhealth.informationmanager.common.parser.ecl;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**

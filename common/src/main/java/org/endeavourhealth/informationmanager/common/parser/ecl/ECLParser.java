@@ -1,13 +1,10 @@
 // Generated from java-escape by ANTLR 4.11.1
-package org.endeavourhealth.informationmanager.parser.ecl;
+package org.endeavourhealth.informationmanager.common.parser.ecl;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
 import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue"})
 public class ECLParser extends Parser {
@@ -17,60 +14,60 @@ public class ECLParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		UTF8_LETTER=1, TAB=2, LF=3, CR=4, SPACE=5, EXCLAMATION=6, QUOTE=7, POUND=8, 
-		DOLLAR=9, PERCENT=10, AMPERSAND=11, APOSTROPHE=12, LEFT_PAREN=13, RIGHT_PAREN=14, 
-		ASTERISK=15, PLUS=16, COMMA=17, DASH=18, PERIOD=19, SLASH=20, ZERO=21, 
-		ONE=22, TWO=23, THREE=24, FOUR=25, FIVE=26, SIX=27, SEVEN=28, EIGHT=29, 
-		NINE=30, COLON=31, SEMICOLON=32, LESS_THAN=33, EQUALS=34, GREATER_THAN=35, 
-		QUESTION=36, AT=37, CAP_A=38, CAP_B=39, CAP_C=40, CAP_D=41, CAP_E=42, 
-		CAP_F=43, CAP_G=44, CAP_H=45, CAP_I=46, CAP_J=47, CAP_K=48, CAP_L=49, 
-		CAP_M=50, CAP_N=51, CAP_O=52, CAP_P=53, CAP_Q=54, CAP_R=55, CAP_S=56, 
-		CAP_T=57, CAP_U=58, CAP_V=59, CAP_W=60, CAP_X=61, CAP_Y=62, CAP_Z=63, 
-		LEFT_BRACE=64, BACKSLASH=65, RIGHT_BRACE=66, CARAT=67, UNDERSCORE=68, 
-		ACCENT=69, A=70, B=71, C=72, D=73, E=74, F=75, G=76, H=77, I=78, J=79, 
-		K=80, L=81, M=82, N=83, O=84, P=85, Q=86, R=87, S=88, T=89, U=90, V=91, 
-		W=92, X=93, Y=94, Z=95, LEFT_CURLY_BRACE=96, PIPE=97, RIGHT_CURLY_BRACE=98, 
+		UTF8_LETTER=1, TAB=2, LF=3, CR=4, SPACE=5, EXCLAMATION=6, QUOTE=7, POUND=8,
+		DOLLAR=9, PERCENT=10, AMPERSAND=11, APOSTROPHE=12, LEFT_PAREN=13, RIGHT_PAREN=14,
+		ASTERISK=15, PLUS=16, COMMA=17, DASH=18, PERIOD=19, SLASH=20, ZERO=21,
+		ONE=22, TWO=23, THREE=24, FOUR=25, FIVE=26, SIX=27, SEVEN=28, EIGHT=29,
+		NINE=30, COLON=31, SEMICOLON=32, LESS_THAN=33, EQUALS=34, GREATER_THAN=35,
+		QUESTION=36, AT=37, CAP_A=38, CAP_B=39, CAP_C=40, CAP_D=41, CAP_E=42,
+		CAP_F=43, CAP_G=44, CAP_H=45, CAP_I=46, CAP_J=47, CAP_K=48, CAP_L=49,
+		CAP_M=50, CAP_N=51, CAP_O=52, CAP_P=53, CAP_Q=54, CAP_R=55, CAP_S=56,
+		CAP_T=57, CAP_U=58, CAP_V=59, CAP_W=60, CAP_X=61, CAP_Y=62, CAP_Z=63,
+		LEFT_BRACE=64, BACKSLASH=65, RIGHT_BRACE=66, CARAT=67, UNDERSCORE=68,
+		ACCENT=69, A=70, B=71, C=72, D=73, E=74, F=75, G=76, H=77, I=78, J=79,
+		K=80, L=81, M=82, N=83, O=84, P=85, Q=86, R=87, S=88, T=89, U=90, V=91,
+		W=92, X=93, Y=94, Z=95, LEFT_CURLY_BRACE=96, PIPE=97, RIGHT_CURLY_BRACE=98,
 		TILDE=99;
 	public static final int
-		RULE_ecl = 0, RULE_expressionconstraint = 1, RULE_refinedexpressionconstraint = 2, 
-		RULE_compoundexpressionconstraint = 3, RULE_conjunctionexpressionconstraint = 4, 
-		RULE_disjunctionexpressionconstraint = 5, RULE_exclusionexpressionconstraint = 6, 
-		RULE_dottedexpressionconstraint = 7, RULE_dottedexpressionattribute = 8, 
-		RULE_subexpressionconstraint = 9, RULE_eclfocusconcept = 10, RULE_dot = 11, 
-		RULE_memberof = 12, RULE_eclconceptreference = 13, RULE_conceptid = 14, 
-		RULE_term = 15, RULE_wildcard = 16, RULE_constraintoperator = 17, RULE_descendantof = 18, 
-		RULE_descendantorselfof = 19, RULE_childof = 20, RULE_ancestorof = 21, 
-		RULE_ancestororselfof = 22, RULE_parentof = 23, RULE_conjunction = 24, 
-		RULE_disjunction = 25, RULE_exclusion = 26, RULE_eclrefinement = 27, RULE_conjunctionrefinementset = 28, 
-		RULE_disjunctionrefinementset = 29, RULE_subrefinement = 30, RULE_eclattributeset = 31, 
-		RULE_conjunctionattributeset = 32, RULE_disjunctionattributeset = 33, 
-		RULE_subattributeset = 34, RULE_eclattributegroup = 35, RULE_eclattribute = 36, 
-		RULE_cardinality = 37, RULE_minvalue = 38, RULE_to = 39, RULE_maxvalue = 40, 
-		RULE_many = 41, RULE_reverseflag = 42, RULE_eclattributename = 43, RULE_expressioncomparisonoperator = 44, 
-		RULE_numericcomparisonoperator = 45, RULE_stringcomparisonoperator = 46, 
-		RULE_numericvalue = 47, RULE_stringvalue = 48, RULE_integervalue = 49, 
-		RULE_decimalvalue = 50, RULE_nonnegativeintegervalue = 51, RULE_sctid = 52, 
-		RULE_ws = 53, RULE_mws = 54, RULE_comment = 55, RULE_nonstarchar = 56, 
-		RULE_nonspacechar = 57, RULE_starwithnonfslash = 58, RULE_nonfslash = 59, 
-		RULE_sp = 60, RULE_htab = 61, RULE_cr = 62, RULE_lf = 63, RULE_qm = 64, 
-		RULE_bs = 65, RULE_digit = 66, RULE_zero = 67, RULE_digitnonzero = 68, 
+		RULE_ecl = 0, RULE_expressionconstraint = 1, RULE_refinedexpressionconstraint = 2,
+		RULE_compoundexpressionconstraint = 3, RULE_conjunctionexpressionconstraint = 4,
+		RULE_disjunctionexpressionconstraint = 5, RULE_exclusionexpressionconstraint = 6,
+		RULE_dottedexpressionconstraint = 7, RULE_dottedexpressionattribute = 8,
+		RULE_subexpressionconstraint = 9, RULE_eclfocusconcept = 10, RULE_dot = 11,
+		RULE_memberof = 12, RULE_eclconceptreference = 13, RULE_conceptid = 14,
+		RULE_term = 15, RULE_wildcard = 16, RULE_constraintoperator = 17, RULE_descendantof = 18,
+		RULE_descendantorselfof = 19, RULE_childof = 20, RULE_ancestorof = 21,
+		RULE_ancestororselfof = 22, RULE_parentof = 23, RULE_conjunction = 24,
+		RULE_disjunction = 25, RULE_exclusion = 26, RULE_eclrefinement = 27, RULE_conjunctionrefinementset = 28,
+		RULE_disjunctionrefinementset = 29, RULE_subrefinement = 30, RULE_eclattributeset = 31,
+		RULE_conjunctionattributeset = 32, RULE_disjunctionattributeset = 33,
+		RULE_subattributeset = 34, RULE_eclattributegroup = 35, RULE_eclattribute = 36,
+		RULE_cardinality = 37, RULE_minvalue = 38, RULE_to = 39, RULE_maxvalue = 40,
+		RULE_many = 41, RULE_reverseflag = 42, RULE_eclattributename = 43, RULE_expressioncomparisonoperator = 44,
+		RULE_numericcomparisonoperator = 45, RULE_stringcomparisonoperator = 46,
+		RULE_numericvalue = 47, RULE_stringvalue = 48, RULE_integervalue = 49,
+		RULE_decimalvalue = 50, RULE_nonnegativeintegervalue = 51, RULE_sctid = 52,
+		RULE_ws = 53, RULE_mws = 54, RULE_comment = 55, RULE_nonstarchar = 56,
+		RULE_nonspacechar = 57, RULE_starwithnonfslash = 58, RULE_nonfslash = 59,
+		RULE_sp = 60, RULE_htab = 61, RULE_cr = 62, RULE_lf = 63, RULE_qm = 64,
+		RULE_bs = 65, RULE_digit = 66, RULE_zero = 67, RULE_digitnonzero = 68,
 		RULE_nonwsnonpipe = 69, RULE_anynonescapedchar = 70, RULE_escapedchar = 71;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"ecl", "expressionconstraint", "refinedexpressionconstraint", "compoundexpressionconstraint", 
-			"conjunctionexpressionconstraint", "disjunctionexpressionconstraint", 
-			"exclusionexpressionconstraint", "dottedexpressionconstraint", "dottedexpressionattribute", 
-			"subexpressionconstraint", "eclfocusconcept", "dot", "memberof", "eclconceptreference", 
-			"conceptid", "term", "wildcard", "constraintoperator", "descendantof", 
-			"descendantorselfof", "childof", "ancestorof", "ancestororselfof", "parentof", 
-			"conjunction", "disjunction", "exclusion", "eclrefinement", "conjunctionrefinementset", 
-			"disjunctionrefinementset", "subrefinement", "eclattributeset", "conjunctionattributeset", 
-			"disjunctionattributeset", "subattributeset", "eclattributegroup", "eclattribute", 
-			"cardinality", "minvalue", "to", "maxvalue", "many", "reverseflag", "eclattributename", 
-			"expressioncomparisonoperator", "numericcomparisonoperator", "stringcomparisonoperator", 
-			"numericvalue", "stringvalue", "integervalue", "decimalvalue", "nonnegativeintegervalue", 
-			"sctid", "ws", "mws", "comment", "nonstarchar", "nonspacechar", "starwithnonfslash", 
-			"nonfslash", "sp", "htab", "cr", "lf", "qm", "bs", "digit", "zero", "digitnonzero", 
+			"ecl", "expressionconstraint", "refinedexpressionconstraint", "compoundexpressionconstraint",
+			"conjunctionexpressionconstraint", "disjunctionexpressionconstraint",
+			"exclusionexpressionconstraint", "dottedexpressionconstraint", "dottedexpressionattribute",
+			"subexpressionconstraint", "eclfocusconcept", "dot", "memberof", "eclconceptreference",
+			"conceptid", "term", "wildcard", "constraintoperator", "descendantof",
+			"descendantorselfof", "childof", "ancestorof", "ancestororselfof", "parentof",
+			"conjunction", "disjunction", "exclusion", "eclrefinement", "conjunctionrefinementset",
+			"disjunctionrefinementset", "subrefinement", "eclattributeset", "conjunctionattributeset",
+			"disjunctionattributeset", "subattributeset", "eclattributegroup", "eclattribute",
+			"cardinality", "minvalue", "to", "maxvalue", "many", "reverseflag", "eclattributename",
+			"expressioncomparisonoperator", "numericcomparisonoperator", "stringcomparisonoperator",
+			"numericvalue", "stringvalue", "integervalue", "decimalvalue", "nonnegativeintegervalue",
+			"sctid", "ws", "mws", "comment", "nonstarchar", "nonspacechar", "starwithnonfslash",
+			"nonfslash", "sp", "htab", "cr", "lf", "qm", "bs", "digit", "zero", "digitnonzero",
 			"nonwsnonpipe", "anynonescapedchar", "escapedchar"
 		};
 	}
@@ -78,33 +75,33 @@ public class ECLParser extends Parser {
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, null, "'\\t'", "'\\n'", "'\\r'", "' '", "'!'", "'\"'", "'#'", "'$'", 
-			"'%'", "'&'", "'''", "'('", "')'", "'*'", "'+'", "','", "'-'", "'.'", 
-			"'/'", "'0'", "'1'", "'2'", "'3'", "'4'", "'5'", "'6'", "'7'", "'8'", 
-			"'9'", "':'", "';'", "'<'", "'='", "'>'", "'?'", "'@'", "'A'", "'B'", 
-			"'C'", "'D'", "'E'", "'F'", "'G'", "'H'", "'I'", "'J'", "'K'", "'L'", 
-			"'M'", "'N'", "'O'", "'P'", "'Q'", "'R'", "'S'", "'T'", "'U'", "'V'", 
-			"'W'", "'X'", "'Y'", "'Z'", "'['", "'\\'", "']'", "'^'", "'_'", "'`'", 
-			"'a'", "'b'", "'c'", "'d'", "'e'", "'f'", "'g'", "'h'", "'i'", "'j'", 
-			"'k'", "'l'", "'m'", "'n'", "'o'", "'p'", "'q'", "'r'", "'s'", "'t'", 
+			null, null, "'\\t'", "'\\n'", "'\\r'", "' '", "'!'", "'\"'", "'#'", "'$'",
+			"'%'", "'&'", "'''", "'('", "')'", "'*'", "'+'", "','", "'-'", "'.'",
+			"'/'", "'0'", "'1'", "'2'", "'3'", "'4'", "'5'", "'6'", "'7'", "'8'",
+			"'9'", "':'", "';'", "'<'", "'='", "'>'", "'?'", "'@'", "'A'", "'B'",
+			"'C'", "'D'", "'E'", "'F'", "'G'", "'H'", "'I'", "'J'", "'K'", "'L'",
+			"'M'", "'N'", "'O'", "'P'", "'Q'", "'R'", "'S'", "'T'", "'U'", "'V'",
+			"'W'", "'X'", "'Y'", "'Z'", "'['", "'\\'", "']'", "'^'", "'_'", "'`'",
+			"'a'", "'b'", "'c'", "'d'", "'e'", "'f'", "'g'", "'h'", "'i'", "'j'",
+			"'k'", "'l'", "'m'", "'n'", "'o'", "'p'", "'q'", "'r'", "'s'", "'t'",
 			"'u'", "'v'", "'w'", "'x'", "'y'", "'z'", "'{'", "'|'", "'}'", "'~'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, "UTF8_LETTER", "TAB", "LF", "CR", "SPACE", "EXCLAMATION", "QUOTE", 
-			"POUND", "DOLLAR", "PERCENT", "AMPERSAND", "APOSTROPHE", "LEFT_PAREN", 
-			"RIGHT_PAREN", "ASTERISK", "PLUS", "COMMA", "DASH", "PERIOD", "SLASH", 
-			"ZERO", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", 
-			"NINE", "COLON", "SEMICOLON", "LESS_THAN", "EQUALS", "GREATER_THAN", 
-			"QUESTION", "AT", "CAP_A", "CAP_B", "CAP_C", "CAP_D", "CAP_E", "CAP_F", 
-			"CAP_G", "CAP_H", "CAP_I", "CAP_J", "CAP_K", "CAP_L", "CAP_M", "CAP_N", 
-			"CAP_O", "CAP_P", "CAP_Q", "CAP_R", "CAP_S", "CAP_T", "CAP_U", "CAP_V", 
-			"CAP_W", "CAP_X", "CAP_Y", "CAP_Z", "LEFT_BRACE", "BACKSLASH", "RIGHT_BRACE", 
-			"CARAT", "UNDERSCORE", "ACCENT", "A", "B", "C", "D", "E", "F", "G", "H", 
-			"I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", 
-			"W", "X", "Y", "Z", "LEFT_CURLY_BRACE", "PIPE", "RIGHT_CURLY_BRACE", 
+			null, "UTF8_LETTER", "TAB", "LF", "CR", "SPACE", "EXCLAMATION", "QUOTE",
+			"POUND", "DOLLAR", "PERCENT", "AMPERSAND", "APOSTROPHE", "LEFT_PAREN",
+			"RIGHT_PAREN", "ASTERISK", "PLUS", "COMMA", "DASH", "PERIOD", "SLASH",
+			"ZERO", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT",
+			"NINE", "COLON", "SEMICOLON", "LESS_THAN", "EQUALS", "GREATER_THAN",
+			"QUESTION", "AT", "CAP_A", "CAP_B", "CAP_C", "CAP_D", "CAP_E", "CAP_F",
+			"CAP_G", "CAP_H", "CAP_I", "CAP_J", "CAP_K", "CAP_L", "CAP_M", "CAP_N",
+			"CAP_O", "CAP_P", "CAP_Q", "CAP_R", "CAP_S", "CAP_T", "CAP_U", "CAP_V",
+			"CAP_W", "CAP_X", "CAP_Y", "CAP_Z", "LEFT_BRACE", "BACKSLASH", "RIGHT_BRACE",
+			"CARAT", "UNDERSCORE", "ACCENT", "A", "B", "C", "D", "E", "F", "G", "H",
+			"I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
+			"W", "X", "Y", "Z", "LEFT_CURLY_BRACE", "PIPE", "RIGHT_CURLY_BRACE",
 			"TILDE"
 		};
 	}
@@ -489,7 +486,7 @@ public class ECLParser extends Parser {
 			{
 			setState(169);
 			subexpressionconstraint();
-			setState(175); 
+			setState(175);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -511,7 +508,7 @@ public class ECLParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(177); 
+				setState(177);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -576,7 +573,7 @@ public class ECLParser extends Parser {
 			{
 			setState(179);
 			subexpressionconstraint();
-			setState(185); 
+			setState(185);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -598,7 +595,7 @@ public class ECLParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(187); 
+				setState(187);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -725,7 +722,7 @@ public class ECLParser extends Parser {
 			{
 			setState(195);
 			subexpressionconstraint();
-			setState(199); 
+			setState(199);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -743,7 +740,7 @@ public class ECLParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(201); 
+				setState(201);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,4,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -1260,7 +1257,7 @@ public class ECLParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(247); 
+			setState(247);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -1276,7 +1273,7 @@ public class ECLParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(249); 
+				setState(249);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,10,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -1287,7 +1284,7 @@ public class ECLParser extends Parser {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(252); 
+					setState(252);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 					do {
@@ -1297,11 +1294,11 @@ public class ECLParser extends Parser {
 						sp();
 						}
 						}
-						setState(254); 
+						setState(254);
 						_errHandler.sync(this);
 						_la = _input.LA(1);
 					} while ( _la==SPACE );
-					setState(257); 
+					setState(257);
 					_errHandler.sync(this);
 					_alt = 1;
 					do {
@@ -1317,12 +1314,12 @@ public class ECLParser extends Parser {
 						default:
 							throw new NoViableAltException(this);
 						}
-						setState(259); 
+						setState(259);
 						_errHandler.sync(this);
 						_alt = getInterpreter().adaptivePredict(_input,12,_ctx);
 					} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 					}
-					} 
+					}
 				}
 				setState(265);
 				_errHandler.sync(this);
@@ -2162,7 +2159,7 @@ public class ECLParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(321); 
+			setState(321);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -2184,7 +2181,7 @@ public class ECLParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(323); 
+				setState(323);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,17,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -2247,7 +2244,7 @@ public class ECLParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(330); 
+			setState(330);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -2269,7 +2266,7 @@ public class ECLParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(332); 
+				setState(332);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,18,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -2493,7 +2490,7 @@ public class ECLParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(355); 
+			setState(355);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -2515,7 +2512,7 @@ public class ECLParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(357); 
+				setState(357);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,21,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -2578,7 +2575,7 @@ public class ECLParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(364); 
+			setState(364);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -2600,7 +2597,7 @@ public class ECLParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(366); 
+				setState(366);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,22,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -3641,7 +3638,7 @@ public class ECLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(470); 
+			setState(470);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
@@ -3761,7 +3758,7 @@ public class ECLParser extends Parser {
 					throw new NoViableAltException(this);
 				}
 				}
-				setState(472); 
+				setState(472);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( ((_la) & ~0x3f) == 0 && ((1L << _la) & -130L) != 0 || (((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & 68719476735L) != 0 );
@@ -3914,7 +3911,7 @@ public class ECLParser extends Parser {
 			integervalue();
 			setState(485);
 			match(PERIOD);
-			setState(487); 
+			setState(487);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
@@ -3924,7 +3921,7 @@ public class ECLParser extends Parser {
 				digit();
 				}
 				}
-				setState(489); 
+				setState(489);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( ((_la) & ~0x3f) == 0 && ((1L << _la) & 2145386496L) != 0 );
@@ -4098,7 +4095,7 @@ public class ECLParser extends Parser {
 				match(T);
 				setState(504);
 				match(P);
-				setState(506); 
+				setState(506);
 				_errHandler.sync(this);
 				_alt = 1;
 				do {
@@ -4114,7 +4111,7 @@ public class ECLParser extends Parser {
 					default:
 						throw new NoViableAltException(this);
 					}
-					setState(508); 
+					setState(508);
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,41,_ctx);
 				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -4665,7 +4662,7 @@ public class ECLParser extends Parser {
 					default:
 						throw new NoViableAltException(this);
 					}
-					} 
+					}
 				}
 				setState(620);
 				_errHandler.sync(this);
@@ -4742,7 +4739,7 @@ public class ECLParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(626); 
+			setState(626);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -4790,7 +4787,7 @@ public class ECLParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(628); 
+				setState(628);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,48,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -4982,7 +4979,7 @@ public class ECLParser extends Parser {
 					default:
 						throw new NoViableAltException(this);
 					}
-					} 
+					}
 				}
 				setState(639);
 				_errHandler.sync(this);

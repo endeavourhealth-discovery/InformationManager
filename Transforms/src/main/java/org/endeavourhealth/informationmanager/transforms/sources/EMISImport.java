@@ -59,7 +59,7 @@ public class EMISImport implements TTImport {
         document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(), "EMIS (including Read) codes",
             "The EMIS local code scheme and graph including Read 2 and EMIS local codes."));
         System.out.println("importing emis code file");
-        populateRemaps();
+        populateRemaps(remaps);
         addEMISUnlinked();
         importEMISCodes(config.getFolder());
         importDrugs(config.getFolder());
@@ -124,7 +124,7 @@ public class EMISImport implements TTImport {
            }
     }
 
-    private void populateRemaps() {
+    public static void populateRemaps(Map<String,String> remaps) {
         remaps.put("65O2", "116813009");
         remaps.put("65O3", "268504008");
         remaps.put("65O4", "271498007");
@@ -173,6 +173,11 @@ public class EMISImport implements TTImport {
                 ec.setTerm(fields[2]);
                 ec.setCode(fields[3]);
                 ec.setConceptId(fields[4]);
+                if (isBlackList(fields[4])) {
+                    ec.setConceptId(fields[3].replaceAll("\\^","").replaceAll("-","_"));
+                    LOG.warn(ec.getConceptId());
+                }
+
                 ec.setDescid(fields[5]);
                 ec.setSnomedDescripton(fields[6]);
                 if (fields.length==14)
@@ -196,8 +201,6 @@ public class EMISImport implements TTImport {
         String descid = ec.getDescid();
         String parentId = ec.getParentId();
         String snomedDescription= ec.snomedDescripton;
-        if (conceptId.equals("1572871000006101"))
-            System.out.println();
 
 
         if (parentId!=null)

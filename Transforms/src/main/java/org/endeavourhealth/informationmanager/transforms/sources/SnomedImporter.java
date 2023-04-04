@@ -4,9 +4,11 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.model.imq.Bool;
+import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.informationmanager.transforms.sources.ECLToIML;
+import org.endeavourhealth.informationmanager.common.ECLToIML;
 import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
@@ -534,15 +536,20 @@ public class SnomedImporter implements TTImport {
            return;
        }
       Query expression= eclConverter.getQueryFromECL(ecl);
-       if (expression.getFrom().getIri()!=null)
-         op.addObject(RDFS.RANGE,expression.getFrom());
-       if (expression.getFrom().getFrom()!=null) {
-         for (TTAlias range : expression.getFrom().getFrom()) {
-           op.addObject(RDFS.RANGE, TTIriRef.iri(range.getIri()));
+       for (Match match:expression.getMatch()){
+         if (match.getId()!=null) {
+           op.addObject(RDFS.RANGE, TTIriRef.iri(match.getId()));
+         }
+         else {
+           if (match.getBoolMatch().equals(Bool.or)){
+             for (Match or:match.getMatch()){
+               op.addObject(RDFS.RANGE, TTIriRef.iri(or.getId()));
+             }
+           }
+           else
+            throw new DataFormatException("ecl of this kind is not supported for ranges");
          }
        }
-       if (expression.getFrom().getWhere()!=null)
-         throw new DataFormatException("Snomed MCRM range converter does not support compound or refined ecl");
    }
 
 

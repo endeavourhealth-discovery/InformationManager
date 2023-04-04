@@ -17,7 +17,7 @@ public class ModelShapes {
 	private static final TTIriRef IMA= TTIriRef.iri(IM.NAMESPACE+"InformationModelAllShapes");
 
 	private static final TTManager manager= new TTManager();
-	
+
 	private String sourcePath;
 
 
@@ -40,9 +40,7 @@ public class ModelShapes {
 		select(getEntity(IM.NAMESPACE+"SelectClause"));
 		where(getEntity(IM.NAMESPACE+"WhereClause"));
 		compare(getEntity(IM.NAMESPACE+"CompareClause"));
-		within(getEntity(IM.NAMESPACE+"WithinClause"));
 		value(getEntity(IM.NAMESPACE+"ValueClause"));
-		having(getEntity(IM.NAMESPACE+"HavingClause"));
 		range(getEntity(IM.NAMESPACE+"RangeClause"));
 		function(getEntity(IM.NAMESPACE+"Function"));
 		parameter(getEntity(IM.NAMESPACE+"Parameter"));

@@ -2,7 +2,10 @@ package org.endeavourhealth.informationmanager.transforms.authored;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.model.imq.*;
-import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.imapi.model.tripletree.TTDocument;
+import org.endeavourhealth.imapi.model.tripletree.TTEntity;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
+import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
@@ -10,6 +13,7 @@ import org.endeavourhealth.imapi.vocabulary.SHACL;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class StandardQueries {
 
@@ -21,6 +25,7 @@ public class StandardQueries {
 		getConcepts();
 		getAllowableProperties();
 		getAllowableRanges();
+		allowableSubTypes();
 		saveForms(manager.getDocument());
 		gpGMSRegisteredPractice();
 
@@ -36,31 +41,29 @@ public class StandardQueries {
 		query
 				.setName("GMS registered practice on reference date")
 				.select(s -> s
-					.setIri(IM.NAMESPACE+"gpRegistration")
-					.where(p->p
 						.setIri(IM.NAMESPACE+"Organisation")
-					.setAlias("organisation")))
-		  .from(f->f
-				.setType(IM.NAMESPACE+"Patient").setName("Patient")
-			.where(w->w
-				.setIri(IM.NAMESPACE+"gpRegistration")
+					.setVariable("practice"))
+		  .match(f->f
+				.setType("Patient").setName("Patient")
+				.path(p->p
+				.setIri("gpRegistration"))
 				.setBool(Bool.and)
 				.where(pv->pv
-					.setIri(IM.NAMESPACE+"patientType")
-					.addIn(new From().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+					.setIri("patientType")
+					.addIn(new Element().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
 				.where(pv->pv
-					.setIri(IM.NAMESPACE+"effectiveDate")
+					.setIri("effectiveDate")
 					.setOperator(Operator.lte)
-					.setRelativeTo("$referenceDate"))
+					.setRelativeTo(new Property().setParameter("$referenceDate")))
 				.where(pv->pv
 					.setBool(Bool.or)
 					.where(pv1->pv1
-						.setExclude(true)
-						.setIri(IM.NAMESPACE+"endDate"))
+						.setNull(true)
+						.setIri("endDate"))
 					.where(pv1->pv1
-					.setIri(IM.NAMESPACE+"endDate")
+					.setIri("endDate")
 					.setOperator(Operator.gt)
-						.setRelativeTo("$referenceDate")))));
+						.setRelativeTo(new Property().setParameter("$referenceDate")))));
 
 		gpRegPractice.getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE+"query"));
 		gpRegPractice
@@ -69,76 +72,47 @@ public class StandardQueries {
 	}
 
 
-	/*
-	private static void gpGMSRegistrationDate() throws IOException {
-		TTManager manager= loadCore();
-		TTEntity gpRegDate= manager.getEntity("im:gpGMSRegistrationDate");
-		gpRegDate.getPredicateMap().remove(SHACL.PARAMETER);
-		Select select= new Select()
-			.setName("Latest registration date if registered regular")
-			.property(p->p.
-				setAlias("registrationDate"))
-			.match(m->m
-				.addPathTo(new ConceptRef(IM.NAMESPACE+"hasEntry"))
-				.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
-				.property(pv1-> pv1
-					.setIri(IM.NAMESPACE + "effectiveDate")
-					.setAlias("effectiveDate")
-					.setValue(Comparison.LESS_THAN, "$ReferenceDate"))
-				.order(o-> o
-					.setOrderBy(new IriAlias().setAlias("registrationDate"))
-					.setLimit(1)
-					.setDirection(Order.DESCENDING))
-				.testProperty(pv->pv
-					.setIri(IM.NAMESPACE + "patientType")
-					.addIsConcept(ConceptRef.iri(IM.GMS_PATIENT.getIri(),"GP GMS Regular patient type")))
-				.testProperty(pv->pv
-					.setNotExist(true)
-					.setName("the registration has not ended ")
-					.setIri(IM.NAMESPACE + "endDate")));
-		gpRegDate
-			.set(IM.QUERY_DEFINITION,TTLiteral.literal(Query.getJson(select)));;
-		gpRegDate.getPredicateMap().remove(IM.QUERY_DEFINITION);
-		saveCore(manager.getDocument());
-		output(gpRegDate);
+
+
+	private void allowableSubTypes() throws IOException {
+		TTEntity entity= getQuery("AllowableChildTypes");
+		if (entity==null) {
+			entity = new TTEntity();
+			manager.getDocument().addEntity(entity);
+		}
+		entity
+			.setIri(IM.NAMESPACE+"Query_AllowableChildTypes")
+			.addType(IM.QUERY)
+			.setName("For a parent type, allowable child entity types and their predicates connecting to their parent");
+		entity.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE+"IMEditorQueries"));
+
+		Query query= new Query();
+		query.setName("Allowable child types for editor");
+		query
+			.match(f->f
+				.where(w1->w1.setId(IM.IS_CONTAINED_IN.getIri())
+					.addIn(IM.NAMESPACE+"EntityTypes")))
+			.match(w1->w1
+				.path(p->p
+					.setId(SHACL.PROPERTY.getIri()))
+				.setBool(Bool.and)
+				.where(a2->a2
+					.setIri(SHACL.NODE.getIri())
+					.addIn(new Match().setParameter("$this")))
+				.where(a2->a2
+					.setIri(SHACL.PATH.getIri())
+					.setIn(List.of(Element.iri(IM.IS_CONTAINED_IN.getIri())
+						, Match.iri(RDFS.SUBCLASSOF.getIri()), Match.iri(IM.IS_SUBSET_OF.getIri())))))
+			.select(s->s
+				.setId(RDFS.LABEL.getIri()))
+			.select(s->s
+				.setId(SHACL.PROPERTY.getIri())
+
+				.select(s1->s1
+					.setIri(SHACL.PATH.getIri())));
+		entity.set(IM.DEFINITION, TTLiteral.literal(query));
+
 	}
-
-
-	private static void gpRegistrationStatus() throws IOException {
-		TTManager manager= loadCore();
-		TTEntity gpStatus= manager.getEntity("im:gpRegisteredStatus");
-		gpStatus.getPredicateMap().remove(SHACL.PARAMETER);
-		Select select= new Select()
-			.setName("Latest gp patient type")
-			.property(p->p
-				.setAlias("patientType"))
-			.match(m->m
-				.addPathTo(new ConceptRef(IM.NAMESPACE+"hasEntry"))
-				.setEntityType(TTIriRef.iri(IM.NAMESPACE+"GPRegistration"))
-				.property(pv-> pv
-					.setIri(IM.NAMESPACE+"effectiveDate")
-					.setAlias("effectiveDate")
-					.value(c->c
-						.setComparison(Comparison.LESS_THAN)
-						.setValueVariable("$referenceDate")))
-				.property(tp->tp
-					.setIri(IM.NAMESPACE+"patientType")
-					.setAlias("patientType"))
-				.order(o-> o
-					.setOrderBy(new IriAlias().setAlias("effectiveDate"))
-					.setLimit(1)
-					.setDirection(Order.DESCENDING)));
-
-		gpStatus
-			.set(IM.QUERY_DEFINITION,TTLiteral.literal(Query.getJson(select)));
-		gpStatus.set(IM.FUNCTION_DEFINITION,TTLiteral.literal(Query.getJson(new Function()
-			.addToConceptMap(IM.NAMESPACE+"2751000252106",IM.NAMESPACE+"1012571000252108")
-			.setDefaultConcept(IM.NAMESPACE+"1012581000252106"))));
-		gpStatus.getPredicateMap().remove(IM.QUERY_DEFINITION);
-		saveCore(manager.getDocument());
-		output(gpStatus);
-	}
-*/
 	private void getAllowableRanges() throws JsonProcessingException {
 		TTEntity query= getQuery("AllowableRanges");
 
@@ -150,12 +124,12 @@ public class StandardQueries {
 				.setActiveOnly(true)
 				.select(s->s.setIri(IM.CODE.getIri()))
 				.select(s->s.setIri(RDFS.LABEL.getIri()))
-				.from(f ->f
+				.match(f ->f
 					.setType(IM.CONCEPT.getIri())
 				.where(w->w
 					.setIri(RDFS.RANGE.getIri())
 					.setInverse(true)
-					.addIn(new From().setVariable("$this")
+					.addIn(new Element().setParameter("this")
 						.setAncestorsOf(true)
 						.setDescendantsOrSelfOf(true))
 				))));
@@ -172,11 +146,11 @@ public class StandardQueries {
 				.setActiveOnly(true)
 				.select(s->s.setIri(IM.CODE.getIri()))
 				.select(s->s.setIri(RDFS.LABEL.getIri()))
-			.from(f ->f
+			.match(f ->f
 				.setType(IM.CONCEPT.getIri())
 			.where(w->w
 					.setIri(RDFS.DOMAIN.getIri())
-					.addIn(new From().setVariable("$this").setAncestorsOf(true))
+					.addIn(new Element().setParameter("this").setAncestorsOf(true))
 				))));
 	}
 
@@ -187,7 +161,7 @@ public class StandardQueries {
 			new Query()
 				.setActiveOnly(true)
 				.setName("Search for concepts")
-				.from(w->w
+				.match(w->w
 					.setType(IM.CONCEPT.getIri()))));
 	}
 
@@ -199,8 +173,8 @@ public class StandardQueries {
 			TTLiteral.literal(new Query()
 				.setName("All subtypes of an entity, active only")
 					.setActiveOnly(true)
-				.from(w->w
-					.setVariable("$this")
+				.match(w->w
+					.setParameter("this")
 					.setDescendantsOrSelfOf(true))
 				.select(s->s.setIri(RDFS.LABEL.getIri()))));
 	}
