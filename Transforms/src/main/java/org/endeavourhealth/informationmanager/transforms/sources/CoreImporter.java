@@ -78,6 +78,9 @@ public class CoreImporter implements TTImport {
         TTManager manager = new TTManager();
         Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
         TTDocument document = manager.loadDocument(path.toFile());
+        if(".*\\\\DiscoveryCore\\\\CoreOntology.json".equals(coreFile)) {
+            codeToString(document);
+        }
         System.out.println("Generating inferred document from "+ coreFile);
         Reasoner reasoner = new Reasoner();
         TTDocument inferred = reasoner.generateInferred(document);
@@ -90,6 +93,15 @@ public class CoreImporter implements TTImport {
       }
 
     }
+  }
+
+  public static void codeToString(TTDocument document) {
+      document.getEntities().forEach(e -> {
+          if (e.getCode() != null) {
+              String code = e.getCode().toString();
+              e.setCode(code);
+          }
+      });
   }
 
    private void importNamespaces() throws Exception {
