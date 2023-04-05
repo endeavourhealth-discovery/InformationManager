@@ -439,7 +439,7 @@ public class TrudUpdater {
     }
 
     private static void processBNF(TrudFeed feed) {
-        String path = WorkingDir + feed.getName() + "\\" + feed.getRemoteVersion();
+        String path = WorkingDir + feed.getName() + "/" + feed.getRemoteVersion();
 
         testAndUnzip(path, ".*/f_bnf1_.*.xml", ".*/week.*-r2_3-BNF.zip");
     }
