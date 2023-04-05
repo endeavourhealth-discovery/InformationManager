@@ -400,14 +400,21 @@ public class TrudUpdater {
 
     private static void transformFile(String cmdPath, String workDir, String xmlFile, String... transforms) {
         try {
+            LOG.info("Transforming XML to CSV...");
+            String tools = WorkingDir + "ODSTOOLS/" + localVersions.get("ODSTOOLS").asText();
             Path xml = findFileForId(workDir, xmlFile);
             for(String transform : transforms) {
-                LOG.info("Transforming [{}] using [{}]", xml.getFileName(), transform + ".xsl");
-                execute(workDir, cmdPath + "dmdDataLoader/msxsl.exe", xml.toString(), cmdPath + "xsl/" + transform + ".xsl", "-o", transform + ".csv");
+                execute(workDir,
+                    "java",
+                    "-jar",
+                    tools + "/saxon/Java/saxon9he.jar",
+                    "-t",
+                    "-s:" + xml.toString(),
+                    "-xsl:" + cmdPath + "/xsl/" + transform + ".xsl",
+                    "-o:" + transform + ".csv");
             }
-        } catch (IOException e) {
-            LOG.error("Unable to find [{}] in [{}]", xmlFile, workDir);
-            System.exit(-1);
+        } catch (Exception e) {
+            LOG.error("Error transforming ODS data", e);
         }
     }
 
