@@ -18,7 +18,7 @@ ext {
             json                : '20190722',
             jsonSimple          : '0.4',
             logback             : '1.4.6',
-            openCsv             : '4.6',
+            openCsv             : '5.7.1',
             openLlet            : '2.6.5',
             owlApi              : '5.5.0',
             rdf4j               : '4.2.3',
