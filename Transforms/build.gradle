@@ -16,7 +16,6 @@ dependencies {
     implementation libs.commonsIO
     implementation libs.commonsCompress
     implementation libs.factPlusPlus
-    implementation libs.javaxxmlbind
     implementation libs.jaxbApi
     implementation libs.jaxbRuntime
     implementation libs.jerseyClient
