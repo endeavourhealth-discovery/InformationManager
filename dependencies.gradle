@@ -1,7 +1,7 @@
 ext {
     versions = [
             activation          : '1.1',
-            antlr               : '4.11.1',
+            antlr               : '4.12.0',
             collections4        : '4.4',
             commonsIO           : '2.8.0',
             commonsCompress     : '1.21',
@@ -11,20 +11,20 @@ ext {
             jackson             : '2.14.2',
             javaxactivation     : '1.1.1',
             jaxb                : '2.3.1',
-            jersey              : '2.35',
+            jersey              : '3.1.1',
             juneau              : '8.2.0',
-            junit               : '5.8.1',
+            junit               : '5.9.2',
             junitRunner         : '1.9.2',
             json                : '20190722',
             jsonSimple          : '0.4',
-            logback             : '1.4.5',
+            logback             : '1.4.6',
             openCsv             : '4.6',
             openLlet            : '2.6.5',
-            owlApi              : '5.1.20',
-            rdf4j               : '4.1.1',
-            slf4j               : '1.7.32',
+            owlApi              : '5.5.0',
+            rdf4j               : '4.2.3',
+            slf4j               : '2.0.7',
             snomed              : '1.2.0',
-            wsrs                : '2.1.1',
+            wsrs                : '3.1.0',
     ]
     libs = [
             imapi               : "org.endeavourhealth.imapi:api:1.0-SNAPSHOT",
@@ -66,6 +66,6 @@ ext {
             rdf4jRepoSail       : "org.eclipse.rdf4j:rdf4j-repository-sail:$versions.rdf4j",
             slf4j               : "org.slf4j:slf4j-api:$versions.slf4j",
             snomed              : "org.snomed.languages:snomed-ecl-parser:$versions.snomed",
-            wsrs                : "javax.ws.rs:javax.ws.rs-api:$versions.wsrs",
+            wsrs                : "jakarta.ws.rs:jakarta.ws.rs-api:$versions.wsrs",
     ]
 }
