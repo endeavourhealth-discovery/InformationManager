@@ -45,6 +45,8 @@ public class Importer implements TTImportByType {
    private TTImport getImporter(TTIriRef importType) throws Exception {
       if (TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter").equals(importType))
          return new SingleFileImporter();
+      if (IM.GRAPH_QUERY.equals(importType))
+         return new CoreQueryImporter();
       else if (IM.GRAPH_DISCOVERY.equals(importType))
          return new CoreImporter();
       else  if (IM.GRAPH_BARTS_CERNER.equals(importType))

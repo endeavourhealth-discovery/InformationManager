@@ -175,7 +175,7 @@ public class EMISImport implements TTImport {
                 ec.setConceptId(fields[4]);
                 if (isBlackList(fields[4])) {
                     ec.setConceptId(fields[3].replaceAll("\\^","").replaceAll("-","_"));
-                    LOG.warn(ec.getConceptId());
+                   // LOG.warn(ec.getConceptId());
                 }
 
                 ec.setDescid(fields[5]);

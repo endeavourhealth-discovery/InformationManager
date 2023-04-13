@@ -206,7 +206,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 				convertAttributeSet(where,subref.eclattributeset(),true);
 			}
 		else if (subref.eclattributegroup()!=null){
-			from.path(p->p.setId(IM.NAMESPACE+"roleGroup"));
+			from.path(p->p.setIri(IM.NAMESPACE+"roleGroup"));
 			convertAttributeGroup(where,subref.eclattributegroup());
 		}
 		for (ECLParser.SubrefinementContext subOrRef : refinement.conjunctionrefinementset().subrefinement()) {
@@ -216,7 +216,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 				convertAttributeSet(where, subOrRef.eclattributeset(),true);
 			}
 			else if (subOrRef.eclattributegroup() != null) {
-				from.path(p->p.setId(IM.NAMESPACE+"roleGroup"));
+				from.path(p->p.setIri(IM.NAMESPACE+"roleGroup"));
 				convertAttributeGroup(where, subOrRef.eclattributegroup());
 			}
 		}
@@ -231,7 +231,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 			convertAttributeSet(where,subref.eclattributeset(),true);
 		}
 		else if (subref.eclattributegroup()!=null){
-			from.path(p->p.setId(IM.NAMESPACE+"roleGroup"));
+			from.path(p->p.setIri(IM.NAMESPACE+"roleGroup"));
 			convertAttributeGroup(where,subref.eclattributegroup());
 		}
 		for (ECLParser.SubrefinementContext subOrRef : refinement.disjunctionrefinementset().subrefinement()) {
@@ -239,7 +239,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 				convertAttributeSet(where, subOrRef.eclattributeset(),true);
 			}
 			else if (subOrRef.eclattributegroup() != null) {
-				from.path(p->p.setId(IM.NAMESPACE+"roleGroup"));
+				from.path(p->p.setIri(IM.NAMESPACE+"roleGroup"));
 				convertAttributeGroup(where, subOrRef.eclattributegroup());
 			}
 		}
@@ -252,7 +252,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 			convertAttributeSet(from,subref.eclattributeset(),true);
 		}
 		else if (subref.eclattributegroup()!=null){
-			from.path(p->p.setId(IM.NAMESPACE+"roleGroup"));
+			from.path(p->p.setIri(IM.NAMESPACE+"roleGroup"));
 			convertAttributeGroup(from,subref.eclattributegroup());
 		}
 	}

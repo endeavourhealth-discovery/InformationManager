@@ -1,4 +1,4 @@
-// Generated from java-escape by ANTLR 4.11.1
+// Generated from C:/Users/david/CloudStation/EhealthTrust/DiscoveryDataService/InformationManager/common/src/main/grammars\ECL.g4 by ANTLR 4.12.0
 package org.endeavourhealth.informationmanager.common.parser.ecl;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 

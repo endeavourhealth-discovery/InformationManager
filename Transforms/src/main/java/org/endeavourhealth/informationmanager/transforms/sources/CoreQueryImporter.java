@@ -1,16 +1,14 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.cdm.ProvActivity;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
-import org.endeavourhealth.imapi.vocabulary.SHACL;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 
 import java.io.FileWriter;
@@ -21,22 +19,84 @@ import java.util.List;
 
 public class CoreQueryImporter implements TTImport {
     public static String ex="http://example.org/qry#";
+    public TTDocument document;
 
     @Override
     public void importData(TTImportConfig config) throws Exception {
         TTManager manager = new TTManager();
-        TTDocument document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
+        document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
+        getIsas();
+        getConcepts();
+        getAllowableProperties();
+        getAllowableRanges();
+        getSearchAll();
+        allowableSubTypes();
+        currentGMS();
+        gpGMSRegisteredPractice();
+        DeleteSets();
+        testQuery();
+        objectPropertyRangeSuggestions();
+        dataPropertyRangeSuggestions();
         output(document,config.getFolder());
-        addCurrentReg(document, config.getFolder());
-        addTemplates(document);
-        testQuery(document,config.getFolder());
-        output(document,config.getFolder());
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
+        if (!TTFilerFactory.isBulk()) {
+            TTTransactionFiler filer= new TTTransactionFiler(null);
+            filer.fileTransaction(document);
+        }
+        else {
+            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                filer.fileDocument(document);
+            }
         }
     }
 
-    private void testQuery(TTDocument document, String outFolder) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    private void objectPropertyRangeSuggestions() throws JsonProcessingException {
+        TTEntity query= getQuery("ObjectPropertyRangeSuggestions","Range suggestions for object property","takes account of the data model shape that the property is part of");
+        query.set(IM.DEFINITION,TTLiteral.literal(
+          new Query()
+                .setName("Suggested range for a property")
+                .setDescription("get node, class or datatype values (ranges)  of property objects that have 4this as their path")
+                .match(m->m
+                  .setBoolMatch(Bool.or)
+                  .match(m1->m1
+                    .path(p->p
+                      .setIri(SHACL.NODE.getIri())
+                      .node(n->n
+                        .setVariable("range"))))
+                  .match(m1->m1
+                    .path(p->p
+                      .setIri(SHACL.CLASS.getIri())
+                      .node(n->n
+                        .setVariable("range"))))
+                  .match(m1->m1
+                    .path(p->p
+                      .setIri(SHACL.DATATYPE.getIri())
+                      .node(n->n
+                        .setVariable("range"))))
+                  .where(w->w
+                    .setIri(SHACL.PATH.getIri())
+                    .addIn(new Node().setParameter("this"))))
+                .select(s->s.setNodeVar("range").setIri(RDFS.LABEL.getIri()))));
+        document.addEntity(query);
+    }
+    private void dataPropertyRangeSuggestions() throws JsonProcessingException {
+        TTEntity query= getQuery("dataPropertyRangeSuggestions","Range suggestions for object property","takes account of the data model shape that the property is part of");
+        query.set(IM.DEFINITION,TTLiteral.literal(
+          new Query()
+            .setName("Suggested range for a data property")
+            .setDescription("get datatype values (ranges)  of property objects that have 4this as their path")
+            .match(m->m
+                .path(p->p
+                  .setIri(SHACL.DATATYPE.getIri())
+                  .node(n->n
+                    .setVariable("range")))
+              .where(w->w
+                .setIri(SHACL.PATH.getIri())
+                .addIn(new Node().setParameter("this"))))
+            .select(s->s.setNodeVar("range").setIri(RDFS.LABEL.getIri()))));
+        document.addEntity(query);
+    }
+
+    private void testQuery() throws IOException{
 
         TTEntity qry = new TTEntity().addType(IM.QUERY);
         qry
@@ -58,7 +118,7 @@ public class CoreQueryImporter implements TTImport {
             .match(or->or
               .setDescription("aged between 65 and 70")
               .where(w->w
-                .setId("age")
+                .setIri("age")
                 .range(r->r
                   .from(from->from
                     .setOperator(Operator.gte)
@@ -68,64 +128,64 @@ public class CoreQueryImporter implements TTImport {
                     .setValue("70")))))
             .match(or->or
               .setDescription("Diabetic")
-              .setSet(ex+"Q_Diabetics"))
+              .setSet("http://example/queries#Q_Diabetics"))
             .match(or->or
-              .path(p->p.setId("observation"))
-              .path(p->p.setType("Observation"))
+              .path(p->p.setIri("observation")
+                .node(n->n.setType("Observation")))
               .where(ob->ob
-                .setId("concept")
-                .addIn(new Element().setId(SNOMED.NAMESPACE+"714628002").setDescendantsOf(true)))))
+                .setIri("concept")
+                .addIn(new Node().setIri(SNOMED.NAMESPACE+"714628002").setDescendantsOf(true)))))
           .match(w->w
-            .path(p->p.setId("observation"))
-            .path(p->p.setType("Observation")
-              .setVariable("latestBP"))
+            .path(p->p.setIri("observation")
+              .node(n->n.setType("Observation")
+                .setVariable("latestBP")))
             .setBool(Bool.and)
             .where(ww->ww
               .setDescription("Home or office based Systolic")
-              .setId("concept")
+              .setIri("concept")
               .setName("concept")
-              .addIn(new Element()
-                .setId(SNOMED.NAMESPACE+"271649006")
+              .addIn(new Node()
+                .setIri(SNOMED.NAMESPACE+"271649006")
                 .setName("Systolic blood pressure"))
-              .addIn(new Element()
-                .setId(IM.CODE_SCHEME_EMIS.getIri()+"1994021000006104")
+              .addIn(new Node()
+                .setIri(IM.CODE_SCHEME_EMIS.getIri()+"1994021000006104")
                 .setName("Home systolic blood pressure"))
               .setValueLabel("Office or home systolic blood pressure"))
             .where(ww->ww
               .setDescription("Last 6 months")
-              .setId("effectiveDate")
+              .setIri("effectiveDate")
               .setOperator(Operator.gte)
               .setValue("-6")
               .setUnit("MONTHS")
-              .relativeTo(r->r.setId("$referenceDate"))
+              .relativeTo(r->r.setIri("$referenceDate"))
               .setValueLabel("last 6 months"))
             .addOrderBy(new OrderLimit()
-              .setId("effectiveDate")
-              .setNode("latestBP")
+              .setIri("effectiveDate")
+              .setVariable("latestBP")
               .setLimit(1)
               .setDirection(Order.descending)))
           .match(m->m
             .where(w->w
-              .setNode("latestBP")
-              .setId(IM.NAMESPACE+"numericValue")
+              .setVariable("latestBP")
+              .setIri(IM.NAMESPACE+"numericValue")
               .setDescription(">150")
               .setOperator(Operator.gt)
               .setValue("150")))
           .match(w->w
             .setExclude(true)
             .setDescription("High BP not followed by screening invite")
-            .path(p->p.setId(IM.NAMESPACE+"observation"))
-            .path(p->p.setType("Observation"))
+            .path(p->p.setIri(IM.NAMESPACE+"observation")
+              .node(n->n.setType("Observation")))
             .setBool(Bool.and)
             .where(inv->inv
               .setDescription("Invited for Screening after BP")
-              .setId(IM.NAMESPACE+"concept")
-              .addIn(new Element().setSet(IM.NAMESPACE+"InvitedForScreening")))
+              .setIri(IM.NAMESPACE+"concept")
+              .addIn(new Node().setSet(IM.NAMESPACE+"InvitedForScreening")))
             .where(after->after
               .setDescription("after high BP")
-              .setId(IM.NAMESPACE+"effectiveDate")
+              .setIri(IM.NAMESPACE+"effectiveDate")
               .setOperator(Operator.gte)
-              .relativeTo(r->r.setNode("latestBP").setId("effectiveDate"))))
+              .relativeTo(r->r.setVariable("latestBP").setIri("effectiveDate"))))
           .match(w->w
             .setExclude(true)
             .setDescription("not hypertensive")
@@ -134,47 +194,49 @@ public class CoreQueryImporter implements TTImport {
         qry.set(IM.DEFINITION, TTLiteral.literal(prof));
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
         document.addEntity(qry);
-        document.setContext(TTUtil.getDefaultContext());
-        outputQuery(prof);
-    }
 
-    private void addTemplates(TTDocument document) {
-       document
-         .addEntity(addTemplate(IM.NAMESPACE+"QT_RegisteredGMS",IM.NAMESPACE+"Q_RegisteredGMS","from",1000));
-    }
-
-    private TTEntity addTemplate(String iri,String value, String path, int weighting) {
-        TTEntity template= new TTEntity()
-          .setIri(iri)
-          .set(IM.WEIGHTING,TTLiteral.literal(weighting))
-          .set(IM.PATH_TO,TTLiteral.literal(path));
-        return template;
     }
 
 
-    private void addCurrentReg(TTDocument document, String outFolder) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    private void DeleteSets() throws JsonProcessingException {
+        TTEntity entity= new TTEntity()
+          .setIri(IM.NAMESPACE+"DeleteSets")
+          .setName("Delete all concept sets in a graph")
+          .setDescription("Pass in the graph name as a 'this' argument and it deletes all sets");
+        entity.set(IM.UPDATE_PROCEDURE,TTLiteral.literal(new Update()
+          .match(m->m
+            .setGraph(new Node().setParameter("this"))
+            .setType(IM.CONCEPT_SET.getIri()))
+          .addDelete(new Delete())));
+        document.addEntity(entity);
+
+
+    }
+
+
+    private void currentGMS() throws JsonProcessingException {
 
         TTEntity qry = new TTEntity().addType(IM.QUERY);
         qry
-            .setIri(IM.NAMESPACE + "Q_RegisteredGMS")
-            .setName("Patients registered for GMS services on the reference date")
-            .setDescription("For any registration period,a registration start date before the reference date and no end date," +
-                "or an end date after the reference date.");
+          .setIri(IM.NAMESPACE + "Q_RegisteredGMS")
+          .setName("Patients registered for GMS services on the reference date")
+          .setDescription("For any registration period,a registration start date before the reference date and no end date," +
+            "or an end date after the reference date.");
         Query prof = new Query();
         prof.setIri(qry.getIri());
         prof.setName(qry.getName());
         prof.setDescription(qry.getDescription());
         qry.set(IM.WEIGHTING,TTLiteral.literal(10000));
         prof.match(f -> f
-             .setType(IM.NAMESPACE+"Patient")
-             .setName("Patient"))
-           .match(m->m
-             .path(p->p
-               .setId("gpRegistration"))
+            .setType(IM.NAMESPACE+"Patient")
+            .setName("Patient"))
+          .match(m->m
+            .path(p->p
+              .setIri("gpRegistration"))
             .setBool(Bool.and)
             .where(p1->p1
-                .setIri("patientType")
-                    .addIn(new Element().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+              .setIri("patientType")
+              .addIn(new Node().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
             .where(pv->pv
               .setIri("effectiveDate")
               .setOperator(Operator.lte)
@@ -185,18 +247,205 @@ public class CoreQueryImporter implements TTImport {
                 .setIri("endDate")
                 .setNull(true))
               .where(pv1->pv1
-                    .setIri("endDate")
-                      .setOperator(Operator.gt)
-                      .setRelativeTo(new Property().setParameter("$referenceDate")))));
+                .setIri("endDate")
+                .setOperator(Operator.gt)
+                .setRelativeTo(new Property().setParameter("$referenceDate")))));
 
         qry.set(IM.DEFINITION, TTLiteral.literal(prof));
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
         document.addEntity(qry);
         document.setContext(TTUtil.getDefaultContext());
-        setProvenance(qry, document);
-        outputQuery(prof);
 
     }
+
+
+
+    private void getSearchAll() throws JsonProcessingException {
+        TTEntity query= getQuery("SearchmainTypes","Search for entities of the main types","used to filter free text searches excluding queries and concept sets");
+        query.set(IM.DEFINITION,TTLiteral.literal(
+          new Query()
+            .setActiveOnly(true)
+            .setName("Search for all main types")
+            .match(f->f
+              .setVariable("type")
+              .setBoolMatch(Bool.or)
+              .match(w->w
+                .setType(IM.CONCEPT.getIri()))
+              .match(w->w
+                .setType(IM.CONCEPT_SET.getIri()))
+              .match(w->w
+                .setType(IM.FOLDER.getIri()))
+              .match(w->w
+                .setType(IM.VALUESET.getIri()))
+              .match(w->w
+                .setType(IM.NAMESPACE+"dataModelProperty")))
+            .select(s->s.setVariable("type").setIri(RDFS.LABEL.getIri()))
+            .select(s->s.setVariable("type").setIri(RDFS.COMMENT.getIri()))
+            .select(s->s.setVariable("type").setIri(IM.HAS_STATUS.getIri()))
+            .select(s->s.setVariable("type").setIri(IM.WEIGHTING.getIri()))
+            .select(s->s.setVariable("type").setIri(IM.HAS_SCHEME.getIri()))
+        ));
+    }
+
+
+    private void gpGMSRegisteredPractice() throws IOException {
+        TTEntity entity= new TTEntity()
+          .setIri(IM.NAMESPACE+"gpGMSRegisteredPractice")
+          .setName("Current GMS registered practice")
+          .setScheme(IM.CODE_SCHEME_DISCOVERY)
+          .addType(IM.FUNCTION)
+          .addType(RDF.PROPERTY);
+        entity.addObject(RDFS.SUBCLASSOF,IM.FUNCTION_PROPERTY);
+
+        Query query= new Query();
+        query
+          .setName("GMS registered practice on reference date")
+          .select(s -> s
+            .setIri(IM.NAMESPACE+"recordOwner")
+            .setVariable("practice"))
+          .match(f->f
+            .setParameter("this")
+            .path(p->p
+              .setIri("gpRegistration")
+            .node(n->n
+              .setIri("GPRegistration"))
+              .setVariable("practice"))
+            .setBool(Bool.and)
+            .where(pv->pv
+              .setIri("patientType")
+              .addIn(new Node().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+            .where(pv->pv
+              .setIri("effectiveDate")
+              .setOperator(Operator.lte)
+              .setRelativeTo(new Property().setParameter("$referenceDate")))
+            .where(pv->pv
+              .setBool(Bool.or)
+              .where(pv1->pv1
+                .setNull(true)
+                .setIri("endDate"))
+              .where(pv1->pv1
+                .setIri("endDate")
+                .setOperator(Operator.gt)
+                .setRelativeTo(new Property().setParameter("$referenceDate")))));
+        entity
+          .set(IM.DEFINITION,TTLiteral.literal(query));
+        document.addEntity(entity);
+    }
+
+
+
+
+    private void allowableSubTypes() throws IOException {
+        TTEntity entity= getQuery("AllowableChildTypes","for a parent entity, the types that can be child types","used in the editor to select the type of entity being created as a subtype");
+        Query query= new Query();
+        query.setName("Allowable child types for editor");
+        query
+          .match(f->f
+            .setVariable("concept")
+            .where(w1->w1.setIri(IM.IS_CONTAINED_IN.getIri())
+              .addIn(IM.NAMESPACE+"EntityTypes")))
+          .match(w1->w1
+            .path(p->p
+              .setIri(SHACL.PROPERTY.getIri())
+            .node(n->n.setVariable("predicate")))
+            .setBool(Bool.and)
+            .where(a2->a2
+              .setIri(SHACL.NODE.getIri())
+              .addIn(new Match().setParameter("$this")))
+            .where(a2->a2
+              .setIri(SHACL.PATH.getIri())
+              .setIn(List.of(Node.iri(IM.IS_CONTAINED_IN.getIri())
+                , Match.iri(RDFS.SUBCLASSOF.getIri()), Match.iri(IM.IS_SUBSET_OF.getIri())))))
+          .select(s->s
+            .setVariable("concept")
+            .setIri(RDFS.LABEL.getIri()))
+          .select(s->s
+            .setVariable("predicate")
+            .setIri(SHACL.PROPERTY.getIri())
+            .select(s1->s1
+              .setVariable("predicate")
+              .setIri(SHACL.PATH.getIri())));
+        entity.set(IM.DEFINITION, TTLiteral.literal(query));
+
+    }
+    private void getAllowableRanges() throws JsonProcessingException {
+        TTEntity query= getQuery("AllowableRanges","Allowable ranges for a particular property or its ancestors","uses inverse range property to return the ranges of the property as authored. Should be used with another ");
+        query.set(IM.DEFINITION,TTLiteral.literal(
+          new Query()
+            .setName("Allowable Ranges for a property and super properties")
+            .setActiveOnly(true)
+            .select(s->s.setIri(IM.CODE.getIri()))
+            .select(s->s.setIri(RDFS.LABEL.getIri()))
+            .match(f ->f
+              .where(w->w
+                .setInverse(true)
+                .setAncestorsOf(true)
+                .setIri(RDFS.RANGE.getIri())
+                .addIn(new Node().setParameter("this"))))));
+        document.addEntity(query);
+    }
+
+    private void getAllowableProperties() throws JsonProcessingException {
+        TTEntity query= getQuery("AllowableProperties","Allowable properties for a terminology concept","Returns a list of properties for a particular term concept, used in value set definitions with RCL");
+
+        query.set(IM.DEFINITION,TTLiteral.literal(
+          new Query()
+            .setName("Allowable Properties for a terminology concept")
+            .setActiveOnly(true)
+            .select(s->s.setVariable("concept").setIri(IM.CODE.getIri()))
+            .select(s->s.setVariable("label").setIri(RDFS.LABEL.getIri()))
+            .match(f ->f
+              .setType(IM.CONCEPT.getIri())
+              .where(w->w
+                .setDescription("property that has this concept or supertype as a domain")
+                .setIri(RDFS.DOMAIN.getIri())
+                .addIn(new Node().setParameter("this").setAncestorsOf(true))
+              ))));
+    }
+
+    private void getConcepts() throws JsonProcessingException {
+        TTEntity query= getQuery("SearchEntities","Search for entities of a certain type","parameter 'this' set to the list of type iris, Normally used with a text search entry to filter the list");
+        query.getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE+"query"));
+        query.set(IM.DEFINITION,TTLiteral.literal(
+          new Query()
+            .setActiveOnly(true)
+            .setName("Search for concepts")
+            .match(w->w
+              .setParameter("this"))
+            .select(s->s.setVariable("entity").setIri(RDFS.LABEL.getIri()))
+            .select(s->s.setVariable("entity").setIri(RDF.TYPE.getIri()))));
+    }
+
+    private void getIsas() throws JsonProcessingException {
+        TTEntity query = getQuery("GetIsas","Get active subtypes of concept","returns transitive closure of an entity and its subtypes, usually used with a text search filter to narrow results");
+        query.getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE+"query"));
+        query.set(IM.DEFINITION,
+          TTLiteral.literal(new Query()
+            .setName("All subtypes of an entity, active only")
+            .setActiveOnly(true)
+            .match(w->w
+              .setVariable("isa")
+              .setParameter("this")
+              .setDescendantsOrSelfOf(true))
+            .select(s->s.setVariable("isa").setIri(RDFS.LABEL.getIri()))
+            .select(s->s.setVariable("isa").setIri(IM.CODE.getIri()))));
+    }
+
+    private TTEntity getQuery(String iri, String name, String comment) {
+        TTEntity entity= new TTEntity()
+          .setIri(IM.NAMESPACE+"Query_"+iri)
+          .setName(name)
+          .setDescription(comment)
+          .addType(IM.QUERY);
+        entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"FormValidationQueries"));
+        document.addEntity(entity);
+        return entity;
+    }
+
+
+
+
+
 
     private void setProvenance(TTEntity rdf, TTDocument document) {
         ProvActivity activity = new ProvActivity()
@@ -213,9 +462,9 @@ public class CoreQueryImporter implements TTImport {
     }
 
 
-    private void output(TTDocument document,String folder) throws IOException {
-        if (ImportApp.testDirectory != null) {
-            try (FileWriter writer = new FileWriter(folder + "\\DiscoveryCore\\CoreQueries.json")) {
+    private void output(TTDocument document,String directory) throws IOException {
+
+            try (FileWriter writer = new FileWriter(directory + "\\DiscoveryCore\\CoreQueries\\CoreQueriesAll.json")) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
                 objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
@@ -224,16 +473,21 @@ public class CoreQueryImporter implements TTImport {
                     .withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(document);
                 writer.write(doc);
             }
-
-        }
+            for (TTEntity entity:document.getEntities()){
+                if (entity.get(IM.DEFINITION)!=null) {
+                    Query query = entity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
+                    outputQuery(query, directory);
+                }
+            }
 
     }
 
 
-    private void outputQuery(Query qry) throws IOException {
-        if (ImportApp.testDirectory != null) {
-            String directory = ImportApp.testDirectory.replace("%", " ");
-            try (FileWriter writer = new FileWriter(directory + "\\"+ qry.getName().substring(0,20)+"+.json")) {
+    private void outputQuery(Query qry,String directory) throws IOException {
+        String name= qry.getName();
+        if (name.length()>20)
+            name= name.substring(0,20);
+            try (FileWriter writer = new FileWriter(directory + "\\DiscoveryCore\\CoreQueries\\"+ name +"+.json")) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
                 objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
@@ -242,7 +496,7 @@ public class CoreQueryImporter implements TTImport {
                     .withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(qry);
                 writer.write(doc);
             }
-        }
+
 
     }
 

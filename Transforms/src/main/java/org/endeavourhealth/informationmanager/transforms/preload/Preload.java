@@ -80,6 +80,7 @@ public class Preload {
         TTImportByType importer = new Importer()
             .validateByType(IM.GRAPH_DISCOVERY, cfg.getFolder())
             .validateByType(SNOMED.GRAPH_SNOMED, cfg.getFolder())
+            .validateByType(IM.GRAPH_QUERY, cfg.getFolder())
             .validateByType(IM.GRAPH_ENCOUNTERS, cfg.getFolder())
             .validateByType(IM.GRAPH_EMIS, cfg.getFolder())
             .validateByType(IM.GRAPH_TPP, cfg.getFolder())
@@ -98,6 +99,7 @@ public class Preload {
         LOG.info("Importing files...");
         importer.importByType(IM.GRAPH_DISCOVERY, cfg);
         importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
+        importer.importByType(IM.GRAPH_QUERY, cfg);
         importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
         importer.importByType(IM.GRAPH_EMIS, cfg);
         importer.importByType(IM.GRAPH_TPP, cfg);

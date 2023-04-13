@@ -73,6 +73,7 @@ public class ImportApp {
             case "all":
                 TTImportByType importer = new Importer()
                     .validateByType(IM.GRAPH_DISCOVERY, cfg.getFolder())
+                  .validateByType(IM.GRAPH_QUERY,cfg.getFolder())
                     .validateByType(SNOMED.GRAPH_SNOMED, cfg.getFolder())
                     .validateByType(IM.GRAPH_ENCOUNTERS, cfg.getFolder())
                     .validateByType(IM.GRAPH_EMIS, cfg.getFolder())
@@ -90,6 +91,7 @@ public class ImportApp {
 //                    .validateByType(IM.GRAPH_CONFIG, cfg.getFolder())
                       .validateByType(IM.GRAPH_DELTAS,cfg.getFolder());
                 importer.importByType(IM.GRAPH_DISCOVERY, cfg);
+                importer.importByType(IM.GRAPH_QUERY,cfg);
                 importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
                 importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
                 importer.importByType(IM.GRAPH_EMIS, cfg);
@@ -106,6 +108,10 @@ public class ImportApp {
 //                importer.importByType(IM.GRAPH_CONFIG,cfg);
                 importer.importByType(IM.GRAPH_IM1, cfg);
                 importer.importByType(IM.GRAPH_DELTAS,cfg);
+                break;
+            case "corequery":
+                importer = new Importer().validateByType(IM.GRAPH_QUERY, cfg.getFolder());
+                importer.importByType(IM.GRAPH_QUERY,cfg);
                 break;
             case "imv1":
                 importer = new Importer().validateByType(IM.GRAPH_IM1, cfg.getFolder());
@@ -201,19 +207,14 @@ public class ImportApp {
                 throw new Exception("Unknown import type");
 
         }
-        if (!cfg.getImportType().equals("singlefile")) {
-            if (!cfg.isSkiptct()) {
-                TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
-                closureGenerator.generateClosure(cfg.getFolder(), cfg.isSecure());
-            }
-            if (cfg.getImportType().equals("all")||cfg.getImportType().equals("core")) {
+
+        if (cfg.getImportType().equals("all")||cfg.getImportType().equals("core")) {
                 System.out.println("expanding value sets");
                 new SetExpander().expandAllSets();
-            }
-            if (!cfg.isSkiplucene()) {
+        }
+        if (!cfg.isSkiplucene()) {
                 System.out.println("building lucene index");
                 new LuceneIndexer().buildIndexes();
-            }
         }
 
         System.out.println("Finished - " + (new Date()));
