@@ -33,7 +33,7 @@ public class CoreQueryImporter implements TTImport {
         allowableSubTypes();
         currentGMS();
         gpGMSRegisteredPractice();
-        DeleteSets();
+        deleteSets();
         testQuery();
         objectPropertyRangeSuggestions();
         dataPropertyRangeSuggestions();
@@ -75,7 +75,7 @@ public class CoreQueryImporter implements TTImport {
                   .where(w->w
                     .setIri(SHACL.PATH.getIri())
                     .addIn(new Node().setParameter("this"))))
-                .select(s->s.setNodeVar("range").setIri(RDFS.LABEL.getIri()))));
+                .return_(r->r.setNodeRef("range").property(p->p.setIri(RDFS.LABEL.getIri())))));
         document.addEntity(query);
     }
     private void dataPropertyRangeSuggestions() throws JsonProcessingException {
@@ -92,7 +92,7 @@ public class CoreQueryImporter implements TTImport {
               .where(w->w
                 .setIri(SHACL.PATH.getIri())
                 .addIn(new Node().setParameter("this"))))
-            .select(s->s.setNodeVar("range").setIri(RDFS.LABEL.getIri()))));
+            .return_(s->s.setNodeRef("range").property(p->p.setIri(RDFS.LABEL.getIri())))));
         document.addEntity(query);
     }
 
@@ -198,7 +198,7 @@ public class CoreQueryImporter implements TTImport {
     }
 
 
-    private void DeleteSets() throws JsonProcessingException {
+    private void deleteSets() throws JsonProcessingException {
         TTEntity entity= new TTEntity()
           .setIri(IM.NAMESPACE+"DeleteSets")
           .setName("Delete all concept sets in a graph")
@@ -279,12 +279,13 @@ public class CoreQueryImporter implements TTImport {
                 .setType(IM.VALUESET.getIri()))
               .match(w->w
                 .setType(IM.NAMESPACE+"dataModelProperty")))
-            .select(s->s.setVariable("type").setIri(RDFS.LABEL.getIri()))
-            .select(s->s.setVariable("type").setIri(RDFS.COMMENT.getIri()))
-            .select(s->s.setVariable("type").setIri(IM.HAS_STATUS.getIri()))
-            .select(s->s.setVariable("type").setIri(IM.WEIGHTING.getIri()))
-            .select(s->s.setVariable("type").setIri(IM.HAS_SCHEME.getIri()))
-        ));
+            .return_(s->s.setNodeRef("type")
+              .property(p->p.setIri(RDFS.LABEL.getIri()))
+            .property(p->p.setIri(RDFS.COMMENT.getIri()))
+            .property(p->p.setIri(IM.HAS_STATUS.getIri()))
+            .property(p->p.setIri(IM.WEIGHTING.getIri()))
+            .property(p->p.setIri(IM.HAS_SCHEME.getIri()))
+        )));
     }
 
 
@@ -300,9 +301,10 @@ public class CoreQueryImporter implements TTImport {
         Query query= new Query();
         query
           .setName("GMS registered practice on reference date")
-          .select(s -> s
-            .setIri(IM.NAMESPACE+"recordOwner")
-            .setVariable("practice"))
+          .return_(r->r
+            .setNodeRef("practice")
+            .property(s -> s
+            .setIri(IM.NAMESPACE+"recordOwner")))
           .match(f->f
             .setParameter("this")
             .path(p->p
@@ -356,15 +358,16 @@ public class CoreQueryImporter implements TTImport {
               .setIri(SHACL.PATH.getIri())
               .setIn(List.of(Node.iri(IM.IS_CONTAINED_IN.getIri())
                 , Match.iri(RDFS.SUBCLASSOF.getIri()), Match.iri(IM.IS_SUBSET_OF.getIri())))))
-          .select(s->s
-            .setVariable("concept")
-            .setIri(RDFS.LABEL.getIri()))
-          .select(s->s
-            .setVariable("predicate")
+          .return_(s->s
+            .setNodeRef("concept")
+            .property(p->p
+               .setIri(RDFS.LABEL.getIri()))
+            .property(p->p
             .setIri(SHACL.PROPERTY.getIri())
-            .select(s1->s1
-              .setVariable("predicate")
-              .setIri(SHACL.PATH.getIri())));
+            .node(s1->s1
+              .setNodeRef("predicate")
+              .property(p1->p1
+                  .setIri(SHACL.PATH.getIri())))));
         entity.set(IM.DEFINITION, TTLiteral.literal(query));
 
     }
@@ -374,8 +377,9 @@ public class CoreQueryImporter implements TTImport {
           new Query()
             .setName("Allowable Ranges for a property and super properties")
             .setActiveOnly(true)
-            .select(s->s.setIri(IM.CODE.getIri()))
-            .select(s->s.setIri(RDFS.LABEL.getIri()))
+            .return_(r->r
+            .property(s->s.setIri(IM.CODE.getIri()))
+            .property(s->s.setIri(RDFS.LABEL.getIri())))
             .match(f ->f
               .where(w->w
                 .setInverse(true)
@@ -392,9 +396,12 @@ public class CoreQueryImporter implements TTImport {
           new Query()
             .setName("Allowable Properties for a terminology concept")
             .setActiveOnly(true)
-            .select(s->s.setVariable("concept").setIri(IM.CODE.getIri()))
-            .select(s->s.setVariable("label").setIri(RDFS.LABEL.getIri()))
+            .return_(r->r
+              .setNodeRef("concept")
+              .property(p->p.setIri(IM.CODE.getIri()))
+              .property(p->p.setIri(RDFS.LABEL.getIri())))
             .match(f ->f
+              .setVariable("concept")
               .setType(IM.CONCEPT.getIri())
               .where(w->w
                 .setDescription("property that has this concept or supertype as a domain")
@@ -412,8 +419,9 @@ public class CoreQueryImporter implements TTImport {
             .setName("Search for concepts")
             .match(w->w
               .setParameter("this"))
-            .select(s->s.setVariable("entity").setIri(RDFS.LABEL.getIri()))
-            .select(s->s.setVariable("entity").setIri(RDF.TYPE.getIri()))));
+            .return_(r->r
+            .property(p->p.setIri(RDFS.LABEL.getIri()))
+            .property(p->p.setIri(RDF.TYPE.getIri())))));
     }
 
     private void getIsas() throws JsonProcessingException {
@@ -427,8 +435,9 @@ public class CoreQueryImporter implements TTImport {
               .setVariable("isa")
               .setParameter("this")
               .setDescendantsOrSelfOf(true))
-            .select(s->s.setVariable("isa").setIri(RDFS.LABEL.getIri()))
-            .select(s->s.setVariable("isa").setIri(IM.CODE.getIri()))));
+            .return_(s->s.setNodeRef("isa")
+              .property(p->p.setIri(RDFS.LABEL.getIri()))
+            .property(p->p.setIri(IM.CODE.getIri())))));
     }
 
     private TTEntity getQuery(String iri, String name, String comment) {

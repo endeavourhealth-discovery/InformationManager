@@ -212,10 +212,7 @@ public class ImportApp {
                 System.out.println("expanding value sets");
                 new SetExpander().expandAllSets();
         }
-        if (!cfg.isSkiplucene()) {
-                System.out.println("building lucene index");
-                new LuceneIndexer().buildIndexes();
-        }
+
 
         System.out.println("Finished - " + (new Date()));
     }
