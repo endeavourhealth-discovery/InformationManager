@@ -446,7 +446,7 @@ public class CoreQueryImporter implements TTImport {
           .setName(name)
           .setDescription(comment)
           .addType(IM.QUERY);
-        entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"FormValidationQueries"));
+        entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"IMFormValidationQueries"));
         document.addEntity(entity);
         return entity;
     }
