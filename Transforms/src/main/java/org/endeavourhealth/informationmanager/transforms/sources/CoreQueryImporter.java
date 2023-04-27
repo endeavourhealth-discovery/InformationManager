@@ -9,11 +9,9 @@ import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,6 +35,7 @@ public class CoreQueryImporter implements TTImport {
         testQuery();
         objectPropertyRangeSuggestions();
         dataPropertyRangeSuggestions();
+        dataModelPropertyRange();
         output(document,config.getFolder());
         if (!TTFilerFactory.isBulk()) {
             TTTransactionFiler filer= new TTTransactionFiler(null);
@@ -76,6 +75,35 @@ public class CoreQueryImporter implements TTImport {
                     .setIri(SHACL.PATH.getIri())
                     .addIn(new Node().setParameter("this"))))
                 .return_(r->r.setNodeRef("range").property(p->p.setIri(RDFS.LABEL.getIri())))));
+        document.addEntity(query);
+    }
+
+    private void dataModelPropertyRange() throws JsonProcessingException {
+        TTEntity query= getQuery("DataModelPropertyRange","Data model property range","takes account of the data model shape that the property is part of");
+        query.set(IM.DEFINITION,TTLiteral.literal(
+                new Query()
+                        .setName("Data model property range")
+                        .setDescription("get node, class or datatype value (range)  of property objects for specific data model and property")
+                        .match(m->m
+                                .setParameter("myDataModel")
+                                .path(p->p.setIri(SHACL.PROPERTY.getIri()).node(n->n.setVariable("shaclProperty")))
+                                .where(w->w.setIri(SHACL.PATH.getIri()).addIn(new Node().setParameter("myProperty"))))
+                        .return_(r->r.
+                                setNodeRef("shaclProperty")
+                                .setProperty(List.of(
+                                        new ReturnProperty()
+                                        .setIri(SHACL.CLASS.getIri())
+                                        .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                                .setIri(RDFS.LABEL.getIri())))),
+                                        new ReturnProperty()
+                                        .setIri(SHACL.NODE.getIri())
+                                        .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                                .setIri(RDFS.LABEL.getIri())))),
+                                        new ReturnProperty()
+                                        .setIri(SHACL.DATATYPE.getIri())
+                                        .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                                .setIri(RDFS.LABEL.getIri()))))))
+                        )));
         document.addEntity(query);
     }
     private void dataPropertyRangeSuggestions() throws JsonProcessingException {
