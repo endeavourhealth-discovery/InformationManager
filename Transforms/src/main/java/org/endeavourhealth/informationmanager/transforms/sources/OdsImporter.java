@@ -6,6 +6,7 @@ import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.slf4j.Logger;
@@ -104,7 +105,8 @@ public class OdsImporter implements TTImport {
         String odsCode = fieldByName("OrganisationId");
         String orgIri = IM.ORGANISATION_NAMESPACE +  odsCode;
         if(organisationCodes.contains(odsCode)) {
-           doc.addEntity(new TTEntity().setIri(orgIri).setCode(odsCode));
+           doc.addEntity(new TTEntity().setIri(orgIri).setCode(odsCode)
+             .addType(TTIriRef.iri(IM.NAMESPACE+"Organisation")));
         }
         String addIri = IM.LOCATION_NAMESPACE + "ODS_"+ odsCode;
 
