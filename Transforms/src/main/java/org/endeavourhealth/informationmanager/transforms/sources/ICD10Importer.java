@@ -10,6 +10,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.SNOMED;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -42,7 +43,7 @@ public class ICD10Importer implements TTImport {
         validateFiles(config.getFolder());
         System.out.println("Importing ICD10....");
         System.out.println("Getting snomed codes");
-        snomedCodes = importMaps.importSnomedCodes();
+        snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
         document = manager.createDocument(IM.GRAPH_ICD10.getIri());
         document.addEntity(manager.createGraph(IM.GRAPH_ICD10.getIri(), "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
         createTaxonomy();

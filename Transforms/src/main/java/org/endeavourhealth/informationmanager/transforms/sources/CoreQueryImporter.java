@@ -136,38 +136,36 @@ public class CoreQueryImporter implements TTImport {
           .match(f->f
             .setType("Patient"))
           .match(w->w
-            .setDescription("Registered for gms")
             .setSet(IM.NAMESPACE+"Q_RegisteredGMS")
             .setName("Registered for GMS services on reference date"))
           .match(m->m
             .setBoolMatch(Bool.or)
             .match(or->or
-              .setDescription("aged between 65 and 70")
               .where(w->w
                 .setIri("age")
                 .range(r->r
                   .from(from->from
                     .setOperator(Operator.gte)
-                    .setValue("65"))
+                    .setValue("65")
+                    .setUnit("YEARS"))
                   .to(to->to
                     .setOperator(Operator.lt)
-                    .setValue("70")))))
+                    .setValue("70")
+                    .setUnit("YEARS")))))
             .match(or->or
-              .setDescription("Diabetic")
               .setSet("http://example/queries#Q_Diabetics"))
             .match(or->or
               .path(p->p.setIri("observation")
                 .node(n->n.setType("Observation")))
               .where(ob->ob
                 .setIri("concept")
-                .addIn(new Node().setIri(SNOMED.NAMESPACE+"714628002").setDescendantsOf(true)))))
+                .addIn(new Node().setIri(SNOMED.NAMESPACE+"714628002").setDescendantsOf(true))
+                .setValueVariable("Prediabetes"))))
           .match(w->w
             .path(p->p.setIri("observation")
-              .node(n->n.setType("Observation")
-                .setVariable("latestBP")))
+              .node(n->n.setType("Observation")))
             .setBool(Bool.and)
             .where(ww->ww
-              .setDescription("Home or office based Systolic")
               .setIri("concept")
               .setName("concept")
               .addIn(new Node()
@@ -178,7 +176,6 @@ public class CoreQueryImporter implements TTImport {
                 .setName("Home systolic blood pressure"))
               .setValueLabel("Office or home systolic blood pressure"))
             .where(ww->ww
-              .setDescription("Last 6 months")
               .setIri("effectiveDate")
               .setOperator(Operator.gte)
               .setValue("-6")
@@ -192,29 +189,24 @@ public class CoreQueryImporter implements TTImport {
               .setDirection(Order.descending)))
           .match(m->m
             .where(w->w
-              .setVariable("latestBP")
+              .setNodeRef("latestBP")
               .setIri(IM.NAMESPACE+"numericValue")
-              .setDescription(">150")
               .setOperator(Operator.gt)
               .setValue("150")))
           .match(w->w
             .setExclude(true)
-            .setDescription("High BP not followed by screening invite")
             .path(p->p.setIri(IM.NAMESPACE+"observation")
               .node(n->n.setType("Observation")))
             .setBool(Bool.and)
             .where(inv->inv
-              .setDescription("Invited for Screening after BP")
               .setIri(IM.NAMESPACE+"concept")
               .addIn(new Node().setSet(IM.NAMESPACE+"InvitedForScreening")))
             .where(after->after
-              .setDescription("after high BP")
               .setIri(IM.NAMESPACE+"effectiveDate")
               .setOperator(Operator.gte)
               .relativeTo(r->r.setVariable("latestBP").setIri("effectiveDate"))))
           .match(w->w
             .setExclude(true)
-            .setDescription("not hypertensive")
             .setSet(IM.NAMESPACE+"Q_Hypertensives")
             .setName("Hypertensives"));
         qry.set(IM.DEFINITION, TTLiteral.literal(prof));

@@ -46,8 +46,7 @@ public class IM1MapImport implements TTImport {
     private final Map<String,String> oldIriSnomed = new HashMap<>();
     private final Map<String,Integer> IdToDbid = new HashMap<>();
     private final Map<String,TTEntity> iriToSet= new HashMap<>();
-    private final Map<String,String> oldCodeToNew= new HashMap<>();
-    private final Map<String,String> emisTermToCode= new HashMap<>();
+    private Map<String,String> codeToIri= new HashMap<>();
     private final Map<String,String> remaps= new HashMap<>();
     private final Map<String,String> organisationMap= Map.of(
             "CM_Org_Barts","RQX42",
@@ -71,11 +70,12 @@ public class IM1MapImport implements TTImport {
 
     public void importData(String inFolder, boolean secure) throws Exception {
         EMISImport.populateRemaps(remaps);
+        codeToIri= importMaps.getCodeToIri();
 
-        LOG.info("Loading emis look ups....");
-        importEMISCodes(inFolder);
+
         importOld(inFolder);
         importUsage(inFolder);
+
 
         LOG.info("Retrieving all entities and matches...");
         entities= importMaps.getAllPlusMatches();
@@ -240,46 +240,19 @@ public class IM1MapImport implements TTImport {
 
                         else if (scheme.equals(IM.CODE_SCHEME_EMIS.getIri())) {
                             if (!(".....").equals(code)) {
-                                String conceptId= oldCodeToNew.get(code);
-                                if (conceptId==null) {
-                                    String oldCode = code;
-                                    oldCode = oldCode.replaceAll("[.]", "");
-                                    conceptId = oldCodeToNew.get(oldCode);
-                                    if (conceptId == null) {
-                                        if (term.startsWith("[")) {
-                                            String suffix = term.substring(1, term.indexOf("]"));
-                                            oldCode = oldCode.replace("_", "") + "-" + suffix;
-                                            conceptId = oldCodeToNew.get(oldCode);
-                                        }
-                                    }
-                                    if (conceptId == null) {
-                                        conceptId = emisTermToCode.get(term);
-                                    }
-                                    if (conceptId == null){
-                                        //if (!Character.isLowerCase(code.charAt(0)))
-                                          //  if (!code.startsWith("Z"))
-                                            //    System.out.println(code + "  " + line);
-                                        }
-                                }
-                                if (conceptId!=null){
-                                    if (entities.containsKey(scheme + conceptId)) {
-                                        checkEntity(scheme, conceptId, im1Scheme, term, code, oldIri, description);
-                                    }
-                                    else {
-                                        String oldConceptId = code.replaceAll("\\.", "").replaceAll("-", "_").replaceAll("\\^", "");
-                                        if (entities.containsKey(scheme + oldConceptId)) {
-                                            addIM1id(scheme + oldConceptId, oldIri);
-                                        }
-                                        else {
-                                            conceptId = remaps.get(oldConceptId);
-                                            if (conceptId != null) {
-                                                checkEntity(scheme, conceptId, im1Scheme, term, code, oldIri, description);
-                                            }
-                                            else
-                                                throw new DataFormatException("missing emis code");
-                                        }
+                                if (im1Scheme.equals("READ2"))
+                                    code= code.replaceAll("\\.","");
+                                String emisConcept = codeToIri.get(IM.CODE_SCHEME_EMIS.getIri() + code);
+                                if (emisConcept == null) {
+                                    if (term.contains("SHHAPT")) {
+                                        emisConcept = codeToIri.get(IM.CODE_SCHEME_EMIS.getIri() + code + "-SHHAPT");
                                     }
                                 }
+                                if (emisConcept == null) {
+                                        System.out.println("emis concept missing");
+                                }
+                                else
+                                    addIM1id(emisConcept, oldIri);
                             }
                         }
 
@@ -964,29 +937,6 @@ public class IM1MapImport implements TTImport {
 
     }
 
-    private void importEMISCodes(String folder) throws IOException {
-        Path file =  ImportUtils.findFileForId(folder, emisCodes[0]);
-        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();
-            int count = 0;
-            String line = reader.readLine();
-            while (line != null && !line.isEmpty()) {
-                String[] fields = line.split("\t");
-                count++;
-                if (count % 100000== 0)
-                    LOG.info("found {} old emis codes ", count);
-
-               String oldCode= fields[3];
-               String conceptId= fields[4];
-               String term= fields[2];
-               oldCodeToNew.put(oldCode,conceptId);
-               emisTermToCode.put(term,conceptId);
-                line = reader.readLine();
-            }
-            LOG.info("{} codes imported",count);
-        }
-
-    }
 
 
 
@@ -1007,6 +957,6 @@ public class IM1MapImport implements TTImport {
         IdToDbid.clear();
         iriToSet.clear();
         importMaps.close();
-        oldCodeToNew.clear();
+        codeToIri.clear();
     }
 }

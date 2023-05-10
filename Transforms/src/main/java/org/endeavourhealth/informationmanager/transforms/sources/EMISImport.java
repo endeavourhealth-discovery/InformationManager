@@ -66,10 +66,41 @@ public class EMISImport implements TTImport {
         manager.createIndex();
         allergyMaps(config.getFolder());
         setEmisHierarchy();
+        addExtraMatches();
         supplementary();
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
+    }
+
+    private void addExtraMatches(){
+        for (Map.Entry<String,TTEntity> item: codeIdToEntity.entrySet()){
+            String codeId= item.getKey();
+            TTEntity emisConcept= item.getValue();
+            if (emisConcept.get(IM.MATCHED_TO)==null){
+                matchParent(codeId,emisConcept);
+            }
+         //   if (emisConcept.get(IM.MATCHED_TO)==null){
+           //     System.out.println("emis code id"+ codeId+" not matched");
+            //}
+        }
+
+    }
+
+    private void matchParent(String codeId, TTEntity emisConcept) {
+        List<String> parents= parentMap.get(codeId);
+        if (parents!=null){
+            for (String parent:parents){
+                TTEntity parentEntity= codeIdToEntity.get(parent);
+                if (parentEntity.get(IM.MATCHED_TO)!=null){
+                    emisConcept.set(IM.MATCHED_TO,parentEntity.get(IM.MATCHED_TO));
+                }
+                else {
+                    matchParent(parent,emisConcept);
+                }
+            }
+        }
+
     }
 
     private void importDrugs(String folder) throws IOException {
@@ -196,7 +227,7 @@ public class EMISImport implements TTImport {
     private void addConcept( EmisCode ec) {
         String codeId = ec.getCodeId();
         String term = ec.getTerm();
-        String oldCode = ec.getCode();
+        String code = ec.getCode();
         String conceptId = ec.getConceptId();
         String descid = ec.getDescid();
         String parentId = ec.getParentId();
@@ -213,13 +244,13 @@ public class EMISImport implements TTImport {
         String name = (term.length() <= 250)
           ? term
           : (term.substring(0, 200) + "...");
-        TTEntity emisConcept = conceptIdToEntity.get(conceptId);
+        TTEntity emisConcept = codeIdToEntity.get(codeId);
         if (emisConcept == null) {
-            if (remaps.get(oldCode) != null)
-                conceptId = remaps.get(oldCode);
+            if (remaps.get(code) != null)
+                conceptId = remaps.get(code);
             emisConcept = new TTEntity()
-              .setIri(IM.CODE_SCHEME_EMIS.getIri() + conceptId)
-              .setCode(conceptId)
+              .setIri(IM.CODE_SCHEME_EMIS.getIri() + codeId)
+              .setCode(code)
               .addType(IM.CONCEPT)
               .setScheme(IM.CODE_SCHEME_EMIS);
             String mainTerm= snomedDescription;
@@ -228,7 +259,7 @@ public class EMISImport implements TTImport {
             emisConcept
               .setName(mainTerm);
 
-            conceptIdToEntity.put(conceptId,emisConcept);
+            codeIdToEntity.put(codeId,emisConcept);
             document.addEntity(emisConcept);
         }
         emisConcept.addObject(IM.CODE_ID,codeId);
@@ -238,15 +269,8 @@ public class EMISImport implements TTImport {
             termCode.set(RDFS.LABEL,TTLiteral.literal(name));
             emisConcept.addObject(IM.HAS_TERM_CODE,termCode);
         }
-        if (notFoundValue(emisConcept,IM.HAS_TERM_CODE,IM.OLD_CODE,oldCode)){
-            TTNode termCode= new TTNode();
-            termCode.set(IM.OLD_CODE,TTLiteral.literal(oldCode));
-            termCode.set(RDFS.LABEL,TTLiteral.literal(name));
-            emisConcept.addObject(IM.HAS_TERM_CODE,termCode);
-        }
 
-        codeIdToEntity.put(codeId,emisConcept);
-        oldCodeToEntity.put(oldCode,emisConcept);
+        oldCodeToEntity.put(code,emisConcept);
         termToEmis.put(term, emisConcept);
         if (isSnomed(conceptId)) {
             if (!isBlackList(conceptId)) {
@@ -259,12 +283,16 @@ public class EMISImport implements TTImport {
                      emisConcept.addObject(IM.IS_CHILD_OF, iri(EMIS + "EMISUnlinkedCodes"));
             }
         }
-        if (oldCode.equals("EMISNHH2")) {
+        else {
+            emisConcept.set(IM.ALTERNATIVE_CODE,TTLiteral.literal(conceptId));
+        }
+
+        if (code.equals("EMISNHH2")) {
             emisConcept.setName("EMIS Read 2 and local codes");
             emisConcept.set(IM.IS_CONTAINED_IN, new TTArray()
               .add(iri(IM.NAMESPACE + "CodeBasedTaxonomies")));
         }
-        if (parentId == null && !oldCode.equals("EMISNHH2"))
+        if (parentId == null && !code.equals("EMISNHH2"))
             emisConcept.set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS + "EMISUnlinkedCodes")));
         if (parentId != null) {
             parentMap.computeIfAbsent(codeId, k -> new ArrayList<>());

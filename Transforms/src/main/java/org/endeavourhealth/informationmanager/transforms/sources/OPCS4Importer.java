@@ -11,6 +11,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.SNOMED;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -41,7 +42,7 @@ public class OPCS4Importer implements TTImport {
     public void importData(TTImportConfig config) throws Exception {
         System.out.println("Importing OPCS4.....");
         System.out.println("Checking Snomed codes first");
-        snomedCodes= importMaps.importSnomedCodes();
+        snomedCodes= importMaps.getCodes(SNOMED.NAMESPACE);
         try (TTManager manager= new TTManager()) {
             document = manager.createDocument(IM.GRAPH_OPCS4.getIri());
             document.addEntity(manager.createGraph(IM.GRAPH_OPCS4.getIri(), "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
