@@ -184,7 +184,6 @@ public class CoreQueryImporter implements TTImport {
               .setValueLabel("last 6 months"))
             .addOrderBy(new OrderLimit()
               .setIri("effectiveDate")
-              .setVariable("latestBP")
               .setLimit(1)
               .setDirection(Order.descending)))
           .match(m->m
