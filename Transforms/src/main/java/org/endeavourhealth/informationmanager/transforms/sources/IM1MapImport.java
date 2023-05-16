@@ -189,6 +189,8 @@ public class IM1MapImport implements TTImport {
                         case "CM_DiscoveryCode":
                             if(oldIri.startsWith("FHIR_")) {
                                 scheme = FHIR.GRAPH_FHIR.getIri();
+                            } else if (oldIri.startsWith("CM_Sys_")) {
+                                scheme = IM.SYSTEM_NAMESPACE;
                             } else {
                                 scheme = IM.CODE_SCHEME_DISCOVERY.getIri();
                                 if (code.startsWith("LPV_Imp_Crn"))
@@ -353,7 +355,6 @@ public class IM1MapImport implements TTImport {
                         else if (scheme.equals((FHIR.GRAPH_FHIR.getIri()))) {
                             addFhir(oldIri, term, im1Scheme, code);
                         }
-
                         else {
                             checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
                         }
@@ -658,14 +659,18 @@ public class IM1MapImport implements TTImport {
 
 
     private void importContext(String inFolder) throws IOException,DataFormatException {
+        Set<String> contexts = new HashSet<>();
+        Set<String> nodeValues = new HashSet<>();
+        HashMap<String, TTEntity> nodeMaps = new HashMap<>();
         for (String statsFile : context) {
             Path file = ImportUtils.findFilesForId(inFolder, statsFile).get(0);
-            LOG.info("Retrieving counts from..." + file.toString());
+            LOG.info("Retrieving context maps from..." + file.toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
                 reader.readLine();  // NOSONAR - Skipping header
                 String line = reader.readLine();
                 while (line != null && !line.isEmpty()) {
                     String[] fields = line.split("\t");
+                    String node = fields[0];
                     String publisher= fields[1];
                     String system= fields[2];
                     String schema= fields[3];
@@ -675,30 +680,18 @@ public class IM1MapImport implements TTImport {
                     String sourceValue= fields[7];
                     if (sourceValue.equals("NULL"))
                         sourceValue=null;
-                    String oldIri1= fields[8];
-                    String headerCode= fields[9];
-                    if (headerCode.equals("NULL"))
-                        headerCode=null;
+                    String lookupConcept= fields[8];
+
+                    String regexSrc= fields[9];
+                    if (regexSrc.equals("NULL"))
+                        regexSrc=null;
                     String regex= fields[10];
                     if (regex.equals("NULL"))
                         regex=null;
-                    String oldIri2=fields[11];
-                    String oldIri;
-                    if (!oldIri2.equals("NULL")){
-                        oldIri=oldIri2;
-                        targetProperty="DM_concept";
-                    }
-                    else
-                    {
-                        oldIri= oldIri1;
-                        if (headerCode!=null)
-                            throw new IOException("value column should be null");
+                    String regexConcept=fields[11];
 
-                    }
-                    if (oldIri.equals("CM_CritCareSrcLctn04"))
-                        LOG.info("CM_CritCareSrcLctn04");
-                    TTIriRef newScheme = getScheme(publisher,system);
-                    TTNode context= new TTNode();
+                    TTIriRef scheme = getScheme(publisher,system);
+
                     TTEntity propertyEntity= oldIriEntity.get(targetProperty);
                     TTIriRef propertyIri;
                     if (propertyEntity==null) {
@@ -716,22 +709,48 @@ public class IM1MapImport implements TTImport {
                     else
                         propertyIri= TTIriRef.iri(propertyEntity.getIri());
 
-                    setContext(context,publisher,system,schema,table,field,sourceValue,regex,headerCode,propertyIri);
+                    String contextId = publisher + "/" + system + "/" + schema + "/" + table + "/" + field;
+                    String nodeIri = IM.CONTEXT_NODE.getIri() + node;
 
+                    if (!contexts.contains(contextId)) {
+                        createContextEntity(contexts, publisher, system, schema, table, field, contextId, nodeIri);
+                    }
 
+                    TTEntity mapNode = nodeMaps.get(nodeIri);
+                    if (mapNode == null) {
+                        mapNode = createMapNode(nodeMaps, nodeIri, node, propertyIri);
+                    }
+
+                    TTArray maps = mapNode.get(IM.HAS_MAP);
+
+                    String oldIri = "NULL".equals(lookupConcept) ? regexConcept : lookupConcept;
 
                     TTEntity entity= oldIriEntity.get(oldIri);
                     if (entity==null) {
-                        entity= addOldEntity(newScheme,oldIri,publisher,system,sourceValue,headerCode,regex);
+                        entity= addOldEntity(scheme,oldIri,publisher,system,sourceValue,regexSrc,regex);
                     }
-                    if (entity.getIri().equals("http://endhealth.info/bc#PF4"))
-                        System.out.println("pf4");
-                    TTIriRef scheme= entity.getScheme();
-                    if (scheme!=null)
-                        if (!scheme.equals(SNOMED.GRAPH_SNOMED)&&(!scheme.equals(IM.CODE_SCHEME_DISCOVERY))) {
-                            entity.set(IM.SOURCE_CONTEXT, context);
+
+
+                    if (sourceValue!=null) {
+                        if (!nodeValues.contains(node + "/" + sourceValue)) {
+                            nodeValues.add(node + "/" + sourceValue);
+                            TTNode map = new TTNode();
+                            maps.add(map);
+                            map.set(IM.SOURCE_VALUE, sourceValue);
+                            map.set(IM.CONCEPT, entity.getIri());
+                        }
+                    } else if (regexSrc!=null) {
+                        if (!nodeValues.contains(node + "/" + regexSrc + "/" + regex)) {
+                            nodeValues.add(node + "/" + regexSrc + "/" + regex);
+                            TTNode map = new TTNode();
+                            maps.add(map);
+                            map.set(IM.SOURCE_VALUE, regexSrc);
+                            map.set(IM.SOURCE_REGEX, regex);
+                            map.set(IM.CONCEPT, entity.getIri());
+                        }
+                    } else {
+                        LOG.error("Both source value and regex is null - unhandled context function?");
                     }
-               //     bindToSet(propertyIri.getIri(),entity.getIri());
 
                     line = reader.readLine();
                 }
@@ -739,30 +758,35 @@ public class IM1MapImport implements TTImport {
         }
     }
 
+    private static TTEntity createMapNode(HashMap<String, TTEntity> nodeMaps, String nodeIri, String node, TTIriRef propertyIri) {
+        TTEntity mapNode = new TTEntity(nodeIri)
+            .set(IM.HAS_MAP, new TTArray())
+            .setName(node)
+            .set(IM.TARGET_PROPERTY, propertyIri);
 
+        document.addEntity(mapNode);
+        nodeMaps.put(nodeIri, mapNode);
 
-
-    private void setContext(TTNode context, String publisher, String system, String schema, String table, String field, String sourceValue, String regex, String headerCode,TTIriRef propertyIri) {
-        TTIriRef organisation;
-        if (organisationMap.get(publisher)!=null) {
-            organisation = new TTIriRef().setIri(IM.GRAPH_ODS.getIri() + organisationMap.get(publisher));
-        }
-        else
-            organisation= new TTIriRef().setIri(IM.GRAPH_ODS.getIri()+UUID.randomUUID().toString());
-        context.set(IM.SOURCE_PUBLISHER,organisation);
-        context.set(IM.SOURCE_SYSTEM,new TTIriRef(IM.SYSTEM_NAMESPACE + system));
-        context.set(IM.SOURCE_SCHEMA,TTLiteral.literal(schema));
-        context.set(IM.SOURCE_TABLE,TTLiteral.literal(table));
-        context.set(IM.SOURCE_FIELD,TTLiteral.literal(field));
-        context.set(IM.TARGET_PROPERTY,propertyIri);
-        if (sourceValue!=null)
-            context.set(IM.SOURCE_VALUE,TTLiteral.literal(sourceValue));
-        if (regex!=null)
-            context.set(IM.SOURCE_REGEX,TTLiteral.literal(regex));
-        if (headerCode!=null)
-            context.set(IM.SOURCE_HEADING,TTLiteral.literal(headerCode));
+        return mapNode;
     }
 
+    private void createContextEntity(Set<String> contexts, String publisher, String system, String schema, String table, String field, String contextId, String nodeIri) {
+        contexts.add(contextId);
+        TTEntity context = new TTEntity(IM.SOURCE_CONTEXT.getIri() + UUID.randomUUID());
+        document.addEntity(context);
+        TTIriRef organisation;
+        if (organisationMap.get(publisher)!=null) {
+            organisation = new TTIriRef().setIri(IM.ORGANISATION_NAMESPACE + organisationMap.get(publisher));
+        }
+        else
+            organisation= new TTIriRef().setIri(IM.ORGANISATION_NAMESPACE + UUID.randomUUID());
+        context.set(IM.SOURCE_PUBLISHER, organisation);
+        if (!"NULL".equals(system)) context.set(IM.SOURCE_SYSTEM,new TTIriRef(IM.SYSTEM_NAMESPACE + system));
+        if (!"NULL".equals(schema)) context.set(IM.SOURCE_SCHEMA,TTLiteral.literal(schema));
+        if (!"NULL".equals(table)) context.set(IM.SOURCE_TABLE,TTLiteral.literal(table));
+        if (!"NULL".equals(field)) context.set(IM.SOURCE_FIELD,TTLiteral.literal(field));
+        context.set(IM.CONTEXT_NODE, new TTIriRef(nodeIri));
+    }
 
     private static String getPhrase(String iri) {
         iri = iri.substring(0, 1).toUpperCase() + iri.substring(1);
