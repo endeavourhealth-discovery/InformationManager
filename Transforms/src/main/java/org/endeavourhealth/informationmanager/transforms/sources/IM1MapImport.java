@@ -772,7 +772,7 @@ public class IM1MapImport implements TTImport {
 
     private void createContextEntity(Set<String> contexts, String publisher, String system, String schema, String table, String field, String contextId, String nodeIri) {
         contexts.add(contextId);
-        TTEntity context = new TTEntity(IM.SOURCE_CONTEXT.getIri() + UUID.randomUUID());
+        TTEntity context = new TTEntity(IM.SOURCE_CONTEXT.getIri() + "/" + UUID.randomUUID());
         document.addEntity(context);
         TTIriRef organisation;
         if (organisationMap.get(publisher)!=null) {
