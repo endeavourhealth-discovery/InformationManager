@@ -36,6 +36,7 @@ public class CoreQueryImporter implements TTImport {
         objectPropertyRangeSuggestions();
         dataPropertyRangeSuggestions();
         dataModelPropertyRange();
+        dataModelPropertyRangeByShape();
         output(document,config.getFolder());
         if (!TTFilerFactory.isBulk()) {
             TTTransactionFiler filer= new TTTransactionFiler(null);
@@ -78,8 +79,8 @@ public class CoreQueryImporter implements TTImport {
         document.addEntity(query);
     }
 
-    private void dataModelPropertyRange() throws JsonProcessingException {
-        TTEntity query= getQuery("DataModelPropertyRange","Data model property range","takes account of the data model shape that the property is part of");
+    private void dataModelPropertyRangeByShape() throws JsonProcessingException {
+        TTEntity query= getQuery("DataModelPropertyRangeByShape","Data model property range","takes account of the data model shape that the property is part of");
         query.set(IM.DEFINITION,TTLiteral.literal(
                 new Query()
                         .setName("Data model property range")
@@ -106,6 +107,24 @@ public class CoreQueryImporter implements TTImport {
                         )));
         document.addEntity(query);
     }
+
+    private void dataModelPropertyRange() throws JsonProcessingException {
+        TTEntity query= getQuery("DataModelPropertyRange","Data model property range","returns a flat list of data model property ranges based on input data model and property");
+        query.set(IM.DEFINITION,TTLiteral.literal(
+            new Query()
+                .setName("Data model property range")
+                .setDescription("get node, class or datatype value (range)  of property objects for specific data model and property")
+                .match(m->m
+                    .setParameter("myDataModel")
+                    .path(p->p.setIri(SHACL.PROPERTY.getIri()).node(n->n.setVariable("shaclProperty")))
+                    .where(w->w.setIri(SHACL.PATH.getIri()).addIn(new Node().setParameter("myProperty"))))
+                .return_(r->r.
+                    setNodeRef("range")
+                    .property(p-> p.setIri(RDFS.LABEL.getIri()))
+                )));
+        document.addEntity(query);
+    }
+
     private void dataPropertyRangeSuggestions() throws JsonProcessingException {
         TTEntity query= getQuery("dataPropertyRangeSuggestions","Range suggestions for object property","takes account of the data model shape that the property is part of");
         query.set(IM.DEFINITION,TTLiteral.literal(
