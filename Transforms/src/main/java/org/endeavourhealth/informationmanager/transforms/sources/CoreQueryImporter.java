@@ -35,6 +35,7 @@ public class CoreQueryImporter implements TTImport {
         testQuery();
         objectPropertyRangeSuggestions();
         dataPropertyRangeSuggestions();
+        searchProperties();
         dataModelPropertyRange();
         dataModelPropertyRangeByShape();
         output(document,config.getFolder());
@@ -444,6 +445,23 @@ public class CoreQueryImporter implements TTImport {
                 .setIri(RDFS.DOMAIN.getIri())
                 .addIn(new Node().setParameter("this").setAncestorsOf(true))
               ))));
+    }
+
+    private void searchProperties() throws JsonProcessingException {
+        TTEntity query = getQuery("SearchProperties", "Search for properties by name","Returns a list of properties using a text search to filter the list.");
+
+        query.set(IM.DEFINITION, TTLiteral.literal(
+            new Query()
+                .setName("Search for properties by name")
+                .setActiveOnly(true)
+                .match(f->f
+                    .setVariable("concept")
+                    .setType(RDF.PROPERTY.getIri()))
+                .return_(r->r
+                    .setNodeRef("concept")
+                    .property(p->p.setIri(IM.CODE.getIri()))
+                    .property(p->p.setIri(RDFS.LABEL.getIri())))
+        ));
     }
 
     private void getConcepts() throws JsonProcessingException {
