@@ -118,9 +118,16 @@ public class CoreQueryImporter implements TTImport {
                 .match(m->m
                     .setParameter("myDataModel")
                     .path(p->p.setIri(SHACL.PROPERTY.getIri()).node(n->n.setVariable("shaclProperty")))
-                    .where(w->w.setIri(SHACL.PATH.getIri()).addIn(new Node().setParameter("myProperty"))))
+                    .where(w->w.setIri(SHACL.PATH.getIri()).addIn(new Node().setParameter("myProperty")))
+                    .where(w0->w0.setVariable("propType")
+                        .setBool(Bool.or)
+                        .where(w1->w1.setIri(SHACL.CLASS.getIri()))
+                        .where(w2->w2.setIri(SHACL.NODE.getIri()))
+                        .where(w3->w3.setIri(SHACL.DATATYPE.getIri()))
+                    )
+                )
                 .return_(r->r.
-                    setNodeRef("range")
+                    setNodeRef("propType")
                     .property(p-> p.setIri(RDFS.LABEL.getIri()))
                 )));
         document.addEntity(query);
