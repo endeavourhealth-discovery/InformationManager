@@ -200,7 +200,7 @@ public class CoreQueryImporter implements TTImport {
               .setOperator(Operator.gte)
               .setValue("-6")
               .setUnit("MONTHS")
-              .relativeTo(r->r.setIri("$referenceDate"))
+              .relativeTo(r->r.setParameter("$referenceDate"))
               .setValueLabel("last 6 months"))
             .addOrderBy(new OrderLimit()
               .setIri("effectiveDate")
@@ -223,7 +223,7 @@ public class CoreQueryImporter implements TTImport {
             .where(after->after
               .setIri(IM.NAMESPACE+"effectiveDate")
               .setOperator(Operator.gte)
-              .relativeTo(r->r.setVariable("latestBP").setIri("effectiveDate"))))
+              .relativeTo(r->r.setNodeRef("latestBP").setIri("effectiveDate"))))
           .match(w->w
             .setExclude(true)
             .setSet(IM.NAMESPACE+"Q_Hypertensives")
