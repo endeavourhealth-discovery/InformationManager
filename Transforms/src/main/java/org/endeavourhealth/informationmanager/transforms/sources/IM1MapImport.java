@@ -82,6 +82,8 @@ public class IM1MapImport implements TTImport {
         entities= importMaps.getAllPlusMatches();
         TTManager manager = new TTManager();
         document = manager.createDocument(IM.GRAPH_IM1.getIri());
+        document.addEntity(manager.createGraph(FHIR.GRAPH_FHIR.getIri(), "FHIR code scheme and graph",
+                "The FHIR code scheme and graph, i.e. codes defined in the FHIR specification"));
         newSchemes();
         statsDocument= manager.createDocument(IM.GRAPH_STATS.getIri());
         importv1Codes(inFolder);
