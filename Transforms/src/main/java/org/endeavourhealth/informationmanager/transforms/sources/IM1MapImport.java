@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.CaseUtils;
 import org.endeavourhealth.imapi.filer.*;
@@ -17,7 +18,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DataFormatException;
-
+import org.endeavourhealth.imapi.model.imq.*;
 public class IM1MapImport implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(IM1MapImport.class);
     private static final String[] im1Codes = {".*\\\\IMv1\\\\concepts.txt"};
@@ -45,7 +46,7 @@ public class IM1MapImport implements TTImport {
     private final Map<String,String> oldIriTerm= new HashMap<>();
     private final Map<String,String> oldIriSnomed = new HashMap<>();
     private final Map<String,Integer> IdToDbid = new HashMap<>();
-    private final Map<String,TTEntity> iriToSet= new HashMap<>();
+    private final Map<String,TTEntity> iriToConcept= new HashMap<>();
     private Map<String,String> codeToIri= new HashMap<>();
     private final Map<String,String> remaps= new HashMap<>();
     private final Map<String,String> organisationMap= Map.of(
@@ -369,60 +370,72 @@ public class IM1MapImport implements TTImport {
             writer.close();
         }
         LOG.info("Process ended with " + count);
-        //valueSetsList.forEach(System.out::println);
-
 	}
 
     private void addFhir(String oldIri, String term, String im1Scheme, String code) throws IOException {
         String scheme = FHIR.GRAPH_FHIR.getIri() + "ValueSet/";
         LOG.info("Writing Fhir ValueSet");
         TTEntity entity = new TTEntity();
+        TTEntity concept = new TTEntity();
 
         if("NULL".equals(code)){
             // Is parent pseudo-scheme
-            im1SchemeToIriTerm.put(oldIri,getFhirIriTerm(term));
-            entity.setIri(scheme + im1SchemeToIriTerm.get(oldIri))
-                    .addType(IM.VALUESET);
-            entity.set(IM.IS_CONTAINED_IN, FHIR.VALUESET_FOLDER);
-            iriToSet.put(entity.getIri(), entity);
+            setParentConceptAndValueSet(oldIri, term, scheme, entity, concept, im1Scheme);
         } else {
             if("CM_DiscoveryCode".equals(im1Scheme)) {
-                im1SchemeToIriTerm.put(oldIri,getFhirIriTerm(term));
-                entity.setIri(scheme + im1SchemeToIriTerm.get(oldIri))
-                        .addType(IM.VALUESET);
-                entity.set(IM.IS_CONTAINED_IN, FHIR.VALUESET_FOLDER);
-                iriToSet.put(entity.getIri(), entity);
+                setParentConceptAndValueSet(oldIri, term, scheme, entity, concept, im1Scheme);
             } else {
                 String iriTerm = im1SchemeToIriTerm.get(im1Scheme);
                 if(iriTerm == null) {
                     System.out.println(im1Scheme);
                     throw new IOException();
                 }
-                entity.setIri(scheme + iriTerm + "/" + (code.toLowerCase().replaceAll(" ", "-")))
+                entity.setIri(FHIR.GRAPH_FHIR.getIri() + iriTerm + "/" + (code.toLowerCase().replaceAll(" ", "-")))
                         .setCode(code)
                         .addType(IM.CONCEPT)
-                        .set(IM.IS_MEMBER_OF, scheme + iriTerm);
+                        .set(IM.IS_CHILD_OF, FHIR.GRAPH_FHIR.getIri() + iriTerm);
 
-                TTEntity vset = iriToSet.get(scheme + iriTerm);
-                if (vset != null) {
-                    TTArray arr = vset.get(IM.HAS_MEMBER);
+                TTEntity parent = iriToConcept.get(FHIR.GRAPH_FHIR.getIri() + iriTerm);
+                if (parent != null) {
+                    TTArray arr = parent.get(IM.HAS_CHILDREN);
                     if (arr == null) {
                         arr = new TTArray();
-                        vset.set(IM.HAS_MEMBER, arr);
+                        parent.set(IM.HAS_CHILDREN, arr);
                     }
                     arr.add(TTIriRef.iri(entity.getIri()));
                 } else {
-                    LOG.error("Value set undefined");
+                    LOG.error("Parent undefined");
                 }
             }
+        }
+        if(concept.getIri() != null) {
+            concept.setName(term).setScheme(FHIR.GRAPH_FHIR).set(IM.IM1ID, TTLiteral.literal(oldIri));
+            document.addEntity(concept);
+            entity.set(IM.DEFINITION, TTLiteral.literal(
+                    new Query().match(m->m
+                            .setName(term)
+                            .setIri(concept.getIri())
+                            .setDescendantsOrSelfOf(true)
+                    )));
         }
         entity.setName(term)
                 .setScheme(FHIR.GRAPH_FHIR)
                 .set(IM.IM1ID, TTLiteral.literal(oldIri));
+
         if(!"NULL".equals(im1Scheme)) {
             entity .set(IM.IM1SCHEME,TTLiteral.literal(im1Scheme));
         }
         document.addEntity(entity);
+    }
+
+    private void setParentConceptAndValueSet(String oldIri, String term, String scheme, TTEntity entity, TTEntity concept,String im1Scheme) throws JsonProcessingException {
+        im1SchemeToIriTerm.put(oldIri,getFhirIriTerm(term));
+        entity.setIri(scheme + im1SchemeToIriTerm.get(oldIri))
+                .addType(IM.VALUESET);
+        entity.set(IM.IS_CONTAINED_IN, FHIR.VALUESET_FOLDER);
+        concept.setIri(FHIR.GRAPH_FHIR.getIri() + im1SchemeToIriTerm.get(oldIri)).addType(IM.CONCEPT);
+        iriToConcept.put(concept.getIri(), concept);
+
     }
 
     private static String getFhirIriTerm(String term) {
@@ -979,7 +992,7 @@ public class IM1MapImport implements TTImport {
         oldIriTerm.clear();
         oldIriSnomed.clear();
         IdToDbid.clear();
-        iriToSet.clear();
+        iriToConcept.clear();
         importMaps.close();
         codeToIri.clear();
     }
