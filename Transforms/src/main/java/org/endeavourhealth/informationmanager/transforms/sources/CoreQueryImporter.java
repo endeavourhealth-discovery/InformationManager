@@ -180,8 +180,9 @@ public class CoreQueryImporter implements TTImport {
               .where(ob->ob
                 .setIri("concept")
                 .addIn(new Node().setIri(SNOMED.NAMESPACE+"714628002").setDescendantsOf(true))
-                .setValueVariable("Prediabetes"))))
+                .setValueLabel("Prediabetes"))))
           .match(w->w
+            .setVariable("latestBP")
             .path(p->p.setIri("observation")
               .node(n->n.setType("Observation")))
             .setBool(Bool.and)
