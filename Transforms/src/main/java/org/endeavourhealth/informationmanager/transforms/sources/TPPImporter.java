@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -147,7 +148,7 @@ public class TPPImporter implements TTImport {
         emisToSnomed= importMaps.importEmisToSnomed();
     }
 
-    private void importLocals(String folder) throws IOException {
+    private void importLocals(String folder) throws IOException, CsvValidationException {
         Path file =  ImportUtils.findFileForId(folder, tppCtv3Lookup[0]);
         System.out.println("Importing TPP Ctv3 local codes");
         try (CSVReader reader = new CSVReader(new FileReader(file.toFile()))) {
@@ -383,7 +384,7 @@ public class TPPImporter implements TTImport {
 
 
 
-    private void importTppCtv3ToSnomed(String folder) throws IOException {
+    private void importTppCtv3ToSnomed(String folder) throws IOException, CsvValidationException {
         Path file =  ImportUtils.findFileForId(folder, tppCtv3ToSnomed[0]);
         System.out.println("Importing TPP Ctv3 to Snomed");
         try (CSVReader reader = new CSVReader(new FileReader(file.toFile()))) {

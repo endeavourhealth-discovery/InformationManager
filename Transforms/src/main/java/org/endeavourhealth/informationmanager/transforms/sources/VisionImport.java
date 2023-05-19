@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -104,7 +105,7 @@ public class VisionImport implements TTImport {
 	}
 
 
-	private void importR2Terms(String folder) throws IOException {
+	private void importR2Terms(String folder) throws IOException, CsvValidationException {
 
 		Path file =  ImportUtils.findFileForId(folder, r2Terms[0]);
 		System.out.println("Importing official R2 terms as vision");
