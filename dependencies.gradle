@@ -7,7 +7,7 @@ ext {
             commonsCompress     : '1.23.0',
             csv                 : '1.10.0',
             factPlusPlus        : '1.6.5',
-            guava               : '10.0.1',
+            guava               : '23.0',
             jackson             : '2.14.2',
             javaxactivation     : '1.1.1',
             jaxb                : '2.3.3',
