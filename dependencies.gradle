@@ -15,7 +15,7 @@ ext {
             juneau              : '8.2.0',
             junit               : '5.9.2',
             junitRunner         : '1.9.2',
-            json                : '20190722',
+            json                : '20230227',
             jsonSimple          : '0.4',
             logback             : '1.4.6',
             openCsv             : '5.7.1',
