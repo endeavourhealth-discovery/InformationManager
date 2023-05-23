@@ -10,7 +10,7 @@ ext {
             guava               : '30.0',
             jackson             : '2.15.1',
             javaxactivation     : '1.1.1',
-            jaxb                : '2.3.3',
+            jaxb                : '4.0.0',
             jersey              : '3.1.2',
             juneau              : '8.2.0',
             junit               : '5.9.2',
