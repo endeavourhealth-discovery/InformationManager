@@ -155,7 +155,7 @@ public class CoreQueryImporter implements TTImport {
             "not followed by a screening invite, excluding hypertensives")
           .match(f->f
             .setType("Patient"))
-          .match(w->w
+          .match(m->m
             .setSet(IM.NAMESPACE+"Q_RegisteredGMS")
             .setName("Registered for GMS services on reference date"))
           .match(m->m
@@ -181,7 +181,7 @@ public class CoreQueryImporter implements TTImport {
                 .setIri("concept")
                 .addIn(new Node().setIri(SNOMED.NAMESPACE+"714628002").setDescendantsOf(true))
                 .setValueLabel("Prediabetes"))))
-          .match(w->w
+          .match(m->m
             .setVariable("latestBP")
             .path(p->p.setIri("observation")
               .node(n->n.setType("Observation")))
@@ -213,36 +213,34 @@ public class CoreQueryImporter implements TTImport {
             .setVariable("highBPReading")
             .setBoolMatch(Bool.or)
             .match(m1->m1
+              .setNodeRef("latestBP")
               .setBool(Bool.and)
               .where(w->w
-               .setNodeRef("latestBP")
-               .setIri(IM.NAMESPACE+"numericValue")
-               .setOperator(Operator.gt)
-               .setValue("140"))
-              .where(w->w
-                .setNodeRef("latestBP")
                 .setIri(IM.NAMESPACE+"concept")
                 .addIn(new Node()
                   .setIri(SNOMED.NAMESPACE+"271649006")
                   .setDescendantsOrSelfOf(true)
                   .setName("Systolic blood pressure"))
-                .setValueLabel("Office blood pressure")))
-            .match(m1->m1
-              .setBool(Bool.and)
+                .setValueLabel("Office blood pressure"))
               .where(w->w
-                .setNodeRef("latestBP")
                 .setIri(IM.NAMESPACE+"numericValue")
                 .setOperator(Operator.gt)
-                .setValue("130"))
+                .setValue("140")))
+            .match(m1->m1
+              .setNodeRef("latestBP")
+              .setBool(Bool.and)
               .where(w->w
-                .setNodeRef("latestBP")
                 .setIri(IM.NAMESPACE+"concept")
                 .addIn(new Node()
                   .setIri(IM.CODE_SCHEME_EMIS.getIri()+"1994021000006104")
                   .setDescendantsOrSelfOf(true)
                   .setName("Home systolic blood pressure"))
-                .setValueLabel("Home blood pressure"))))
-          .match(w->w
+                .setValueLabel("Home blood pressure"))
+              .where(w->w
+                .setIri(IM.NAMESPACE+"numericValue")
+                .setOperator(Operator.gt)
+                .setValue("130"))))
+          .match(m->m
             .setExclude(true)
             .path(p->p.setIri(IM.NAMESPACE+"observation")
               .node(n->n.setType("Observation")))
@@ -254,7 +252,7 @@ public class CoreQueryImporter implements TTImport {
               .setIri(IM.NAMESPACE+"effectiveDate")
               .setOperator(Operator.gte)
               .relativeTo(r->r.setNodeRef("highBPReading").setIri("effectiveDate"))))
-          .match(w->w
+          .match(m->m
             .setExclude(true)
             .setSet(IM.NAMESPACE+"Q_Hypertensives")
             .setName("Hypertensives"));
