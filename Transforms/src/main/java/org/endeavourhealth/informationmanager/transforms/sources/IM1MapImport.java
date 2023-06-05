@@ -1,7 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.CaseUtils;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
@@ -86,6 +85,8 @@ public class IM1MapImport implements TTImport {
                 "The IM1 code scheme and graph"));
         document.addEntity(manager.createGraph(FHIR.GRAPH_FHIR.getIri(), "FHIR code scheme and graph",
                 "The FHIR code scheme and graph, i.e. codes defined in the FHIR specification"));
+        document.addEntity(manager.createGraph(IM.SYSTEM_NAMESPACE, "Computer system scheme and graph",
+                "Computer system scheme and graph"));
         newSchemes();
         statsDocument= manager.createDocument(IM.GRAPH_STATS.getIri());
         importv1Codes(inFolder);
@@ -199,7 +200,7 @@ public class IM1MapImport implements TTImport {
                             } else {
                                 scheme = IM.CODE_SCHEME_DISCOVERY.getIri();
                                 if (code.startsWith("LPV_Imp_Crn"))
-                                    scheme= IM.GRAPH_IMPERIAL_CERNER.getIri();
+                                    scheme= "X";
                             }
                             break;
                         case "ImperialCerner":
@@ -335,21 +336,6 @@ public class IM1MapImport implements TTImport {
                                 TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
                                 if (core != null) {
                                     addNewEntity(scheme+lname,core.getIri(),term,code,scheme,oldIri,description,IM.CONCEPT);
-                                }
-                                else {
-                                    checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
-                                }
-
-                            }
-                        }
-                        else if (scheme.equals(IM.GRAPH_IMPERIAL_CERNER.getIri())){
-                            if (entities.containsKey(scheme+lname)){
-                                checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
-                            }
-                            else {
-                                TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
-                                if (core != null) {
-                                    addNewEntity(scheme+lname,core.getIri(),term,code,im1Scheme,oldIri,description,IM.CONCEPT);
                                 }
                                 else {
                                     checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
@@ -915,6 +901,9 @@ public class IM1MapImport implements TTImport {
         newScheme.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
         newScheme= addNewCoreEntity(IM.DOMAIN+"lnwhsl#","LNWH Silverlink code scheme and graph",
           null,null,IM.GRAPH);
+        newScheme.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
+        newScheme= addNewCoreEntity(IM.DOMAIN+"lnwhsy#","LNWH Symphony code scheme and graph",
+                null,null,IM.GRAPH);
         newScheme.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
         newScheme= addNewCoreEntity(IM.DOMAIN+"thhsl#","THH Silverlink code scheme and graph",
           null,null,IM.GRAPH);

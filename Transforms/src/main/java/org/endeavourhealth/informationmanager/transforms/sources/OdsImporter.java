@@ -56,7 +56,7 @@ public class OdsImporter implements TTImport {
                 TTDocument doc = manager.createDocument(IM.GRAPH_ODS.getIri());
                 doc.setCrud(IM.UPDATE_ALL);
                 if (!graphCreated) {
-                    doc.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(), "", "Official ODS code scheme and graph"));
+                    doc.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(), "ODS  code scheme and graph", "Official ODS code scheme and graph"));
                     graphCreated = true;
                 }
 

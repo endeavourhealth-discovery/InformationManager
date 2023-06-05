@@ -45,12 +45,15 @@ public class QConceptGroups implements TTImport {
 	private static final Logger LOG = LoggerFactory.getLogger(QConceptGroups.class);
 	@Override
 	public void importData(TTImportConfig ttImportConfig) throws Exception {
+		TTManager manager = new TTManager();
+		document.addEntity(manager.createGraph(QR.NAMESPACE,
+				"Q Research scheme and graph"
+				,"Q Research scheme and graph"));
 		addQFolder();
 		importQProjects();
 		importCodeGroups();
 		if ( ImportApp.testDirectory!=null) {
 			String directory = ImportApp.testDirectory.replace("%", " ");
-			TTManager manager = new TTManager();
 			manager.setDocument(document);
 			manager.saveDocument(new File(directory + "\\QCodes.json"));
 		}
