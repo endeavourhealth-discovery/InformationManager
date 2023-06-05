@@ -45,6 +45,9 @@ public class CEGEthnicityImport implements TTImport {
 
 		document = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
 		nhsDocument= nhsManager.createDocument(IM.GRAPH_NHSDD_ETHNIC_2001.getIri());
+		document.addEntity(manager.createGraph(IM.GRAPH_NHSDD_ETHNIC_2001.getIri(),
+				"NHS Ethnicity scheme and graph"
+				,"NHS Ethnicity scheme and graph"));
 		setConceptSetGroups();
 		retrieveEthnicity(config.isSecure());
 		spellCorrections();
