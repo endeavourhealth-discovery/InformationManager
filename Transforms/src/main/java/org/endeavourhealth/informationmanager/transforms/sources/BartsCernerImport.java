@@ -129,7 +129,7 @@ public class BartsCernerImport implements TTImport {
 			.setName("Unclassified Barts Cerner codes")
 			.setDescription("The Cerner codes used in Barts NHS Trust Millennium system"
 				+"that have not yet been placed in the Barts event set hierarchy");
-		unmatchedConcept.addObject(IM.IS_CHILD_OF,iri(IM.NAMESPACE+"BartsCernerCodes"));
+		unmatchedConcept.addObject(IM.IS_CHILD_OF,iri(BARTS_CERNER_CODES));
 		document.addEntity(unmatchedConcept);
 	}
 
@@ -283,16 +283,19 @@ public class BartsCernerImport implements TTImport {
         if (codeToSet.get(code)!=null)
             throw new Exception("duplicate code used for code and set");
         String term= fields[3].replace("\"","");
-        String xterm= term.toLowerCase();
         String setTerm = fields[15].toLowerCase().replace("\"","");
         TTEntity eventSet=termToSet.get(setTerm);
         String iri=IM.CODE_SCHEME_BARTS_CERNER.getIri()+code;
         TTEntity codeConcept= new TTEntity()
             .setIri(iri)
             .addType(IM.CONCEPT)
-            .setName(term)
             .setCode(code)
             .setScheme(IM.CODE_SCHEME_BARTS_CERNER);
+		if(term.equals("")){
+			codeConcept.setName("no name assigned");
+		} else {
+			codeConcept.setName(term);
+		}
         TTEntity parentSet=null;
         if (eventSet!=null) {
             Set<String> parents = childToParent.get(eventSet.getCode());

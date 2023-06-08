@@ -179,7 +179,7 @@ public class EMISImport implements TTImport {
 
     private void addEMISUnlinked() {
         TTEntity c = new TTEntity().setIri(EMIS + "EMISUnlinkedCodes")
-          .set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS + "EMISNHH2")))
+          .set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS + "1669671000006112")))
           .setName("EMIS unlinked local codes")
           .setCode("EMISUnlinkedCodes");
 
