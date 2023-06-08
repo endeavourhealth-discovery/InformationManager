@@ -219,7 +219,10 @@ public class VisionImport implements TTImport {
 				if (shortCode.length() == 1)
 					entity.set(IM.IS_CHILD_OF, new TTArray().add(iri(vision.getIri())));
 				else {
-					String parent = shortCode.substring(0, shortCode.length() - 1);
+					StringBuilder parent = new StringBuilder(shortCode.substring(0, shortCode.length() - 1));
+					while(parent.length() < 5 ) {
+						parent.append("_");
+					}
 					entity.set(IM.IS_CHILD_OF, new TTArray().add(iri(IM.CODE_SCHEME_VISION.getIri() + parent)));
 				}
 			}

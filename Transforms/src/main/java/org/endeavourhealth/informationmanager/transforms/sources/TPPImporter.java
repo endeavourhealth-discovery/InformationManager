@@ -233,7 +233,7 @@ public class TPPImporter implements TTImport {
                     TTEntity tpp= codeToEntity.get(child);
                     if (tpp!=null) {
                         if (!parent.startsWith(".")) {
-                            TTManager.addChildOf(tpp, iri(IM.CODE_SCHEME_TPP.getIri()+ parent));
+                            TTManager.addChildOf(tpp, iri(IM.CODE_SCHEME_TPP.getIri()+ parent.replace(".", "_")));
                         } else {
                             TTManager.addChildOf(tpp, iri(IM.CODE_SCHEME_TPP.getIri()+"TPPCodes"));
                         }
