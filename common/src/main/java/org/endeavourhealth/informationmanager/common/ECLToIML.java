@@ -198,7 +198,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertAndRefinement(Match from, ECLParser.EclrefinementContext refinement) throws DataFormatException {
-		from.setBool(Bool.and);
+		from.setBoolWhere(Bool.and);
 		ECLParser.SubrefinementContext subref = refinement.subrefinement();
 		Where where= new Where();
 		from.addWhere(where);
@@ -223,7 +223,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertOrRefinement(Match from, ECLParser.EclrefinementContext refinement) throws DataFormatException {
-		from.setBool(Bool.or);
+		from.setBoolWhere(Bool.or);
 		Where where= new Where();
 		from.addWhere(where);
 		ECLParser.SubrefinementContext subref = refinement.subrefinement();
@@ -276,7 +276,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertAndSet(Whereable whereable, ECLParser.EclattributesetContext eclAtSet,boolean anyGroup) throws DataFormatException {
-			  whereable.setBool(Bool.and);
+			  whereable.setBoolWhere(Bool.and);
 				Where and = new Where();
 				if (anyGroup)
 					and.setAnyRoleGroup(true);
@@ -293,7 +293,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertOrSet(Whereable whereable, ECLParser.EclattributesetContext eclAtSet,boolean anyGroup) throws DataFormatException {
-		whereable.setBool(Bool.or);
+		whereable.setBoolWhere(Bool.or);
 		Where or = new Where();
 		if (anyGroup)
 			or.setAnyRoleGroup(true);
