@@ -61,12 +61,15 @@ public class Preload {
             else
                 LOG.error("Unknown parameter " + args[i]);
         }
+        /*
 
         LOG.info("Checking db server...");
         if (pingGraphServer()) {
             LOG.error("Graph db server should be shut down before running.");
             System.exit(-1);
         }
+
+         */
 
         LOG.info("Starting import...");
         importData(cfg, graphdbCommand);
@@ -75,6 +78,7 @@ public class Preload {
     private static void importData(TTImportConfig cfg, String graphdb) throws Exception {
         LOG.info("Validating config...");
         validateGraphConfig(cfg.getFolder());
+
 
         LOG.info("Validating data files...");
         TTImportByType importer = new Importer()
@@ -132,6 +136,7 @@ public class Preload {
         TTImport deltaImporter = new DeltaImporter();
         deltaImporter.importData(cfg);
 
+
         LOG.info("expanding value sets");
         new SetExpander().expandAllSets();
         LOG.info("Finished - " + (new Date()));
@@ -163,7 +168,7 @@ public class Preload {
             Runtime.getRuntime().exec(new String[]{graphdb});
             LOG.info("Waiting for startup....");
 
-            int retries = 10;
+            int retries = 20;
             boolean alive = pingGraphServer();
             while (!alive && retries > 0) {
                 Thread.sleep(1000);

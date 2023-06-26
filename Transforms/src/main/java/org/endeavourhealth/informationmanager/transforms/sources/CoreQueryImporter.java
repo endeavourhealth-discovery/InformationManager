@@ -322,6 +322,7 @@ public class CoreQueryImporter implements TTImport {
         document.addEntity(qry);
         document.setContext(TTUtil.getDefaultContext());
 
+
     }
 
 
