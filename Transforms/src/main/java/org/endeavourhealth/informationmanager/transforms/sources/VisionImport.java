@@ -252,6 +252,7 @@ public class VisionImport implements TTImport {
 				if (!code.startsWith(".") && !Character.isLowerCase(code.charAt(0)) && codeToConcept.get(code) == null) {
                     TTEntity c = new TTEntity();
                     c.setIri(IM.CODE_SCHEME_VISION.getIri() + lname);
+                    c.addType(IM.CONCEPT);
                     c.setName(term);
                     c.setCode(code);
 										c.setScheme(IM.CODE_SCHEME_VISION);

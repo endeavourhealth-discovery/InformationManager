@@ -515,6 +515,7 @@ public class IM1MapImport implements TTImport {
         TTEntity unassigned = new TTEntity();
         unassigned.setGraph(TTIriRef.iri(scheme));
         unassigned.setIri(scheme + lname);
+        unassigned.addType(IM.CONCEPT);
         unassigned.setStatus(IM.UNASSIGNED);
         unassigned.set(IM.IM1ID, TTLiteral.literal(oldIri));
         unassigned.setName(term);
@@ -608,7 +609,7 @@ public class IM1MapImport implements TTImport {
         return entity;
     }
     private void addIM1id(String iri,String oldIri){
-        TTEntity im1= new TTEntity().setIri(iri);
+        TTEntity im1= new TTEntity().setIri(iri).addType(IM.CONCEPT);
         TTIriRef graph=TTIriRef.iri(iri.substring(0,iri.lastIndexOf("#")+1));
         im1.setGraph(graph);
         im1.addObject(IM.IM1ID,TTLiteral.literal(oldIri));
@@ -763,6 +764,7 @@ public class IM1MapImport implements TTImport {
 
     private static TTEntity createMapNode(HashMap<String, TTEntity> nodeMaps, String nodeIri, String node, TTIriRef propertyIri) {
         TTEntity mapNode = new TTEntity(nodeIri)
+            .addType(IM.CONCEPT)
             .set(IM.HAS_MAP, new TTArray())
             .setName(node)
             .set(IM.TARGET_PROPERTY, propertyIri);
@@ -776,6 +778,7 @@ public class IM1MapImport implements TTImport {
     private void createContextEntity(Set<String> contexts, String publisher, String system, String schema, String table, String field, String contextId, String nodeIri) {
         contexts.add(contextId);
         TTEntity context = new TTEntity(IM.SOURCE_CONTEXT.getIri() + "/" + UUID.randomUUID());
+        context.addType(IM.CONCEPT);
         document.addEntity(context);
         TTIriRef organisation;
         if (organisationMap.get(publisher)!=null) {
@@ -841,6 +844,7 @@ public class IM1MapImport implements TTImport {
         TTEntity entity= new TTEntity()
           .setGraph(newScheme)
           .setIri(newScheme.getIri()+oldIri)
+            .addType(IM.CONCEPT)
           .setName(term)
           .setScheme(newScheme)
           .setCode(value)
@@ -952,6 +956,7 @@ public class IM1MapImport implements TTImport {
                             if (coreEntity == null) {
                                 coreEntity = new TTEntity();
                                 coreEntity.setIri(coreIri);
+                                coreEntity.addType(IM.CONCEPT);
                                 statsDocument.addEntity(coreEntity);
                                 weightedEntities.put(coreIri,coreEntity);
                             }

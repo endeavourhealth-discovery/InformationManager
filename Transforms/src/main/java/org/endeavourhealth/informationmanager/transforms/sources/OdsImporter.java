@@ -104,16 +104,13 @@ public class OdsImporter implements TTImport {
     private void processLine(TTDocument doc) {
         String odsCode = fieldByName("OrganisationId");
         String orgIri = IM.ORGANISATION_NAMESPACE +  odsCode;
-        if(organisationCodes.contains(odsCode)) {
-           doc.addEntity(new TTEntity().setIri(orgIri).setCode(odsCode)
-             .addType(TTIriRef.iri(IM.NAMESPACE+"Organisation")));
-        }
         String addIri = IM.LOCATION_NAMESPACE + "ODS_"+ odsCode;
 
         TTEntity org = new TTEntity(orgIri);
         org.setName(fieldByName("Name"));
         org.set(IM.CODE, literal(odsCode));
         org.set(IM.ADDRESS, iri(addIri));
+        org.addType(TTIriRef.iri(IM.NAMESPACE+"Organisation"));
         doc.addEntity(org);
 
         TTEntity add = new TTEntity(addIri);
