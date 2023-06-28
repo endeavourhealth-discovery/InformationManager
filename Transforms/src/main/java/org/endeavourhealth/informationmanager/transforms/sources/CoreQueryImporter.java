@@ -153,8 +153,7 @@ public class CoreQueryImporter implements TTImport {
           .setIri(IM.NAMESPACE + "Q_TestQuery")
           .setName("Test for patients either aged between 18 and 65 or with diabetes with the most recent systolic in the last 6 months >150"+
             "not followed by a screening invite, excluding hypertensives")
-          .match(f->f
-            .setType("Patient"))
+          .setType(IM.NAMESPACE + "Patient")
           .match(m->m
             .setSet(IM.NAMESPACE+"Q_RegisteredGMS")
             .setName("Registered for GMS services on reference date"))
