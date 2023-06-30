@@ -37,7 +37,7 @@ public class CoreQueryImporter implements TTImport {
         dataPropertyRangeSuggestions();
         searchProperties();
         dataModelPropertyRange();
-        dataModelPropertyRangeByShape();
+        dataModelPropertyByShape();
         output(document,config.getFolder());
         if (!TTFilerFactory.isBulk()) {
             TTTransactionFiler filer= new TTTransactionFiler(null);
@@ -80,16 +80,16 @@ public class CoreQueryImporter implements TTImport {
         document.addEntity(query);
     }
 
-    private void dataModelPropertyRangeByShape() throws JsonProcessingException {
-        TTEntity query= getQuery("DataModelPropertyRangeByShape","Data model property range","takes account of the data model shape that the property is part of");
+    private void dataModelPropertyByShape() throws JsonProcessingException {
+        TTEntity query= getQuery("DataModelPropertyByShape","Data model property","takes account of the data model shape that the property is part of");
         query.set(IM.DEFINITION,TTLiteral.literal(
                 new Query()
-                        .setName("Data model property range")
-                        .setDescription("get node, class or datatype value (range)  of property objects for specific data model and property")
+                        .setName("Data model property")
+                        .setDescription("get properties of property objects for specific data model and property")
                         .match(m->m
                                 .setParameter("myDataModel")
-                                .path(p->p.setIri(SHACL.PROPERTY.getIri()).match(n->n.setVariable("shaclProperty")))
-                                .where(w->w.setIri(SHACL.PATH.getIri()).addIn(new Node().setParameter("myProperty"))))
+                                .path(p->p.setIri(SHACL.PROPERTY.getIri()).match(n->n.setVariable("shaclProperty")
+                                        .where(w->w.setIri(SHACL.PATH.getIri()).addIn(new Node().setParameter("myProperty"))))))
                         .return_(r->r.
                                 setNodeRef("shaclProperty")
                                 .setProperty(List.of(
@@ -104,7 +104,26 @@ public class CoreQueryImporter implements TTImport {
                                         new ReturnProperty()
                                         .setIri(SHACL.DATATYPE.getIri())
                                         .setNode(new Return().setProperty(List.of(new ReturnProperty()
-                                                .setIri(RDFS.LABEL.getIri()))))))
+                                                .setIri(RDFS.LABEL.getIri())))),
+                                        new ReturnProperty()
+                                                .setIri(SHACL.GROUP.getIri())
+                                                .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                                        .setIri(RDFS.LABEL.getIri())))),
+                                        new ReturnProperty()
+                                                .setIri(SHACL.FUNCTION.getIri())
+                                                .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                                        .setIri(RDFS.LABEL.getIri())))),
+                                        new ReturnProperty()
+                                                .setIri(SHACL.INVERSEPATH.getIri())
+                                                .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                                        .setIri(RDFS.LABEL.getIri())))),
+                                        new ReturnProperty()
+                                                .setIri(SHACL.ORDER.getIri()),
+                                        new ReturnProperty()
+                                                .setIri(SHACL.MAXCOUNT.getIri()),
+                                        new ReturnProperty()
+                                                .setIri(SHACL.MINCOUNT.getIri())
+                                ))
                         )));
         document.addEntity(query);
     }
