@@ -24,6 +24,7 @@ public class IM1MapImport implements TTImport {
     private static final String[] oldIris= {  ".*\\\\IMv1\\\\oldiris.txt"};
     private static final String[] context= {  ".*\\\\IMv1\\\\ContextMaps.txt"};
     private static final String[] emisCodes = {".*\\\\EMIS\\\\emis_codes.txt"};
+    private static final String[] fhirToSonomedMap = {".*\\\\IMv1\\\\maps.txt"};
     private static final String[] usageDbid = {
         ".*\\\\DiscoveryLive\\\\stats1.txt",
         ".*\\\\DiscoveryLive\\\\stats2.txt",
@@ -60,6 +61,7 @@ public class IM1MapImport implements TTImport {
     );
     private final Map<String,String> odsCodeIriMap = new HashMap<>();
     private final Map<String,String> im1SchemeToIriTerm = new HashMap<>();
+    private final Map<String, String> fhirToSnomed = new HashMap<>();
     private List<String> valueSetsList= new ArrayList<>();
 
 
@@ -75,6 +77,7 @@ public class IM1MapImport implements TTImport {
 
         importOld(inFolder);
         importUsage(inFolder);
+        importMaps(inFolder);
 
 
         LOG.info("Retrieving all entities and matches...");
@@ -99,6 +102,19 @@ public class IM1MapImport implements TTImport {
 
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(statsDocument);
+        }
+    }
+
+    private void importMaps(String inFolder) throws IOException {
+        Path file = ImportUtils.findFileForId(inFolder, fhirToSonomedMap[0]);
+        try(BufferedReader reader= new BufferedReader(new FileReader(file.toFile()))) {
+            reader.readLine();
+            String line = reader.readLine();
+            while (line != null && !line.isEmpty()) {
+                String[] fields = line.split("\t");
+                fhirToSnomed.put(fields[0], fields[2]);
+                line = reader.readLine();
+            }
         }
     }
 
@@ -367,13 +383,14 @@ public class IM1MapImport implements TTImport {
         LOG.info("Writing Fhir ValueSet");
         TTEntity entity = new TTEntity();
         TTEntity concept = new TTEntity();
+        TTEntity imValueSet = new TTEntity();
 
         if("NULL".equals(code)){
             // Is parent pseudo-scheme
-            setParentConceptAndValueSet(oldIri, term, scheme, entity, concept, im1Scheme);
+            setParentConceptAndValueSet(oldIri, term, scheme, entity, concept, imValueSet);
         } else {
             if("CM_DiscoveryCode".equals(im1Scheme)) {
-                setParentConceptAndValueSet(oldIri, term, scheme, entity, concept, im1Scheme);
+                setParentConceptAndValueSet(oldIri, term, scheme, entity, concept, imValueSet);
             } else {
                 String iriTerm = im1SchemeToIriTerm.get(im1Scheme);
                 if(iriTerm == null) {
@@ -384,6 +401,19 @@ public class IM1MapImport implements TTImport {
                         .setCode(code)
                         .addType(IM.CONCEPT)
                         .set(IM.IS_CHILD_OF, FHIR.GRAPH_FHIR.getIri() + iriTerm);
+                if(fhirToSnomed.get(oldIri) != null) {
+                    entity.set(IM.MATCHED_TO,new TTIriRef(SNOMED.GRAPH_SNOMED.getIri() + fhirToSnomed.get(oldIri)));
+                } else {
+                    TTEntity imConcept = new TTEntity();
+                    imConcept.setIri(IM.NAMESPACE + iriTerm + "/" + (code.toLowerCase().replaceAll(" ", "-")))
+                            .setName(term)
+                            .setCode(code)
+                            .addType(IM.CONCEPT)
+                            .setScheme(IM.GRAPH_DISCOVERY)
+                            .set(IM.IS_CHILD_OF, IM.NAMESPACE + iriTerm);
+                    document.addEntity(imConcept);
+                    entity.set(IM.MATCHED_TO,new TTIriRef(imConcept.getIri()));
+                }
 
                 TTEntity parent = iriToConcept.get(FHIR.GRAPH_FHIR.getIri() + iriTerm);
                 if (parent != null) {
@@ -408,22 +438,28 @@ public class IM1MapImport implements TTImport {
                             .setDescendantsOrSelfOf(true)
                     )));
         }
+        if(imValueSet.getIri() != null) {
+            imValueSet.setName(term.substring(4))
+                    .setScheme(IM.GRAPH_DISCOVERY);
+            document.addEntity(imValueSet);
+        }
         entity.setName(term)
                 .setScheme(FHIR.GRAPH_FHIR)
                 .set(IM.IM1ID, TTLiteral.literal(oldIri));
 
         if(!"NULL".equals(im1Scheme)) {
-            entity .set(IM.IM1SCHEME,TTLiteral.literal(im1Scheme));
+            entity.set(IM.IM1SCHEME,TTLiteral.literal(im1Scheme));
         }
         document.addEntity(entity);
     }
 
-    private void setParentConceptAndValueSet(String oldIri, String term, String scheme, TTEntity entity, TTEntity concept,String im1Scheme) throws JsonProcessingException {
+    private void setParentConceptAndValueSet(String oldIri, String term, String scheme, TTEntity entity, TTEntity concept, TTEntity imValueSet) {
         im1SchemeToIriTerm.put(oldIri,getFhirIriTerm(term));
         entity.setIri(scheme + im1SchemeToIriTerm.get(oldIri))
                 .addType(IM.VALUESET);
         entity.set(IM.IS_CONTAINED_IN, FHIR.VALUESET_FOLDER);
-        concept.setIri(FHIR.GRAPH_FHIR.getIri() + im1SchemeToIriTerm.get(oldIri)).addType(IM.CONCEPT);
+        concept.setIri(FHIR.GRAPH_FHIR.getIri() + im1SchemeToIriTerm.get(oldIri)).addType(IM.CONCEPT).set(IM.IS_CONTAINED_IN, IM.NAMESPACE + "FHIRCodeSystems");
+        imValueSet.setIri(IM.NAMESPACE + "VSET_" + im1SchemeToIriTerm.get(oldIri)).addType(IM.VALUESET).set(IM.IS_CONTAINED_IN, IM.NAMESPACE + "VSET_DataModel");
         iriToConcept.put(concept.getIri(), concept);
 
     }
