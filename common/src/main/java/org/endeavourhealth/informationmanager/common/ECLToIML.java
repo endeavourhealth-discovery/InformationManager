@@ -198,49 +198,59 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertAndRefinement(Match from, ECLParser.EclrefinementContext refinement) throws DataFormatException {
-		from.setBoolWhere(Bool.and);
+		from.setBool(Bool.and);
 		ECLParser.SubrefinementContext subref = refinement.subrefinement();
-		Where where= new Where();
-		from.addWhere(where);
 		if (subref.eclattributeset() != null) {
-				convertAttributeSet(where,subref.eclattributeset(),true);
+				convertAttributeSet(from,subref.eclattributeset(),true);
 			}
 		else if (subref.eclattributegroup()!=null){
-			from.path(p->p.setIri(IM.NAMESPACE+"roleGroup"));
-			convertAttributeGroup(where,subref.eclattributegroup());
+			Property where= new Property();
+			from.addProperty(where);
+			where.setIri(IM.NAMESPACE+"roleGroup");
+			Match group= new Match();
+			where.setMatch(group);
+			convertAttributeGroup(group,subref.eclattributegroup());
 		}
-		for (ECLParser.SubrefinementContext subOrRef : refinement.conjunctionrefinementset().subrefinement()) {
-			where= new Where();
-			from.addWhere(where);
-			if (subOrRef.eclattributeset() != null) {
-				convertAttributeSet(where, subOrRef.eclattributeset(),true);
+		for (ECLParser.SubrefinementContext subAndRef : refinement.conjunctionrefinementset().subrefinement()) {
+			if (subAndRef.eclattributeset() != null) {
+				convertAttributeSet(from, subAndRef.eclattributeset(),true);
 			}
-			else if (subOrRef.eclattributegroup() != null) {
-				from.path(p->p.setIri(IM.NAMESPACE+"roleGroup"));
-				convertAttributeGroup(where, subOrRef.eclattributegroup());
+			else if (subAndRef.eclattributegroup() != null) {
+				Property where= new Property();
+				from.addProperty(where);
+				where.setIri(IM.NAMESPACE+"roleGroup");
+				Match group= new Match();
+				where.setMatch(group);
+				convertAttributeGroup(group,subAndRef.eclattributegroup());
 			}
 		}
 	}
 
 	private void convertOrRefinement(Match from, ECLParser.EclrefinementContext refinement) throws DataFormatException {
-		from.setBoolWhere(Bool.or);
-		Where where= new Where();
-		from.addWhere(where);
+		from.setBool(Bool.or);
 		ECLParser.SubrefinementContext subref = refinement.subrefinement();
 		if (subref.eclattributeset() != null) {
-			convertAttributeSet(where,subref.eclattributeset(),true);
+			convertAttributeSet(from,subref.eclattributeset(),true);
 		}
 		else if (subref.eclattributegroup()!=null){
-			from.path(p->p.setIri(IM.NAMESPACE+"roleGroup"));
-			convertAttributeGroup(where,subref.eclattributegroup());
+			Property where= new Property();
+			from.addProperty(where);
+			where.setIri(IM.NAMESPACE+"roleGroup");
+			Match group= new Match();
+			where.setMatch(group);
+			convertAttributeGroup(group,subref.eclattributegroup());
 		}
 		for (ECLParser.SubrefinementContext subOrRef : refinement.disjunctionrefinementset().subrefinement()) {
 			if (subOrRef.eclattributeset() != null) {
-				convertAttributeSet(where, subOrRef.eclattributeset(),true);
+				convertAttributeSet(from, subOrRef.eclattributeset(),true);
 			}
 			else if (subOrRef.eclattributegroup() != null) {
-				from.path(p->p.setIri(IM.NAMESPACE+"roleGroup"));
-				convertAttributeGroup(where, subOrRef.eclattributegroup());
+				Property where= new Property();
+				from.addProperty(where);
+				where.setIri(IM.NAMESPACE+"roleGroup");
+				Match group= new Match();
+				where.setMatch(group);
+				convertAttributeGroup(group,subOrRef.eclattributegroup());
 			}
 		}
 	}
@@ -252,65 +262,69 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 			convertAttributeSet(from,subref.eclattributeset(),true);
 		}
 		else if (subref.eclattributegroup()!=null){
-			from.path(p->p.setIri(IM.NAMESPACE+"roleGroup"));
-			convertAttributeGroup(from,subref.eclattributegroup());
+			Property where= new Property();
+			from.addProperty(where);
+			where.setIri(IM.NAMESPACE+"roleGroup");
+			Match group= new Match();
+			where.setMatch(group);
+			convertAttributeGroup(group,subref.eclattributegroup());
 		}
 	}
 
 
 
-	private void convertAttributeSet(Whereable whereable, ECLParser.EclattributesetContext eclAtSet,boolean anyGroup) throws DataFormatException {
+	private void convertAttributeSet(Match match, ECLParser.EclattributesetContext eclAtSet,boolean anyGroup) throws DataFormatException {
 		if (eclAtSet.conjunctionattributeset() == null && eclAtSet.disjunctionattributeset() == null) {
-			Where where= new Where();
-			whereable.addWhere(where);
+			Property where= new Property();
+			match.addProperty(where);
 			if (anyGroup)
 				where.setAnyRoleGroup(true);
 			convertAttribute(where, eclAtSet.subattributeset().eclattribute());
 			}
 		else if (eclAtSet.conjunctionattributeset() != null) {
-			convertAndSet(whereable, eclAtSet,anyGroup);
+			convertAndSet(match, eclAtSet,anyGroup);
 		}
 		else {
-			convertOrSet(whereable, eclAtSet,anyGroup);
+			convertOrSet(match, eclAtSet,anyGroup);
 		}
 	}
 
-	private void convertAndSet(Whereable whereable, ECLParser.EclattributesetContext eclAtSet,boolean anyGroup) throws DataFormatException {
-			  whereable.setBoolWhere(Bool.and);
-				Where and = new Where();
+	private void convertAndSet(Match match, ECLParser.EclattributesetContext eclAtSet,boolean anyGroup) throws DataFormatException {
+			  match.setBool(Bool.and);
+				Property and = new Property();
 				if (anyGroup)
 					and.setAnyRoleGroup(true);
-				whereable.addWhere(and);
+				match.addProperty(and);
 				convertAttribute(and, eclAtSet.subattributeset().eclattribute());
 
 		for (ECLParser.SubattributesetContext subAt : eclAtSet.conjunctionattributeset().subattributeset()) {
-				and= new Where();
+				and= new Property();
 				if (anyGroup)
 					and.setAnyRoleGroup(true);
-				whereable.addWhere(and);
+				match.addProperty(and);
 				convertAttribute(and, subAt.eclattribute());
 			}
 	}
 
-	private void convertOrSet(Whereable whereable, ECLParser.EclattributesetContext eclAtSet,boolean anyGroup) throws DataFormatException {
-		whereable.setBoolWhere(Bool.or);
-		Where or = new Where();
+	private void convertOrSet(Match match, ECLParser.EclattributesetContext eclAtSet,boolean anyGroup) throws DataFormatException {
+		match.setBool(Bool.or);
+		Property or = new Property();
 		if (anyGroup)
 			or.setAnyRoleGroup(true);
-		whereable.addWhere(or);
+		match.addProperty(or);
 		convertAttribute(or, eclAtSet.subattributeset().eclattribute());
 
 		for (ECLParser.SubattributesetContext subAt : eclAtSet.disjunctionattributeset().subattributeset()) {
-			or= new Where();
+			or= new Property();
 			if (anyGroup)
 				or.setAnyRoleGroup(true);
-			whereable.addWhere(or);
+			match.addProperty(or);
 			convertAttribute(or, subAt.eclattribute());
 		}
 	}
 
 	private void convertConjunction(ECLParser.ConjunctionexpressionconstraintContext eclAnd,Match from) throws DataFormatException {
-		from.setBoolMatch(Bool.and);
+		from.setBool(Bool.and);
 		for (ECLParser.SubexpressionconstraintContext eclInter : eclAnd.subexpressionconstraint()) {
 			Match and= new Match();
 			from.addMatch(and);
@@ -319,7 +333,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertExclusion(ECLParser.ExclusionexpressionconstraintContext eclExc,Match from) throws DataFormatException {
-		from.setBoolMatch(Bool.and);
+		from.setBool(Bool.and);
 		Match first= new Match();
 		from.addMatch(first);
 		convertSubECContext(eclExc.subexpressionconstraint().get(0),first);
@@ -332,7 +346,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 	private void convertDisjunction(ECLParser.DisjunctionexpressionconstraintContext eclOr,Match from) throws DataFormatException {
-		from.setBoolMatch(Bool.or);
+		from.setBool(Bool.or);
 		for (ECLParser.SubexpressionconstraintContext eclUnion : eclOr.subexpressionconstraint()) {
 			Match or= new Match();
 			from.addMatch(or);
@@ -340,7 +354,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 		}
 	}
 
-	private void convertAttribute(Where where, ECLParser.EclattributeContext attecl) throws DataFormatException {
+	private void convertAttribute(Property where, ECLParser.EclattributeContext attecl) throws DataFormatException {
 
 		ECLParser.EclconceptreferenceContext eclRef= attecl.eclattributename().subexpressionconstraint().eclfocusconcept().eclconceptreference();
 		ECLParser.ConstraintoperatorContext entail= attecl.eclattributename().subexpressionconstraint().constraintoperator();
@@ -352,7 +366,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 						.subexpressionconstraint().eclfocusconcept().eclconceptreference(),
 						attecl.subexpressionconstraint().constraintoperator()));
 				} else {
-					throw new UnknownFormatConversionException("multi nested ECL not yest supported " + ecl);
+					throw new UnknownFormatConversionException("multi nested ECL not yet supported " + ecl);
 				}
 			} else {
 				throw new UnknownFormatConversionException("unknown comparison type operator " + ecl);
@@ -398,10 +412,10 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 
-	private void convertAttributeGroup(Whereable whereable,
+	private void convertAttributeGroup(Match match,
 																		 ECLParser.EclattributegroupContext eclGroup) throws DataFormatException {
 		if (eclGroup.eclattributeset()!=null) {
-			convertAttributeSet(whereable, eclGroup.eclattributeset(),false);
+			convertAttributeSet(match, eclGroup.eclattributeset(),false);
 		}
 		else
 			throw new DataFormatException("Unable to cope with this type of attribute group : "+ ecl);

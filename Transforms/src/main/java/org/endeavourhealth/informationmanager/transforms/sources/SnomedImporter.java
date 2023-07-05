@@ -541,7 +541,7 @@ public class SnomedImporter implements TTImport {
            op.addObject(RDFS.RANGE, TTIriRef.iri(match.getIri()));
          }
          else {
-           if (match.getBoolMatch().equals(Bool.or)){
+           if (match.getBool().equals(Bool.or)){
              for (Match or:match.getMatch()){
                op.addObject(RDFS.RANGE, TTIriRef.iri(or.getIri()));
              }
