@@ -184,6 +184,8 @@ public class CEGImporter implements TTImport {
 								.setName(qq.getName())
 								.setDescription(qq.getDescription());
 							qq.getType().stream().forEach(ttQuery::addType);
+							if (qq.getType().contains(IM.COHORT_QUERY))
+								ttQuery.set(IM.RETURN_TYPE,TTIriRef.iri(IM.NAMESPACE+"Patient"));
 							document.addEntity(ttQuery);
 							if (qq.getIsContainedIn()!=null){
 								for (TTIriRef inFolder:qq.getIsContainedIn()){

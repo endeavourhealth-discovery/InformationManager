@@ -189,7 +189,8 @@ public class CoreQueryImporter implements TTImport {
 
     private void testQuery() throws IOException{
 
-        TTEntity qry = new TTEntity().addType(IM.QUERY);
+        TTEntity qry = new TTEntity().addType(IM.COHORT_QUERY)
+          .set(IM.RETURN_TYPE,TTIriRef.iri(IM.NAMESPACE+"Patient"));
         qry
           .setIri(IM.NAMESPACE + "Q_TestQuery")
           .setName("Test for patients either aged between 18 and 65 or with diabetes with the most recent systolic in the last 6 months >150"+
