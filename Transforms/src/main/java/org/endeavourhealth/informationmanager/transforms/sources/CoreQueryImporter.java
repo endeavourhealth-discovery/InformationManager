@@ -229,7 +229,7 @@ public class CoreQueryImporter implements TTImport {
           .match(m->m
             .setVariable("latestBP")
             .property(p->p.setIri("observation")
-              .match(n->n.setType("Observation")))
+              .match(n->n.setType("Observation")
             .setBool(Bool.and)
             .property(ww->ww
               .setIri("concept")
@@ -249,7 +249,7 @@ public class CoreQueryImporter implements TTImport {
               .setValue("-6")
               .setUnit("MONTHS")
               .relativeTo(r->r.setParameter("$referenceDate"))
-              .setValueLabel("last 6 months"))
+              .setValueLabel("last 6 months"))))
             .addOrderBy(new OrderLimit()
               .setIri("effectiveDate")
               .setLimit(1)
