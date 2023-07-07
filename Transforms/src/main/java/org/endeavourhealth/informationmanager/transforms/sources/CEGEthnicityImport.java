@@ -193,13 +193,13 @@ public class CEGEthnicityImport implements TTImport {
                 .setScheme(IM.GRAPH_CEG_QUERY)
                 .setDescription("QMUL CEG 16+ Ethnic category "+cat16)
 				.set(IM.IS_SUBSET_OF,TTIriRef.iri(cegSet.getIri()))
-                .set(IM.DEFINITION,TTLiteral.literal(new Query().addMatch(new Match().setBool(Bool.or))));
+                .set(IM.DEFINITION,TTLiteral.literal(new Query().addMatch(new Match())));
             document.addEntity(cegSubset);
             cegCatMap.put(cat16,cegSubset);
 
         }
 				Query cegQuery= cegSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-				cegQuery.getMatch().get(0).match(f->f.setIri(SNOMED.NAMESPACE+snomed));
+				cegQuery.getMatch().get(0).in(f->f.setIri(SNOMED.NAMESPACE+snomed));
 				cegSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(cegQuery)));
         if (cegSubset.get(IM.HAS_TERM_CODE)==null)
             TTManager.addTermCode(cegSubset,catTerm,null);
