@@ -213,16 +213,15 @@ public class CEGEthnicityImport implements TTImport {
 				.setName("Concept set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
                 .setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
 				.set(IM.IS_SUBSET_OF,TTIriRef.iri(nhsSet.getIri()))
-				.set(IM.DEFINITION,TTLiteral.literal(new Query()));
+				.set(IM.DEFINITION,TTLiteral.literal(new Query().addMatch(new Match().setBool(Bool.or))));
                 nhsDocument.addEntity(nhsSubset);
                 nhsCatmap.put(snoNhs, nhsSubset);
             }
             if (nhsSubset.get(IM.HAS_TERM_CODE)==null)
                 TTManager.addTermCode(nhsSubset,nhsTerm,null);
-						Query nhsQuery=
-            nhsSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-						nhsQuery.match(f->f.setIri(SNOMED.NAMESPACE+snomed));
-						nhsSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(nhsQuery)));
+			Query nhsQuery= nhsSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
+			nhsQuery.getMatch().get(0).match(f->f.setIri(SNOMED.NAMESPACE+snomed));
+			nhsSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(nhsQuery)));
         }
     }
 
