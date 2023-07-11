@@ -383,7 +383,7 @@ public class IM1MapImport implements TTImport {
                 entity.setIri(FHIR.GRAPH_FHIR.getIri() + iriTerm + "/" + (code.toLowerCase().replaceAll(" ", "-")))
                         .setCode(code)
                         .addType(IM.CONCEPT)
-                        .set(IM.IS_CHILD_OF, FHIR.GRAPH_FHIR.getIri() + iriTerm);
+                        .set(IM.IS_A, FHIR.GRAPH_FHIR.getIri() + iriTerm);
 
                 TTEntity parent = iriToConcept.get(FHIR.GRAPH_FHIR.getIri() + iriTerm);
                 if (parent != null) {
