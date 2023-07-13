@@ -453,11 +453,31 @@ public class CoreQueryImporter implements TTImport {
         Query query= new Query();
         query.setName("Allowable child types for editor");
         query
+          .match(m->m
+            .setVariable("allowable")
+            .match(m1->m1
+                .setParameter("$this")
+                .property(p->p
+                .setIri(RDF.TYPE.getIri())
+                .in(in->in.setParameter("$this"))
+                .setVariable("thisType")))
+          .match(m1->m1
+            .setBool(Bool.or)
+            .match(m2->m2
+              .property(p->p
+                .setIri(IM.CONTENT_TYPE.getIri())
+                .setValueVariable("allowable")
 
-          .match(f->f
-            .setVariable("concept")
-            .property(w1->w1.setIri(IM.IS_CONTAINED_IN.getIri())
-              .addIn(IM.NAMESPACE+"EntityTypes")))
+                .property(w1->w1.setIri(IM.IS_CONTAINED_IN.getIri())
+                    .addIn(IM.NAMESPACE+"EntityTypes")))
+            .match(m1->m1
+              .setBool(Bool.or)
+              .match(m2->m2
+                .property(p->p
+                  .setIri(RDF.TYPE.getIri())
+                  .in(in->in.setParameter("$this"))))
+              .match(m2->m2
+                .setParameter("$this")
           .match(f->f
             .property(p->p
               .setIri(SHACL.PROPERTY.getIri())

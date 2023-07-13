@@ -198,6 +198,7 @@ public class QConceptGroups implements TTImport {
 			.addType(IM.FOLDER)
 			.setName("Q Project based code groups")
 			.setDescription("Folder containing the Q research  concept groups");
+		folder.addObject(IM.CONTENT_TYPE,IM.CONCEPT_SET);
 		document.addEntity(folder);
 		folder.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets"));
 	}

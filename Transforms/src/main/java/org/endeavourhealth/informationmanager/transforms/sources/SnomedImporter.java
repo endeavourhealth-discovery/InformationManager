@@ -204,6 +204,7 @@ public class SnomedImporter implements TTImport {
         .setName("QOF Code clusters")
         .setDescription("QOF code cluster reference sets issued on "+version)
         .addType(IM.FOLDER);
+      clusters.addObject(IM.CONTENT_TYPE,IM.CONCEPT_SET);
       clusters
         .addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets"));
       document.addEntity(clusters);
@@ -214,6 +215,7 @@ public class SnomedImporter implements TTImport {
         .addType(IM.FOLDER);
         clusterFolder
         .addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QofClusters"));
+        clusterFolder.addObject(IM.CONTENT_TYPE,IM.CONCEPT_SET);
       document.addEntity(clusterFolder);
 
       try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
