@@ -454,52 +454,60 @@ public class CoreQueryImporter implements TTImport {
         query.setName("Allowable child types for editor");
         query
           .match(m->m
-            .setVariable("allowable")
-            .match(m1->m1
-                .setParameter("$this")
-                .property(p->p
-                .setIri(RDF.TYPE.getIri())
-                .in(in->in.setParameter("$this"))
-                .setVariable("thisType")))
-          .match(m1->m1
-            .setBool(Bool.or)
-            .match(m2->m2
-              .property(p->p
-                .setIri(IM.CONTENT_TYPE.getIri())
-                .setValueVariable("allowable")
-
-                .property(w1->w1.setIri(IM.IS_CONTAINED_IN.getIri())
-                    .addIn(IM.NAMESPACE+"EntityTypes")))
-            .match(m1->m1
-              .setBool(Bool.or)
-              .match(m2->m2
-                .property(p->p
-                  .setIri(RDF.TYPE.getIri())
-                  .in(in->in.setParameter("$this"))))
-              .match(m2->m2
-                .setParameter("$this")
+            .setParameter("$this")
+            .property(p->p
+              .setIri(RDF.TYPE.getIri())
+              .setValueVariable("thisType")))
           .match(f->f
+            .setVariable("concept")
+            .property(w1->w1.setIri(IM.IS_CONTAINED_IN.getIri())
+              .addIn(IM.NAMESPACE+"EntityTypes")))
+          .match(f->f
+            .setNodeRef("concept")
             .property(p->p
               .setIri(SHACL.PROPERTY.getIri())
-            .match(n->n
-              .setVariable("predicate")
+              .match(n->n
+                .setVariable("predicate")
+                .setBool(Bool.and)
+                .property(a2->a2
+                  .setIri(SHACL.NODE.getIri())
+                  .addIn(new Node().setRef("thisType")))
+                .property(a2->a2
+                  .setIri(SHACL.PATH.getIri())
+                  .setIn(List.of(Match.iri(IM.IS_CONTAINED_IN.getIri())
+                    , Match.iri(RDFS.SUBCLASSOF.getIri()), Match.iri(IM.IS_SUBSET_OF.getIri())))))))
+          .match(f->f
+            .setBool(Bool.or)
+            .match(m1->m1
+              .setNodeRef("concept")
+                .in(in->in.setRef("thisType")))
+            .match(m1->m1
+              .setParameter("$this")
+              .property(p->p
+                .setIri(IM.CONTENT_TYPE.getIri())
+                .in(in->in.setRef("concept"))
+                .in(in->in.setIri(IM.FOLDER.getIri()))))
+            .match(m1->m1
               .setBool(Bool.and)
-              .property(a2->a2
-              .setIri(SHACL.NODE.getIri())
-              .addIn(new Match().setParameter("$this")))
-              .property(a2->a2
-              .setIri(SHACL.PATH.getIri())
-              .setIn(List.of(Match.iri(IM.IS_CONTAINED_IN.getIri())
-                , Match.iri(RDFS.SUBCLASSOF.getIri()), Match.iri(IM.IS_SUBSET_OF.getIri())))))))
+              .match(m2->m2
+                .setParameter("$this")
+                .property(p->p
+                  .setIri(RDF.TYPE.getIri())
+                  .in(in->in.setIri(IM.FOLDER.getIri()))))
+              .match(m2->m2
+                .setParameter("$this")
+                .setExclude(true)
+                .property(p->p
+                .setIri(IM.CONTENT_TYPE.getIri())))))
           .return_(s->s
             .setNodeRef("concept")
             .property(p->p
-               .setIri(RDFS.LABEL.getIri()))
+              .setIri(RDFS.LABEL.getIri()))
             .property(p->p
-            .setIri(SHACL.PROPERTY.getIri())
-            .node(s1->s1
-              .setNodeRef("predicate")
-              .property(p1->p1
+              .setIri(SHACL.PROPERTY.getIri())
+              .node(s1->s1
+                .setNodeRef("predicate")
+                .property(p1->p1
                   .setIri(SHACL.PATH.getIri())))));
         entity.set(IM.DEFINITION, TTLiteral.literal(query));
 
