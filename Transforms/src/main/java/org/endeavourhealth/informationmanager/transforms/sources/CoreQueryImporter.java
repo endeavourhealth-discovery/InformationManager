@@ -100,27 +100,27 @@ public class CoreQueryImporter implements TTImport {
                                 .setProperty(List.of(
                                         new ReturnProperty()
                                         .setIri(SHACL.CLASS.getIri())
-                                        .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                        .setReturn(new Return().setProperty(List.of(new ReturnProperty()
                                                 .setIri(RDFS.LABEL.getIri())))),
                                         new ReturnProperty()
                                         .setIri(SHACL.NODE.getIri())
-                                        .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                        .setReturn(new Return().setProperty(List.of(new ReturnProperty()
                                                 .setIri(RDFS.LABEL.getIri())))),
                                         new ReturnProperty()
                                         .setIri(SHACL.DATATYPE.getIri())
-                                        .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                        .setReturn(new Return().setProperty(List.of(new ReturnProperty()
                                                 .setIri(RDFS.LABEL.getIri())))),
                                         new ReturnProperty()
                                                 .setIri(SHACL.GROUP.getIri())
-                                                .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                                .setReturn(new Return().setProperty(List.of(new ReturnProperty()
                                                         .setIri(RDFS.LABEL.getIri())))),
                                         new ReturnProperty()
                                                 .setIri(SHACL.FUNCTION.getIri())
-                                                .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                                .setReturn(new Return().setProperty(List.of(new ReturnProperty()
                                                         .setIri(RDFS.LABEL.getIri())))),
                                         new ReturnProperty()
                                                 .setIri(SHACL.INVERSEPATH.getIri())
-                                                .setNode(new Return().setProperty(List.of(new ReturnProperty()
+                                                .setReturn(new Return().setProperty(List.of(new ReturnProperty()
                                                         .setIri(RDFS.LABEL.getIri())))),
                                         new ReturnProperty()
                                                 .setIri(SHACL.ORDER.getIri()),
@@ -505,7 +505,7 @@ public class CoreQueryImporter implements TTImport {
               .setIri(RDFS.LABEL.getIri()))
             .property(p->p
               .setIri(SHACL.PROPERTY.getIri())
-              .node(s1->s1
+              .return_(s1->s1
                 .setNodeRef("predicate")
                 .property(p1->p1
                   .setIri(SHACL.PATH.getIri())))));

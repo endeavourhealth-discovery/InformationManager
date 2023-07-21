@@ -82,7 +82,7 @@ public class Importer implements TTImportByType {
       else if (IM.GRAPH_DELTAS.equals(importType))
          return new DeltaImporter();
       else if (TTIriRef.iri(QR.NAMESPACE).equals(importType))
-         return new QConceptGroups();
+         return new QImporter();
       else
          throw new Exception("Unrecognised import type [" + importType.getIri() + "]");
    }

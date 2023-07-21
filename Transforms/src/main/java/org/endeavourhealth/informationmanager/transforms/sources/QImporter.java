@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.service.SearchService;
 import org.endeavourhealth.imapi.model.imq.Argument;
+import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.imq.QueryRequest;
 import org.endeavourhealth.imapi.model.imq.Update;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
@@ -33,7 +34,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class QConceptGroups implements TTImport {
+public class QImporter implements TTImport {
 	private final Client client= ClientBuilder.newClient();
 	private final TTDocument document = new TTDocument(TTIriRef.iri(QR.NAMESPACE));
 	private final TTIriRef projectsFolder= TTIriRef.iri(QR.NAMESPACE+"QProjects");
@@ -42,14 +43,15 @@ public class QConceptGroups implements TTImport {
 	private final ObjectMapper om = new ObjectMapper();
 	private final Map<String,String> codeGroups = new HashMap<>();
 
-	private static final Logger LOG = LoggerFactory.getLogger(QConceptGroups.class);
+	private static final Logger LOG = LoggerFactory.getLogger(QImporter.class);
 	@Override
 	public void importData(TTImportConfig ttImportConfig) throws Exception {
 		TTManager manager = new TTManager();
 		document.addEntity(manager.createGraph(QR.NAMESPACE,
 				"Q Research scheme and graph"
 				,"Q Research scheme and graph"));
-		addQFolder();
+		addQFolders();
+		queryQRisk3();
 		importQProjects();
 		importCodeGroups();
 		if ( ImportApp.testDirectory!=null) {
@@ -73,6 +75,27 @@ public class QConceptGroups implements TTImport {
 				filer.fileDocument(document);
 			}
 		}
+	}
+
+	private void queryQRisk3() throws JsonProcessingException {
+		TTEntity qRisk3= new TTEntity()
+			.setIri(IM.NAMESPACE+"Q_QRisk3")
+			.setName("QRisk3 record query")
+			.setDescription("query of helth data to set qrisk 3 parameters");
+		qRisk3.set(IM.DEFINITION,TTLiteral.literal(new Query()
+			.setIri(IM.NAMESPACE+"Q_Qrisk3")
+			.setName("QRisk3 health record query")
+			.setType(IM.NAMESPACE+"Patient")
+			.return_(r->r
+				.property(p->p
+					.as("age")
+					.setIri(IM.NAMESPACE+"age")
+					.setUnit("years")))
+			.return_(r->r
+				.property(p->p
+					.as("sex")
+					.setIri(IM.NAMESPACE+"statedGender")))));
+
 	}
 
 	private void importCodeGroups() throws JsonProcessingException {
@@ -192,7 +215,7 @@ public class QConceptGroups implements TTImport {
 		}
 	}
 
-	private void addQFolder() {
+	private void addQFolders() {
 		TTEntity folder= new TTEntity()
 			.setIri(projectsFolder.getIri())
 			.addType(IM.FOLDER)
@@ -201,6 +224,14 @@ public class QConceptGroups implements TTImport {
 		folder.addObject(IM.CONTENT_TYPE,IM.CONCEPT_SET);
 		document.addEntity(folder);
 		folder.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets"));
+		TTEntity qFolder= new TTEntity()
+			.setIri(IM.NAMESPACE+"Q_PredictionQueries")
+			.addType(IM.FOLDER)
+			.setName("Predication queries")
+			.setDescription("Folder containing queries for prediction algorithms");
+		qFolder.addObject(IM.CONTENT_TYPE,IM.QUERY);
+		document.addEntity(qFolder);
+		qFolder.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_Queries"));
 	}
 
 	@Override
