@@ -510,7 +510,7 @@ public class CoreQueryImporter implements TTImport {
                 .property(p1->p1
                   .setIri(SHACL.PATH.getIri())))));
         entity.set(IM.DEFINITION, TTLiteral.literal(query));
-        
+
 
     }
     private void getAllowableRanges() throws JsonProcessingException {
