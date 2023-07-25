@@ -51,7 +51,7 @@ public class QImporter implements TTImport {
 				"Q Research scheme and graph"
 				,"Q Research scheme and graph"));
 		addQFolders();
-		queryQRisk3();
+	//	queryQRisk3();
 		importQProjects();
 		importCodeGroups();
 		if ( ImportApp.testDirectory!=null) {
@@ -94,8 +94,19 @@ public class QImporter implements TTImport {
 			.return_(r->r
 				.property(p->p
 					.as("sex")
-					.setIri(IM.NAMESPACE+"statedGender")))));
-
+					.case_(c->c
+						.when(w->w
+							.property(p1->p1
+								.setIri("statedGender")
+							  .in(in->in.setIri("http://endhealth.info/im#905031000252103")))
+							.then(t->t.setValue("Male")))
+						.when(w->w
+							.property(p1->p1
+								.setIri("statedGender")
+								.in(in->in.setIri("http://endhealth.info/im#905041000252107")))
+							.then(t->t.setValue("Female")))
+						.else_x(e->e
+								.setValue("Male")))))));
 	}
 
 	private void importCodeGroups() throws JsonProcessingException {
