@@ -6,10 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.service.SearchService;
-import org.endeavourhealth.imapi.model.imq.Argument;
-import org.endeavourhealth.imapi.model.imq.Query;
-import org.endeavourhealth.imapi.model.imq.QueryRequest;
-import org.endeavourhealth.imapi.model.imq.Update;
+import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
@@ -29,10 +26,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class QImporter implements TTImport {
 	private final Client client= ClientBuilder.newClient();
@@ -51,7 +45,7 @@ public class QImporter implements TTImport {
 				"Q Research scheme and graph"
 				,"Q Research scheme and graph"));
 		addQFolders();
-	//	queryQRisk3();
+	queryQRisk3();
 		importQProjects();
 		importCodeGroups();
 		if ( ImportApp.testDirectory!=null) {
@@ -82,23 +76,34 @@ public class QImporter implements TTImport {
 			.setIri(IM.NAMESPACE+"Q_QRisk3")
 			.setName("QRisk3 record query")
 			.setDescription("query of helth data to set qrisk 3 parameters");
-		qRisk3.set(IM.DEFINITION,TTLiteral.literal(new Query()
+		Query query= new Query();
+		qRisk3.set(IM.DEFINITION,TTLiteral.literal(query));
+		query
 			.setIri(IM.NAMESPACE+"Q_Qrisk3")
 			.setName("QRisk3 health record query")
-			.setType(IM.NAMESPACE+"Patient")
-			.return_(r->r
-				.property(p->p
-					.as("age")
-					.setIri(IM.NAMESPACE+"age")
-					.setUnit("years")))
-			.return_(r->r
-				.property(p->p
+			.setType(IM.NAMESPACE+"Patient");
+		query.addReturn(new Return());
+		qMatch(query,null,"age","age",false,null,false);
+		qMatch(query,null,"statedGender","sex",false,null,false);
+		qMatch(query,"observation","concept=_411","cvd",true,null,true);
+		qMatch(query,"observation","concept=_24","af",true,null,true);
+	}
+
+
+
+	private void ageSex(Query query){
+		query.getReturn().get(0)
+			.property(p->p
+				.as("age")
+				.setIri("age")
+				.setUnit("years"))
+			.property(p->p
 					.as("sex")
 					.case_(c->c
 						.when(w->w
 							.property(p1->p1
 								.setIri("statedGender")
-							  .in(in->in.setIri("http://endhealth.info/im#905031000252103")))
+								.in(in->in.setIri("http://endhealth.info/im#905031000252103")))
 							.then(t->t.setValue("Male")))
 						.when(w->w
 							.property(p1->p1
@@ -106,7 +111,45 @@ public class QImporter implements TTImport {
 								.in(in->in.setIri("http://endhealth.info/im#905041000252107")))
 							.then(t->t.setValue("Female")))
 						.else_x(e->e
-								.setValue("Male")))))));
+							.setValue("Male"))));
+	}
+
+	private void qMatch(Query query, String path, String propertyValues,String as,Boolean optional,
+											Map<String,String> mapValues,
+											boolean isTruFalse) {
+		Match match= new Match();
+		query.addMatch(match);
+		if (optional==true)
+			match.setOptional(true);
+		if (path!=null) {
+			for (int i = 0; i < path.split("/").length - 1; i++) {
+				Property property = new Property();
+				match.addProperty(property);
+				property.setIri(path.split("/")[i]);
+				match = match.setMatch(new Match().getMatch());
+			}
+		}
+		for (int i=0; i<propertyValues.split(",").length-1;i++){
+			String pv= propertyValues.split(",")[i];
+			String field= pv.split("=")[0];
+			Property property= new Property();
+			property.setIri(field);
+			match.addProperty(property);
+			String values= pv.split("=")[1];
+			for (int q=0; q< values.split(";").length-1; q++){
+				String value= values.split(";")[q];
+				if (value.startsWith("http")){
+					property.addIn(new Node().setSet(value));
+				}
+				property.setValueVariable(as);
+			}
+		}
+		query.getReturn().get(0)
+			.property(p->p
+				.setAs(as)
+				.setValueRef(as));
+
+
 	}
 
 	private void importCodeGroups() throws JsonProcessingException {

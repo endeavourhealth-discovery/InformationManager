@@ -203,6 +203,8 @@ public class EMISImport implements TTImport {
                 ec.setCodeId(fields[0]);
                 ec.setTerm(fields[2]);
                 ec.setCode(fields[3]);
+                if (ec.getCode().equals("C107-99"))
+                    System.out.println(ec.getCode());
                 ec.setConceptId(fields[4]);
                 if (isBlackList(fields[4])) {
                     ec.setConceptId(fields[3].replaceAll("\\^","").replaceAll("-","_"));
@@ -253,11 +255,11 @@ public class EMISImport implements TTImport {
               .setCode(code)
               .addType(IM.CONCEPT)
               .setScheme(IM.CODE_SCHEME_EMIS);
-            String mainTerm= snomedDescription;
-            if (mainTerm.equals("")|mainTerm==null|mainTerm.equals("NULL"))
-                mainTerm= name;
+            //String mainTerm= snomedDescription;
+            //if (mainTerm.equals("")|mainTerm==null|mainTerm.equals("NULL"))
+              //  mainTerm= name;
             emisConcept
-              .setName(mainTerm);
+              .setName(name);
 
             codeIdToEntity.put(codeId,emisConcept);
             document.addEntity(emisConcept);
