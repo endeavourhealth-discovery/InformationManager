@@ -326,7 +326,8 @@ public class CoreQueryImporter implements TTImport {
 
     private void currentGMS() throws JsonProcessingException {
 
-        TTEntity qry = new TTEntity().addType(IM.QUERY);
+        TTEntity qry = new TTEntity().addType(IM.COHORT_QUERY);
+        qry.set(IM.RETURN_TYPE,TTIriRef.iri(IM.NAMESPACE+"Patient"));
         qry
           .setIri(IM.NAMESPACE + "Q_RegisteredGMS")
           .setName("Patients registered for GMS services on the reference date")
