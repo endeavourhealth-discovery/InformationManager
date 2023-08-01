@@ -135,8 +135,8 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_EMIS, cfg);
                 break;
             case "cprd":
-                importer = new Importer().validateByType(IM.GRAPH_CPRD, cfg.getFolder());
-                importer.importByType(IM.GRAPH_CPRD, cfg);
+                importer = new Importer().validateByType(IM.GRAPH_CPRD_MED, cfg.getFolder());
+                importer.importByType(IM.GRAPH_CPRD_MED, cfg);
                 break;
             case "tpp":
             case "ctv3":

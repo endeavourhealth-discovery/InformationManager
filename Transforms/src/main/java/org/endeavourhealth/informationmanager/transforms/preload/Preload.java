@@ -98,7 +98,7 @@ public class Preload {
             .validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
             .validateByType(IM.GRAPH_CEG_QUERY, cfg.getFolder())
             .validateByType(IM.GRAPH_IM1, cfg.getFolder())
-          .validateByType(IM.GRAPH_CPRD, cfg.getFolder())
+          .validateByType(IM.GRAPH_CPRD_MED, cfg.getFolder())
             .validateByType(TTIriRef.iri(QR.NAMESPACE),cfg.getFolder());
 
         LOG.info("Importing files...");
@@ -115,7 +115,7 @@ public class Preload {
         importer.importByType(IM.GRAPH_ODS, cfg);
         importer.importByType(IM.GRAPH_NHS_TFC, cfg);
         importer.importByType(IM.GRAPH_IM1, cfg);
-        importer.importByType(IM.GRAPH_CPRD, cfg);
+        importer.importByType(IM.GRAPH_CPRD_MED, cfg);
 
 
         LOG.info("Generating closure...");
