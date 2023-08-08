@@ -38,6 +38,7 @@ public class CoreQueryImporter implements TTImport {
         searchProperties();
         dataModelPropertyRange();
         dataModelPropertyByShape();
+        searchFolders();
         output(document,config.getFolder());
         if (!TTFilerFactory.isBulk()) {
             TTTransactionFiler filer= new TTTransactionFiler(null);
@@ -582,6 +583,22 @@ public class CoreQueryImporter implements TTImport {
             .return_(r->r
             .property(p->p.setIri(RDFS.LABEL.getIri()))
             .property(p->p.setIri(RDF.TYPE.getIri())))));
+    }
+
+    private void searchFolders() throws JsonProcessingException {
+      TTEntity query = getQuery("SearchFolders", "Search for folder by name","Returns a list of folder using a text search");
+        query.set(IM.DEFINITION, TTLiteral.literal(
+          new Query()
+            .setName("Search for folders by name")
+            .setActiveOnly(true)
+            .match(f->f
+              .setVariable("folder")
+              .setType(IM.FOLDER.getIri()))
+            .return_(r->r
+              .setNodeRef("folder")
+              .property(p->p.setIri(RDFS.LABEL.getIri()))
+              .property(p->p.setIri(RDF.TYPE.getIri())))
+        ));
     }
 
     private void getIsas() throws JsonProcessingException {
