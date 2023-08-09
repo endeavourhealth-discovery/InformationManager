@@ -578,8 +578,7 @@ public class CoreQueryImporter implements TTImport {
           new Query()
             .setActiveOnly(true)
             .setName("Search for concepts")
-            .match(w->w
-              .setParameter("this"))
+            .match(w->w.property(p -> p.setIri(RDF.TYPE.getIri()).addIn(new Node().setParameter("this"))))
             .return_(r->r
             .property(p->p.setIri(RDFS.LABEL.getIri()))
             .property(p->p.setIri(RDF.TYPE.getIri())))));
