@@ -81,7 +81,7 @@ public class QImporter implements TTImport {
 		query
 			.setIri(IM.NAMESPACE+"Q_Qrisk3")
 			.setName("QRisk3 health record query")
-			.setType(IM.NAMESPACE+"Patient");
+			.setTypeOf(IM.NAMESPACE+"Patient");
 		query.addReturn(new Return());
 		qMatch(query,null,"age","age",false,null,false);
 		qMatch(query,null,"statedGender","sex",false,null,false);
@@ -103,12 +103,12 @@ public class QImporter implements TTImport {
 						.when(w->w
 							.property(p1->p1
 								.setIri("statedGender")
-								.in(in->in.setIri("http://endhealth.info/im#905031000252103")))
+								.is(in->in.setIri("http://endhealth.info/im#905031000252103")))
 							.then(t->t.setValue("Male")))
 						.when(w->w
 							.property(p1->p1
 								.setIri("statedGender")
-								.in(in->in.setIri("http://endhealth.info/im#905041000252107")))
+								.is(in->in.setIri("http://endhealth.info/im#905041000252107")))
 							.then(t->t.setValue("Female")))
 						.else_x(e->e
 							.setValue("Male"))));
@@ -139,7 +139,7 @@ public class QImporter implements TTImport {
 			for (int q=0; q< values.split(";").length-1; q++){
 				String value= values.split(";")[q];
 				if (value.startsWith("http")){
-					property.addIn(new Node().setSet(value));
+					property.addInSet(new Node().setIri(value));
 				}
 				property.setValueVariable(as);
 			}

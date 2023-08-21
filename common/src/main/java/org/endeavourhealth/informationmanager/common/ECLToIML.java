@@ -119,7 +119,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 	}
 
 
-	private void setMatch(Element from, ECLParser.SubexpressionconstraintContext eclSub) {
+	private void setMatch(Match from, ECLParser.SubexpressionconstraintContext eclSub) {
 		boolean includeSubs=false;
 		boolean excludeSelf= false;
 		if (eclSub.constraintoperator()!=null) {
@@ -134,7 +134,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 
 	}
 
-	private void setMatch(Element from, ECLParser.SubexpressionconstraintContext eclSub,boolean includeSubs,boolean excludeSelf) {
+	private void setMatch(Match from, ECLParser.SubexpressionconstraintContext eclSub,boolean includeSubs,boolean excludeSelf) {
 		String concept= eclSub.eclfocusconcept().eclconceptreference().conceptid().getText();
 		String name=null;
 		if (eclSub.eclfocusconcept().eclconceptreference().term()!=null){
@@ -148,21 +148,17 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 			conceptIri= concept;
 		if (excludeSelf) {
 			from
-				.setIri(conceptIri).setDescendantsOf(true);
-			if (name!=null)
-				from.setName(name);
+				.setInstanceOf(new Node().setIri(conceptIri).setDescendantsOf(true)
+				.setName(name));
 		}
 		else if (includeSubs){
 			from
-				.setIri(conceptIri).setDescendantsOrSelfOf(true);
-			if (name!=null)
-				from.setName(name);
+				.setInstanceOf( new Node().setIri(conceptIri).setDescendantsOrSelfOf(true)
+				.setName(name));
 		}
 		else {
 			from
-				.setIri(conceptIri);
-			if (name!=null)
-				from.setName(name);
+				.setInstanceOf(new Node().setIri(conceptIri).setName(name));
 		}
 
 	}
@@ -362,7 +358,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 		if (attecl.expressioncomparisonoperator() != null) {
 			if (attecl.expressioncomparisonoperator().EQUALS() != null) {
 				if (attecl.subexpressionconstraint().eclfocusconcept() != null) {
-					where.addIn(getValue(attecl
+					where.addIs(getValue(attecl
 						.subexpressionconstraint().eclfocusconcept().eclconceptreference(),
 						attecl.subexpressionconstraint().constraintoperator()));
 				} else {
@@ -379,8 +375,8 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 
 
 
-	private Match getValue(ECLParser.EclconceptreferenceContext eclRef,ECLParser.ConstraintoperatorContext entail ) throws DataFormatException {
-		Match conRef = new Match();
+	private Node getValue(ECLParser.EclconceptreferenceContext eclRef,ECLParser.ConstraintoperatorContext entail ) throws DataFormatException {
+		Node conRef = new Node();
 		conRef(eclRef, entail, conRef);
 		return conRef;
 	}

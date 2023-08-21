@@ -404,8 +404,8 @@ public class IM1MapImport implements TTImport {
             entity.set(IM.DEFINITION, TTLiteral.literal(
                     new Query().match(m->m
                             .setName(term)
-                            .setIri(concept.getIri())
-                            .setDescendantsOrSelfOf(true)
+                            .setInstanceOf(new Node().setIri(concept.getIri())
+                            .setDescendantsOrSelfOf(true))
                     )));
         }
         entity.setName(term)

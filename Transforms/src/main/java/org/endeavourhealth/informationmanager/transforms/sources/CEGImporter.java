@@ -164,10 +164,10 @@ public class CEGImporter implements TTImport {
 								.setIri(qFolder.getIri())
 								.setName(qFolder.getName())
 								.setName(qFolder.getName());
-							qFolder.getType().forEach(ttFolder::addType);
+							qFolder.getEntityType().forEach(ttFolder::addType);
 								ttFolder
 								.setDescription(qFolder.getDescription());
-							for( TTIriRef type: qFolder.getType()) {
+							for( TTIriRef type: qFolder.getEntityType()) {
 								ttFolder.addType(type);
 							}
 							document.addEntity(ttFolder);
@@ -186,8 +186,8 @@ public class CEGImporter implements TTImport {
 								.setIri(qq.getIri())
 								.setName(qq.getName())
 								.setDescription(qq.getDescription());
-							qq.getType().stream().forEach(ttQuery::addType);
-							if (qq.getType().contains(IM.COHORT_QUERY))
+							qq.getEntityType().stream().forEach(ttQuery::addType);
+							if (qq.getEntityType().contains(IM.COHORT_QUERY))
 								ttQuery.set(IM.RETURN_TYPE,TTIriRef.iri(IM.NAMESPACE+"Patient"));
 							document.addEntity(ttQuery);
 							if (qq.getIsContainedIn()!=null){

@@ -539,13 +539,13 @@ public class SnomedImporter implements TTImport {
        }
       Query expression= eclConverter.getQueryFromECL(ecl);
        for (Match match:expression.getMatch()){
-         if (match.getIri()!=null) {
-           op.addObject(RDFS.RANGE, TTIriRef.iri(match.getIri()));
+         if (match.getInstanceOf()!=null) {
+           op.addObject(RDFS.RANGE, TTIriRef.iri(match.getInstanceOf().getIri()));
          }
          else {
            if (match.getBool().equals(Bool.or)){
              for (Match or:match.getMatch()){
-               op.addObject(RDFS.RANGE, TTIriRef.iri(or.getIri()));
+               op.addObject(RDFS.RANGE, TTIriRef.iri(or.getInstanceOf().getIri()));
              }
            }
            else
