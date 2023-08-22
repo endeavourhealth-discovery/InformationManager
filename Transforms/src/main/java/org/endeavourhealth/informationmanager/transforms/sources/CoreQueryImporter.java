@@ -260,9 +260,9 @@ public class CoreQueryImporter implements TTImport {
               .setDirection(Order.descending)))))
           .match(m->m
             .setVariable("highBPReading")
+            .setNodeRef("latestBP")
             .setBool(Bool.or)
             .match(m1->m1
-              .setNodeRef("latestBP")
               .setBool(Bool.and)
               .property(w->w
                 .setIri(IM.NAMESPACE+"concept")
@@ -276,7 +276,6 @@ public class CoreQueryImporter implements TTImport {
                 .setOperator(Operator.gt)
                 .setValue("140")))
             .match(m1->m1
-              .setNodeRef("latestBP")
               .setBool(Bool.and)
               .property(w->w
                 .setIri(IM.NAMESPACE+"concept")
