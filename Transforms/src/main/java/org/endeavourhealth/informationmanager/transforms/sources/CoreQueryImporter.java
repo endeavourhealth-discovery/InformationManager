@@ -374,34 +374,37 @@ public class CoreQueryImporter implements TTImport {
 
     }
 
-
-
     private void getSearchAll() throws JsonProcessingException {
-        TTEntity query= getQuery("SearchmainTypes","Search for entities of the main types","used to filter free text searches excluding queries and concept sets");
-        query.set(IM.DEFINITION,TTLiteral.literal(
-          new Query()
-            .setActiveOnly(true)
-            .setName("Search for all main types")
-            .match(f->f
-              .setVariable("type")
-              .setBool(Bool.or)
-              .match(w->w
-                .setTypeOf(IM.CONCEPT.getIri()))
-              .match(w->w
-                .setTypeOf(IM.CONCEPT_SET.getIri()))
-              .match(w->w
-                .setTypeOf(IM.FOLDER.getIri()))
-              .match(w->w
-                .setTypeOf(IM.VALUESET.getIri()))
-              .match(w->w
-                .setTypeOf(IM.NAMESPACE+"dataModelProperty")))
-            .return_(s->s.setNodeRef("type")
-              .property(p->p.setIri(RDFS.LABEL.getIri()))
-            .property(p->p.setIri(RDFS.COMMENT.getIri()))
-            .property(p->p.setIri(IM.HAS_STATUS.getIri()))
-            .property(p->p.setIri(IM.WEIGHTING.getIri()))
-            .property(p->p.setIri(IM.HAS_SCHEME.getIri()))
-        )));
+        TTEntity query = getQuery("SearchmainTypes", "Search for entities of the main types", "used to filter free text searches excluding queries and concept sets");
+        query.set(IM.DEFINITION, TTLiteral.literal(
+            new Query()
+                .setActiveOnly(true)
+                .setName("Search for all main types")
+                .match(f -> f
+                    .setVariable("type")
+                    .setBool(Bool.or)
+                    .match(w -> w
+                        .setTypeOf(IM.CONCEPT.getIri()))
+                    .match(w -> w
+                        .setTypeOf(IM.CONCEPT_SET.getIri()))
+                    .match(w -> w
+                        .setTypeOf(IM.FOLDER.getIri()))
+                    .match(w -> w
+                        .setTypeOf(IM.VALUESET.getIri()))
+                    .match(w -> w
+                        .setTypeOf(IM.NAMESPACE + "dataModelProperty")))
+                .return_(s -> s.setNodeRef("type")
+                    .property(p -> p.setIri(RDFS.LABEL.getIri()))
+                    .property(p -> p.setIri(RDFS.COMMENT.getIri()))
+                    .property(p -> p.setIri(IM.CODE.getIri()))
+                    .property(p -> p.setIri(IM.HAS_STATUS.getIri())
+                        .return_(r -> r.property(rp -> rp.setIri(RDFS.LABEL.getIri()))))
+                    .property(p -> p.setIri(IM.HAS_SCHEME.getIri())
+                        .return_(r -> r.property(rp -> rp.setIri(RDFS.LABEL.getIri()))))
+                    .property(p -> p.setIri(RDF.TYPE.getIri())
+                        .return_(r -> r.property(rp -> rp.setIri(RDFS.LABEL.getIri()))))
+                    .property(p -> p.setIri(IM.WEIGHTING.getIri()))
+                )));
     }
 
 

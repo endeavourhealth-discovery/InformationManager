@@ -216,7 +216,9 @@ public class ImportApp {
                 System.out.println("expanding value sets");
                 new SetExpander().expandAllSets();
         }
-        new LuceneIndexer().buildIndexes();
+
+        if (!cfg.isSkiplucene())
+            new LuceneIndexer().buildIndexes();
 
         System.out.println("Finished - " + (new Date()));
     }
