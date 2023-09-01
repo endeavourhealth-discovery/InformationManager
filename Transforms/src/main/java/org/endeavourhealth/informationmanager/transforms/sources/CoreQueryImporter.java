@@ -381,7 +381,6 @@ public class CoreQueryImporter implements TTImport {
                 .setActiveOnly(true)
                 .setName("Search for all main types")
                 .match(f -> f
-                    .setVariable("type")
                     .setBool(Bool.or)
                     .match(w -> w
                         .setTypeOf(IM.CONCEPT.getIri()))
@@ -393,7 +392,7 @@ public class CoreQueryImporter implements TTImport {
                         .setTypeOf(IM.VALUESET.getIri()))
                     .match(w -> w
                         .setTypeOf(IM.NAMESPACE + "dataModelProperty")))
-                .return_(s -> s.setNodeRef("type")
+                .return_(s -> s
                     .property(p -> p.setIri(RDFS.LABEL.getIri()))
                     .property(p -> p.setIri(RDFS.COMMENT.getIri()))
                     .property(p -> p.setIri(IM.CODE.getIri()))
