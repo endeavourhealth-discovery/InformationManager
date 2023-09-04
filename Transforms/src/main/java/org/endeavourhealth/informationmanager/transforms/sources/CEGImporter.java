@@ -73,7 +73,8 @@ public class CEGImporter implements TTImport {
 				if (!querySet.contains(set.getIri())) {
 					TTEntity ttSet = new TTEntity()
 						.setIri(set.getIri())
-						.setName(set.getName());
+						.setName(set.getName())
+                        .addType(IM.VALUESET);
 					if (set.getUsedIn() != null) {
 						for (TTIriRef used : set.getUsedIn())
 							ttSet.addObject(IM.USED_IN, used);
