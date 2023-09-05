@@ -75,10 +75,6 @@ public class CEGImporter implements TTImport {
 						.setIri(set.getIri())
 						.setName(set.getName())
                         .addType(IM.VALUESET);
-					if (set.getUsedIn() != null) {
-						for (TTIriRef used : set.getUsedIn())
-							ttSet.addObject(IM.USED_IN, used);
-					}
 					ttSet.addObject(IM.IS_CONTAINED_IN, valueSetFolder);
 					document.addEntity(ttSet);
 				}
@@ -191,6 +187,10 @@ public class CEGImporter implements TTImport {
 							if (qq.getEntityType().contains(IM.COHORT_QUERY))
 								ttQuery.set(IM.RETURN_TYPE,TTIriRef.iri(IM.NAMESPACE+"Patient"));
 							document.addEntity(ttQuery);
+							if (qq.getUses() != null) {
+								for (TTIriRef uses : qq.getUses())
+									ttQuery.addObject(IM.USES, uses);
+							}
 							if (qq.getIsContainedIn()!=null){
 								for (TTIriRef inFolder:qq.getIsContainedIn()){
 									ttQuery.addObject(IM.IS_CONTAINED_IN,inFolder);
