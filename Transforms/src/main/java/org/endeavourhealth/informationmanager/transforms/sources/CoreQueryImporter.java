@@ -622,7 +622,7 @@ public class CoreQueryImporter implements TTImport {
               .setVariable("isa")
               .setInstanceOf(new Node()
               .setParameter("this")
-              .setDescendantsOrSelfOf(true)))
+              .setDescendantsOf(true)))
             .return_(s->s.setNodeRef("isa")
               .property(p->p.setIri(RDFS.LABEL.getIri()))
             .property(p->p.setIri(IM.CODE.getIri())))));
