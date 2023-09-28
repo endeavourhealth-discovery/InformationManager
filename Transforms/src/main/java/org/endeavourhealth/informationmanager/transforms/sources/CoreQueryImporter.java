@@ -24,6 +24,7 @@ public class CoreQueryImporter implements TTImport {
         TTManager manager = new TTManager();
         document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
         getIsas();
+        getDescendants();
         getConcepts();
         getAllowableProperties();
         getAllowableRanges();
@@ -622,10 +623,27 @@ public class CoreQueryImporter implements TTImport {
               .setVariable("isa")
               .setInstanceOf(new Node()
               .setParameter("this")
-              .setDescendantsOf(true)))
+              .setDescendantsOrSelfOf(true)))
             .return_(s->s.setNodeRef("isa")
               .property(p->p.setIri(RDFS.LABEL.getIri()))
             .property(p->p.setIri(IM.CODE.getIri())))));
+    }
+
+    private void getDescendants() throws JsonProcessingException {
+        TTEntity query = getQuery("GetDescendants","Get active subtypes of concept","returns transitive closure of an entity and its subtypes, usually used with a text search filter to narrow results");
+        query.getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE+"query"));
+        query.set(IM.DEFINITION,
+            TTLiteral.literal(new Query()
+                .setName("All subtypes of an entity, active only")
+                .setActiveOnly(true)
+                .match(w->w
+                    .setVariable("isa")
+                    .setInstanceOf(new Node()
+                        .setParameter("this")
+                        .setDescendantsOf(true)))
+                .return_(s->s.setNodeRef("isa")
+                    .property(p->p.setIri(RDFS.LABEL.getIri()))
+                    .property(p->p.setIri(IM.CODE.getIri())))));
     }
 
     private TTEntity getQuery(String iri, String name, String comment) {
