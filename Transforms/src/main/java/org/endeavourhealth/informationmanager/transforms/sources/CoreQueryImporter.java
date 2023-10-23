@@ -40,6 +40,7 @@ public class CoreQueryImporter implements TTImport {
         dataModelPropertyRange();
         dataModelPropertyByShape();
         searchFolders();
+        searchContainedIn();
         output(document,config.getFolder());
         if (!TTFilerFactory.isBulk()) {
             TTTransactionFiler filer= new TTTransactionFiler(null);
@@ -609,6 +610,23 @@ public class CoreQueryImporter implements TTImport {
               .setNodeRef("folder")
               .property(p->p.setIri(RDFS.LABEL.getIri()))
               .property(p->p.setIri(RDF.TYPE.getIri())))
+        ));
+    }
+
+    private void searchContainedIn() throws JsonProcessingException {
+        TTEntity query = getQuery("SearchContainedIn", "Search for entities contained in parent folder","parameter 'value' needs to be set to the parent folder");
+        query.set(IM.DEFINITION, TTLiteral.literal(
+                new Query()
+                        .setName("Search for entities contained in parent folder")
+                        .setActiveOnly(true)
+                        .match(f->f
+                                .property(p->p
+                                        .setIri(IM.IS_CONTAINED_IN.getIri())
+                                        .is(i->i
+                                                .setParameter("value")
+                                        )
+                                )
+                        )
         ));
     }
 
