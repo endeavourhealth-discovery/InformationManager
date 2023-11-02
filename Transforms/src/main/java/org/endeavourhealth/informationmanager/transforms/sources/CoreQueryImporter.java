@@ -630,6 +630,23 @@ public class CoreQueryImporter implements TTImport {
         ));
     }
 
+    private void searchAllowableSubclass() throws JsonProcessingException {
+        TTEntity query = getQuery("SearchAllowableSubclass", "Search for allowable subclasses","parameter 'value' needs to be set to the parent folder");
+        query.set(IM.DEFINITION, TTLiteral.literal(
+                new Query()
+                        .setName("Search for allowable subclasses")
+                        .setActiveOnly(true)
+                        .match(f->f
+                                .property(p->p
+                                        .setIri(RDF.TYPE.getIri())
+                                        .is(i->i
+                                                .setParameter("value")
+                                        )
+                                )
+                        )
+        ));
+    }
+
     private void getIsas() throws JsonProcessingException {
         TTEntity query = getQuery("GetIsas","Get active subtypes of concept","returns transitive closure of an entity and its subtypes, usually used with a text search filter to narrow results");
         query.getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE+"query"));
