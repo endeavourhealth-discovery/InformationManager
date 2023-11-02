@@ -41,6 +41,7 @@ public class CoreQueryImporter implements TTImport {
         dataModelPropertyByShape();
         searchFolders();
         searchContainedIn();
+        searchAllowableSubclass();
         output(document,config.getFolder());
         if (!TTFilerFactory.isBulk()) {
             TTTransactionFiler filer= new TTTransactionFiler(null);
