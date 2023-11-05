@@ -78,7 +78,7 @@ public class SnomedImporter implements TTImport {
    };
 
    public static final String[] substitutions = {
-       ".*\\\\HISTORY\\\\.*\\\\SnomedCT_UKClinicalRF2_.*\\\\Resources\\\\HistorySubstitutionTable\\\\xres2_HistorySubstitutionTable_.*\\.txt",
+       ".*\\\\HISTORY\\\\.*\\\\SnomedCT_UKClinicalRF2_.*\\\\Resources\\\\QueryTable\\\\xres2_SNOMEDQueryTable_.*\\.txt",
    };
 
    public static final String[] attributeRanges = {
@@ -259,19 +259,25 @@ public class SnomedImporter implements TTImport {
                String line = reader.readLine();
                while (line != null && !line.isEmpty()) {
                   String[] fields = line.split("\t");
-                  String old= fields[0];
-                  String replacedBy = fields[2];
-                  TTEntity c = conceptMap.get(old);
-                  if (c==null){
-                   c= new TTEntity().setIri(SN+old);
-                   document.addEntity(c);
-                   c.addType(IM.CONCEPT);
-                   c.setStatus(IM.INACTIVE);
-                   c.setCode(old);
-                   c.setScheme(SNOMED.GRAPH_SNOMED);
+                  String supertype= fields[0];
+                  if (!supertype.equals("138875005")) {
+                    String subtype = fields[1];
+                    String provenance = fields[2];
+                    TTEntity c = conceptMap.get(subtype);
+                    if (c == null) {
+                      c = new TTEntity().setIri(SN + subtype);
+                      document.addEntity(c);
+                      c.addType(IM.CONCEPT);
+                      c.setStatus(IM.INACTIVE);
+                      c.setCode(subtype);
+                      c.setScheme(SNOMED.GRAPH_SNOMED);
+                    }
+                    switch (provenance) {
+                      case "0", "3" -> c.addObject(IM.SUBSUMED_BY, TTIriRef.iri(SN + supertype));
+                      case "1" -> c.addObject(IM.USUALLY_SUBSUMED_BY, TTIriRef.iri(SN + supertype));
+                      case "2" -> c.addObject(IM.APPROXIMATE_SUBSUMED_BY, TTIriRef.iri(SN + supertype));
+                    }
                   }
-                  addRelationship(c,0,REPLACED_BY,replacedBy);
-
                   line = reader.readLine();
                }
             }
@@ -619,18 +625,15 @@ public class SnomedImporter implements TTImport {
    }
 
    private void addRelationship(TTEntity c, Integer group, String relationship, String target) {
-      if (relationship.equals(IS_A)) {
-         addIsa(c,target);
-         if (c.getIri().equals(SNOMED_ATTRIBUTE))
-            c.addObject(RDFS.SUBCLASSOF,RDF.PROPERTY);
-
-      } else if (relationship.equals(REPLACED_BY)){
-         c.addObject(SNOMED.REPLACED_BY,TTIriRef.iri(SNOMED.NAMESPACE+target));
-      }
-      else {
-         TTNode roleGroup = getRoleGroup(c, group);
-         roleGroup.set(TTIriRef.iri(SN+relationship),TTIriRef.iri(SN+target));
-      }
+     if (relationship.equals(IS_A)) {
+       addIsa(c,target);
+       if (c.getIri().equals(SNOMED_ATTRIBUTE))
+         c.addObject(RDFS.SUBCLASSOF,RDF.PROPERTY);
+     }
+     else {
+       TTNode roleGroup = getRoleGroup(c, group);
+       roleGroup.set(TTIriRef.iri(SN+relationship),TTIriRef.iri(SN+target));
+     }
    }
 
    private TTNode getRoleGroup(TTEntity c, Integer groupNumber) {

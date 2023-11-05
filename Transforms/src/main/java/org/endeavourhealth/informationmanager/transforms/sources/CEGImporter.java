@@ -46,7 +46,7 @@ public class CEGImporter implements TTImport {
 		TTEntity graph= new TTEntity()
 			.setIri(IM.GRAPH_CEG_QUERY.getIri())
 				.setName("CEG (QMUL) graph")
-					.setDescription("CEG library of concept sets queries and profiles")
+					.setDescription("CEG library of value sets, queries and profiles")
 						.addType(IM.GRAPH);
 			graph.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
 		document.addEntity(graph);
@@ -109,7 +109,7 @@ public class CEGImporter implements TTImport {
 		document.addEntity(folder);
 		folder= new TTEntity()
 			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets")
-			.setName("QMUL CEG concept set library")
+			.setName("QMUL CEG value set library")
 			.addType(IM.FOLDER)
 			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets"));
 		folder.addObject(IM.CONTENT_TYPE,IM.CONCEPT_SET);

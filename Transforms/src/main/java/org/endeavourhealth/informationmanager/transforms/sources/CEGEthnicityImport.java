@@ -188,7 +188,7 @@ public class CEGEthnicityImport implements TTImport {
             cegSubset= new TTEntity()
                 .setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16_"+cat16)
                 .addType(IM.CONCEPT_SET)
-                .setName("Concept set - "+ catTerm)
+                .setName("Value set - "+ catTerm)
                 .setCode(cat16)
                 .setScheme(IM.GRAPH_CEG_QUERY)
                 .setDescription("QMUL CEG 16+ Ethnic category "+cat16)
@@ -210,7 +210,7 @@ public class CEGEthnicityImport implements TTImport {
                 .setIri(IM.NAMESPACE + "CSET_EthnicCategoryNHS2001_"+nhs16)
 				.setCode(nhs16)
                 .addType(IM.CONCEPT_SET)
-				.setName("Concept set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
+				.setName("Value set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
                 .setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
 				.set(IM.IS_SUBSET_OF,TTIriRef.iri(nhsSet.getIri()))
 				.set(IM.DEFINITION,TTLiteral.literal(new Query().addMatch(new Match().setBool(Bool.or))));
@@ -236,7 +236,7 @@ public class CEGEthnicityImport implements TTImport {
 		nhsSet= new TTEntity()
 			.setIri(IM.NAMESPACE+"CSET_EthnicCategory2001")
 			.addType(IM.CONCEPT_SET)
-			.setName("Concept set - 2001 census Ethnic category (set group")
+			.setName("Value set - 2001 census Ethnic category (set group")
 			.setDescription("NHS Data Dictionary 2001 census based categorisations of ethnic groups");
 		nhsSet.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"EthnicitySets")));
 		document.addEntity(nhsSet);

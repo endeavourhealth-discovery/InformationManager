@@ -32,10 +32,11 @@ public class QImporter implements TTImport {
 	private final Client client= ClientBuilder.newClient();
 	private final TTDocument document = new TTDocument(TTIriRef.iri(QR.NAMESPACE));
 	private final TTIriRef projectsFolder= TTIriRef.iri(QR.NAMESPACE+"QProjects");
-	private final Map<String,String> idProjectMap = new HashMap<>();
+	private final Map<String,TTEntity> idProjectMap = new HashMap<>();
 	private final Map<String,TTEntity> idCodeGroupMap = new HashMap<>();
 	private final ObjectMapper om = new ObjectMapper();
-	private final Map<String,String> codeGroups = new HashMap<>();
+	private final Map<String,String> codeGroupVersion = new HashMap<>();
+	private final Map<String,String> projectVersion= new HashMap<>();
 
 	private static final Logger LOG = LoggerFactory.getLogger(QImporter.class);
 	@Override
@@ -45,9 +46,15 @@ public class QImporter implements TTImport {
 				"Q Research scheme and graph"
 				,"Q Research scheme and graph"));
 		addQFolders();
-	queryQRisk3();
+//	queryQRisk3();
 		importQProjects();
 		importCodeGroups();
+		for (Map.Entry<String,TTEntity> entry:idProjectMap.entrySet()){
+			document.addEntity(entry.getValue());
+		}
+		for (Map.Entry<String,TTEntity> entry:idCodeGroupMap.entrySet()){
+			document.addEntity(entry.getValue());
+		}
 		if ( ImportApp.testDirectory!=null) {
 			String directory = ImportApp.testDirectory.replace("%", " ");
 			manager.setDocument(document);
@@ -75,7 +82,7 @@ public class QImporter implements TTImport {
 		TTEntity qRisk3= new TTEntity()
 			.setIri(IM.NAMESPACE+"Q_QRisk3")
 			.setName("QRisk3 record query")
-			.setDescription("query of helth data to set qrisk 3 parameters");
+			.setDescription("query of health data to set qrisk 3 parameters");
 		Query query= new Query();
 		qRisk3.set(IM.DEFINITION,TTLiteral.literal(query));
 		query
@@ -153,7 +160,7 @@ public class QImporter implements TTImport {
 	}
 
 	private void importCodeGroups() throws JsonProcessingException {
-		for (Map.Entry<String,String> project:idProjectMap.entrySet()) {
+		for (Map.Entry<String,TTEntity> project:idProjectMap.entrySet()) {
 			String projectId = project.getKey();
 			LOG.info("Fetching  code groups for project "+projectId+"...");
 			int page=0;
@@ -175,18 +182,18 @@ public class QImporter implements TTImport {
 								.setName("Q code group "+codeGroup.get("Name").asText())
 								.addType(IM.CONCEPT_SET);
 						}
-						qGroup.addObject(IM.IS_SUBSET_OF, TTIriRef.iri(project.getValue()));
+						qGroup.addObject(IM.IS_SUBSET_OF, TTIriRef.iri(project.getValue().getIri()));
 						qGroup.set(IM.VERSION, TTLiteral.literal(version));
-						document.addEntity(qGroup);
-						idCodeGroupMap.put(groupId, qGroup);
-						if (codeGroups.get(groupId)==null) {
-							importCodes(projectId, qGroup, id);
-							codeGroups.put(groupId, version);
+						if (idCodeGroupMap.get(groupId)==null) {
+							idCodeGroupMap.put(groupId, qGroup);
+							codeGroupVersion.put(groupId, version);
 						}
-						else {
-							if (!codeGroups.get(id).equals(version))
-								System.err.println("Code group " + id + " has 2 versions");
+						else if (Integer.parseInt(version)>Integer.parseInt(codeGroupVersion.get(groupId))){
+							idCodeGroupMap.put(groupId, qGroup);
+							codeGroupVersion.put(groupId, version);
 						}
+						importCodes(projectId, qGroup, id);
+
 					}
 				}
 				else
@@ -232,15 +239,23 @@ public class QImporter implements TTImport {
 			document.addEntity(qp);
 
 			 */
+			String id= project.get("Id").asText();
 			TTEntity qset= new TTEntity()
 				.setIri(QR.NAMESPACE+"QPredict_"+ project.get("Id").asText())
 				.addType(IM.CONCEPT_SET)
 				.setName(project.get("Name").asText());
 			qset.set(IM.IS_CONTAINED_IN,projectsFolder);
 			qset.set(SHACL.ORDER,TTLiteral.literal(1));
-			document.addEntity(qset);
-			idProjectMap.put(project.get("Id").asText(),qset.getIri());
-
+			String version = project.get("Version").asText();
+			qset.set(IM.VERSION,TTLiteral.literal(version));
+			if (idProjectMap.get(id)==null) {
+				idProjectMap.put(id, qset);
+				projectVersion.put(id,version);
+			}
+			else if (Integer.parseInt(version)> Integer.parseInt(projectVersion.get(id))) {
+				idProjectMap.put(id,qset);
+				projectVersion.put(id,version);
+			}
 		}
 	}
 

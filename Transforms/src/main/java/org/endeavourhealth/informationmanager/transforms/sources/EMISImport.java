@@ -34,7 +34,7 @@ public class EMISImport implements TTImport {
     private final Map<String, TTEntity> termToEmis = new HashMap<>();
     private final Map<String, List<String>> parentMap = new HashMap<>();
     private final Map<String, String> remaps = new HashMap<>();
-    List<String> emisNs=Arrays.asList("1000006","1000033","1000034","1000035");
+    List<String> emisNs=Arrays.asList("1000006","1000033","1000034","1000035","1000027");
 
     private final TTManager manager = new TTManager();
     private TTDocument document;
@@ -60,48 +60,21 @@ public class EMISImport implements TTImport {
             "The EMIS local code scheme and graph including Read 2 and EMIS local codes."));
         System.out.println("importing emis code file");
         populateRemaps(remaps);
-        addEMISUnlinked();
+        addEMISTopLevel();
         importEMISCodes(config.getFolder());
         importDrugs(config.getFolder());
         manager.createIndex();
+
         allergyMaps(config.getFolder());
         setEmisHierarchy();
-        addExtraMatches();
+        //addExtraMatches();
         supplementary();
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
     }
 
-    private void addExtraMatches(){
-        for (Map.Entry<String,TTEntity> item: codeIdToEntity.entrySet()){
-            String codeId= item.getKey();
-            TTEntity emisConcept= item.getValue();
-            if (emisConcept.get(IM.MATCHED_TO)==null){
-                matchParent(codeId,emisConcept);
-            }
-         //   if (emisConcept.get(IM.MATCHED_TO)==null){
-           //     System.out.println("emis code id"+ codeId+" not matched");
-            //}
-        }
 
-    }
-
-    private void matchParent(String codeId, TTEntity emisConcept) {
-        List<String> parents= parentMap.get(codeId);
-        if (parents!=null){
-            for (String parent:parents){
-                TTEntity parentEntity= codeIdToEntity.get(parent);
-                if (parentEntity.get(IM.MATCHED_TO)!=null){
-                    emisConcept.set(IM.MATCHED_TO,parentEntity.get(IM.MATCHED_TO));
-                }
-                else {
-                    matchParent(parent,emisConcept);
-                }
-            }
-        }
-
-    }
 
     private void importDrugs(String folder) throws IOException {
         Path file =  ImportUtils.findFileForId(folder, drugIds[0]);
@@ -149,8 +122,17 @@ public class EMISImport implements TTImport {
                String oldCode= all.getIri().substring(all.getIri().lastIndexOf("#")+1);
                oldCode= oldCode.replaceAll("_",".");
                TTEntity emisEntity = oldCodeToEntity.get(oldCode);
-               for (TTValue superClass : all.get(IM.MATCHED_TO).getElements()) {
+               if (all.get(IM.MATCHED_TO)!=null){
+                for (TTValue superClass : all.get(IM.MATCHED_TO).getElements()) {
                    emisEntity.addObject(IM.MATCHED_TO, superClass);
+                }
+               }
+               else if (all.get(IM.ROLE_GROUP)!=null)
+                   emisEntity.set(IM.ROLE_GROUP,all.get(IM.ROLE_GROUP));
+               if (all.get(RDFS.SUBCLASSOF)!=null){
+                   for (TTValue sup:all.get(RDFS.SUBCLASSOF).getElements()){
+                       emisEntity.addObject(RDFS.SUBCLASSOF,sup.asIriRef());
+                   }
                }
            }
     }
@@ -168,27 +150,30 @@ public class EMISImport implements TTImport {
         for (Map.Entry<String, List<String>> entry : parentMap.entrySet()) {
             String child = entry.getKey();
             TTEntity childEntity = codeIdToEntity.get(child);
-            List<String> parents = entry.getValue();
-            for (String parentId : parents) {
-                TTEntity parentEntity = codeIdToEntity.get(parentId);
-                    TTManager.addChildOf(childEntity, TTIriRef.iri(parentEntity.getIri()));
+            if (childEntity.get(IM.MATCHED_TO) == null) {
+                List<String> parents = entry.getValue();
+                for (String parentId : parents) {
+                    TTEntity parentEntity = codeIdToEntity.get(parentId);
+                    childEntity.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(parentEntity.getIri()));
                 }
+            }
         }
     }
 
 
-    private void addEMISUnlinked() {
-        TTEntity c = new TTEntity().setIri(EMIS + "EMISUnlinkedCodes")
+    private void addEMISTopLevel() {
+        TTEntity c = new TTEntity().setIri(EMIS + "EMISOrphanCodes")
           .set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS + "1669671000006112")))
-          .setName("EMIS unlinked local codes")
-          .setCode("EMISUnlinkedCodes");
-
+          .setName("EMIS unmatched orphan codes")
+          .setDescription("EMIS orphan codes that have no parent and are not matched to UK Snomed-CT."+
+            " Each has a code id and an original text code and an EMIS Snomed concept id but no parent code")
+          .setScheme(IM.GRAPH_EMIS);
         document.addEntity(c);
     }
 
     private void importEMISCodes(String folder) throws IOException {
         Path file =  ImportUtils.findFileForId(folder, emisCodes[0]);
-        addEMISUnlinked();  //place holder for unlinked emis codes betlow the emis root code
+        //place holder for unlinked emis codes betlow the emis root code
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
             reader.readLine();
             int count = 0;
@@ -228,14 +213,15 @@ public class EMISImport implements TTImport {
 
     private void addConcept( EmisCode ec) {
         String codeId = ec.getCodeId();
+        if (codeId.equals("192931000006112")) return;
         String term = ec.getTerm();
         String code = ec.getCode();
         String conceptId = ec.getConceptId();
+        //if (conceptId.equals("906241000006109"))
+          //  System.out.println("rfc concept");
         String descid = ec.getDescid();
         String parentId = ec.getParentId();
         String snomedDescription= ec.snomedDescripton;
-
-
         if (parentId!=null)
             if (parentId.equals("")|parentId.equals("NULL"))
                 parentId = null;
@@ -255,9 +241,6 @@ public class EMISImport implements TTImport {
               .setCode(code)
               .addType(IM.CONCEPT)
               .setScheme(IM.CODE_SCHEME_EMIS);
-            //String mainTerm= snomedDescription;
-            //if (mainTerm.equals("")|mainTerm==null|mainTerm.equals("NULL"))
-              //  mainTerm= name;
             emisConcept
               .setName(name);
 
@@ -280,25 +263,22 @@ public class EMISImport implements TTImport {
                 if (notFound(emisConcept, IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + conceptId)))
                    emisConcept.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + conceptId));
             }
-            else {
-                if (notFound(emisConcept, IM.IS_CHILD_OF, iri(EMIS + "EMISUnlinkedCodes")))
-                     emisConcept.addObject(IM.IS_CHILD_OF, iri(EMIS + "EMISUnlinkedCodes"));
-            }
         }
         else {
             emisConcept.set(IM.ALTERNATIVE_CODE,TTLiteral.literal(conceptId));
         }
-
         if (code.equals("EMISNHH2")) {
-            emisConcept.setName("EMIS Read 2 and local codes");
             emisConcept.set(IM.IS_CONTAINED_IN, new TTArray()
               .add(iri(IM.NAMESPACE + "CodeBasedTaxonomies")));
         }
-        if (parentId == null && !code.equals("EMISNHH2"))
-            emisConcept.set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS + "EMISUnlinkedCodes")));
-        if (parentId != null) {
-            parentMap.computeIfAbsent(codeId, k -> new ArrayList<>());
-            parentMap.get(codeId).add(parentId);
+        else {
+            if (parentId == null && emisConcept.get(IM.MATCHED_TO) == null) {
+                emisConcept.set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS + "EMISOrphanCodes")));
+            }
+            else if (parentId!=null){
+                parentMap.computeIfAbsent(codeId, k -> new ArrayList<>());
+                parentMap.get(codeId).add(parentId);
+            }
         }
     }
 

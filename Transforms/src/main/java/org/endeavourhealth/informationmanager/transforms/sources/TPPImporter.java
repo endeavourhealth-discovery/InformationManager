@@ -77,12 +77,24 @@ public class TPPImporter implements TTImport {
             addEmisMaps();
             addDiscoveryMaps();
             importVaccineMaps(manager, config.getFolder());
+            setOrphanC0des();
 
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
             }
 
 
+        }
+    }
+
+    private void setOrphanC0des() {
+        for (Map.Entry<String,TTEntity> entry:codeToEntity.entrySet()){
+            String code=entry.getKey();
+            TTEntity tppEntity= entry.getValue();
+            if (tppEntity.get(IM.MATCHED_TO)==null){
+                if (tppEntity.get(IM.IS_CHILD_OF)==null)
+                    tppEntity.addObject(IM.IS_CHILD_OF,TTIriRef.iri(TPP+"TPPOrphanCodes"));
+            }
         }
     }
 
@@ -369,11 +381,17 @@ public class TPPImporter implements TTImport {
     private void addTPPTopLevel(){
         TTEntity c= new TTEntity().setIri(TPP+"TPPCodes")
           .addType(IM.CONCEPT)
-          .setName("TPP TPP and local codes")
+          .setName("TPP (CTV3) and TPP local codes")
           .setScheme(IM.GRAPH_TPP)
           .setCode("TPPCodes");
         c.set(IM.IS_CONTAINED_IN,new TTArray());
         c.get(IM.IS_CONTAINED_IN).add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+        document.addEntity(c);
+         c = new TTEntity().setIri(TPP + "TPPOrphanCodes")
+          .set(IM.IS_CHILD_OF, new TTArray().add(iri(TPP + "TPPCodes")))
+          .setName("TPP unmatched orphan codes")
+          .setDescription("TPP orphan codes whose parent is unknown and are not matched to UK Snomed-CT")
+          .setScheme(IM.GRAPH_TPP);
         document.addEntity(c);
     }
 

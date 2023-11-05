@@ -72,7 +72,6 @@ public class IM1MapImport implements TTImport {
         EMISImport.populateRemaps(remaps);
         codeToIri= importMaps.getCodeToIri();
 
-
         importOld(inFolder);
         importUsage(inFolder);
 
@@ -128,11 +127,14 @@ public class IM1MapImport implements TTImport {
                     used.put(oldIri,usedDbid.get(dbid));
                 IdToDbid.put(oldIri,dbid);
                 String term=fields[2];
+
                 String description= fields[3];
                 String im1Scheme= fields[4];
                 String code= fields[5];
                 String draft=fields[7];
                 String scheme;
+                if (term.contains("Clinical document"))
+                    System.out.println(code+ " "+ term);
 
                 if (!code.contains(",")) {
                     switch (im1Scheme) {
@@ -146,7 +148,7 @@ public class IM1MapImport implements TTImport {
                             scheme = "X";
                             break;
                         case "DM+D":
-                            scheme = SNOMED.NAMESPACE;
+                            scheme = "X";
                             break;
                         case "CTV3":
                             scheme = IM.CODE_SCHEME_TPP.getIri();
@@ -257,7 +259,7 @@ public class IM1MapImport implements TTImport {
                                     }
                                 }
                                 if (emisConcept == null) {
-                                        System.out.println("emis concept missing");
+                                        System.out.println("im1 invalid emis concept");
                                 }
                                 else
                                     addIM1id(emisConcept, oldIri);
