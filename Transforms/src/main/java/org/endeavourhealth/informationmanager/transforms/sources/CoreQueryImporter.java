@@ -42,6 +42,7 @@ public class CoreQueryImporter implements TTImport {
         searchFolders();
         searchContainedIn();
         searchAllowableSubclass();
+        searchAllowableContainedIn();
         output(document,config.getFolder());
         if (!TTFilerFactory.isBulk()) {
             TTTransactionFiler filer= new TTTransactionFiler(null);
@@ -364,7 +365,7 @@ public class CoreQueryImporter implements TTImport {
               .setBool(Bool.or)
               .property(pv1->pv1
                 .setIri(IM.NAMESPACE+"endDate")
-                .setNull(true))
+                .setIsNull(true))
               .property(pv1->pv1
                 .setIri(IM.NAMESPACE+"endDate")
                 .setOperator(Operator.gt)
@@ -445,7 +446,7 @@ public class CoreQueryImporter implements TTImport {
             .property(pv->pv
               .setBool(Bool.or)
               .property(pv1->pv1
-                .setNull(true)
+                .setIsNull(true)
                 .setIri(IM.NAMESPACE+"endDate"))
               .property(pv1->pv1
                 .setIri(IM.NAMESPACE+"endDate")
@@ -633,7 +634,7 @@ public class CoreQueryImporter implements TTImport {
     }
 
     private void searchAllowableSubclass() throws JsonProcessingException {
-        TTEntity query = getQuery("SearchAllowableSubclass", "Search for allowable subclasses","parameter 'value' needs to be set to the parent folder");
+        TTEntity query = getQuery("SearchAllowableSubclass", "Search for allowable subclasses","parameter 'value' needs to be set to current entity type");
         query.set(IM.DEFINITION, TTLiteral.literal(
                 new Query()
                         .setName("Search for allowable subclasses")
@@ -646,6 +647,33 @@ public class CoreQueryImporter implements TTImport {
                                         )
                                 )
                         )
+        ));
+    }
+
+    private void searchAllowableContainedIn() throws JsonProcessingException {
+        TTEntity query = getQuery("SearchAllowableContainedIn", "Search for allowable parent folder","parameter 'value' needs to be set to the current entity type");
+        query.set(IM.DEFINITION, TTLiteral.literal(
+                new Query()
+                        .setName("Search for allowable contained in")
+                        .setActiveOnly(true)
+                        .match(m->m
+                                .setVariable("folder")
+                                .setTypeOf(IM.FOLDER.getIri())
+                                .setBool(Bool.or)
+                                .property(p->p
+                                        .setIri(IM.CONTENT_TYPE.getIri())
+                                        .isNull()
+                                )
+                                .property(p->p
+                                        .setIri(IM.CONTENT_TYPE.getIri())
+                                        .is(i->i.setParameter("value"))
+                                )
+
+                        )
+                        .return_(r->r
+                                .setNodeRef("folder")
+                                .property(p->p.setIri(RDFS.LABEL.getIri()))
+                                .property(p->p.setIri(RDF.TYPE.getIri())))
         ));
     }
 
