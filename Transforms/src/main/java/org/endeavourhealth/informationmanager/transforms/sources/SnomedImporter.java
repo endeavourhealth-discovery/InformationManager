@@ -276,7 +276,7 @@ public class SnomedImporter implements TTImport {
                       case "0" -> c.addObject(IM.SUBSUMED_BY, TTIriRef.iri(SN + supertype));
                       case "1" -> c.addObject(IM.USUALLY_SUBSUMED_BY, TTIriRef.iri(SN + supertype));
                       case "2" -> c.addObject(IM.APPROXIMATE_SUBSUMED_BY, TTIriRef.iri(SN + supertype));
-                      case "3" -> c.addObject(IM.SUBSUMED_BY, TTIriRef.iri(SN + supertype));
+                      case "3" -> c.addObject(IM.MULTIPLE_SUBSUMED_BY, TTIriRef.iri(SN + supertype));
                     }
                   }
                   line = reader.readLine();
