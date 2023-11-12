@@ -15,7 +15,10 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.*;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
@@ -59,6 +62,9 @@ public class EMISImport implements TTImport {
         document = manager.createDocument(IM.GRAPH_EMIS.getIri());
         document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(), "EMIS original codes",
             "The EMIS code scheme including codes directly matched to UK Snomed-CT, and EMIS unmatched local codes."));
+
+        checkAndUnzip(config.getFolder());
+
         System.out.println("importing emis code file");
         populateRemaps(remaps);
         addEMISTopLevel();
@@ -74,6 +80,37 @@ public class EMISImport implements TTImport {
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
         }
+    }
+
+    private void checkAndUnzip(String folder) throws IOException {
+        List<String> zippedFiles=Arrays.asList("emis_codes", "EMISDrugs");
+        LOG.info("Checking for EMIS file updates");
+
+        for(String filename : zippedFiles) {
+            Path zipFile = ImportUtils.findFileForId(folder, ".*\\\\EMIS\\\\" + filename + ".zip");
+            FileTime zipDate = getFileTimestamp(zipFile);
+            LOG.info("{} - {}", zipFile, zipDate);
+
+            Path txtFile = null;
+            FileTime txtDate = null;
+            try {
+                txtFile = ImportUtils.findFileForId(folder, ".*\\\\EMIS\\\\" + filename + ".txt");
+                txtDate = getFileTimestamp(txtFile);
+                LOG.info("{} - {}", txtFile, txtDate);
+            } catch (Exception e) {
+                LOG.info("No text file found");
+            }
+
+           if (null == txtFile || null == txtDate || zipDate.compareTo(txtDate) > 0) {
+               LOG.info("Extracting updated {}...", zipFile);
+               ImportUtils.unzipArchive(zipFile.toString(), zipFile.getParent().toString());
+           }
+        }
+    }
+
+    private FileTime getFileTimestamp(Path file) throws IOException {
+        BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);
+        return attr.lastModifiedTime();
     }
 
     private void importLocalCodeMaps(String folder) throws IOException {
