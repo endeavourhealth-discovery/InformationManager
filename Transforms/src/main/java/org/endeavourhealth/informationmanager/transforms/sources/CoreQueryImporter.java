@@ -359,8 +359,7 @@ public class CoreQueryImporter implements TTImport {
             .property(pv -> pv
               .setBool(Bool.or)
               .property(pv1->pv1
-                .setIri(IM.NAMESPACE+"endDate")
-                .setNull(true))
+                .setIri(IM.NAMESPACE+"endDate"))
               .property(pv1->pv1
                 .setIri(IM.NAMESPACE+"endDate")
                 .setOperator(Operator.gt)
@@ -441,7 +440,6 @@ public class CoreQueryImporter implements TTImport {
             .property(pv->pv
               .setBool(Bool.or)
               .property(pv1->pv1
-                .setNull(true)
                 .setIri(IM.NAMESPACE+"endDate"))
               .property(pv1->pv1
                 .setIri(IM.NAMESPACE+"endDate")
