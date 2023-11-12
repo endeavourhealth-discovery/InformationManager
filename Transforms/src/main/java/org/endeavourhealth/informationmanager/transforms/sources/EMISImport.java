@@ -1,9 +1,9 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -27,6 +27,7 @@ public class EMISImport implements TTImport {
     private static final String[] emisCodes = {".*\\\\EMIS\\\\emis_codes.txt"};
     private static final String[] allergies = {".*\\\\EMIS\\\\Allergies.json"};
     private static final String[] drugIds = {".*\\\\EMIS\\\\EMISDrugs.txt"};
+    private static final String[] localCodeMaps = {".*\\\\EMIS\\\\LocalCodeMaps.txt"};
     private final Map<String, TTEntity> codeIdToEntity = new HashMap<>();
     private final Map<String,TTEntity> oldCodeToEntity = new HashMap<>();
     private final Map<String, TTEntity> conceptIdToEntity = new HashMap<>();
@@ -56,13 +57,14 @@ public class EMISImport implements TTImport {
     public void importData(TTImportConfig config) throws Exception {
         System.out.println("Retrieving filed snomed codes");
         document = manager.createDocument(IM.GRAPH_EMIS.getIri());
-        document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(), "EMIS (including Read) codes",
-            "The EMIS local code scheme and graph including Read 2 and EMIS local codes."));
+        document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(), "EMIS original codes",
+            "The EMIS code scheme including codes directly matched to UK Snomed-CT, and EMIS unmatched local codes."));
         System.out.println("importing emis code file");
         populateRemaps(remaps);
         addEMISTopLevel();
         importEMISCodes(config.getFolder());
         importDrugs(config.getFolder());
+        importLocalCodeMaps(config.getFolder());
         manager.createIndex();
 
         allergyMaps(config.getFolder());
@@ -74,6 +76,49 @@ public class EMISImport implements TTImport {
         }
     }
 
+    private void importLocalCodeMaps(String folder) throws IOException {
+        LOG.info("Adding local code maps");
+        Path file =  ImportUtils.findFileForId(folder, localCodeMaps[0]);
+        Set<String> activeConcepts= new HashSet<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            String line = reader.readLine();
+            line=reader.readLine();
+            int count=0;
+            while (line != null && !line.isEmpty()) {
+                count++;
+                String[] fields = line.split("\t");
+                String emisCodeId = fields[0];
+                String snomedCode = fields[1];
+                String status = fields[2];
+                String descid="";
+                String name="";
+                if (fields.length>4) {
+                    descid = fields[3];
+                    name = fields[4];
+                }
+                if (status.equals(IM.INACTIVE.getIri()) && activeConcepts.contains(emisCodeId))
+                    continue;
+
+                TTEntity emisEntity = codeIdToEntity.get(emisCodeId);
+                emisEntity.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + snomedCode));
+                if (status.equals(IM.ACTIVE.getIri()))
+                    activeConcepts.add(emisCodeId);
+                if (!descid.equals("")) {
+                    setDescriptionId(descid, name, emisEntity);
+                }
+                line = reader.readLine();
+            }
+        }
+    }
+
+    private void setDescriptionId(String descid, String name, TTEntity emisEntity) {
+        if (notFoundValue(emisEntity, IM.HAS_TERM_CODE, IM.CODE, descid)) {
+            TTNode termCode = new TTNode();
+            termCode.set(IM.CODE, TTLiteral.literal(descid));
+            termCode.set(RDFS.LABEL, TTLiteral.literal(name));
+            emisEntity.addObject(IM.HAS_TERM_CODE, termCode);
+        }
+    }
 
 
     private void importDrugs(String folder) throws IOException {
@@ -83,16 +128,30 @@ public class EMISImport implements TTImport {
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
                 String[] fields = line.split("\t");
-                String descid = fields[0];
+                String codeId = fields[0];
                 String snomed = fields[1];
                 String term = fields[2];
+                TTEntity emisConcept= codeIdToEntity.get(codeId);
+                if (emisConcept==null){
+                    emisConcept= new TTEntity()
+                      .setIri(EMIS+codeId)
+                      .setScheme(TTIriRef.iri(EMIS))
+                      .setName(term)
+                      .set(IM.CODE_ID,TTLiteral.literal(codeId));
+                    TTEntity mainConcept= termToEmis.get(term);
+                    String code=codeId;
+                    if (mainConcept!=null)
+                        code= mainConcept.getCode();
+                    emisConcept.setCode(code);
+                    document.addEntity(emisConcept);
+                }
+                if (emisConcept.getStatus()==null){
+                    emisConcept.setStatus(snomed.equals("NULL") ?IM.INACTIVE: IM.ACTIVE);
+                }
+                if (notFoundValue(emisConcept,IM.HAS_TERM_CODE,IM.CODE,codeId))
+                    TTManager.addTermCode(emisConcept, null, codeId);
                 if (!snomed.equals("NULL")) {
-                    TTEntity emisConcept = snomedToEmis.get(snomed);
-                    if (emisConcept == null)
-                        emisConcept = termToEmis.get(term);
-                    if (emisConcept != null)
-                        if (notFoundValue(emisConcept,IM.HAS_TERM_CODE,IM.CODE,descid))
-                            TTManager.addTermCode(emisConcept, null, descid);
+                    emisConcept.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
                 }
                 line = reader.readLine();
             }
@@ -147,14 +206,33 @@ public class EMISImport implements TTImport {
 
 
     private void setEmisHierarchy() {
+        LOG.info("Creating local code subclasses of core");
         for (Map.Entry<String, List<String>> entry : parentMap.entrySet()) {
             String child = entry.getKey();
             TTEntity childEntity = codeIdToEntity.get(child);
             if (childEntity.get(IM.MATCHED_TO) == null) {
-                List<String> parents = entry.getValue();
-                for (String parentId : parents) {
-                    TTEntity parentEntity = codeIdToEntity.get(parentId);
-                    childEntity.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(parentEntity.getIri()));
+                Set<String> coreParents= new HashSet<>();
+                getCoreParents(child,childEntity,coreParents);
+                if (!coreParents.isEmpty()){
+                    for (String parent:coreParents){
+                        childEntity.addObject(IM.LOCAL_SUBCLASS_OF,TTIriRef.iri(parent));
+                    }
+                }
+            }
+        }
+    }
+    private void getCoreParents(String child,TTEntity childEntity,Set<String> coreParents){
+        if (parentMap.get(child)!=null) {
+            for (String parentId : parentMap.get(child)) {
+                TTEntity parentEntity = codeIdToEntity.get(parentId);
+                if (parentEntity.get(IM.MATCHED_TO) != null) {
+                    for (TTValue parent : parentEntity.get(IM.MATCHED_TO).getElements()) {
+                        coreParents.add(parent.asIriRef().getIri());
+                    }
+                }
+                else {
+                    String parent=parentEntity.get(IM.CODE_ID).asLiteral().getValue();
+                    getCoreParents(parent,parentEntity,coreParents);
                 }
             }
         }
@@ -182,14 +260,12 @@ public class EMISImport implements TTImport {
                 String[] fields = line.split("\t");
                 count++;
                 if (count % 100000== 0)
-                    LOG.info("Written {} entities for "+ document.getGraph().getIri(), count);
+                    LOG.info("Imported {} emis codes for "+ document.getGraph().getIri(), count);
 
                  EmisCode ec = new EmisCode();
                 ec.setCodeId(fields[0]);
                 ec.setTerm(fields[2]);
                 ec.setCode(fields[3]);
-                if (ec.getCode().equals("C107-99"))
-                    System.out.println(ec.getCode());
                 ec.setConceptId(fields[4]);
                 if (isBlackList(fields[4])) {
                     ec.setConceptId(fields[3].replaceAll("\\^","").replaceAll("-","_"));
@@ -221,7 +297,6 @@ public class EMISImport implements TTImport {
           //  System.out.println("rfc concept");
         String descid = ec.getDescid();
         String parentId = ec.getParentId();
-        String snomedDescription= ec.snomedDescripton;
         if (parentId!=null)
             if (parentId.equals("")|parentId.equals("NULL"))
                 parentId = null;
@@ -248,12 +323,7 @@ public class EMISImport implements TTImport {
             document.addEntity(emisConcept);
         }
         emisConcept.addObject(IM.CODE_ID,codeId);
-        if (notFoundValue(emisConcept,IM.HAS_TERM_CODE,IM.CODE,descid)){
-            TTNode termCode= new TTNode();
-            termCode.set(IM.CODE,TTLiteral.literal(descid));
-            termCode.set(RDFS.LABEL,TTLiteral.literal(name));
-            emisConcept.addObject(IM.HAS_TERM_CODE,termCode);
-        }
+        setDescriptionId(descid, name, emisConcept);
 
         oldCodeToEntity.put(code,emisConcept);
         termToEmis.put(term, emisConcept);
@@ -276,6 +346,7 @@ public class EMISImport implements TTImport {
                 emisConcept.set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS + "EMISOrphanCodes")));
             }
             else if (parentId!=null){
+                emisConcept.addObject(IM.IS_CHILD_OF,TTIriRef.iri(EMIS+ parentId));
                 parentMap.computeIfAbsent(codeId, k -> new ArrayList<>());
                 parentMap.get(codeId).add(parentId);
             }
@@ -348,7 +419,7 @@ public class EMISImport implements TTImport {
 
 
     public void validateFiles(String inFolder){
-         ImportUtils.validateFiles(inFolder,emisCodes,allergies);
+         ImportUtils.validateFiles(inFolder,emisCodes,allergies,localCodeMaps);
     }
 
     @Override

@@ -2,6 +2,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.logic.service.SetService;
 import org.endeavourhealth.imapi.model.imq.Bool;
@@ -55,23 +56,14 @@ public class CEGEthnicityImport implements TTImport {
 		spellCorrections();
 		importEthnicGroups(config.getFolder());
 
-		if (TTFilerFactory.isTransactional()){
-			new TTTransactionFiler(null).fileTransaction(document);
-		}
-		else {
-
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 				filer.fileDocument(document);
 			}
-		}
-		if (TTFilerFactory.isTransactional()){
-			new TTTransactionFiler(null).fileTransaction(nhsDocument);
-		}
-		else {
+
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 				filer.fileDocument(nhsDocument);
 			}
-		}
+
 	}
 
 

@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
@@ -18,14 +19,9 @@ public class CoreVerbImporter implements TTImport {
 		document = manager.createDocument();
 		verbs();
 		ownerships();
-		if (!TTFilerFactory.isBulk()) {
-			TTTransactionFiler filer= new TTTransactionFiler(null);
-			filer.fileTransaction(document);
-		} else {
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 				filer.fileDocument(document);
 			}
-		}
 
 	}
 

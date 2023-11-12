@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -54,15 +55,11 @@ public class CoreImporter implements TTImport {
         manager.loadDocument(path.toFile());
         TTDocument document = manager.getDocument();
         System.out.println("Filing  " + document.getGraph().getIri() + " from " + coreFile);
-        if (!TTFilerFactory.isBulk()) {
-          TTTransactionFiler filer= new TTTransactionFiler(null);
-          filer.fileTransaction(document);
-        } else {
           try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
           }
         }
-      }
+
    }
 
 

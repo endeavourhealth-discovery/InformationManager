@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.model.iml.ConceptSet;
 import org.endeavourhealth.imapi.model.iml.Entity;
 import org.endeavourhealth.imapi.model.iml.ModelDocument;
@@ -54,14 +55,9 @@ public class CEGImporter implements TTImport {
 		 CEGEthnicityImport ethnicImport= new CEGEthnicityImport();
 		ethnicImport.importData(config);
 		createFolders(document);
-
-		if (TTFilerFactory.isTransactional()){
-			new TTTransactionFiler(null).fileTransaction(document);
-		}
-		else {
-			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 				filer.fileDocument(document);
-			}
+
 		}
 
 		//Import queries
@@ -83,15 +79,10 @@ public class CEGImporter implements TTImport {
 					document.addEntity(ttSet);
 				}
 			}
-			if (TTFilerFactory.isTransactional()) {
-				new TTTransactionFiler(null).fileTransaction(document);
-			}
-			else {
-				try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 					filer.fileDocument(document);
 				}
 			}
-		}
 	}
 
 
@@ -200,14 +191,9 @@ public class CEGImporter implements TTImport {
 						}
 					}
 				  output(fileEntry,qDocument,document);
-					if (TTFilerFactory.isTransactional()){
-						new TTTransactionFiler(null).fileTransaction(document);
-					}
-					else {
 						try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 							filer.fileDocument(document);
 						}
-					}
 					this.conceptSets.addAll(converter.getValueSets().values());
 					}
 				}

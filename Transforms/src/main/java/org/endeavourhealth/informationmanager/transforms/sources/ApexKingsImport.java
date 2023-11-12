@@ -1,6 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -38,11 +39,6 @@ public class ApexKingsImport implements TTImport {
             importR2Matches();
             setTopLevel();
             importApexKings(config.getFolder());
-            if (TTFilerFactory.isTransactional()) {
-                new TTTransactionFiler(null).fileTransaction(document);
-                return;
-            }
-
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
             }
