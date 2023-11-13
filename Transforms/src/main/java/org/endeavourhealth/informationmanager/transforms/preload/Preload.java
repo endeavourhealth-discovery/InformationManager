@@ -4,6 +4,7 @@ import org.apache.http.HttpStatus;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
+import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -138,7 +139,7 @@ public class Preload {
         try ( TTImport deltaImporter = new DeltaImporter()) {
             deltaImporter.importData(cfg);
         }
-
+        new RangeInheritor().inheritRanges(null);
 
         LOG.info("expanding value sets");
         new SetExpander().expandAllSets();
