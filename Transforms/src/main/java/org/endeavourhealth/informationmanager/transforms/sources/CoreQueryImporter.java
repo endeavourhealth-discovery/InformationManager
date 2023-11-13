@@ -656,7 +656,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setBool(Bool.or)
                                 .property(p->p
                                         .setIri(IM.CONTENT_TYPE.getIri())
-                                        .isNull()
+                                        .setIsNull(true)
                                 )
                                 .property(p->p
                                         .setIri(IM.CONTENT_TYPE.getIri())
