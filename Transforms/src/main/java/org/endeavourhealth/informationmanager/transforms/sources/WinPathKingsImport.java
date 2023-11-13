@@ -37,10 +37,6 @@ public class WinPathKingsImport implements TTImport {
             setTopLevel();
             importR2Matches();
             importWinPathKings(config.getFolder());
-            if (TTFilerFactory.isTransactional()) {
-                new TTTransactionFiler(null).fileTransaction(document);
-                return;
-            }
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
             }

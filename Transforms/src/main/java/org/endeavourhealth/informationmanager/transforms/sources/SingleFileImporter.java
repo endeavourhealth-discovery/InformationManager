@@ -1,9 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTFilerException;
-import org.endeavourhealth.imapi.filer.TTImport;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
-import org.endeavourhealth.imapi.filer.TTTransactionFiler;
+import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -31,8 +28,8 @@ public class SingleFileImporter implements TTImport{
 		try (TTManager manager= new TTManager()) {
             manager.loadDocument(new File(ttImportConfig.getFolder().replaceAll("%", " ")));
             manager.setDocument(generateInferred(manager.getDocument()));
-            TTTransactionFiler filer = new TTTransactionFiler();
-            filer.fileTransaction(manager.getDocument());
+            TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
+            filer.fileDocument(manager.getDocument());
         }
 	}
 

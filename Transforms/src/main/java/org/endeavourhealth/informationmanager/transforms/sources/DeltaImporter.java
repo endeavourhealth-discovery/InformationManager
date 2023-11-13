@@ -1,11 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTFilerException;
-import org.endeavourhealth.imapi.filer.TTImport;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
-import org.endeavourhealth.imapi.filer.TTTransactionFiler;
-
-import java.io.IOException;
+import org.endeavourhealth.imapi.filer.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,8 +11,9 @@ public class DeltaImporter implements TTImport {
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
 		Path file =  ImportUtils.findFileForId(config.getFolder(), delta[0]);
-		TTTransactionFiler filer= new TTTransactionFiler(file.toString());
-		filer.fileDeltas();
+		try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
+			filer.fileDeltas(file.toString());
+		}
 	}
 
 	@Override

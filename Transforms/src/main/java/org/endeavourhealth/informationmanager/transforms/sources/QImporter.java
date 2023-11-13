@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.rdf4j.TTTransactionFiler;
 import org.endeavourhealth.imapi.logic.service.SearchService;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
@@ -68,14 +70,10 @@ public class QImporter implements TTImport {
 
 		LOG.info("Deleting q code groups..");
 		new SearchService().updateIM(qr);
-		if (!TTFilerFactory.isBulk()) {
-			TTTransactionFiler filer= new TTTransactionFiler(null);
-			filer.fileTransaction(document);
-		} else {
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 				filer.fileDocument(document);
 			}
-		}
+
 	}
 
 	private void queryQRisk3() throws JsonProcessingException {

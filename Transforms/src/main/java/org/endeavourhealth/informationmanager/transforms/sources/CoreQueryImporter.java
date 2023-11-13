@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.model.cdm.ProvActivity;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -44,15 +45,10 @@ public class CoreQueryImporter implements TTImport {
         searchAllowableSubclass();
         searchAllowableContainedIn();
         output(document,config.getFolder());
-        if (!TTFilerFactory.isBulk()) {
-            TTTransactionFiler filer= new TTTransactionFiler(null);
-            filer.fileTransaction(document);
-        }
-        else {
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
             }
-        }
+
     }
 
     private void objectPropertyRangeSuggestions() throws JsonProcessingException {
@@ -364,8 +360,7 @@ public class CoreQueryImporter implements TTImport {
             .property(pv -> pv
               .setBool(Bool.or)
               .property(pv1->pv1
-                .setIri(IM.NAMESPACE+"endDate")
-                .setIsNull(true))
+                .setIri(IM.NAMESPACE+"endDate"))
               .property(pv1->pv1
                 .setIri(IM.NAMESPACE+"endDate")
                 .setOperator(Operator.gt)
@@ -446,7 +441,6 @@ public class CoreQueryImporter implements TTImport {
             .property(pv->pv
               .setBool(Bool.or)
               .property(pv1->pv1
-                .setIsNull(true)
                 .setIri(IM.NAMESPACE+"endDate"))
               .property(pv1->pv1
                 .setIri(IM.NAMESPACE+"endDate")
