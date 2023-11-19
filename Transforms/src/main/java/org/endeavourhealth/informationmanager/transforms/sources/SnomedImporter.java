@@ -441,6 +441,8 @@ public class SnomedImporter implements TTImport {
           if (FULLY_SPECIFIED.equals(fields[6]) || c.getName() == null) {
             c.setName(fields[7]);
           }
+          if (fields[0].equals("2967881014"))
+            System.out.println(line);
           if (c.getStatus().equals(IM.ACTIVE)) {
             if (ACTIVE.equals(fields[2]))
               TTManager.addTermCode(c, fields[7], fields[0], IM.ACTIVE);
