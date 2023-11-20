@@ -31,6 +31,7 @@ public class Preload {
     private static final Logger LOG = LoggerFactory.getLogger(Preload.class);
 
     public static void main(String[] args) throws Exception {
+        boolean skipBulk= false;
         LOG.info("Running Preload...");
         if (args.length < 4) {
             LOG.error("Insufficient parameters supplied:");
@@ -59,18 +60,11 @@ public class Preload {
                 graphdbCommand = arg.split("=")[1];
             else if (args[i].contains("test="))
                 ImportApp.testDirectory = args[i].substring(args[i].lastIndexOf("=") + 1);
+            else if (args[i].toLowerCase().contains("skipbulk"))
+                cfg.setSkipBulk(true);
             else
                 LOG.error("Unknown parameter " + args[i]);
         }
-        /*
-
-        LOG.info("Checking db server...");
-        if (pingGraphServer()) {
-            LOG.error("Graph db server should be shut down before running.");
-            System.exit(-1);
-        }
-
-         */
 
         LOG.info("Starting import...");
         importData(cfg, graphdbCommand);
@@ -79,7 +73,6 @@ public class Preload {
     private static void importData(TTImportConfig cfg, String graphdb) throws Exception {
         LOG.info("Validating config...");
         validateGraphConfig(cfg.getFolder());
-
 
         LOG.info("Validating data files...");
         TTImportByType importer = new Importer()
@@ -101,31 +94,33 @@ public class Preload {
             .validateByType(IM.GRAPH_IM1, cfg.getFolder())
           //.validateByType(IM.GRAPH_CPRD_MED, cfg.getFolder())
             .validateByType(TTIriRef.iri(QR.NAMESPACE),cfg.getFolder());
+        if (!cfg.isSkipBulk()) {
 
-        LOG.info("Importing files...");
-        importer.importByType(IM.GRAPH_DISCOVERY, cfg);
-        importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
-        importer.importByType(IM.GRAPH_QUERY, cfg);
-        importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
-        importer.importByType(IM.GRAPH_EMIS, cfg);
-        importer.importByType(IM.GRAPH_TPP, cfg);
-        importer.importByType(IM.GRAPH_OPCS4, cfg);
-        importer.importByType(IM.GRAPH_ICD10, cfg);
-        importer.importByType(IM.GRAPH_VISION, cfg);
-        importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
-        importer.importByType(IM.GRAPH_ODS, cfg);
-        importer.importByType(IM.GRAPH_NHS_TFC, cfg);
-        importer.importByType(IM.GRAPH_IM1, cfg);
-        //importer.importByType(IM.GRAPH_CPRD_MED, cfg);
+            LOG.info("Importing files...");
+            importer.importByType(IM.GRAPH_DISCOVERY, cfg);
+            importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
+            importer.importByType(IM.GRAPH_QUERY, cfg);
+            importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
+            importer.importByType(IM.GRAPH_EMIS, cfg);
+            importer.importByType(IM.GRAPH_TPP, cfg);
+            importer.importByType(IM.GRAPH_OPCS4, cfg);
+            importer.importByType(IM.GRAPH_ICD10, cfg);
+            importer.importByType(IM.GRAPH_VISION, cfg);
+            importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
+            importer.importByType(IM.GRAPH_ODS, cfg);
+            importer.importByType(IM.GRAPH_NHS_TFC, cfg);
+            importer.importByType(IM.GRAPH_IM1, cfg);
+            //importer.importByType(IM.GRAPH_CPRD_MED, cfg);
 
 
-        LOG.info("Generating closure...");
-        TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
-        closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
+            LOG.info("Generating closure...");
+            TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
+            closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
 
-        LOG.info("Preparing bulk filer...");
-        TTBulkFiler.createRepository();
-        startGraph(graphdb);
+            LOG.info("Preparing bulk filer...");
+            TTBulkFiler.createRepository();
+            startGraph(graphdb);
+        }
 
 
 

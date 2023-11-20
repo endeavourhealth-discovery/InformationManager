@@ -1,5 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.rdf4j.common.text.StringUtil;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
@@ -23,6 +25,7 @@ import java.util.zip.DataFormatException;
 public class SnomedImporter implements TTImport {
 
    private Map<String, TTEntity> conceptMap;
+  private Map<String, TTEntity> refsetMap;
    private final ECLToIML eclConverter = new ECLToIML();
    private TTDocument document;
    private Integer counter;
@@ -136,7 +139,6 @@ public class SnomedImporter implements TTImport {
           importVmp(config.getFolder());
 
           addSpecials(document);
-          conceptMap.clear();
           try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
               filer.fileDocument(document);
           }
@@ -225,8 +227,11 @@ public class SnomedImporter implements TTImport {
           String[] fields = line.split("\t");
           String refset= fields[4];
           String clusterTerm=fields[0];
+          String normalTerm= StringUtils.capitalize(fields[1]);
+          normalTerm=normalTerm.split(" codes")[0]+" (primary care value set)";
           String imTerm = clusterTerm +" code cluster";
           TTEntity c= conceptMap.get(refset);
+          c.set(IM.PREFERRED_NAME,TTLiteral.literal(normalTerm));
           if (!hasTermCode(c,imTerm)) {
             c.addObject(IM.HAS_TERM_CODE, new TTNode().set(RDFS.LABEL, TTLiteral.literal(imTerm)));
             c.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(clusterFolder.getIri()));
@@ -373,6 +378,7 @@ public class SnomedImporter implements TTImport {
 
     private void importRefsetFiles(String path) throws IOException {
       int i = 0;
+      refsetMap= new HashMap<>();
       for (String refsetFile : refsets) {
          List<Path> paths =  ImportUtils.findFilesForId(path, refsetFile);
          Path file = paths.get(0);
@@ -396,15 +402,21 @@ public class SnomedImporter implements TTImport {
         String[] fields = line.split("\t");
         if (fields[2].equals(ACTIVE)) {
           TTEntity c = conceptMap.get(fields[4]);
-          if (c == null) {
+         // if (fields[4].equals("999035921000230109"))
+           // System.out.println(fields[4]);
+          if (refsetMap.get(fields[4])==null) {
+            refsetMap.put(fields[4], c);
+            document.addEntity(c);
+          }
+         /* if (c == null) {
             c = new TTEntity().setIri(SNOMED.NAMESPACE + fields[4]);
             c.setType(new TTArray().add(IM.CONCEPT_SET));
             conceptMap.put(fields[4], c);
             document.addEntity(c);
           }
+          */
           c.addObject(IM.HAS_MEMBER, TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
         }
-
     }
 
     private void importDescriptionFiles(String path) throws IOException {
@@ -433,21 +445,29 @@ public class SnomedImporter implements TTImport {
         // if (fields[4].equals("900000000000455006"))
         // System.out.println(fields[7]);
         TTEntity c = conceptMap.get(fields[4]);
+        String term=fields[7];
 
         if (c!=null) {
-          if (fields[7].contains("(attribute)")) {
+          if (term.contains("(attribute)")) {
             c.addType(RDF.PROPERTY);
           }
           if (FULLY_SPECIFIED.equals(fields[6]) || c.getName() == null) {
             c.setName(fields[7]);
           }
-          if (fields[0].equals("2967881014"))
-            System.out.println(line);
           if (c.getStatus().equals(IM.ACTIVE)) {
             if (ACTIVE.equals(fields[2]))
-              TTManager.addTermCode(c, fields[7], fields[0], IM.ACTIVE);
+              TTManager.addTermCode(c, term, fields[0], IM.ACTIVE);
             else
-              TTManager.addTermCode(c, fields[7], fields[0], IM.INACTIVE);
+              TTManager.addTermCode(c, term, fields[0], IM.INACTIVE);
+          }
+          if (term.contains(" General practice data extraction - ")) {
+            term = term.split(" General practice data extraction - ")[1];
+            if (term.contains(" simple reference set")) {
+              term = term.split(" simple reference set")[0];
+              term = StringUtils.capitalize(term) + " (NHS GP value set)";
+              c.set(IM.PREFERRED_NAME,TTLiteral.literal(term));
+              TTManager.addTermCode(c, term, fields[0]);
+            }
           }
         }
     }

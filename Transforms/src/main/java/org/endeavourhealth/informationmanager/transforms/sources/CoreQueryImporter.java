@@ -32,6 +32,7 @@ public class CoreQueryImporter implements TTImport {
            allowableSubTypes();
            currentGMS();
            currentGMSAsMatch();
+           agedOver18AsMatch();
            gpGMSRegisteredPractice();
            deleteSets();
            testQuery();
@@ -52,6 +53,32 @@ public class CoreQueryImporter implements TTImport {
        }
 
     }
+
+    private void agedOver18AsMatch() throws JsonProcessingException {
+            TTEntity qry = new TTEntity().addType(IM.MATCH_CLAUSE);
+            qry.set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
+            qry.set(IM.WEIGHTING,TTLiteral.literal(10000));
+            qry.set(SHACL.ORDER,3);
+            qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
+            qry
+              .setIri(IM.NAMESPACE + "M_AgedOverEighteen")
+              .setName("Aged over 18 (feature)")
+              .setDescription("Tests wether a person is over 18 years of age.");
+            Match over18= getOver18();
+            qry.set(IM.DEFINITION, TTLiteral.literal(over18));
+            document.addEntity(qry);
+    }
+
+    private Match getOver18() {
+        return new Match()
+          .setName("Aged over 18 years")
+          .property(p->p
+            .setIri(IM.NAMESPACE+"age")
+            .setUnit("YEAR")
+            .setOperator(Operator.gte)
+            .setValue("18"));
+    }
+
 
     private void objectPropertyRangeSuggestions() throws JsonProcessingException {
         TTEntity query= getQuery("ObjectPropertyRangeSuggestions","Range suggestions for object property","takes account of the data model shape that the property is part of");
@@ -192,17 +219,19 @@ public class CoreQueryImporter implements TTImport {
         document.addEntity(query);
     }
 
+
     private void getActiveDiabetes() throws JsonProcessingException {
         TTEntity entity = new TTEntity().addType(IM.MATCH_CLAUSE)
           .set(IM.RETURN_TYPE,TTIriRef.iri(IM.NAMESPACE+"Patient"));
         entity.setIri(IM.NAMESPACE+"M_ActiveDiabetes");
-        entity.setName("Active Diabetes");
+        entity.setName("Active Diabetes (Latest entry for diabetes not followed by a resolution)");
         entity.setDescription("Entry for diabetes not followed by a diabetes resolved entry");
         entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"M_CommonClauses"));
         entity.set(SHACL.ORDER,2);
         entity.set(IM.DEFINITION,TTLiteral.literal(getActiveDiabetesMatch()));
         document.addEntity(entity);
     }
+
 
     private Match getActiveDiabetesMatch(){
         return new Match()
@@ -283,7 +312,7 @@ public class CoreQueryImporter implements TTImport {
           .match(m->m
             .property(p->p
               .setIri(IM.NAMESPACE+"observation")
-              .match(n->n.setTypeOf(IM.NAMESPACE+"Observation")
+              .match(m1->m1.setTypeOf(IM.NAMESPACE+"Observation")
                 .setVariable("latestBP")
                 .setBool(Bool.and)
                 .property(ww->ww
@@ -309,40 +338,41 @@ public class CoreQueryImporter implements TTImport {
               .addProperty(new OrderDirection()
                 .setIri(IM.NAMESPACE+"effectiveDate")
                 .setDirection(Order.descending))
-              .setLimit(1)))))
-          .match(m->m
-            .setVariable("highBPReading")
-            .setNodeRef("latestBP")
-            .setBool(Bool.or)
-            .match(m1->m1
+              .setLimit(1))
+            .then(m2->m2
               .setBool(Bool.and)
-              .property(w->w
-                .setIri(IM.NAMESPACE+"concept")
-                .addIs(new Node()
-                  .setIri(SNOMED.NAMESPACE+"271649006")
-                  .setDescendantsOrSelfOf(true)
-                  .setName("Systolic blood pressure"))
-                .setValueLabel("Office blood pressure"))
-              .property(w->w
+              .match(m3->m3
+                .setVariable("highBPReading")
+                .setBool(Bool.or)
+                .match(m4->m4
+                  .setBool(Bool.and)
+                  .property(w->w
+                    .setIri(IM.NAMESPACE+"concept")
+                    .addIs(new Node()
+                      .setIri(SNOMED.NAMESPACE+"271649006")
+                    .setDescendantsOrSelfOf(true)
+                    .setName("Systolic blood pressure"))
+                    .setValueLabel("Office blood pressure"))
+                  .property(w->w
+                    .setIri(IM.NAMESPACE+"numericValue")
+                    .setOperator(Operator.gt)
+                    .setValue("140")))
+              .match(m4->m4
+                .setBool(Bool.and)
+                .property(w->w
+                  .setIri(IM.NAMESPACE+"concept")
+                  .addIs(new Node()
+                    .setIri(IM.CODE_SCHEME_EMIS.getIri()+"1994021000006104")
+                        .setDescendantsOrSelfOf(true)
+                    .setName("Home systolic blood pressure"))
+                    .setValueLabel("Home blood pressure"))
+               .property(w->w
                 .setIri(IM.NAMESPACE+"numericValue")
                 .setOperator(Operator.gt)
-                .setValue("140")))
-            .match(m1->m1
-              .setBool(Bool.and)
-              .property(w->w
-                .setIri(IM.NAMESPACE+"concept")
-                .addIs(new Node()
-                  .setIri(IM.CODE_SCHEME_EMIS.getIri()+"1994021000006104")
-                  .setDescendantsOrSelfOf(true)
-                  .setName("Home systolic blood pressure"))
-                .setValueLabel("Home blood pressure"))
-              .property(w->w
-                .setIri(IM.NAMESPACE+"numericValue")
-                .setOperator(Operator.gt)
-                .setValue("130"))))
+                .setValue("130"))))))))
           .match(m->m
             .setExclude(true)
-            .property(p->p.setIri(IM.NAMESPACE+"observation")
+            .property(w->w.setIri(IM.NAMESPACE+"observation")
               .match(n->n.setTypeOf(IM.NAMESPACE+"Observation")
             .setBool(Bool.and)
             .property(inv->inv
@@ -404,7 +434,7 @@ public class CoreQueryImporter implements TTImport {
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
         qry
           .setIri(IM.NAMESPACE + "M_RegisteredGMS")
-          .setName("Tests whether a patient is registered GMS services on the reference date")
+          .setName("Registered for GMS services on the reference date")
           .setDescription("For any registration period,a registration start date before the reference date and no end date," +
             "or an end date after the reference date.");
         Match gmsMatch= getGMSMatch();
