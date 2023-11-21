@@ -1,13 +1,18 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class LoadDataTester {
+    private static final Logger LOG = LoggerFactory.getLogger(LoadDataTester.class);
+
     public static void testLoadData(String outpath, boolean secure) throws Exception {
         /*
-        System.out.println("Testing LOAD DATA configuration.");
+        LOG.info("Testing LOAD DATA configuration.");
 
         String filename = outpath + "/test.tst";
 
-        System.out.println("Generating test file(" + filename + ")");
+        LOG.info("Generating test file({})", filename);
         try (FileWriter fw = new FileWriter(filename)) {
             fw.write("test\n");
         }
@@ -39,7 +44,7 @@ public class LoadDataTester {
             try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
                 stmt.setString(1, filename);
                 stmt.executeUpdate();
-                System.out.println("LOAD DATA correctly configured.");
+                LOG.info("LOAD DATA correctly configured.");
             } catch (Exception e) {
                 String withness = secure ? "without" : "with";
                 System.err.println("Incorrect LOAD DATA config, try " + withness + " secure flag and/or 'allowLoadLocalInfile=true' in JDBC url");

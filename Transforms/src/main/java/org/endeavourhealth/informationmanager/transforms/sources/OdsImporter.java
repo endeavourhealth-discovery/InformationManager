@@ -4,11 +4,13 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
+import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.ODS;
+import org.endeavourhealth.imapi.vocabulary.ORG;
+
+import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,66 +25,304 @@ import static org.endeavourhealth.imapi.model.tripletree.TTLiteral.literal;
 
 public class OdsImporter implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(OdsImporter.class);
-    private static final String[] organisationFiles = {
-        ".*\\\\TRUD\\\\ODS\\\\.*\\\\Organisation_Details.csv"
-    };
-
-    List<String> organisationCodes = List.of("RQX42", "8HL46", "5LA19", "RQM93", "RAX0A", "NV178", "RF4", "8HN02");
+    private static final String CODING_SYSTEM = ".*\\\\TRUD\\\\ODS\\\\.*\\\\Code_System_Details.csv";
+    private static final String ORGANISATION_DETAILS = ".*\\\\TRUD\\\\ODS\\\\.*\\\\Organisation_Details.csv";
+    private static final String ORGANISATION_RELATIONSHIPS = ".*\\\\TRUD\\\\ODS\\\\.*\\\\Relationship_Details.csv";
+    private static final String ORGANISATION_ROLES = ".*\\\\TRUD\\\\ODS\\\\.*\\\\Role_Details.csv";
 
     private List<String> fieldIndex;
     private String[] fieldData;
-    private final TTManager manager = new TTManager();
+    private final Map<String, TTEntity> entityIndex = new HashMap<>();
 
     public void validateFiles(String inFolder) {
-        ImportUtils.validateFiles(inFolder, organisationFiles);
+        ImportUtils.validateFiles(inFolder, new String[]{CODING_SYSTEM, ORGANISATION_DETAILS, ORGANISATION_RELATIONSHIPS, ORGANISATION_ROLES});
     }
 
-
     /**
-     * Imports the core ontology document
+     * Imports the TRUD Organisation data
      *
      * @param config import config
-     * @return TTImport object builder pattern
      * @throws Exception invalid document
      */
     @Override
     public void importData(TTImportConfig config) throws Exception {
-        LOG.info("Importing Organisation data");
+        try (TTManager manager = new TTManager();
+             TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            TTDocument doc = manager.createDocument(IM.GRAPH_ODS.getIri());
+            doc.setCrud(IM.UPDATE_ALL);
+            doc.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(), "ODS  code scheme and graph", "Official ODS code scheme and graph"));
 
+            importCodingSystem(config, doc);
+            filer.fileDocument(doc);
 
-        boolean graphCreated = false;
-        for (String orgFile : organisationFiles) {
-            try (TTManager manager = new TTManager()) {
-                TTDocument doc = manager.createDocument(IM.GRAPH_ODS.getIri());
-                doc.setCrud(IM.UPDATE_ALL);
-                if (!graphCreated) {
-                    doc.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(), "ODS  code scheme and graph", "Official ODS code scheme and graph"));
-                    graphCreated = true;
-                }
+            doc = manager.createDocument(IM.GRAPH_ODS.getIri());
+            doc.setCrud(IM.UPDATE_ALL);
+            doc.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(), "ODS  code scheme and graph", "Official ODS code scheme and graph"));
 
-                Path file = ImportUtils.findFileForId(config.getFolder(), orgFile);
+            importOrganisationData(config, doc);
+            importOrganisationRelationships(config);
+            importOrganisationRoles(config);
+            filer.fileDocument(doc);
+        }
+    }
 
-                LOG.info("Processing organisations in {}", file.getFileName());
-                int i = 0;
-                try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-                    readLine(reader);
-                    processHeaders();
+    private void importCodingSystem(TTImportConfig config, TTDocument doc) throws Exception {
+        TTArray recordClassSet;
+        TTArray relationshipSet;
+        LOG.info("Importing coding systems");
 
-                    while (readLine(reader)) {
-                        processLine(doc);
-                        i++;
-                        if (i % 25000 == 0)
-                            LOG.info("Processed {} lines", i);
+        Path file = ImportUtils.findFileForId(config.getFolder(), CODING_SYSTEM);
 
-                    }
-                }
+        relationshipSet = new TTArray();
+        recordClassSet = new TTArray();
+        TTIriRef londonExtension = iri(IM.NAMESPACE + "903031000252104");
 
-                try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-                    filer.fileDocument(doc);
-                }
+        // Add/create base types
+        doc
+            .addEntity(new TTEntity(ODS.ORGANISATION_ROLE_TYPE)
+                    .setName("Organisation role")
+                    .addType(IM.CONCEPT)
+                    .setDescription("The business role the organisation performs")
+                    .setStatus(IM.ACTIVE)
+                    .set(RDFS.SUBCLASSOF, londonExtension)
+            )
+            .addEntity(new TTEntity(ODS.ORGANISATION_RELATIONSHIP)
+                    .setName("Organisation relationship")
+                    .addType(IM.CONCEPT)
+                    .setDescription("The type of the relationship with another organisation")
+                    .setStatus(IM.ACTIVE)
+                    .set(RDFS.SUBCLASSOF, londonExtension)
+            ).addEntity(new TTEntity(ODS.ORGANISATION_RECORD_CLASS)
+                    .setName("Organisation record class")
+                    .addType(IM.CONCEPT)
+                    .setDescription("The business role the organisation performs")
+                    .setStatus(IM.ACTIVE)
+                    .set(RDFS.SUBCLASSOF, londonExtension)
+            )
+
+            // Add/create value sets
+            .addEntity(new TTEntity(IM.NAMESPACE + "SET_OrganisationRole")
+                .setName("Value set - Organisation role")
+                .addType(IM.VALUESET)
+                .setDescription("Value set for Organisation (data model) / role")
+                .setStatus(IM.ACTIVE)
+                .set(IM.DEFINITION, literal("{\"match\":[{\"name\":\"Organisation role\",\"instanceOf\":{\"@id\":\"" + ODS.ORGANISATION_ROLE_TYPE + "\",\"descendantsOf\":true}}]}"))
+                .set(IM.IS_CONTAINED_IN, iri(IM.NAMESPACE + "VSET_DataModel"))
+                .set(IM.HAS_MEMBER, relationshipSet)
+            ).addEntity(new TTEntity(IM.NAMESPACE + "SET_OrganisationRelationshipType")
+                .setName("Value set - Organisation relationship")
+                .addType(IM.VALUESET)
+                .setDescription("Value set for Organisation (data model) / relationship")
+                .setStatus(IM.ACTIVE)
+                .set(IM.DEFINITION, literal("{\"match\":[{\"name\":\"Organisation role\",\"instanceOf\":{\"@id\":\"" + ODS.ORGANISATION_RELATIONSHIP + "\",\"descendantsOf\":true}}]}"))
+                .set(IM.IS_CONTAINED_IN, iri(IM.NAMESPACE + "VSET_DataModel"))
+                .set(IM.HAS_MEMBER, relationshipSet)
+            ).addEntity(new TTEntity(IM.NAMESPACE + "SET_OrganisationRecordClass")
+                .setName("Value set - Organisation record class")
+                .addType(IM.VALUESET)
+                .setDescription("Value set for Organisation (data model) / record class")
+                .setStatus(IM.ACTIVE)
+                .set(IM.DEFINITION, literal("{\"match\":[{\"name\":\"Organisation role\",\"instanceOf\":{\"@id\":\"" + ODS.ORGANISATION_RECORD_CLASS + "\",\"descendantsOf\":true}}]}"))
+                .set(IM.IS_CONTAINED_IN, iri(IM.NAMESPACE + "VSET_DataModel"))
+                .set(IM.HAS_MEMBER, recordClassSet)
+            )
+
+        ;
+
+        LOG.info("Processing coding systems in {}", file.getFileName());
+        int i = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            readLine(reader);
+            processHeaders();
+
+            while (readLine(reader)) {
+                processCodingSystemLine(doc);
+                i++;
+                if (i % 25000 == 0)
+                    LOG.info("Processed {} lines", i);
+
             }
         }
+    }
 
+    private void processCodingSystemLine(TTDocument doc) {
+        String codeSystem = fieldByName("CodeSystemName");
+        if (null == codeSystem)
+            return;
+
+        String prefix = null;
+        String suffix = null;
+
+        switch (codeSystem) {
+            case "OrganisationRecordClass":
+                prefix = ODS.ORGANISATION_RECORD_CLASS;
+                suffix = "(Organisation record class)";
+                break;
+            case "OrganisationRole":
+                prefix = ODS.ORGANISATION_ROLE_TYPE;
+                suffix = "(Organisation role)";
+                break;
+            case "OrganisationRelationship":
+                prefix = ODS.ORGANISATION_RELATIONSHIP;
+                suffix = "(Organisation relationship)";
+                break;
+            default:
+                LOG.warn("Unknown ODS code system [{}]", codeSystem);
+                break;
+        }
+
+        if (null != prefix) {
+            TTEntity concept = new TTEntity(prefix + "_" + fieldByName("Code"))
+                .addType(IM.CONCEPT)
+                .setName(fieldByName("DisplayName", true) + " " + suffix)
+                .setScheme(IM.CODE_SCHEME_ODS)
+                .setCode(fieldByName("Id"))
+                .set(RDFS.SUBCLASSOF, new TTArray().add(iri(prefix)))
+                .setStatus(IM.ACTIVE);
+            doc.addEntity(concept);
+        }
+    }
+
+    private void importOrganisationData(TTImportConfig config, TTDocument doc) throws Exception {
+        LOG.info("Importing Organisation data");
+
+        Path file = ImportUtils.findFileForId(config.getFolder(), ORGANISATION_DETAILS);
+
+        LOG.info("Processing organisations in {}", file.getFileName());
+        int i = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            readLine(reader);
+            processHeaders();
+
+            while (readLine(reader)) {
+                processOrganisationLine(doc);
+                i++;
+                if (i % 25000 == 0)
+                    LOG.info("Processed {} lines", i);
+
+            }
+        }
+    }
+
+    private void processOrganisationLine(TTDocument doc) {
+        String odsCode = fieldByName("OrganisationId");
+        String addIri = ORG.LOCATION_NAMESPACE + "ODS_" + odsCode;
+
+        TTEntity org = new TTEntity(ORG.ORGANISATION_NAMESPACE + odsCode)
+            .addType(TTIriRef.iri(IM.NAMESPACE + "Organisation"))
+            .setName(fieldByName("Name", true))
+            .setStatus("Active".equals(fieldByName("Status")) ? IM.ACTIVE : IM.INACTIVE)
+            .set(ORG.ODS_CODE, literal(odsCode))
+            .set(IM.ADDRESS, iri(addIri))
+            .set(ORG.ORGANISATION_RECORD_CLASS, iri(ODS.ORGANISATION_RECORD_CLASS + "_" + fieldByName("OrganisationRecordClass")));
+
+        addEntity(org, doc);
+
+        TTEntity add = new TTEntity(addIri)
+            .addType(IM.ADDRESS_CLASS)
+            .set(IM.ADDRESS_LINE_1, literal(fieldByName("AddrLn1", true)))
+            .set(IM.ADDRESS_LINE_2, literal(fieldByName("AddrLn2", true)))
+            .set(IM.ADDRESS_LINE_3, literal(fieldByName("AddrLn3", true)))
+            .set(IM.LOCALITY, literal(fieldByName("Town", true)))
+            .set(IM.REGION, literal(fieldByName("County", true)))
+            .set(IM.POST_CODE, literal(fieldByName("PostCode", true)))
+            .set(IM.COUNTRY, literal(fieldByName("Country", true)));
+
+        String uprn = fieldByName("UPRN");
+        if (uprn != null && !uprn.isEmpty())
+            add.set(IM.UPRN, literal(fieldByName("UPRN")));
+
+        addEntity(add, doc);
+    }
+
+    private void importOrganisationRelationships(TTImportConfig config) throws IOException {
+        LOG.info("Importing Organisation relationship data");
+
+        Path file = ImportUtils.findFileForId(config.getFolder(), ORGANISATION_RELATIONSHIPS);
+
+        LOG.info("Processing relationships in {}", file.getFileName());
+        int i = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            readLine(reader);
+            processHeaders();
+
+            while (readLine(reader)) {
+                processRelationshipLine();
+                i++;
+                if (i % 25000 == 0)
+                    LOG.info("Processed {} lines", i);
+
+            }
+        }
+    }
+
+    private void processRelationshipLine() {
+        String odsCode = fieldByName("OrganisationId");
+
+        TTEntity org = entityIndex.get(ORG.ORGANISATION_NAMESPACE + odsCode);
+        if (null == org)
+            LOG.error("Unknown organisation [{}]", odsCode);
+        else {
+            TTArray rels = org.get(ORG.RELATED_ORGANISATION);
+            if (null == rels) {
+                rels = new TTArray();
+                org.set(ORG.RELATED_ORGANISATION, rels);
+            }
+
+            TTNode rel = new TTNode()
+                .set(IM.CONCEPT, iri(ODS.ORGANISATION_RELATIONSHIP + "_" + fieldByName("RelationshipId")))
+                .set(IM.EFFECTIVE_DATE, literal(fieldByName("OperationalStartDate")))
+                .set(IM.END_DATE, literal(fieldByName("OperationalEndDate")))
+                .set(IM.HAS_STATUS, "Active".equals(fieldByName("Status")) ? IM.ACTIVE : IM.INACTIVE)
+                .set(ORG.TARGET, iri(ORG.ORGANISATION_NAMESPACE + fieldByName("TargetOrganisationId")));
+
+            rels.add(rel);
+        }
+    }
+
+    private void importOrganisationRoles(TTImportConfig config) throws IOException {
+        LOG.info("Importing Organisation role data");
+
+        Path file = ImportUtils.findFileForId(config.getFolder(), ORGANISATION_ROLES);
+
+        LOG.info("Processing roles in {}", file.getFileName());
+        int i = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            readLine(reader);
+            processHeaders();
+
+            while (readLine(reader)) {
+                processRoleLine();
+                i++;
+                if (i % 25000 == 0)
+                    LOG.info("Processed {} lines", i);
+
+            }
+        }
+    }
+
+    private void processRoleLine() {
+        String odsCode = fieldByName("OrganisationId");
+        String roleId = fieldByName("RoleId");
+
+        TTEntity org = entityIndex.get(ORG.ORGANISATION_NAMESPACE + odsCode);
+        if (null == org)
+            LOG.error("Unknown organisation [{}]", odsCode);
+        else {
+            TTArray roles = org.get(ORG.ROLE);
+            if (null == roles) {
+                roles = new TTArray();
+                org.set(ORG.ROLE, roles);
+            }
+
+            TTNode role = new TTNode()
+                .set(IM.CONCEPT, iri(ODS.ORGANISATION_ROLE_TYPE + "_" + roleId))
+                .set(IM.EFFECTIVE_DATE, literal(fieldByName("OperationalStartDate")))
+                .set(IM.END_DATE, literal(fieldByName("OperationalEndDate")))
+                .set(IM.HAS_STATUS, "Active".equals(fieldByName("Status")) ? IM.ACTIVE : IM.INACTIVE);
+
+            roles.add(role);
+        }
     }
 
     private boolean readLine(BufferedReader reader) throws IOException {
@@ -101,41 +341,42 @@ public class OdsImporter implements TTImport {
         this.fieldIndex = Arrays.asList(this.fieldData);
     }
 
-    private void processLine(TTDocument doc) {
-        String odsCode = fieldByName("OrganisationId");
-        String orgIri = IM.ORGANISATION_NAMESPACE +  odsCode;
-        String addIri = IM.LOCATION_NAMESPACE + "ODS_"+ odsCode;
-
-        TTEntity org = new TTEntity(orgIri);
-        org.setName(fieldByName("Name"));
-        org.set(IM.CODE, literal(odsCode));
-        org.set(IM.ADDRESS, iri(addIri));
-        org.addType(TTIriRef.iri(IM.NAMESPACE+"Organisation"));
-        doc.addEntity(org);
-
-        TTEntity add = new TTEntity(addIri);
-        add.addType(IM.ADDRESS_CLASS);
-        add.set(IM.ADDRESS_LINE_1, literal(fieldByName("AddrLn1")));
-        add.set(IM.ADDRESS_LINE_2, literal(fieldByName("AddrLn2")));
-        add.set(IM.ADDRESS_LINE_3, literal(fieldByName("AddrLn3")));
-        add.set(IM.LOCALITY, literal(fieldByName("Town")));
-        add.set(IM.REGION, literal(fieldByName("County")));
-        add.set(IM.POST_CODE, literal(fieldByName("PostCode")));
-        add.set(IM.COUNTRY, literal(fieldByName("Country")));
-        String uprn = fieldByName("UPRN");
-        if (uprn != null && !uprn.isEmpty())
-            add.set(IM.UPRN, literal(fieldByName("UPRN")));
-
-        doc.addEntity(add);
+    private String fieldByName(String name) {
+        return fieldByName(name, false);
     }
 
-    private String fieldByName(String name) {
+    private String fieldByName(String name, boolean asProperCase) {
         int i = this.fieldIndex.indexOf(name);
 
         if (i >= this.fieldData.length)
             return null;
 
-        return this.fieldData[i];
+        return asProperCase ? toProperCase(this.fieldData[i]) : this.fieldData[i];
+    }
+
+    private void addEntity(TTEntity entity, TTDocument doc) {
+        doc.addEntity(entity);
+        entityIndex.put(entity.getIri(), entity);
+    }
+
+    private String toProperCase(String text) {
+        if (text == null || text.isEmpty())
+            return "";
+
+        Set<String> skipWords = Set.of("NHS", "PCT", "DMU", "GP", "LA", "LSP", "DSCRO", "ICB", "SMHPC", "HSCIC", "NH");
+        StringJoiner fixed = new StringJoiner(" ");
+        String[] words = text.split(" ");
+
+        for(String word : words) {
+            if (skipWords.contains(word) || (word.startsWith("(") && word.endsWith(")")))
+                fixed.add(word);
+            else
+                fixed.add(word.toLowerCase());
+        }
+
+        String result = fixed.toString();
+
+        return result.substring(0,1).toUpperCase() + result.substring(1);
     }
 
     @Override

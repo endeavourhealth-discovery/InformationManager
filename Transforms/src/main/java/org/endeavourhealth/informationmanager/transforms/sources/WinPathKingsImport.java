@@ -9,6 +9,8 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -20,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class WinPathKingsImport implements TTImport {
-
+    private static final Logger LOG = LoggerFactory.getLogger(WinPathKingsImport.class);
 
 	private static final String[] kingsWinPath = {".*\\\\Kings\\\\Winpath.txt"};
 	private TTDocument document;
@@ -56,13 +58,13 @@ public class WinPathKingsImport implements TTImport {
 
 
 	private void importR2Matches() throws  TTFilerException, IOException {
-		System.out.println("Retrieving read vision 2 snomed map");
+		LOG.info("Retrieving read vision 2 snomed map");
 		readToSnomed= importMaps.importReadToSnomed();
 
 	}
 
 	private void importWinPathKings(String folder) throws IOException {
-		System.out.println("Importing kings code file");
+		LOG.info("Importing kings code file");
 
 		Path file = ImportUtils.findFileForId(folder, kingsWinPath[0]);
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -91,11 +93,11 @@ public class WinPathKingsImport implements TTImport {
 
 				count++;
 				if (count % 500 == 0) {
-					System.out.println("Processed " + count + " records");
+					LOG.info("Processed {} records", count);
 				}
 				line = reader.readLine();
 			}
-			System.out.println("Process ended with " + count + " records");
+			LOG.info("Process ended with {} records", count);
 		}
 
 	}

@@ -51,7 +51,7 @@ public class TPPImporter implements TTImport {
     public void importData(TTImportConfig config) throws Exception {
 
 
-        System.out.println("Looking for Snomed codes");
+        LOG.info("Looking for Snomed codes");
         try (TTManager manager= new TTManager()) {
 
             document = manager.createDocument(IM.GRAPH_TPP.getIri());
@@ -156,13 +156,13 @@ public class TPPImporter implements TTImport {
 
 
     private void importEMISMaps() throws SQLException, TTFilerException, IOException {
-        System.out.println("Getting EMIS maps");
+        LOG.info("Getting EMIS maps");
         emisToSnomed= importMaps.importEmisToSnomed();
     }
 
     private void importLocals(String folder) throws IOException, CsvValidationException {
         Path file =  ImportUtils.findFileForId(folder, tppCtv3Lookup[0]);
-        System.out.println("Importing TPP Ctv3 local codes");
+        LOG.info("Importing TPP Ctv3 local codes");
         try (CSVReader reader = new CSVReader(new FileReader(file.toFile()))) {
             reader.readNext();
             String[] fields;
@@ -185,13 +185,13 @@ public class TPPImporter implements TTImport {
 
                 }
             }
-            System.out.println("Process ended with " + count);
+            LOG.info("Process ended with {}", count);
         }
     }
 
     private void importnhsMaps(String folder) throws IOException{
             Path file =  ImportUtils.findFileForId(folder, nhsMap[0]);
-            System.out.println("Retrieving terms from tpp_TPP+lookup2");
+            LOG.info("Retrieving terms from tpp_TPP+lookup2");
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
                 reader.readLine(); // NOSONAR - Skip header
                 String line = reader.readLine();
@@ -214,7 +214,7 @@ public class TPPImporter implements TTImport {
 
                     line = reader.readLine();
                 }
-                System.out.println("Process ended with " + count +" entities created");
+                LOG.info("Process ended with {} entities created", count);
             }
 
 
@@ -233,7 +233,7 @@ public class TPPImporter implements TTImport {
     private void importCV3Hierarchy(String path) throws IOException {
         for (String hierFile : hierarchies) {
             Path file =  ImportUtils.findFilesForId(path, hierFile).get(0);
-            System.out.println("Processing  hierarchy in " + file.getFileName().toString());
+            LOG.info("Processing  hierarchy in {}", file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
                 String line = reader.readLine();
                 int count = 0;
@@ -252,7 +252,7 @@ public class TPPImporter implements TTImport {
                     }
                     line = reader.readLine();
                 }
-                System.out.println("Imported " + count + " hierarchy nodes");
+                LOG.info("Imported {} hierarchy nodes", count);
             }
         }
 
@@ -262,7 +262,7 @@ public class TPPImporter implements TTImport {
         int i = 0;
         for (String termFile : terms) {
             Path file =  ImportUtils.findFilesForId(path, termFile).get(0);
-            System.out.println("Processing  terms    in " + file.getFileName().toString());
+            LOG.info("Processing terms in {}", file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
                 reader.readLine();  // NOSONAR - Skip header
                 String line = reader.readLine();
@@ -278,14 +278,14 @@ public class TPPImporter implements TTImport {
                 }
             }
         }
-        System.out.println("Imported " + i + " term codes");
+        LOG.info("Imported {} term codes", i);
     }
 
     private void importTPPDescriptions(String path) throws IOException {
         int i = 0;
         for (String conceptFile : descriptions) {
             Path file =  ImportUtils.findFilesForId(path, conceptFile).get(0);
-            System.out.println("Processing  descriptions in " + file.getFileName().toString());
+            LOG.info("Processing  descriptions in {}", file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
                 String line = reader.readLine();
                 while (line != null && !line.isEmpty()) {
@@ -307,14 +307,14 @@ public class TPPImporter implements TTImport {
                 }
             }
         }
-        System.out.println("Imported " + i + " term codes");
+        LOG.info("Imported {} term codes", i);
     }
 
     private void importTPPDcf(String path) throws IOException {
         int i = 0;
         for (String conceptFile : dcf) {
             Path file =  ImportUtils.findFilesForId(path, conceptFile).get(0);
-            System.out.println("Processing  replacememnts in " + file.getFileName().toString());
+            LOG.info("Processing replacememnts in {}", file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
                 String line = reader.readLine();
                 while (line != null && !line.isEmpty()) {
@@ -322,7 +322,7 @@ public class TPPImporter implements TTImport {
                     String concept1= fields[1];
                     String termCode=fields[0];
                     if (termCode.equals("Yag2I"))
-                        System.out.println("term code");
+                        LOG.info("term code");
                     String concept2=fields[2];
                     String term= termCodes.get(termCode);
                     if (term!=null){
@@ -344,14 +344,14 @@ public class TPPImporter implements TTImport {
                 }
             }
         }
-        System.out.println("Imported " + i + " term codes");
+        LOG.info("Imported {} term codes", i);
     }
 
     private void inportTPPConcepts(String path) throws IOException {
             int i = 0;
             for (String conceptFile : concepts) {
                 Path file =  ImportUtils.findFilesForId(path, conceptFile).get(0);
-                System.out.println("Processing  concepts in " + file.getFileName().toString());
+                LOG.info("Processing concepts in {}", file.getFileName().toString());
                 try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
                     String line = reader.readLine();
                     while (line != null && !line.isEmpty()) {
@@ -375,7 +375,7 @@ public class TPPImporter implements TTImport {
                     }
                 }
             }
-            System.out.println("Imported " + i + " concepts");
+            LOG.info("Imported {} concepts", i);
     }
 
     private void addTPPTopLevel(){
@@ -404,7 +404,7 @@ public class TPPImporter implements TTImport {
 
     private void importTppCtv3ToSnomed(String folder) throws IOException, CsvValidationException {
         Path file =  ImportUtils.findFileForId(folder, tppCtv3ToSnomed[0]);
-        System.out.println("Importing TPP Ctv3 to Snomed");
+        LOG.info("Importing TPP Ctv3 to Snomed");
         try (CSVReader reader = new CSVReader(new FileReader(file.toFile()))) {
             reader.readNext();
             String[] fields;
@@ -431,7 +431,7 @@ public class TPPImporter implements TTImport {
                     tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + snomed));
                 }
             }
-            System.out.println("Process ended with " + count);
+            LOG.info("Process ended with {}", count);
         }
     }
 

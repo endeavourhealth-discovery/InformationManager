@@ -1,6 +1,5 @@
 package org.endeavourhealth.informationmanager.transforms.online;
 
-import org.endeavourhealth.imapi.filer.TCGenerator;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImportByType;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
@@ -12,6 +11,8 @@ import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
@@ -19,6 +20,8 @@ import java.util.Date;
  * Utility app for importing one or all of the various source files for the ontology initial population.
  */
 public class ImportApp {
+    private static final Logger LOG = LoggerFactory.getLogger(ImportApp.class);
+
     public static String testDirectory;
 
     public static void main(String[] args) throws Exception {
@@ -213,14 +216,14 @@ public class ImportApp {
         }
 
         if (cfg.getImportType().equals("all")||cfg.getImportType().equals("core")) {
-                System.out.println("expanding value sets");
+                LOG.info("expanding value sets");
                 new SetExpander().expandAllSets();
         }
 
         if (!cfg.isSkiplucene())
             new LuceneIndexer().buildIndexes();
 
-        System.out.println("Finished - " + (new Date()));
+        LOG.info("Finished - ", new Date());
     }
 }
 

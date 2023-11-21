@@ -58,14 +58,14 @@ public class EMISImport implements TTImport {
 
 
     public void importData(TTImportConfig config) throws Exception {
-        System.out.println("Retrieving filed snomed codes");
+        LOG.info("Retrieving filed snomed codes");
         document = manager.createDocument(IM.GRAPH_EMIS.getIri());
         document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(), "EMIS original codes",
             "The EMIS code scheme including codes directly matched to UK Snomed-CT, and EMIS unmatched local codes."));
 
         checkAndUnzip(config.getFolder());
 
-        System.out.println("importing emis code file");
+        LOG.info("importing emis code file");
         populateRemaps(remaps);
         addEMISTopLevel();
         importEMISCodes(config.getFolder());
@@ -331,7 +331,7 @@ public class EMISImport implements TTImport {
         String code = ec.getCode();
         String conceptId = ec.getConceptId();
         //if (conceptId.equals("906241000006109"))
-          //  System.out.println("rfc concept");
+          //  LOG.info("rfc concept");
         String descid = ec.getDescid();
         String parentId = ec.getParentId();
         if (parentId!=null)

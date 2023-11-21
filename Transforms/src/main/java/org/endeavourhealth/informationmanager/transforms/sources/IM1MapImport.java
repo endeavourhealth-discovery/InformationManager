@@ -112,7 +112,7 @@ public class IM1MapImport implements TTImport {
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
                 if (line.toLowerCase().contains("accurx")){
-                    System.out.println(line);
+                    LOG.trace("Accurx [{}]", line);
                 }
                 String[] fields = line.split("\t");
                 while (fields.length<6) {
@@ -134,7 +134,7 @@ public class IM1MapImport implements TTImport {
                 String draft=fields[7];
                 String scheme;
                 if (term.contains("Clinical document"))
-                    System.out.println(code+ " "+ term);
+                    LOG.trace("Clinical document [{}|{}]", code, term);
 
                 if (!code.contains(",")) {
                     switch (im1Scheme) {
@@ -259,7 +259,7 @@ public class IM1MapImport implements TTImport {
                                     }
                                 }
                                 if (emisConcept == null) {
-                                        System.out.println("im1 invalid emis concept");
+                                    LOG.warn("IM1 - Invalid EMIS concept (scheme/code|term) [{}/{}|{}]", im1Scheme, code, term);
                                 }
                                 else
                                     addIM1id(emisConcept, oldIri);
@@ -354,7 +354,7 @@ public class IM1MapImport implements TTImport {
                     }
                 }
                 count++;
-                if (count %10000== 0){
+                if (count %100000== 0){
                     LOG.info("Imported {} im1 concepts",count);
                 }
                 line= reader.readLine();
@@ -379,7 +379,7 @@ public class IM1MapImport implements TTImport {
             } else {
                 String iriTerm = im1SchemeToIriTerm.get(im1Scheme);
                 if(iriTerm == null) {
-                    System.out.println(im1Scheme);
+                    LOG.error("Unknown IM1 scheme [{}]", im1Scheme);
                     throw new IOException();
                 }
                 entity.setIri(FHIR.GRAPH_FHIR.getIri() + iriTerm + "/" + (code.toLowerCase().replaceAll(" ", "-")))
@@ -784,10 +784,10 @@ public class IM1MapImport implements TTImport {
         document.addEntity(context);
         TTIriRef organisation;
         if (organisationMap.get(publisher)!=null) {
-            organisation = new TTIriRef().setIri(IM.ORGANISATION_NAMESPACE + organisationMap.get(publisher));
+            organisation = new TTIriRef().setIri(ORG.ORGANISATION_NAMESPACE + organisationMap.get(publisher));
         }
         else
-            organisation= new TTIriRef().setIri(IM.ORGANISATION_NAMESPACE + UUID.randomUUID());
+            organisation= new TTIriRef().setIri(ORG.ORGANISATION_NAMESPACE + UUID.randomUUID());
         context.set(IM.SOURCE_PUBLISHER, organisation);
         if (!"NULL".equals(system)) context.set(IM.SOURCE_SYSTEM,new TTIriRef(IM.SYSTEM_NAMESPACE + system));
         if (!"NULL".equals(schema)) context.set(IM.SOURCE_SCHEMA,TTLiteral.literal(schema));

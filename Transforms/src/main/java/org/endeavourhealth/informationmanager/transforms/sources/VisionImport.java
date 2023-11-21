@@ -45,8 +45,8 @@ public class VisionImport implements TTImport {
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
 
-		System.out.println("importing vision codes");
-		System.out.println("retrieving snomed codes from IM");
+		LOG.info("importing vision codes");
+		LOG.info("retrieving snomed codes from IM");
         try (TTManager manager= new TTManager()) {
             snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
             document = manager.createDocument(IM.GRAPH_VISION.getIri());
@@ -108,7 +108,7 @@ public class VisionImport implements TTImport {
 	private void importR2Terms(String folder) throws IOException, CsvValidationException {
 
 		Path file =  ImportUtils.findFileForId(folder, r2Terms[0]);
-		System.out.println("Importing official R2 terms as vision");
+		LOG.info("Importing official R2 terms as vision");
 
 		try( CSVReader reader = new CSVReader(new FileReader(file.toFile()))){
 			reader.readNext();
@@ -129,12 +129,12 @@ public class VisionImport implements TTImport {
 					}
 				}
 			}
-			System.out.println("Process ended with " + count +" read 2 terms");
+			LOG.info("Process ended with {} read 2 terms", count);
 		}
 	}
 
 	private void importEmis() throws IOException {
-		System.out.println("Importing EMIS/Read from IM for look up....");
+		LOG.info("Importing EMIS/Read from IM for look up....");
 		emisRead= importMaps.getEMISReadAsVision();
 
 		}
@@ -143,7 +143,7 @@ public class VisionImport implements TTImport {
 	private void importR2Desc(String folder) throws IOException {
 
 		Path file =  ImportUtils.findFileForId(folder, r2Desc[0]);
-		System.out.println("Importing R2 entities");
+		LOG.info("Importing R2 entities");
 
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
 			reader.readLine(); // NOSONAR - Skip header
@@ -178,13 +178,13 @@ public class VisionImport implements TTImport {
 						}
 						count++;
 						if (count % 50000 == 0) {
-							System.out.println("Processed " + count + " read code termid links");
+							LOG.info("Processed {} read code termid links", count);
 						}
 					}
 				}
 				line = reader.readLine();
 			}
-			System.out.println("Process ended with " + count + " read code term id links");
+			LOG.info("Process ended with {} read code term id links", count);
 		}
 	}
 
@@ -232,7 +232,7 @@ public class VisionImport implements TTImport {
 
 	private void importVisionCodes(String folder) throws IOException {
 		Path file =  ImportUtils.findFileForId(folder, visionRead2Code[0]);
-		System.out.println("Retrieving terms from vision read+lookup2");
+		LOG.info("Retrieving terms from vision read+lookup2");
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
 			reader.readLine(); // NOSONAR - Skip header
 			String line = reader.readLine();
@@ -261,7 +261,7 @@ public class VisionImport implements TTImport {
                 }
 				line = reader.readLine();
 			}
-			System.out.println("Process ended with " + count + " additional Vision read like codes created");
+			LOG.info("Process ended with {} additional Vision read like codes created", count);
 		}
 	}
 
@@ -284,7 +284,7 @@ public class VisionImport implements TTImport {
 
 	private void addVisionMaps(String folder) throws IOException {
 		Path file =  ImportUtils.findFileForId(folder, visionRead2toSnomed[0]);
-		System.out.println("Retrieving Vision snomed maps");
+		LOG.info("Retrieving Vision snomed maps");
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
 			reader.readLine(); // NOSONAR - Skip header
 			String line = reader.readLine();
@@ -306,7 +306,7 @@ public class VisionImport implements TTImport {
 				}
 				line = reader.readLine();
 			}
-			System.out.println("Process ended with " + count);
+			LOG.info("Process ended with {}", count);
 		}
 	}
 
