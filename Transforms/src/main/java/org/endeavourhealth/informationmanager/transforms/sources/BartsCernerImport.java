@@ -10,6 +10,8 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -21,6 +23,7 @@ import java.util.zip.DataFormatException;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class BartsCernerImport implements TTImport {
+    private static final Logger LOG = LoggerFactory.getLogger(BartsCernerImport.class);
 
 	private static final String[] used = {".*\\\\Barts\\\\Barts-Cerner-Codes.txt"};
 	private static final String[] codes = {".*\\\\Barts\\\\V500_event_code.txt"};
@@ -46,7 +49,7 @@ public class BartsCernerImport implements TTImport {
 
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
-		System.out.println("retrieving snomed codes from IM");
+		LOG.info("retrieving snomed codes from IM");
 		document= manager.createDocument(IM.GRAPH_BARTS_CERNER.getIri());
 		document.addEntity(manager.createGraph(IM.GRAPH_BARTS_CERNER.getIri(),"Barts Cerner code scheme and graph"
 		,"The Barts Cerner local code scheme and graph i.e. local codes with links to cor"));
@@ -90,7 +93,7 @@ public class BartsCernerImport implements TTImport {
 		int count = 0;
 		for (String conceptFile : maps) {
 			Path file =  ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
-			System.out.println("Processing  Snomed maps " + file.getFileName().toString());
+			LOG.info("Processing  Snomed maps {}", file.getFileName().toString());
 			try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
 				reader.readLine();  // NOSONAR - Skipping CSV header line
 				String line = reader.readLine();
@@ -109,7 +112,7 @@ public class BartsCernerImport implements TTImport {
 					}
 				}
 			}
-		System.out.println("Imported " + count + " maps");
+		LOG.info("Imported {} maps", count);
 	}
 
 
@@ -138,7 +141,7 @@ public class BartsCernerImport implements TTImport {
 		int count = 0;
 		for (String conceptFile : hierarchy) {
 			Path file =  ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
-			System.out.println("Processing  cerner event set V500 canon in " + file.getFileName().toString());
+			LOG.info("Processing  cerner event set V500 canon in ", file.getFileName().toString());
 			try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
 				reader.readLine();  // NOSONAR - Skipping CSV header line
 				String line = reader.readLine();
@@ -158,7 +161,7 @@ public class BartsCernerImport implements TTImport {
 		}
 
 
-		System.out.println("Imported " + count + " hierarchy links");
+		LOG.info("Imported {} hierarchy links", count);
 
 
 	}
@@ -168,9 +171,9 @@ public class BartsCernerImport implements TTImport {
         String parent= fields[0];
         String child= fields[2];
         if (parent.equals(child))
-            System.out.println("? top level "+ parent+" "+ fields[1]);
+            LOG.info("? top level {} {}", parent, fields[1]);
         if (codeToSet.get(parent)==null)
-            System.out.println("missing event set cd "+ parent +" "+ fields[1]);
+            LOG.info("missing event set cd {} {}", parent, fields[1]);
         Integer order= Integer.parseInt(fields[4]);
         TTEntity eventSet= codeToSet.get(child);
         eventSet.addObject(IM.IS_CHILD_OF,iri(IM.CODE_SCHEME_BARTS_CERNER.getIri()+parent));
@@ -184,7 +187,7 @@ public class BartsCernerImport implements TTImport {
 		int count = 0;
 		for (String conceptFile : used) {
 			Path file =  ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
-			System.out.println("Processing  cerner event codes in " + file.getFileName().toString());
+			LOG.info("Processing cerner event codes in {}", file.getFileName().toString());
 			try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
 				reader.readLine();  // NOSONAR - Skipping CSV header line
 				String line = reader.readLine();
@@ -195,7 +198,7 @@ public class BartsCernerImport implements TTImport {
 				}
 			}
 		}
-		System.out.println("Imported " + count + " codes from look up");
+		LOG.info("Imported {} codes from look up", count);
 
 	}
 
@@ -225,7 +228,7 @@ public class BartsCernerImport implements TTImport {
 		int count = 0;
 		for (String conceptFile : sets) {
 			Path file =  ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
-			System.out.println("Processing  cerner event set codes in " + file.getFileName().toString());
+			LOG.info("Processing  cerner event set codes in {}", file.getFileName().toString());
 			try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
 				reader.readLine();  // NOSONAR - Skipping CSV header line
 				String line = reader.readLine();
@@ -236,7 +239,7 @@ public class BartsCernerImport implements TTImport {
 				}
 			}
 		}
-		System.out.println("Imported " + count + " sets");
+		LOG.info("Imported {} sets", count);
 
 
 	}
@@ -261,7 +264,7 @@ public class BartsCernerImport implements TTImport {
 		int count = 0;
 		for (String conceptFile : codes) {
 			Path file =  ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
-			System.out.println("Processing  cerner event codes in " + file.getFileName().toString());
+			LOG.info("Processing cerner event codes in {}", file.getFileName().toString());
 			try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
 				reader.readLine();  // NOSONAR - Skipping CSV header line
 				String line = reader.readLine();
@@ -272,7 +275,7 @@ public class BartsCernerImport implements TTImport {
 				}
 			}
 		}
-		System.out.println("Imported " + count + " codes from look up");
+		LOG.info("Imported {} codes from look up", count);
 
 
 	}

@@ -11,6 +11,8 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -21,11 +23,11 @@ import java.util.zip.DataFormatException;
 
 
 public class ICD10Importer implements TTImport {
+    private static final Logger LOG = LoggerFactory.getLogger(ICD10Importer.class);
 
     private static final String[] entities = {".*\\\\ICD10\\\\.*\\\\Content\\\\ICD10_Edition5_CodesAndTitlesAndMetadata_GB_.*\\.txt"};
     private static final String[] maps = {".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
     private static final String[] chapters = {".*\\\\ICD10\\\\ICD10-Chapters.txt"};
-
 
     private final TTIriRef icd10Codes = TTIriRef.iri(IM.CODE_SCHEME_ICD10.getIri() + "ICD10Codes");
     private final TTManager manager = new TTManager();
@@ -41,8 +43,8 @@ public class ICD10Importer implements TTImport {
     @Override
     public void importData(TTImportConfig config) throws Exception {
         validateFiles(config.getFolder());
-        System.out.println("Importing ICD10....");
-        System.out.println("Getting snomed codes");
+        LOG.info("Importing ICD10....");
+        LOG.info("Getting snomed codes");
         snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
         document = manager.createDocument(IM.GRAPH_ICD10.getIri());
         document.addEntity(manager.createGraph(IM.GRAPH_ICD10.getIri(), "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
@@ -80,7 +82,7 @@ public class ICD10Importer implements TTImport {
                     parentIndex = -(insertion + 1) - 1;
                 String qParent = startChapterList.get(parentIndex);
                 TTEntity parent = startChapterMap.get(qParent);
-                // System.out.println(code+" in "+ parent.getCode() +"?");
+                // LOG.info("{} in {}?", code, parent.getCode());
                 icd10Entity.addObject(IM.IS_CHILD_OF, TTIriRef.iri(parent.getIri()));
             }
 
@@ -120,7 +122,7 @@ public class ICD10Importer implements TTImport {
             while (line != null && !line.isEmpty()) {
                 count++;
                 if (count % 10000 == 0) {
-                    System.out.println("Processed " + count + " records");
+                    LOG.info("Processed {} records", count);
                 }
                 String[] fields = line.split("\t");
                 String iri = IM.CODE_SCHEME_ICD10.getIri() + fields[1];
@@ -139,7 +141,7 @@ public class ICD10Importer implements TTImport {
                 document.addEntity(c);
                 line = reader.readLine();
             }
-            System.out.println("Process ended with " + count + " chapter records");
+            LOG.info("Process ended with {} chapter records", count);
         }
 
     }
@@ -155,7 +157,7 @@ public class ICD10Importer implements TTImport {
             while (line != null && !line.isEmpty()) {
                 count++;
                 if (count % 10000 == 0) {
-                    System.out.println("Processed " + count + " records");
+                    LOG.info("Processed {} records", count);
                 }
                 String[] fields = line.split("\t");
                 TTEntity c = new TTEntity()
@@ -176,7 +178,7 @@ public class ICD10Importer implements TTImport {
                 document.addEntity(c);
                 line = reader.readLine();
             }
-            System.out.println("Process ended with " + count + " entities");
+            LOG.info("Process ended with {} entities", count);
 
         }
 

@@ -12,6 +12,8 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -25,6 +27,7 @@ import java.util.zip.DataFormatException;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class OPCS4Importer implements TTImport {
+    private static final Logger LOG = LoggerFactory.getLogger(OPCS4Importer.class);
 
     private static final String[] entities = {".*\\\\OPCS4\\\\.*\\\\OPCS4.* CodesAndTitles.*\\.txt"};
     private static final String[] chapters = {".*\\\\OPCS4\\\\OPCSChapters.txt"};
@@ -40,8 +43,8 @@ public class OPCS4Importer implements TTImport {
     private ImportMaps importMaps = new ImportMaps();
 
     public void importData(TTImportConfig config) throws Exception {
-        System.out.println("Importing OPCS4.....");
-        System.out.println("Checking Snomed codes first");
+        LOG.info("Importing OPCS4.....");
+        LOG.info("Checking Snomed codes first");
         snomedCodes= importMaps.getCodes(SNOMED.NAMESPACE);
         try (TTManager manager= new TTManager()) {
             document = manager.createDocument(IM.GRAPH_OPCS4.getIri());
@@ -119,7 +122,7 @@ public class OPCS4Importer implements TTImport {
             while (line != null && !line.isEmpty()) {
                 count++;
                 if (count % 10000 == 0) {
-                    System.out.println("Processed " + count + " records");
+                    LOG.info("Processed {} records", count);
                 }
                 String[] fields = line.split("\t");
                 String code=fields[0];
@@ -149,7 +152,7 @@ public class OPCS4Importer implements TTImport {
                     document.addEntity(c);
                     line = reader.readLine();
             }
-            System.out.println("Imported " + count + " records");
+            LOG.info("Imported {} records", count);
         }
     }
 

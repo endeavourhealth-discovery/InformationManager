@@ -6,6 +6,8 @@ import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import java.io.BufferedReader;
@@ -18,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 public class ApexKingsImport implements TTImport {
-
+    private static final Logger LOG = LoggerFactory.getLogger(ApexKingsImport.class);
 
 	private static final String[] kingsPath = {".*\\\\Kings\\\\KingsPathMap.txt"};
 	private static final String KINGS_APEX_CODES = IM.GRAPH_KINGS_APEX.getIri()+"KingsApexCodes";
@@ -59,13 +61,13 @@ public class ApexKingsImport implements TTImport {
 
 
 	private void importR2Matches() throws SQLException, TTFilerException, IOException {
-		System.out.println("Retrieving read vision 2 snomed map");
+		LOG.info("Retrieving read vision 2 snomed map");
 		readToSnomed= importMaps.importReadToSnomed();
 
 	}
 
 	private void importApexKings(String folder) throws IOException {
-		System.out.println("Importing kings code file");
+		LOG.info("Importing kings code file");
 
 		Path file =  ImportUtils.findFileForId(folder, kingsPath[0]);
 		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -94,10 +96,10 @@ public class ApexKingsImport implements TTImport {
 				}
 				count.getAndIncrement();
 				if (count.get() % 500 == 0) {
-					System.out.println("Processed " + count + " records");
+					LOG.info("Processed {} records", count);
 				}
             });
-			System.out.println("Process ended with " + count + " records");
+			LOG.info("Process ended with {} records", count);
 		}
 
 	}

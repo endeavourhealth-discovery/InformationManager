@@ -12,6 +12,8 @@ import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -23,7 +25,9 @@ import java.util.Map;
 import java.util.Set;
 
 public class CEGEthnicityImport implements TTImport {
-	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
+    private static final Logger LOG = LoggerFactory.getLogger(CEGEthnicityImport.class);
+
+    private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
 	private final TTManager manager = new TTManager();
 	private TTDocument document;
 	private TTDocument nhsDocument;
@@ -142,8 +146,8 @@ public class CEGEthnicityImport implements TTImport {
 	private void importEthnicGroups(String folder) throws IOException {
 
 		Path file = ImportUtils.findFileForId(folder, lookups[0]);
-		System.out.println("Importing Categories");
 
+        LOG.info("Importing Categories");
 
 		try( BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))){
 			reader.readLine();  // NOSONAR - Skipping CSV header line
@@ -156,14 +160,14 @@ public class CEGEthnicityImport implements TTImport {
                 line=reader.readLine();
 
 			}
-			System.out.println("Process ended with " + count +" terms");
+			LOG.info("Process ended with {} terms", count);
 		}
 	}
 
     private void processEthnicGroupLine(int count, String line) throws JsonProcessingException {
         String[] fields;
         if(count %50000 == 0){
-            System.out.println("Processed " + count +" terms");
+            LOG.info("Processed {} terms", count);
         }
         fields= line.split("\t");
         String snomed=fields[1];

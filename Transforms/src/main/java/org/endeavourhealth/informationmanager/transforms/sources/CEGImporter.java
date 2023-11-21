@@ -16,6 +16,8 @@ import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBContext;
 import java.io.File;
@@ -27,20 +29,22 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class CEGImporter implements TTImport {
-	private TTEntity owner;
-	private final Set<TTEntity> allEntities = new HashSet<>();
-
+    private static final Logger LOG = LoggerFactory.getLogger(CEGImporter.class);
 
 	private static final String[] queries = {".*\\\\CEGQuery"};
 	private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
 	private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
-	public Set<ConceptSet> conceptSets= new HashSet<>();
+
+    public Set<ConceptSet> conceptSets= new HashSet<>();
 	public Set<String> querySet= new HashSet<>();
 	public TTIriRef valueSetFolder;
 
-	@Override
+    private TTEntity owner;
+    private final Set<TTEntity> allEntities = new HashSet<>();
+
+    @Override
 	public void importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
 		TTDocument document= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
@@ -142,7 +146,7 @@ public class CEGImporter implements TTImport {
 			if (!fileEntry.isDirectory()) {
 				String ext= FilenameUtils.getExtension(fileEntry.getName());
 				if (ext.equalsIgnoreCase("xml")) {
-                    System.out.println("..." + fileEntry.getName());
+                    LOG.info("...{}", fileEntry.getName());
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(new FileReader(fileEntry));

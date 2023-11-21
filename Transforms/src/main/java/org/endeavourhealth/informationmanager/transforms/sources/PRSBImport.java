@@ -8,6 +8,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import java.io.File;
@@ -20,6 +22,7 @@ import java.util.zip.DataFormatException;
 
 
 public class PRSBImport implements TTImport {
+    private static final Logger LOG = LoggerFactory.getLogger(PRSBImport.class);
 
 	private static final String[] prsbEntities = {".*\\\\PRSB\\\\RetrieveInstance.json"};
 	private TTDocument document;
@@ -53,7 +56,7 @@ public class PRSBImport implements TTImport {
 		int i = 0;
 		for (String prsbFile : prsbEntities) {
 			Path file = ImportUtils.findFilesForId(path, prsbFile).get(0);
-			System.out.println("Processing entities in " + file.getFileName().toString());
+			LOG.info("Processing entities in {}", file.getFileName().toString());
 			JSONParser jsonParser = new JSONParser();
 			try (FileReader reader = new FileReader(file.toFile()))
 			{
@@ -79,7 +82,7 @@ public class PRSBImport implements TTImport {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Imported " + i + " entities");
+		LOG.info("Imported {} entities", i);
 	}
 
 	private void parsePRSBModel(JSONObject dataModel) throws DataFormatException {

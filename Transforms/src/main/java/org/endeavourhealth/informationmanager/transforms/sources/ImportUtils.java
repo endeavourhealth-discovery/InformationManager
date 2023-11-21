@@ -21,8 +21,9 @@ import java.util.zip.ZipInputStream;
 
 
 public class ImportUtils {
-    private static final int BUFFER_SIZE = 8192;
     private static final Logger LOG = LoggerFactory.getLogger(ImportUtils.class);
+
+    private static final int BUFFER_SIZE = 8192;
 
     /**
      * Validates the presence of various files from a root folder path
@@ -38,7 +39,7 @@ public class ImportUtils {
                     try {
                         findFileForId(path, file);
                     } catch (IOException e) {
-                        System.out.println("Error finding file [" + file + "]");
+                        LOG.info("Error finding file [{}]", file);
                         System.err.println(e.getMessage());
                         exit.set(true);
                     }
@@ -138,7 +139,7 @@ public class ImportUtils {
         try (FileOutputStream fos = new FileOutputStream(newFile)) {
             int len;
             long read = 0;
-            System.out.print("Extracting " + zipEntry.getName() + " - 0%\r");
+            LOG.info("Extracting " + zipEntry.getName() + " - 0%\r");
             while ((len = zis.read(buffer)) > 0) {
                 read += len;
                 fos.write(buffer, 0, len);
@@ -146,7 +147,7 @@ public class ImportUtils {
                     System.out.print("Extracting " + zipEntry.getName() + " - " + (read * 100 / zipEntry.getSize()) + "%\r");
             }
         }
-        System.out.println("Extracted " + zipEntry.getName() + " - 100%\r");
+        LOG.info("Extracted {} - 100%", zipEntry.getName());
     }
 
     private static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
