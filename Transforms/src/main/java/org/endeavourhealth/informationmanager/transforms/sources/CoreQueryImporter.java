@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
-import org.endeavourhealth.imapi.model.cdm.ProvActivity;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -13,7 +11,6 @@ import org.endeavourhealth.imapi.vocabulary.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class CoreQueryImporter implements TTImport {
@@ -21,62 +18,60 @@ public class CoreQueryImporter implements TTImport {
 
     @Override
     public void importData(TTImportConfig config) throws Exception {
-       try (TTManager manager = new TTManager()) {
-           document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
-           getIsas();
-           getDescendants();
-           getConcepts();
-           getAllowableProperties();
-           getAllowableRanges();
-           getSearchAll();
-           allowableSubTypes();
-           currentGMS();
-           currentGMSAsMatch();
-           agedOver18AsMatch();
-           gpGMSRegisteredPractice();
-           deleteSets();
-           testQuery();
-           getActiveDiabetes();
-        objectPropertyRangeSuggestions();
-        dataPropertyRangeSuggestions();
-        searchProperties();
-        dataModelPropertyRange();
-        dataModelPropertyByShape();
-        searchFolders();
-        searchContainedIn();
-        searchAllowableSubclass();
-        searchAllowableContainedIn();
-        output(document, config.getFolder());
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
+        try (TTManager manager = new TTManager()) {
+            document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
+            getIsas();
+            getDescendants();
+            getConcepts();
+            getAllowableProperties();
+            getAllowableRanges();
+            getSearchAll();
+            allowableSubTypes();
+            currentGMS();
+            currentGMSAsMatch();
+            agedOver18AsMatch();
+            gpGMSRegisteredPractice();
+            deleteSets();
+            testQuery();
+            getActiveDiabetes();
+            objectPropertyRangeSuggestions();
+            dataPropertyRangeSuggestions();
+            searchProperties();
+            dataModelPropertyRange();
+            dataModelPropertyByShape();
+            searchFolders();
+            searchContainedIn();
+            searchAllowableSubclass();
+            searchAllowableContainedIn();
+            output(document, config.getFolder());
+            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+                filer.fileDocument(document);
+            }
         }
-       }
-
     }
 
     private void agedOver18AsMatch() throws JsonProcessingException {
-            TTEntity qry = new TTEntity().addType(IM.MATCH_CLAUSE);
-            qry.set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
-            qry.set(IM.WEIGHTING,TTLiteral.literal(10000));
-            qry.set(SHACL.ORDER,3);
-            qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
-            qry
-              .setIri(IM.NAMESPACE + "M_AgedOverEighteen")
-              .setName("Aged over 18 (feature)")
-              .setDescription("Tests wether a person is over 18 years of age.");
-            Match over18= getOver18();
-            qry.set(IM.DEFINITION, TTLiteral.literal(over18));
-            document.addEntity(qry);
+        TTEntity qry = new TTEntity().addType(IM.MATCH_CLAUSE);
+        qry.set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
+        qry.set(IM.WEIGHTING, TTLiteral.literal(10000));
+        qry.set(SHACL.ORDER, 3);
+        qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
+        qry.setIri(IM.NAMESPACE + "M_AgedOverEighteen")
+            .setName("Aged over 18 (feature)")
+            .setDescription("Tests wether a person is over 18 years of age.");
+        Match over18 = getOver18();
+        qry.set(IM.DEFINITION, TTLiteral.literal(over18));
+        document.addEntity(qry);
     }
 
     private Match getOver18() {
         return new Match()
-          .setName("Aged over 18 years")
-          .property(p->p
-            .setIri(IM.NAMESPACE+"age")
-            .setUnit("YEAR")
-            .setOperator(Operator.gte)
-            .setValue("18"));
+            .setName("Aged over 18 years")
+            .property(p -> p
+                .setIri(IM.NAMESPACE + "age")
+                .setUnit("YEAR")
+                .setOperator(Operator.gte)
+                .setValue("18"));
     }
 
 
@@ -213,8 +208,7 @@ public class CoreQueryImporter implements TTImport {
                     .property(p -> p
                         .setIri(SHACL.DATATYPE.getIri())
                         .match(n -> n
-                            .setVariable("range")))
-                )
+                            .setVariable("range"))))
                 .return_(s -> s.setNodeRef("range").property(p -> p.setIri(RDFS.LABEL.getIri())))));
         document.addEntity(query);
     }
@@ -222,52 +216,52 @@ public class CoreQueryImporter implements TTImport {
 
     private void getActiveDiabetes() throws JsonProcessingException {
         TTEntity entity = new TTEntity().addType(IM.MATCH_CLAUSE)
-          .set(IM.RETURN_TYPE,TTIriRef.iri(IM.NAMESPACE+"Patient"));
-        entity.setIri(IM.NAMESPACE+"M_ActiveDiabetes");
+            .set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
+        entity.setIri(IM.NAMESPACE + "M_ActiveDiabetes");
         entity.setName("Active Diabetes (Latest entry for diabetes not followed by a resolution)");
         entity.setDescription("Entry for diabetes not followed by a diabetes resolved entry");
-        entity.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"M_CommonClauses"));
-        entity.set(SHACL.ORDER,2);
-        entity.set(IM.DEFINITION,TTLiteral.literal(getActiveDiabetesMatch()));
+        entity.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
+        entity.set(SHACL.ORDER, 2);
+        entity.set(IM.DEFINITION, TTLiteral.literal(getActiveDiabetesMatch()));
         document.addEntity(entity);
     }
 
 
-    private Match getActiveDiabetesMatch(){
+    private Match getActiveDiabetesMatch() {
         return new Match()
-          .setName("Active diabetics")
-            .property(p->p
-              .setIri(IM.NAMESPACE+"observation")
-              .match(n->n.setTypeOf(IM.NAMESPACE+"Observation")
-                .setVariable("latestDiabetes")
-                .property(ww->ww
-                  .setIri(IM.NAMESPACE+"concept")
-                  .setName("concept")
-                  .addInSet(new Node()
-                    .setIri("http://snomed.info/sct#999004691000230108")
-                    .setName("Diabetes Mellitus")))
-                .setOrderBy(new OrderLimit()
-                  .addProperty(new OrderDirection()
-                    .setIri(IM.NAMESPACE+"effectiveDate")
-                    .setDirection(Order.descending))
-                  .setLimit(1))))
-            .then(m1->m1
-              .setExclude(true)
-              .property(p->p
-              .setIri(IM.NAMESPACE+"observation")
-              .match(n->n.setTypeOf(IM.NAMESPACE+"Observation")
-                .setBool(Bool.and)
-                .setVariable("ResolvedDiabetes")
-                .property(ww->ww
-                  .setIri(IM.NAMESPACE+"concept")
-                  .setName("concept")
-                  .addInSet(new Node()
-                    .setIri("http://snomed.info/sct#999003371000230102")
-                    .setName("Diabetes Resolved")))
-                .property(ww->ww
-                  .setIri(IM.NAMESPACE+"effectiveDate")
-                  .setOperator(Operator.gte)
-                  .relativeTo(r->r.setNodeRef("latestDiabetes").setIri(IM.NAMESPACE+"effectiveDate"))))));
+            .setName("Active diabetics")
+            .property(p -> p
+                .setIri(IM.NAMESPACE + "observation")
+                .match(n -> n.setTypeOf(IM.NAMESPACE + "Observation")
+                    .setVariable("latestDiabetes")
+                    .property(ww -> ww
+                        .setIri(IM.NAMESPACE + "concept")
+                        .setName("concept")
+                        .addInSet(new Node()
+                            .setIri("http://snomed.info/sct#999004691000230108")
+                            .setName("Diabetes Mellitus")))
+                    .setOrderBy(new OrderLimit()
+                        .addProperty(new OrderDirection()
+                            .setIri(IM.NAMESPACE + "effectiveDate")
+                            .setDirection(Order.descending))
+                        .setLimit(1))))
+            .then(m1 -> m1
+                .setExclude(true)
+                .property(p -> p
+                    .setIri(IM.NAMESPACE + "observation")
+                    .match(n -> n.setTypeOf(IM.NAMESPACE + "Observation")
+                        .setBool(Bool.and)
+                        .setVariable("ResolvedDiabetes")
+                        .property(ww -> ww
+                            .setIri(IM.NAMESPACE + "concept")
+                            .setName("concept")
+                            .addInSet(new Node()
+                                .setIri("http://snomed.info/sct#999003371000230102")
+                                .setName("Diabetes Resolved")))
+                        .property(ww -> ww
+                            .setIri(IM.NAMESPACE + "effectiveDate")
+                            .setOperator(Operator.gte)
+                            .relativeTo(r -> r.setNodeRef("latestDiabetes").setIri(IM.NAMESPACE + "effectiveDate"))))));
     }
 
     private void testQuery() throws IOException {
@@ -312,7 +306,7 @@ public class CoreQueryImporter implements TTImport {
             .match(m -> m
                 .property(p -> p
                     .setIri(IM.NAMESPACE + "observation")
-                    .match(m1->m1.setTypeOf(IM.NAMESPACE + "Observation")
+                    .match(m1 -> m1.setTypeOf(IM.NAMESPACE + "Observation")
                         .setBool(Bool.and)
                         .property(ww -> ww
                             .setIri(IM.NAMESPACE + "concept")
@@ -340,7 +334,7 @@ public class CoreQueryImporter implements TTImport {
                             .setLimit(1))
                         .then(t -> t.setVariable("highBPReading")
                             .setBool(Bool.or)
-                .match(m4->m4
+                            .match(m4 -> m4
                                 .setBool(Bool.and)
                                 .property(w -> w
                                     .setIri(IM.NAMESPACE + "concept")
@@ -353,7 +347,7 @@ public class CoreQueryImporter implements TTImport {
                                     .setIri(IM.NAMESPACE + "numericValue")
                                     .setOperator(Operator.gt)
                                     .setValue("140")))
-              .match(m4->m4
+                            .match(m4 -> m4
                                 .setBool(Bool.and)
                                 .property(w -> w
                                     .setIri(IM.NAMESPACE + "concept")
@@ -365,12 +359,10 @@ public class CoreQueryImporter implements TTImport {
                                 .property(w -> w
                                     .setIri(IM.NAMESPACE + "numericValue")
                                     .setOperator(Operator.gt)
-                                    .setValue("130"))))
-                    ))
-            )
+                                    .setValue("130")))))))
             .match(m -> m
                 .setExclude(true)
-            .property(w->w.setIri(IM.NAMESPACE+"observation")
+                .property(w -> w.setIri(IM.NAMESPACE + "observation")
                     .match(n -> n.setTypeOf(IM.NAMESPACE + "Observation")
                         .setBool(Bool.and)
                         .property(inv -> inv
@@ -410,14 +402,14 @@ public class CoreQueryImporter implements TTImport {
 
         TTEntity qry = new TTEntity().addType(IM.COHORT_QUERY);
         qry.set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
-        qry.set(IM.WEIGHTING,TTLiteral.literal(10000));
+        qry.set(IM.WEIGHTING, TTLiteral.literal(10000));
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
         qry
             .setIri(IM.NAMESPACE + "Q_RegisteredGMS")
             .setName("Patients registered for GMS services on the reference date")
             .setDescription("For any registration period,a registration start date before the reference date and no end date," +
                 "or an end date after the reference date.");
-        qry.set(IM.DEFINITION, TTLiteral.literal(getGmsPatient(qry.getIri(),qry.getName(),qry.getDescription())));
+        qry.set(IM.DEFINITION, TTLiteral.literal(getGmsPatient(qry.getIri(), qry.getName(), qry.getDescription())));
         document.addEntity(qry);
     }
 
@@ -426,27 +418,27 @@ public class CoreQueryImporter implements TTImport {
 
         TTEntity qry = new TTEntity().addType(IM.MATCH_CLAUSE);
         qry.set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
-        qry.set(IM.WEIGHTING,TTLiteral.literal(10000));
-        qry.set(SHACL.ORDER,1);
+        qry.set(IM.WEIGHTING, TTLiteral.literal(10000));
+        qry.set(SHACL.ORDER, 1);
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
         qry
-          .setIri(IM.NAMESPACE + "M_RegisteredGMS")
-          .setName("Registered for GMS services on the reference date")
-          .setDescription("For any registration period,a registration start date before the reference date and no end date," +
-            "or an end date after the reference date.");
-        Match gmsMatch= getGMSMatch();
+            .setIri(IM.NAMESPACE + "M_RegisteredGMS")
+            .setName("Registered for GMS services on the reference date")
+            .setDescription("For any registration period,a registration start date before the reference date and no end date," +
+                "or an end date after the reference date.");
+        Match gmsMatch = getGMSMatch();
         qry.set(IM.DEFINITION, TTLiteral.literal(gmsMatch));
         document.addEntity(qry);
     }
 
-    private Query getGmsPatient(String iri, String name,String description) {
+    private Query getGmsPatient(String iri, String name, String description) {
         Query prof = new Query();
         prof.setIri(iri);
         prof.setName(name);
         prof.setDescription(description);
         prof
             .setTypeOf(IM.NAMESPACE + "Patient")
-          .setName("Patient");
+            .setName("Patient");
         prof.addMatch(getGMSMatch());
         return prof;
     }
@@ -454,26 +446,27 @@ public class CoreQueryImporter implements TTImport {
     private Match getGMSMatch() {
         return new Match()
             .setName("Registered GMS services on the reference date")
-                .property(p -> p
-                    .setIri(IM.NAMESPACE + "gpRegistration")
-                    .match(m1 -> m1
-                        .setTypeOf(IM.NAMESPACE + "GPRegistration")
-                        .setBool(Bool.and)
-                        .property(p1 -> p1
-                            .setIri(IM.NAMESPACE + "gpPatientType")
-                            .addIs(new Node().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
-                        .property(pv -> pv
-                            .setIri(IM.NAMESPACE + "effectiveDate")
-                            .setOperator(Operator.lte)
-                            .setRelativeTo(new Property().setParameter("$referenceDate")))
-                        .property(pv -> pv
-                            .setBool(Bool.or)
-                            .property(pv1 -> pv1
-                                .setIri(IM.NAMESPACE + "endDate"))
-                            .property(pv1 -> pv1
-                                .setIri(IM.NAMESPACE + "endDate")
-                                .setOperator(Operator.gt)
-                                .setRelativeTo(new Property().setParameter("$referenceDate"))))));
+            .property(p -> p
+                .setIri(IM.NAMESPACE + "gpRegistration")
+                .match(m1 -> m1
+                    .setTypeOf(IM.NAMESPACE + "GPRegistration")
+                    .setBool(Bool.and)
+                    .property(p1 -> p1
+                        .setIri(IM.NAMESPACE + "gpPatientType")
+                        .addIs(new Node().setIri(IM.GMS_PATIENT.getIri()).setName("Regular GMS patient")))
+                    .property(pv -> pv
+                        .setIri(IM.NAMESPACE + "effectiveDate")
+                        .setOperator(Operator.lte)
+                        .setRelativeTo(new Property().setParameter("$referenceDate")))
+                    .property(pv -> pv
+                        .setBool(Bool.or)
+                        .property(pv1 -> pv1
+                            .setIri(IM.NAMESPACE + "endDate")
+                            .setIsNull(true))
+                        .property(pv1 -> pv1
+                            .setIri(IM.NAMESPACE + "endDate")
+                            .setOperator(Operator.gt)
+                            .setRelativeTo(new Property().setParameter("$referenceDate"))))));
     }
 
     private void getSearchAll() throws JsonProcessingException {
@@ -529,7 +522,6 @@ public class CoreQueryImporter implements TTImport {
                 .property(s -> s
                     .setIri(IM.NAMESPACE + "recordOwner")))
             .match(f -> f
-
                 .setInstanceOf(new Node()
                     .setParameter("this"))
                 .property(p -> p
@@ -820,6 +812,7 @@ public class CoreQueryImporter implements TTImport {
 
     @Override
     public void validateFiles(String inFolder) throws TTFilerException {
+        // No files to validate
     }
 
 
@@ -835,17 +828,16 @@ public class CoreQueryImporter implements TTImport {
             writer.write(doc);
         }
         for (TTEntity entity : document.getEntities()) {
-                if (entity.isType(IM.MATCH_CLAUSE)) {
-                    Match match = entity.get(IM.DEFINITION).asLiteral().objectValue(Match.class);
-                    outputMatch(match, directory);
+            if (entity.isType(IM.MATCH_CLAUSE)) {
+                Match match = entity.get(IM.DEFINITION).asLiteral().objectValue(Match.class);
+                outputMatch(match, directory);
+            } else {
+                if (entity.get(IM.DEFINITION) != null) {
+                    Query query = entity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
+                    outputQuery(query, directory);
                 }
-                else {
-            if (entity.get(IM.DEFINITION) != null) {
-                Query query = entity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-                outputQuery(query, directory);
             }
         }
-            }
 
     }
 
@@ -865,17 +857,17 @@ public class CoreQueryImporter implements TTImport {
         }
     }
 
-    private void outputMatch(Match qry,String directory) throws IOException {
-        String name= qry.getName();
-        if (name.length()>20)
-            name= name.substring(0,20);
-        try (FileWriter writer = new FileWriter(directory + "\\DiscoveryCore\\CoreQueries\\"+ name +"+.json")) {
+    private void outputMatch(Match qry, String directory) throws IOException {
+        String name = qry.getName();
+        if (name.length() > 20)
+            name = name.substring(0, 20);
+        try (FileWriter writer = new FileWriter(directory + "\\DiscoveryCore\\CoreQueries\\" + name + "+.json")) {
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
             objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
             String doc = objectMapper.writerWithDefaultPrettyPrinter()
-              .withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(qry);
+                .withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(qry);
             writer.write(doc);
         }
     }
