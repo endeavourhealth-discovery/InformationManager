@@ -32,6 +32,12 @@ public class CoreQueryImporter implements TTImport {
             agedOver18AsMatch();
             gpGMSRegisteredPractice();
             deleteSets();
+            patientsWithActiveCondition(IM.NAMESPACE + "Q_Diabetics", "Patients with active diabetes",
+                SNOMED.NAMESPACE + "73211009", "Diabetes mellitus",
+                SNOMED.NAMESPACE + "315051004", "Diabetes resolved");
+            patientsWithActiveCondition(IM.NAMESPACE + "Q_Hypertensives", "Patients with active hypertension",
+                SNOMED.NAMESPACE + "70995007", "Hypertension",
+                SNOMED.NAMESPACE + "162659009", "Hypertension resolved");
             testQuery();
             getActiveDiabetes();
             objectPropertyRangeSuggestions();
@@ -73,7 +79,6 @@ public class CoreQueryImporter implements TTImport {
                 .setOperator(Operator.gte)
                 .setValue("18"));
     }
-
 
     private void objectPropertyRangeSuggestions() throws JsonProcessingException {
         TTEntity query = getQuery("ObjectPropertyRangeSuggestions", "Range suggestions for object property", "takes account of the data model shape that the property is part of");
@@ -213,7 +218,6 @@ public class CoreQueryImporter implements TTImport {
         document.addEntity(query);
     }
 
-
     private void getActiveDiabetes() throws JsonProcessingException {
         TTEntity entity = new TTEntity().addType(IM.MATCH_CLAUSE)
             .set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
@@ -225,7 +229,6 @@ public class CoreQueryImporter implements TTImport {
         entity.set(IM.DEFINITION, TTLiteral.literal(getActiveDiabetesMatch()));
         document.addEntity(entity);
     }
-
 
     private Match getActiveDiabetesMatch() {
         return new Match()
@@ -264,17 +267,62 @@ public class CoreQueryImporter implements TTImport {
                             .relativeTo(r -> r.setNodeRef("latestDiabetes").setIri(IM.NAMESPACE + "effectiveDate"))))));
     }
 
+    private void patientsWithActiveCondition(String iri, String name, String activeIri, String activeName, String inactiveIri, String inactiveName) throws JsonProcessingException {
+        TTEntity qry = new TTEntity(iri)
+            .addType(IM.COHORT_QUERY)
+            .setName(name)
+            .set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
+
+        Query definition = new Query()
+            .setIri(iri)
+            .setName(name)
+            .setTypeOf(IM.NAMESPACE + "Patient")
+            .match(m -> m
+                .property(p -> p
+                    .setIri(IM.NAMESPACE + "observation")
+                    .match(m1 -> m1.setTypeOf(IM.NAMESPACE + "Observation")
+                        .setBool(Bool.and)
+                        .property(ww -> ww
+                            .setIri(IM.NAMESPACE + "concept")
+                            .setName("concept")
+                            .addIs(new Node()
+                                .setIri(activeIri)
+                                .setName(activeName)
+                                .setDescendantsOrSelfOf(true))
+                            .addIs(new Node()
+                                .setIri(inactiveIri)
+                                .setName(inactiveName)
+                                .setDescendantsOrSelfOf(true))
+                            .setValueLabel(activeName + " or " + inactiveName))
+                        .setOrderBy(new OrderLimit()
+                            .addProperty(new OrderDirection()
+                                .setIri(IM.NAMESPACE + "effectiveDate")
+                                .setDirection(Order.descending))
+                            .setLimit(1))
+                        .then(t -> t
+                            .property(w -> w
+                                .setIri(IM.NAMESPACE + "concept")
+                                .addIs(new Node()
+                                    .setIri(activeIri)
+                                    .setName(activeName)
+                                    .setDescendantsOrSelfOf(true)))))));
+
+        qry.set(IM.DEFINITION, TTLiteral.literal(definition));
+        qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
+        document.addEntity(qry);
+    }
+
     private void testQuery() throws IOException {
 
         TTEntity qry = new TTEntity().addType(IM.COHORT_QUERY)
             .set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
         qry
             .setIri(IM.NAMESPACE + "Q_TestQuery")
-            .setName("Test for patients either aged between 18 and 65 or with diabetes with the most recent systolic in the last 6 months >150" +
+            .setName("Test for patients either aged between 65 and 70 or with diabetes with the most recent systolic in the last 12 months either home >130 or office >140," +
                 "not followed by a screening invite, excluding hypertensives");
         Query prof = new Query()
             .setIri(IM.NAMESPACE + "Q_TestQuery")
-            .setName("Test for patients either aged between 18 and 65 or with diabetes with the most recent systolic in the last 6 months >150" +
+            .setName("Test for patients either aged between 65 and 70 or with diabetes with the most recent systolic in the last 12 months either home >130 or office >140," +
                 "not followed by a screening invite, excluding hypertensives")
             .setTypeOf(IM.NAMESPACE + "Patient")
             .match(m -> m
@@ -295,7 +343,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setValue("70")
                                 .setUnit("YEARS")))))
                 .match(or -> or
-                    .addInSet(new Node().setIri("http://example/queries#Q_Diabetics")))
+                    .addInSet(new Node().setIri(IM.NAMESPACE + "Q_Diabetics")))
                 .match(or -> or
                     .property(p -> p.setIri(IM.NAMESPACE + "observation")
                         .match(n -> n.setTypeOf(IM.NAMESPACE + "Observation")
@@ -323,10 +371,10 @@ public class CoreQueryImporter implements TTImport {
                         .property(ww -> ww
                             .setIri(IM.NAMESPACE + "effectiveDate")
                             .setOperator(Operator.gte)
-                            .setValue("-6")
+                            .setValue("-12")
                             .setUnit("MONTHS")
                             .relativeTo(r -> r.setParameter("$referenceDate"))
-                            .setValueLabel("last 6 months"))
+                            .setValueLabel("last 12 months"))
                         .setOrderBy(new OrderLimit()
                             .addProperty(new OrderDirection()
                                 .setIri(IM.NAMESPACE + "effectiveDate")
@@ -381,7 +429,6 @@ public class CoreQueryImporter implements TTImport {
         document.addEntity(qry);
     }
 
-
     private void deleteSets() throws JsonProcessingException {
         TTEntity entity = new TTEntity()
             .setIri(IM.NAMESPACE + "DeleteSets")
@@ -397,7 +444,6 @@ public class CoreQueryImporter implements TTImport {
 
     }
 
-
     private void currentGMS() throws JsonProcessingException {
 
         TTEntity qry = new TTEntity().addType(IM.COHORT_QUERY);
@@ -412,7 +458,6 @@ public class CoreQueryImporter implements TTImport {
         qry.set(IM.DEFINITION, TTLiteral.literal(getGmsPatient(qry.getIri(), qry.getName(), qry.getDescription())));
         document.addEntity(qry);
     }
-
 
     private void currentGMSAsMatch() throws JsonProcessingException {
 
@@ -815,7 +860,6 @@ public class CoreQueryImporter implements TTImport {
         // No files to validate
     }
 
-
     private void output(TTDocument document, String directory) throws IOException {
 
         try (FileWriter writer = new FileWriter(directory + "\\DiscoveryCore\\CoreQueries\\CoreQueriesAll.json")) {
@@ -840,7 +884,6 @@ public class CoreQueryImporter implements TTImport {
         }
 
     }
-
 
     private void outputQuery(Query qry, String directory) throws IOException {
         String name = qry.getName();
