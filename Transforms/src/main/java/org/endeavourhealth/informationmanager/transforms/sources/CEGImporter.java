@@ -2,6 +2,8 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.Unmarshaller;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
@@ -19,7 +21,9 @@ import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBContext;
+
+import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -147,9 +151,10 @@ public class CEGImporter implements TTImport {
 				String ext= FilenameUtils.getExtension(fileEntry.getName());
 				if (ext.equalsIgnoreCase("xml")) {
                     LOG.info("...{}", fileEntry.getName());
+                    
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
-						.unmarshal(new FileReader(fileEntry));
+						.unmarshal(fileEntry);
 					EqdToIMQ converter= new EqdToIMQ();
 					ModelDocument qDocument= converter.convertEQD(eqd,dataMap,
 						labels);
