@@ -214,7 +214,7 @@ public class OdsImporter implements TTImport {
             .setStatus("Active".equals(fieldByName("Status")) ? IM.ACTIVE : IM.INACTIVE)
             .set(ORG.ODS_CODE, literal(odsCode))
             .set(IM.ADDRESS, iri(addIri))
-            .set(ORG.ORGANISATION_RECORD_CLASS, iri(ODS.ORGANISATION_RECORD_CLASS + "_" + fieldByName("OrganisationRecordClass")));
+            .set(ORG.ORGANISATION_RECORD_CLASS, iri(ODS.ORGANISATION_RECORD_CLASS + "_" + fieldByName("OrganisationRecordClass").substring(2)));
 
         addEntity(org, doc);
 
@@ -270,7 +270,7 @@ public class OdsImporter implements TTImport {
             }
 
             TTNode rel = new TTNode()
-                .set(IM.CONCEPT, iri(ODS.ORGANISATION_RELATIONSHIP + "_" + fieldByName("RelationshipId")))
+                .set(IM.CONCEPT, iri(ODS.ORGANISATION_RELATIONSHIP + "_" + fieldByName("RelationshipId").substring(2)))
                 .set(IM.EFFECTIVE_DATE, literal(fieldByName("OperationalStartDate")))
                 .set(IM.END_DATE, literal(fieldByName("OperationalEndDate")))
                 .set(IM.HAS_STATUS, "Active".equals(fieldByName("Status")) ? IM.ACTIVE : IM.INACTIVE)
@@ -316,7 +316,7 @@ public class OdsImporter implements TTImport {
             }
 
             TTNode role = new TTNode()
-                .set(IM.CONCEPT, iri(ODS.ORGANISATION_ROLE_TYPE + "_" + roleId))
+                .set(IM.CONCEPT, iri(ODS.ORGANISATION_ROLE_TYPE + "_" + roleId.substring(2)))
                 .set(IM.EFFECTIVE_DATE, literal(fieldByName("OperationalStartDate")))
                 .set(IM.END_DATE, literal(fieldByName("OperationalEndDate")))
                 .set(IM.HAS_STATUS, "Active".equals(fieldByName("Status")) ? IM.ACTIVE : IM.INACTIVE);
