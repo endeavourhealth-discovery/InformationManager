@@ -17,7 +17,7 @@ ext {
             junitRunner         : '1.10.1',
             json                : '20231013',
             jsonSimple          : '0.4',
-            logback             : '1.4.11',
+            logback             : '1.4.13',
             openCsv             : '5.9',
             openLlet            : '2.6.5',
             owlApi              : '5.5.0',
