@@ -174,7 +174,7 @@ public class OdsImporter implements TTImport {
         if (null != prefix) {
             TTEntity concept = new TTEntity(prefix + "_" + fieldByName("Code"))
                 .addType(IM.CONCEPT)
-                .setName(fieldByName("DisplayName", true) + " " + suffix)
+                .setName(fieldByName("DisplayName") + " " + suffix)
                 .setScheme(IM.CODE_SCHEME_ODS)
                 .setCode(fieldByName("Id"))
                 .set(RDFS.SUBCLASSOF, new TTArray().add(iri(prefix)))
@@ -210,7 +210,7 @@ public class OdsImporter implements TTImport {
 
         TTEntity org = new TTEntity(ORG.ORGANISATION_NAMESPACE + odsCode)
             .addType(TTIriRef.iri(IM.NAMESPACE + "Organisation"))
-            .setName(fieldByName("Name", true))
+            .setName(fieldByName("Name"))
             .setStatus("Active".equals(fieldByName("Status")) ? IM.ACTIVE : IM.INACTIVE)
             .set(ORG.ODS_CODE, literal(odsCode))
             .set(IM.ADDRESS, iri(addIri))
@@ -220,13 +220,13 @@ public class OdsImporter implements TTImport {
 
         TTEntity add = new TTEntity(addIri)
             .addType(IM.ADDRESS_CLASS)
-            .set(IM.ADDRESS_LINE_1, literal(fieldByName("AddrLn1", true)))
-            .set(IM.ADDRESS_LINE_2, literal(fieldByName("AddrLn2", true)))
-            .set(IM.ADDRESS_LINE_3, literal(fieldByName("AddrLn3", true)))
-            .set(IM.LOCALITY, literal(fieldByName("Town", true)))
-            .set(IM.REGION, literal(fieldByName("County", true)))
-            .set(IM.POST_CODE, literal(fieldByName("PostCode", true)))
-            .set(IM.COUNTRY, literal(fieldByName("Country", true)));
+            .set(IM.ADDRESS_LINE_1, literal(fieldByName("AddrLn1")))
+            .set(IM.ADDRESS_LINE_2, literal(fieldByName("AddrLn2")))
+            .set(IM.ADDRESS_LINE_3, literal(fieldByName("AddrLn3")))
+            .set(IM.LOCALITY, literal(fieldByName("Town")))
+            .set(IM.REGION, literal(fieldByName("County")))
+            .set(IM.POST_CODE, literal(fieldByName("PostCode")))
+            .set(IM.COUNTRY, literal(fieldByName("Country")));
 
         String uprn = fieldByName("UPRN");
         if (uprn != null && !uprn.isEmpty())
@@ -342,41 +342,17 @@ public class OdsImporter implements TTImport {
     }
 
     private String fieldByName(String name) {
-        return fieldByName(name, false);
-    }
-
-    private String fieldByName(String name, boolean asProperCase) {
         int i = this.fieldIndex.indexOf(name);
 
         if (i >= this.fieldData.length)
             return null;
 
-        return asProperCase ? toProperCase(this.fieldData[i]) : this.fieldData[i];
+        return this.fieldData[i];
     }
 
     private void addEntity(TTEntity entity, TTDocument doc) {
         doc.addEntity(entity);
         entityIndex.put(entity.getIri(), entity);
-    }
-
-    private String toProperCase(String text) {
-        if (text == null || text.isEmpty())
-            return "";
-
-        Set<String> skipWords = Set.of("NHS", "PCT", "DMU", "GP", "LA", "LSP", "DSCRO", "ICB", "SMHPC", "HSCIC", "NH");
-        StringJoiner fixed = new StringJoiner(" ");
-        String[] words = text.split(" ");
-
-        for(String word : words) {
-            if (skipWords.contains(word) || (word.startsWith("(") && word.endsWith(")")))
-                fixed.add(word);
-            else
-                fixed.add(word.toLowerCase());
-        }
-
-        String result = fixed.toString();
-
-        return result.substring(0,1).toUpperCase() + result.substring(1);
     }
 
     @Override
