@@ -40,6 +40,7 @@ public class CoreQueryImporter implements TTImport {
                 SNOMED.NAMESPACE + "162659009", "Hypertension resolved");
             testQuery();
             getActiveDiabetes();
+            getLatestHighBP();
             objectPropertyRangeSuggestions();
             dataPropertyRangeSuggestions();
             searchProperties();
@@ -228,6 +229,78 @@ public class CoreQueryImporter implements TTImport {
         entity.set(SHACL.ORDER, 2);
         entity.set(IM.DEFINITION, TTLiteral.literal(getActiveDiabetesMatch()));
         document.addEntity(entity);
+    }
+
+    private void getLatestHighBP() throws JsonProcessingException {
+        TTEntity entity = new TTEntity().addType(IM.MATCH_CLAUSE)
+          .set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
+        entity.setIri(IM.NAMESPACE + "M_LatestRecentHighSystolic");
+        entity.setName("Latest systolic BP in the last 6 months is high");
+        entity.setDescription("Latest home or office BP within the last 12 months is either >140 if in the office of >130 if done at home or self reported");
+        entity.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
+        entity.set(SHACL.ORDER, 3);
+        entity.set(IM.DEFINITION, TTLiteral.literal(getLatestBPMatch()));
+        document.addEntity(entity);
+    }
+
+    private Match getLatestBPMatch() {
+        return new Match()
+            .property(p -> p
+              .setIri(IM.NAMESPACE + "observation")
+              .match(m1 -> m1.setTypeOf(IM.NAMESPACE + "Observation")
+                .setBool(Bool.and)
+                .property(ww -> ww
+                  .setIri(IM.NAMESPACE + "concept")
+                  .setName("concept")
+                  .addInSet(new Node()
+                    .setIri(SNOMED.NAMESPACE + "999035921000230109")
+                    .setDescendantsOrSelfOf(true)
+                    .setName("Systolic blood pressure recording"))
+                  .addIs(new Node()
+                    .setIri(IM.CODE_SCHEME_EMIS.getIri() + "1994021000006104")
+                    .setDescendantsOrSelfOf(true)
+                    .setName("Home systolic blood pressure"))
+                  .setValueLabel("Office home or self recorded systolic blood pressure"))
+                .property(ww -> ww
+                  .setIri(IM.NAMESPACE + "effectiveDate")
+                  .setOperator(Operator.gte)
+                  .setValue("-12")
+                  .setUnit("MONTHS")
+                  .relativeTo(r -> r.setParameter("$referenceDate"))
+                  .setValueLabel("last 12 months"))
+                .setOrderBy(new OrderLimit()
+                  .addProperty(new OrderDirection()
+                    .setIri(IM.NAMESPACE + "effectiveDate")
+                    .setDirection(Order.descending))
+                  .setLimit(1))
+                .then(t -> t.setVariable("highBPReading")
+                  .setBool(Bool.or)
+                  .match(m4 -> m4
+                    .setBool(Bool.and)
+                    .property(w -> w
+                      .setIri(IM.NAMESPACE + "concept")
+                      .addIs(new Node()
+                        .setIri(SNOMED.NAMESPACE + "271649006")
+                        .setDescendantsOrSelfOf(true)
+                        .setName("Systolic blood pressure"))
+                      .setValueLabel("Office blood pressure"))
+                    .property(w -> w
+                      .setIri(IM.NAMESPACE + "numericValue")
+                      .setOperator(Operator.gt)
+                      .setValue("140")))
+                  .match(m4 -> m4
+                    .setBool(Bool.and)
+                    .property(w -> w
+                      .setIri(IM.NAMESPACE + "concept")
+                      .addIs(new Node()
+                        .setIri(IM.CODE_SCHEME_EMIS.getIri() + "1994021000006104")
+                        .setDescendantsOrSelfOf(true)
+                        .setName("Home systolic blood pressure"))
+                      .setValueLabel("Home blood pressure"))
+                    .property(w -> w
+                      .setIri(IM.NAMESPACE + "numericValue")
+                      .setOperator(Operator.gt)
+                      .setValue("130"))))));
     }
 
     private Match getActiveDiabetesMatch() {
