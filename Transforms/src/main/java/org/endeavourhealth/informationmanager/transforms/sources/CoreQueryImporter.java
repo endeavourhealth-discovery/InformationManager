@@ -40,7 +40,8 @@ public class CoreQueryImporter implements TTImport {
                 SNOMED.NAMESPACE + "162659009", "Hypertension resolved");
             testQuery();
             getActiveDiabetes();
-            getLatestHighBP();
+            latestBPMatch();
+            latestHighBP();
             objectPropertyRangeSuggestions();
             dataPropertyRangeSuggestions();
             searchProperties();
@@ -231,20 +232,91 @@ public class CoreQueryImporter implements TTImport {
         document.addEntity(entity);
     }
 
-    private void getLatestHighBP() throws JsonProcessingException {
+    private void latestHighBP() throws JsonProcessingException {
         TTEntity entity = new TTEntity().addType(IM.MATCH_CLAUSE)
           .set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
         entity.setIri(IM.NAMESPACE + "M_LatestRecentHighSystolic");
-        entity.setName("Latest systolic BP in the last 6 months is high");
+        entity.setName("Latest systolic blood pressure in the last 6 months is high");
         entity.setDescription("Latest home or office BP within the last 12 months is either >140 if in the office of >130 if done at home or self reported");
         entity.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
-        entity.set(SHACL.ORDER, 3);
-        entity.set(IM.DEFINITION, TTLiteral.literal(getLatestBPMatch()));
+        entity.set(SHACL.ORDER, 4);
+        Match match=new Match()
+          .property(p -> p
+            .setIri(IM.NAMESPACE + "observation")
+            .match(m1 -> m1.setTypeOf(IM.NAMESPACE + "Observation")
+              .setBool(Bool.and)
+              .property(ww -> ww
+                .setIri(IM.NAMESPACE + "concept")
+                .setName("concept")
+                .addInSet(new Node()
+                  .setIri(SNOMED.NAMESPACE + "999035921000230109")
+                  .setDescendantsOrSelfOf(true)
+                  .setName("Systolic blood pressure recording"))
+                .addIs(new Node()
+                  .setIri(IM.CODE_SCHEME_EMIS.getIri() + "1994021000006104")
+                  .setDescendantsOrSelfOf(true)
+                  .setName("Home systolic blood pressure"))
+                .setValueLabel("Office home or self recorded systolic blood pressure"))
+              .property(ww->ww
+                .setIri(IM.NAMESPACE+"value")
+                .setIsNull(false))
+              .property(ww -> ww
+                .setIri(IM.NAMESPACE + "effectiveDate")
+                .setOperator(Operator.gte)
+                .setValue("-12")
+                .setUnit("MONTHS")
+                .relativeTo(r -> r.setParameter("$referenceDate"))
+                .setValueLabel("last 12 months"))
+              .setOrderBy(new OrderLimit()
+                .addProperty(new OrderDirection()
+                  .setIri(IM.NAMESPACE + "effectiveDate")
+                  .setDirection(Order.descending))
+                .setLimit(1))
+              .then(t -> t.setVariable("highBPReading")
+                .setBool(Bool.or)
+                .match(m4 -> m4
+                  .setBool(Bool.and)
+                  .property(w -> w
+                    .setIri(IM.NAMESPACE + "concept")
+                    .addIs(new Node()
+                      .setIri(SNOMED.NAMESPACE + "271649006")
+                      .setDescendantsOrSelfOf(true)
+                      .setName("Systolic blood pressure"))
+                    .setValueLabel("Office blood pressure"))
+                  .property(w -> w
+                    .setIri(IM.NAMESPACE + "numericValue")
+                    .setOperator(Operator.gt)
+                    .setValue("140")))
+                .match(m4 -> m4
+                  .setBool(Bool.and)
+                  .property(w -> w
+                    .setIri(IM.NAMESPACE + "concept")
+                    .addIs(new Node()
+                      .setIri(IM.CODE_SCHEME_EMIS.getIri() + "1994021000006104")
+                      .setDescendantsOrSelfOf(true)
+                      .setName("Home systolic blood pressure"))
+                    .setValueLabel("Home blood pressure"))
+                  .property(w -> w
+                    .setIri(IM.NAMESPACE + "numericValue")
+                    .setOperator(Operator.gt)
+                    .setValue("130"))))));
+        entity.set(IM.DEFINITION, TTLiteral.literal(match));
+        document.addEntity(entity);
+        entity.set(IM.DEFINITION, TTLiteral.literal(match));
         document.addEntity(entity);
     }
 
-    private Match getLatestBPMatch() {
-        return new Match()
+    private void latestBPMatch() throws JsonProcessingException {
+        TTEntity entity = new TTEntity().addType(IM.MATCH_CLAUSE)
+          .set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
+        entity.setIri(IM.NAMESPACE + "M_LatestSystolicBP12M");
+        entity.setName("Latest systolic blood pressure in the last 12 months");
+        entity.setDescription("The latest systolic blood pressure that has a value");
+
+        entity.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
+        entity.set(SHACL.ORDER, 3);
+
+        Match match=new Match()
             .property(p -> p
               .setIri(IM.NAMESPACE + "observation")
               .match(m1 -> m1.setTypeOf(IM.NAMESPACE + "Observation")
@@ -254,13 +326,10 @@ public class CoreQueryImporter implements TTImport {
                   .setName("concept")
                   .addInSet(new Node()
                     .setIri(SNOMED.NAMESPACE + "999035921000230109")
-                    .setDescendantsOrSelfOf(true)
-                    .setName("Systolic blood pressure recording"))
-                  .addIs(new Node()
-                    .setIri(IM.CODE_SCHEME_EMIS.getIri() + "1994021000006104")
-                    .setDescendantsOrSelfOf(true)
-                    .setName("Home systolic blood pressure"))
-                  .setValueLabel("Office home or self recorded systolic blood pressure"))
+                    .setName("Systolic blood pressure recording")))
+                .property(ww->ww
+                  .setIri(IM.NAMESPACE+"value")
+                  .setIsNull(false))
                 .property(ww -> ww
                   .setIri(IM.NAMESPACE + "effectiveDate")
                   .setOperator(Operator.gte)
@@ -273,34 +342,9 @@ public class CoreQueryImporter implements TTImport {
                     .setIri(IM.NAMESPACE + "effectiveDate")
                     .setDirection(Order.descending))
                   .setLimit(1))
-                .then(t -> t.setVariable("highBPReading")
-                  .setBool(Bool.or)
-                  .match(m4 -> m4
-                    .setBool(Bool.and)
-                    .property(w -> w
-                      .setIri(IM.NAMESPACE + "concept")
-                      .addIs(new Node()
-                        .setIri(SNOMED.NAMESPACE + "271649006")
-                        .setDescendantsOrSelfOf(true)
-                        .setName("Systolic blood pressure"))
-                      .setValueLabel("Office blood pressure"))
-                    .property(w -> w
-                      .setIri(IM.NAMESPACE + "numericValue")
-                      .setOperator(Operator.gt)
-                      .setValue("140")))
-                  .match(m4 -> m4
-                    .setBool(Bool.and)
-                    .property(w -> w
-                      .setIri(IM.NAMESPACE + "concept")
-                      .addIs(new Node()
-                        .setIri(IM.CODE_SCHEME_EMIS.getIri() + "1994021000006104")
-                        .setDescendantsOrSelfOf(true)
-                        .setName("Home systolic blood pressure"))
-                      .setValueLabel("Home blood pressure"))
-                    .property(w -> w
-                      .setIri(IM.NAMESPACE + "numericValue")
-                      .setOperator(Operator.gt)
-                      .setValue("130"))))));
+               ));
+        entity.set(IM.DEFINITION, TTLiteral.literal(match));
+        document.addEntity(entity);
     }
 
     private Match getActiveDiabetesMatch() {
@@ -947,7 +991,7 @@ public class CoreQueryImporter implements TTImport {
         for (TTEntity entity : document.getEntities()) {
             if (entity.isType(IM.MATCH_CLAUSE)) {
                 Match match = entity.get(IM.DEFINITION).asLiteral().objectValue(Match.class);
-                outputMatch(match, directory);
+                outputMatch(entity.getName(),match, directory);
             } else {
                 if (entity.get(IM.DEFINITION) != null) {
                     Query query = entity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
@@ -973,8 +1017,7 @@ public class CoreQueryImporter implements TTImport {
         }
     }
 
-    private void outputMatch(Match qry, String directory) throws IOException {
-        String name = qry.getName();
+    private void outputMatch(String name,Match qry, String directory) throws IOException {
         if (name.length() > 20)
             name = name.substring(0, 20);
         try (FileWriter writer = new FileWriter(directory + "\\DiscoveryCore\\CoreQueries\\" + name + "+.json")) {
