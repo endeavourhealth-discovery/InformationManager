@@ -236,7 +236,7 @@ public class CoreQueryImporter implements TTImport {
         TTEntity entity = new TTEntity().addType(IM.MATCH_CLAUSE)
           .set(IM.RETURN_TYPE, TTIriRef.iri(IM.NAMESPACE + "Patient"));
         entity.setIri(IM.NAMESPACE + "M_LatestRecentHighSystolic");
-        entity.setName("Latest systolic blood pressure in the last 6 months is high");
+        entity.setName("Latest systolic blood pressure in the last 12 months is high");
         entity.setDescription("Latest home or office BP within the last 12 months is either >140 if in the office of >130 if done at home or self reported");
         entity.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
         entity.set(SHACL.ORDER, 4);
@@ -259,7 +259,7 @@ public class CoreQueryImporter implements TTImport {
                 .setValueLabel("Office home or self recorded systolic blood pressure"))
               .property(ww->ww
                 .setIri(IM.NAMESPACE+"value")
-                .setIsNull(false))
+                .setNotNull(true))
               .property(ww -> ww
                 .setIri(IM.NAMESPACE + "effectiveDate")
                 .setOperator(Operator.gte)
@@ -329,7 +329,7 @@ public class CoreQueryImporter implements TTImport {
                     .setName("Systolic blood pressure recording")))
                 .property(ww->ww
                   .setIri(IM.NAMESPACE+"value")
-                  .setIsNull(false))
+                  .setNotNull(true))
                 .property(ww -> ww
                   .setIri(IM.NAMESPACE + "effectiveDate")
                   .setOperator(Operator.gte)
