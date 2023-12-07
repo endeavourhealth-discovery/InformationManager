@@ -259,7 +259,7 @@ public class CoreQueryImporter implements TTImport {
                 .setValueLabel("Office home or self recorded systolic blood pressure"))
               .property(ww->ww
                 .setIri(IM.NAMESPACE+"value")
-                .setNotNull(true))
+                .setIsNotNull(true))
               .property(ww -> ww
                 .setIri(IM.NAMESPACE + "effectiveDate")
                 .setOperator(Operator.gte)
@@ -329,7 +329,7 @@ public class CoreQueryImporter implements TTImport {
                     .setName("Systolic blood pressure recording")))
                 .property(ww->ww
                   .setIri(IM.NAMESPACE+"value")
-                  .setNotNull(true))
+                  .setIsNotNull(true))
                 .property(ww -> ww
                   .setIri(IM.NAMESPACE + "effectiveDate")
                   .setOperator(Operator.gte)
