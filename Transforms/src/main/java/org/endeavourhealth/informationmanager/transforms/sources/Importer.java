@@ -7,6 +7,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.Vocabulary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +34,26 @@ public class Importer implements TTImportByType {
             return this;
         }
     }
+    @Override
+    public TTImportByType importByType(Vocabulary importType, TTImportConfig config) throws Exception {
+        LOG.info("Importing {}", importType.getIri());
+        try (TTImport importer = getImporter(importType.asTTIriRef())) {
+            importer.validateFiles(config.getFolder());
+            importer.importData(config);
+            return this;
+        }
+    }
 
     @Override
     public TTImportByType validateByType(TTIriRef importType, String inFolder) throws Exception {
         try (TTImport importer = getImporter(importType)) {
+            importer.validateFiles(inFolder);
+            return this;
+        }
+    }
+    @Override
+    public TTImportByType validateByType(Vocabulary importType, String inFolder) throws Exception {
+        try (TTImport importer = getImporter(importType.asTTIriRef())) {
             importer.validateFiles(inFolder);
             return this;
         }

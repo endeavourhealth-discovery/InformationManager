@@ -239,7 +239,7 @@ public class IM1MapImport implements TTImport {
                             else {
                                 TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
                                 if (core != null) {
-                                    addNewEntity(scheme+lname,core.getIri(),term,code,im1Scheme,oldIri,description,IM.CONCEPT);
+                                    addNewEntity(scheme+lname,core.getIri(),term,code,im1Scheme,oldIri,description,IM.CONCEPT.asTTIriRef());
                                 }
                                 else {
                                     checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
@@ -325,7 +325,7 @@ public class IM1MapImport implements TTImport {
                             String visionNamespace = "1000027";
                             if (getNameSpace(code).equals(visionNamespace)){
                                 scheme= IM.CODE_SCHEME_VISION.getIri();
-                                addNewEntity(scheme+code,null,term,code,im1Scheme,oldIri,description,IM.CONCEPT);
+                                addNewEntity(scheme+code,null,term,code,im1Scheme,oldIri,description,IM.CONCEPT.asTTIriRef());
                             }
                             checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
                         }
@@ -337,7 +337,7 @@ public class IM1MapImport implements TTImport {
                             else {
                                 TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
                                 if (core != null) {
-                                    addNewEntity(scheme+lname,core.getIri(),term,code,scheme,oldIri,description,IM.CONCEPT);
+                                    addNewEntity(scheme+lname,core.getIri(),term,code,scheme,oldIri,description,IM.CONCEPT.asTTIriRef());
                                 }
                                 else {
                                     checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
@@ -867,7 +867,7 @@ public class IM1MapImport implements TTImport {
     private TTIriRef getScheme(String publisher, String system) throws DataFormatException {
         if (publisher.equals("CM_Org_Barts"))
             if (system.equals("CM_Sys_Cerner"))
-                return IM.CODE_SCHEME_BARTS_CERNER;
+                return IM.CODE_SCHEME_BARTS_CERNER.asTTIriRef();
         if (publisher.equals("CM_Org_BHRUT"))
             if (system.equals("CM_Sys_Medway"))
                 return (TTIriRef.iri(IM.DOMAIN+"bhrutm#"));
@@ -893,26 +893,26 @@ public class IM1MapImport implements TTImport {
     }
 
     private void newSchemes(){
-        TTEntity newScheme= addNewCoreEntity(IM.DOMAIN+"bhrutm#","BHRUT Medway code scheme and graph",
-          null,null,IM.GRAPH);
+        TTEntity newScheme= addNewCoreEntity(IM.DOMAIN.iri+"bhrutm#","BHRUT Medway code scheme and graph",
+          null,null,IM.GRAPH.asTTIriRef());
         newScheme.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
         newScheme= addNewCoreEntity(IM.DOMAIN+"cwhcc#","CWHC Cerner code scheme and graph",
-          null,null,IM.GRAPH);
+          null,null,IM.GRAPH.asTTIriRef());
         newScheme.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
         newScheme= addNewCoreEntity(IM.DOMAIN+"impc#","Imperial Cerner code scheme and graph",
-          null,null,IM.GRAPH);
+          null,null,IM.GRAPH.asTTIriRef());
         newScheme.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
         newScheme= addNewCoreEntity(IM.DOMAIN+"kingsp#","KCH PIMS code scheme and graph",
-          null,null,IM.GRAPH);
+          null,null,IM.GRAPH.asTTIriRef());
         newScheme.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
         newScheme= addNewCoreEntity(IM.DOMAIN+"lnwhsl#","LNWH Silverlink code scheme and graph",
-          null,null,IM.GRAPH);
+          null,null,IM.GRAPH.asTTIriRef());
         newScheme.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
         newScheme= addNewCoreEntity(IM.DOMAIN+"lnwhsy#","LNWH Symphony code scheme and graph",
-                null,null,IM.GRAPH);
+                null,null,IM.GRAPH.asTTIriRef());
         newScheme.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
         newScheme= addNewCoreEntity(IM.DOMAIN+"thhsl#","THH Silverlink code scheme and graph",
-          null,null,IM.GRAPH);
+          null,null,IM.GRAPH.asTTIriRef());
         newScheme.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
 
     }

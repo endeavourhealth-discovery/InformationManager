@@ -149,7 +149,7 @@ public class EMISImport implements TTImport {
     }
 
     private void setDescriptionId(String descid, String name, TTEntity emisEntity) {
-        if (notFoundValue(emisEntity, IM.HAS_TERM_CODE, IM.CODE, descid)) {
+        if (notFoundValue(emisEntity, IM.HAS_TERM_CODE.asTTIriRef(), IM.CODE.asTTIriRef(), descid)) {
             TTNode termCode = new TTNode();
             termCode.set(IM.CODE, TTLiteral.literal(descid));
             termCode.set(RDFS.LABEL, TTLiteral.literal(name));
