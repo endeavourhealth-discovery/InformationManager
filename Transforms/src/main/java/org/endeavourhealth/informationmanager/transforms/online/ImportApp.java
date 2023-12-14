@@ -71,11 +71,10 @@ public class ImportApp {
     }
 
     private static void importData(TTImportConfig cfg) throws Exception {
-
+        TTImportByType importer = new Importer();
         switch (cfg.getImportType()) {
             case "all":
-                TTImportByType importer = new Importer()
-                    .validateByType(IM.GRAPH_DISCOVERY, cfg.getFolder())
+                    importer.validateByType(IM.GRAPH_DISCOVERY, cfg.getFolder())
                   .validateByType(IM.GRAPH_QUERY,cfg.getFolder())
                     .validateByType(SNOMED.GRAPH_SNOMED, cfg.getFolder())
                     .validateByType(IM.GRAPH_ENCOUNTERS, cfg.getFolder())
@@ -203,12 +202,12 @@ public class ImportApp {
                 importer.importByType(IM.GRAPH_DELTAS, cfg);
                 break;
             case "singlefile" :
-                importer= new Importer().validateByType(TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter"),cfg.getFolder());
-                importer.importByType(TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter"), cfg);
+                importer= new Importer().validateByType(TTIriRef.iri(IM.NAMESPACE.iri+"SingleFileImporter"),cfg.getFolder());
+                importer.importByType(TTIriRef.iri(IM.NAMESPACE.iri+"SingleFileImporter"), cfg);
                 break;
             case "qcodegroups" :
-                importer= new Importer().validateByType(TTIriRef.iri(QR.NAMESPACE),cfg.getFolder());
-                importer.importByType(TTIriRef.iri(QR.NAMESPACE), cfg);
+                importer= new Importer().validateByType(QR.NAMESPACE,cfg.getFolder());
+                importer.importByType(QR.NAMESPACE, cfg);
                 break;
             default:
                 throw new Exception("Unknown import type");

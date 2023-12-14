@@ -142,7 +142,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 		}
 		String conceptIri;
 		if (concept.matches("[0-9]+")) {
-			conceptIri = concept.contains("1000252") ? IM.NAMESPACE + concept : SNOMED.NAMESPACE + concept;
+			conceptIri = concept.contains("1000252") ? IM.NAMESPACE.iri + concept : SNOMED.NAMESPACE.iri + concept;
 		}
 		else
 			conceptIri= concept;
@@ -202,7 +202,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 		else if (subref.eclattributegroup()!=null){
 			Property where= new Property();
 			from.addProperty(where);
-			where.setIri(IM.NAMESPACE+"roleGroup");
+			where.setIri(IM.NAMESPACE.iri+"roleGroup");
 			Match group= new Match();
 			where.setMatch(group);
 			convertAttributeGroup(group,subref.eclattributegroup());
@@ -214,7 +214,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 			else if (subAndRef.eclattributegroup() != null) {
 				Property where= new Property();
 				from.addProperty(where);
-				where.setIri(IM.NAMESPACE+"roleGroup");
+				where.setIri(IM.NAMESPACE.iri+"roleGroup");
 				Match group= new Match();
 				where.setMatch(group);
 				convertAttributeGroup(group,subAndRef.eclattributegroup());
@@ -231,7 +231,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 		else if (subref.eclattributegroup()!=null){
 			Property where= new Property();
 			from.addProperty(where);
-			where.setIri(IM.NAMESPACE+"roleGroup");
+			where.setIri(IM.NAMESPACE.iri+"roleGroup");
 			Match group= new Match();
 			where.setMatch(group);
 			convertAttributeGroup(group,subref.eclattributegroup());
@@ -243,7 +243,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 			else if (subOrRef.eclattributegroup() != null) {
 				Property where= new Property();
 				from.addProperty(where);
-				where.setIri(IM.NAMESPACE+"roleGroup");
+				where.setIri(IM.NAMESPACE.iri+"roleGroup");
 				Match group= new Match();
 				where.setMatch(group);
 				convertAttributeGroup(group,subOrRef.eclattributegroup());
@@ -260,7 +260,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 		else if (subref.eclattributegroup()!=null){
 			Property where= new Property();
 			from.addProperty(where);
-			where.setIri(IM.NAMESPACE+"roleGroup");
+			where.setIri(IM.NAMESPACE.iri+"roleGroup");
 			Match group= new Match();
 			where.setMatch(group);
 			convertAttributeGroup(group,subref.eclattributegroup());
@@ -391,9 +391,9 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 		String code=conceptId.getText();
 		if (code.matches("[0-9]+")) {
 			if (code.contains("1000252"))
-				conRef.setIri(IM.NAMESPACE + code);
+				conRef.setIri(IM.NAMESPACE.iri + code);
 			else
-				conRef.setIri(SNOMED.NAMESPACE + code);
+				conRef.setIri(SNOMED.NAMESPACE.iri + code);
 		} else
 			throw new DataFormatException("ECL converter can only be used for snomed codes at this stage");
 		if (entail!=null) {

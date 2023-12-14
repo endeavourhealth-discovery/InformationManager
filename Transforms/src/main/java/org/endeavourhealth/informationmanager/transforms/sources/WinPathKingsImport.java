@@ -32,8 +32,8 @@ public class WinPathKingsImport implements TTImport {
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
 		try (TTManager manager = new TTManager()) {
-            document = manager.createDocument(IM.GRAPH_KINGS_WINPATH.getIri());
-            document.addEntity(manager.createGraph(IM.GRAPH_KINGS_WINPATH.getIri(),
+            document = manager.createDocument(IM.GRAPH_KINGS_WINPATH.iri);
+            document.addEntity(manager.createGraph(IM.GRAPH_KINGS_WINPATH.iri,
                 "Kings Winpath pathology code scheme and graph",
                 "The Kings pathology Winpath LIMB local code scheme and graph"));
             setTopLevel();
@@ -46,13 +46,13 @@ public class WinPathKingsImport implements TTImport {
 	}
 	private void setTopLevel() {
 		TTEntity kings= new TTEntity()
-			.setIri(IM.GRAPH_KINGS_WINPATH.getIri()+"KingsWinPathCodes")
+			.setIri(IM.GRAPH_KINGS_WINPATH.iri+"KingsWinPathCodes")
 			.addType(IM.CONCEPT)
 			.setName("Kings College Hospital  Winpath codes")
 			.setCode("KingsWinPathCodes")
 			.setScheme(IM.CODE_SCHEME_KINGS_WINPATH)
 			.setDescription("Local codes for the Winpath pathology system in kings")
-			.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies")));
+			.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies")));
 		document.addEntity(kings);
 	}
 
@@ -75,19 +75,19 @@ public class WinPathKingsImport implements TTImport {
 				String[] fields = line.split("\t");
 				String readCode = fields[2];
 				String code = fields[0];
-				String iri = IM.CODE_SCHEME_KINGS_WINPATH.getIri() + (fields[0].replaceAll("[ %,.\"]", ""));
+				String iri = IM.CODE_SCHEME_KINGS_WINPATH.iri + (fields[0].replaceAll("[ %,.\"]", ""));
 				TTEntity entity = new TTEntity()
 					.setIri(iri)
 					.addType(IM.CONCEPT)
 					.setName(fields[1])
 					.setDescription("Local winpath Kings trust pathology system entity ")
 					.setScheme(IM.CODE_SCHEME_KINGS_WINPATH)
-					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(IM.GRAPH_KINGS_APEX.getIri()+"KingsWinPathCodes")))
+					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(IM.GRAPH_KINGS_APEX.iri+"KingsWinPathCodes")))
 					.setCode(code);
 				document.addEntity(entity);
 				if (readToSnomed.get(readCode) != null) {
 					for (String snomed : readToSnomed.get(readCode)) {
-						entity.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+						entity.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+snomed));
 					}
 				}
 

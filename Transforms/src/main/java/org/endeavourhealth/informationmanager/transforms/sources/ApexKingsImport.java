@@ -55,7 +55,7 @@ public class ApexKingsImport implements TTImport {
 			.setCode("KingsApexCodes")
 			.setScheme(IM.GRAPH_KINGS_APEX)
 			.setDescription("Local codes for the Apex pathology system in kings")
-			.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies")));
+			.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies")));
 			document.addEntity(kings);
 	}
 
@@ -91,7 +91,7 @@ public class ApexKingsImport implements TTImport {
 				apexToRead.put(code,readCode);
 				if (readToSnomed.get(readCode)!=null){
 					for (String snomed:readToSnomed.get(readCode)){
-						entity.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+						entity.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+snomed));
 					}
 				}
 				count.getAndIncrement();

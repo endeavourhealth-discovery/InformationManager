@@ -35,10 +35,10 @@ public class CoreVerbImporter implements TTImport {
 
 	private void addEntity(String iri, Map<String,String> keyValue,String superClass){
 		TTEntity entity= new TTEntity()
-			.setIri(IM.NAMESPACE+iri)
+			.setIri(IM.NAMESPACE.iri+iri)
 			.setName(iri);
 		keyValue.entrySet().stream().forEach(e->
-				entity.set(TTIriRef.iri(IM.NAMESPACE+e.getKey()),TTLiteral.literal(e.getValue())));
+				entity.set(TTIriRef.iri(IM.NAMESPACE.iri+e.getKey()),TTLiteral.literal(e.getValue())));
 		document.addEntity(entity);
 	}
 

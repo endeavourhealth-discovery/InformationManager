@@ -102,12 +102,12 @@ public class TPPImporter implements TTImport {
         TTEntity entity= new TTEntity()
           .setIri(IM.CODE_SCHEME_TPP.getIri()+"Y2a0e")
           .setCrud(IM.ADD_QUADS)
-          .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+"1156257007"));
+          .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+"1156257007"));
         document.addEntity(entity);
         entity= new TTEntity()
           .setIri(IM.CODE_SCHEME_TPP.getIri()+"Y29ea")
           .setCrud(IM.ADD_QUADS)
-          .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+"1324671000000103"));
+          .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+"1324671000000103"));
         document.addEntity(entity);
     }
 
@@ -208,7 +208,7 @@ public class TPPImporter implements TTImport {
                         TTEntity tpp = codeToEntity.get(code);
                         if (tpp != null) {
                             if (!alreadyMapped(tpp, snomed))
-                                tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + snomed));
+                                tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE.iri + snomed));
                         }
                     }
 
@@ -385,7 +385,7 @@ public class TPPImporter implements TTImport {
           .setScheme(IM.GRAPH_TPP)
           .setCode("TPPCodes");
         c.set(IM.IS_CONTAINED_IN,new TTArray());
-        c.get(IM.IS_CONTAINED_IN).add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+        c.get(IM.IS_CONTAINED_IN).add(TTIriRef.iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies"));
         document.addEntity(c);
          c = new TTEntity().setIri(TPP + "TPPOrphanCodes")
           .set(IM.IS_CHILD_OF, new TTArray().add(iri(TPP + "TPPCodes")))
@@ -428,7 +428,7 @@ public class TPPImporter implements TTImport {
 
                 }
                 if (!alreadyMapped(tpp, snomed)) {
-                    tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + snomed));
+                    tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE.iri + snomed));
                 }
             }
             LOG.info("Process ended with {}", count);

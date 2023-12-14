@@ -31,8 +31,8 @@ public class BartsCernerImport implements TTImport {
 	private static final String[] hierarchy = {".*\\\\Barts\\\\V500_event_set_canon.txt"};
 	private static final String[] maps = {".*\\\\Barts\\\\Snomed-Barts-Cerner.txt"};
 
-    private static final String BARTS_CERNER_CODES = IM.CODE_SCHEME_BARTS_CERNER.getIri()+"BartsCernerCodes";
-    private static final String UNCLASSIFIED = IM.CODE_SCHEME_BARTS_CERNER.getIri()+"UnClassifiedBartsCernerCode";
+    private static final String BARTS_CERNER_CODES = IM.CODE_SCHEME_BARTS_CERNER.iri+"BartsCernerCodes";
+    private static final String UNCLASSIFIED = IM.CODE_SCHEME_BARTS_CERNER.iri+"UnClassifiedBartsCernerCode";
 
 	private final Map<String, TTEntity> codeToConcept= new HashMap<>();
 	private final Map<String,TTEntity> codeToSet= new HashMap<>();
@@ -50,8 +50,8 @@ public class BartsCernerImport implements TTImport {
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
 		LOG.info("retrieving snomed codes from IM");
-		document= manager.createDocument(IM.GRAPH_BARTS_CERNER.getIri());
-		document.addEntity(manager.createGraph(IM.GRAPH_BARTS_CERNER.getIri(),"Barts Cerner code scheme and graph"
+		document= manager.createDocument(IM.GRAPH_BARTS_CERNER.iri);
+		document.addEntity(manager.createGraph(IM.GRAPH_BARTS_CERNER.iri,"Barts Cerner code scheme and graph"
 		,"The Barts Cerner local code scheme and graph i.e. local codes with links to cor"));
 		importSets(config.getFolder());
 		importHierarchy(config.getFolder());
@@ -101,13 +101,13 @@ public class BartsCernerImport implements TTImport {
 					count++;
 					String[] fields = line.split("\t");
 					String code = fields[0];
-					String iri= IM.CODE_SCHEME_BARTS_CERNER.getIri()+code;
+					String iri= IM.CODE_SCHEME_BARTS_CERNER.iri+code;
 					String snomed = fields[2];
 					TTEntity barts=codeToConcept.get(code);
 					if (snomed.contains("1000252"))
-						barts.addObject(IM.MATCHED_TO,TTIriRef.iri(IM.NAMESPACE+snomed));
+						barts.addObject(IM.MATCHED_TO,TTIriRef.iri(IM.NAMESPACE.iri+snomed));
 					else
-						barts.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+						barts.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE.iri+snomed));
 					line = reader.readLine();
 					}
 				}
@@ -124,7 +124,7 @@ public class BartsCernerImport implements TTImport {
 			.setCode("BartsCernerCodes")
 			.setScheme(IM.GRAPH_BARTS_CERNER)
 			.setDescription("The Cerner codes used in Barts NHS Trust Millennium system");
-		topConcept.addObject(IM.IS_CHILD_OF,iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+		topConcept.addObject(IM.IS_CHILD_OF,iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies"));
 		document.addEntity(topConcept);
 		TTEntity unmatchedConcept= new TTEntity()
 			.setIri(UNCLASSIFIED)

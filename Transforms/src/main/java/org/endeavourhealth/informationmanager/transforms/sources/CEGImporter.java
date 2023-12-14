@@ -103,21 +103,21 @@ public class CEGImporter implements TTImport {
 			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries")
 			.setName("QMUL CEG query library")
 			.addType(IM.FOLDER)
-			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_Queries"));
+			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"Q_Queries"));
 			folder.addObject(IM.CONTENT_TYPE,IM.QUERY);
 		document.addEntity(folder);
 		folder= new TTEntity()
 			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets")
 			.setName("QMUL CEG value set library")
 			.addType(IM.FOLDER)
-			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets"));
+			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"QueryConceptSets"));
 		folder.addObject(IM.CONTENT_TYPE,IM.CONCEPT_SET);
 		document.addEntity(folder);
 		folder= new TTEntity()
 			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGFieldGroups")
 			.setName("QMUL CEG Field group library")
 			.addType(IM.FOLDER)
-			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_CEGQueries"));
+			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"Q_CEGQueries"));
 		folder.addObject(IM.CONTENT_TYPE,IM.QUERY);;
 		document.addEntity(folder);
 
@@ -126,7 +126,7 @@ public class CEGImporter implements TTImport {
 	private void createOrg(TTDocument document) {
 		owner= new TTEntity()
 			.setIri("http://org.endhealth.info/im#QMUL_CEG")
-			.addType(TTIriRef.iri(IM.NAMESPACE+"Organisation"))
+			.addType(TTIriRef.iri(IM.NAMESPACE.iri+"Organisation"))
 			.setName("Clinical Effectiveness Group of Queen Mary University of London - CEG")
 			.setDescription("The Clinical effectiveness group being a special division of Queen Mary University of London," +
 				"deliverying improvements in clinical outcomes for the population of UK");
@@ -188,8 +188,8 @@ public class CEGImporter implements TTImport {
 								.setName(qq.getName())
 								.setDescription(qq.getDescription());
 							qq.getEntityType().stream().forEach(ttQuery::addType);
-							if (qq.getEntityType().contains(IM.COHORT_QUERY))
-								ttQuery.set(IM.RETURN_TYPE,TTIriRef.iri(IM.NAMESPACE+"Patient"));
+							if (qq.getEntityType().contains(IM.COHORT_QUERY.asTTIriRef()))
+								ttQuery.set(IM.RETURN_TYPE,TTIriRef.iri(IM.NAMESPACE.iri+"Patient"));
 							document.addEntity(ttQuery);
 							if (qq.getIsContainedIn()!=null){
 								for (TTIriRef inFolder:qq.getIsContainedIn()){
@@ -218,7 +218,7 @@ public class CEGImporter implements TTImport {
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 			objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 			String json= objectMapper.writerWithDefaultPrettyPrinter().withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(qDocument);
-		  json= json.replaceAll(IM.NAMESPACE,":");
+		  json= json.replaceAll(IM.NAMESPACE.iri,":");
 			try (FileWriter wr= new FileWriter(directory + fileEntry.getName().replace(".xml","") + ".json")){
 				wr.write(json);
 			}
