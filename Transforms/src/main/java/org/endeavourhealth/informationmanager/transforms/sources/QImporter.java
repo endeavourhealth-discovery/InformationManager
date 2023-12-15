@@ -162,6 +162,8 @@ public class QImporter implements TTImport {
 			String projectId = project.getKey();
 			LOG.info("Fetching  code groups for project "+projectId+"...");
 			int page=0;
+			TTEntity projectEntity= project.getValue();
+			String projectVersion= projectEntity.get(IM.VERSION).asLiteral().getValue();
 			boolean results=true;
 			while (results) {
 				page++;

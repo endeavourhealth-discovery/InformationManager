@@ -38,6 +38,7 @@ public class EMISImport implements TTImport {
     private final Map<String, TTEntity> termToEmis = new HashMap<>();
     private final Map<String, List<String>> parentMap = new HashMap<>();
     private final Map<String, String> remaps = new HashMap<>();
+    private final Map<String,String> alternateParents= new HashMap<>();
     List<String> emisNs=Arrays.asList("1000006","1000033","1000034","1000035","1000027");
 
     private final TTManager manager = new TTManager();
@@ -67,6 +68,7 @@ public class EMISImport implements TTImport {
 
         LOG.info("importing emis code file");
         populateRemaps(remaps);
+        populateAlternateParents();
         addEMISTopLevel();
         importEMISCodes(config.getFolder());
         importDrugs(config.getFolder());
@@ -233,6 +235,10 @@ public class EMISImport implements TTImport {
            }
     }
 
+    public void populateAlternateParents(){
+        alternateParents.put("1994021000006104","271649006");
+    }
+
     public static void populateRemaps(Map<String,String> remaps) {
         remaps.put("65O2", "116813009");
         remaps.put("65O3", "268504008");
@@ -248,11 +254,21 @@ public class EMISImport implements TTImport {
             String child = entry.getKey();
             TTEntity childEntity = codeIdToEntity.get(child);
             if (childEntity.get(IM.MATCHED_TO) == null) {
-                Set<String> coreParents= new HashSet<>();
-                getCoreParents(child,childEntity,coreParents);
-                if (!coreParents.isEmpty()){
-                    for (String parent:coreParents){
-                        childEntity.addObject(IM.LOCAL_SUBCLASS_OF,TTIriRef.iri(parent));
+                TTArray oldCode= childEntity.get(IM.CODE);
+                childEntity.set(IM.CODE,childEntity.get(IM.ALTERNATIVE_CODE));
+                childEntity.set(IM.ALTERNATIVE_CODE,oldCode);
+                childEntity.setGraph(IM.GRAPH_EMIS_CORE);
+                childEntity.setScheme(IM.GRAPH_EMIS_CORE);
+                if (alternateParents.get(childEntity.getCode())!=null){
+                    childEntity.addObject(IM.LOCAL_SUBCLASS_OF,TTIriRef.iri(SNOMED.NAMESPACE+ alternateParents.get(childEntity.getCode())));
+                }
+                else {
+                    Set<String> coreParents = new HashSet<>();
+                    getCoreParents(child, childEntity, coreParents);
+                    if (!coreParents.isEmpty()) {
+                        for (String parent : coreParents) {
+                            childEntity.addObject(IM.LOCAL_SUBCLASS_OF, TTIriRef.iri(parent));
+                        }
                     }
                 }
             }
@@ -283,6 +299,14 @@ public class EMISImport implements TTImport {
           .setDescription("EMIS orphan codes that have no parent and are not matched to UK Snomed-CT."+
             " Each has a code id and an original text code and an EMIS Snomed concept id but no parent code")
           .setScheme(IM.GRAPH_EMIS);
+        document.addEntity(c);
+        c = new TTEntity().setIri(IM.GRAPH_EMIS_CORE.getIri());
+        c.setGraph(IM.GRAPH_EMIS_CORE);
+          c.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
+          c.setName("EMIS concepts")
+          .setDescription("EMIS Snomed-CT namespace concepts that are subtypes of Snomed-CT UK. "+
+            " Does not include unmatched or orphan emis concepts, or legacy concepts that are Snomed-CT equivalents")
+          .setScheme(IM.GRAPH_EMIS_CORE);
         document.addEntity(c);
     }
 
