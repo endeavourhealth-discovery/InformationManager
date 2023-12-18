@@ -27,11 +27,11 @@ public class WikiGenerator {
 	public String generateDocs(String importFolder) throws DataFormatException, IOException {
 		this.importFolder = importFolder;
 		StringBuilder documentation = new StringBuilder();
-		veto.add(IM.NAMESPACE+"Organisation");
-		veto.add(IM.NAMESPACE+"ComputerSystem");
+		veto.add(IM.NAMESPACE.iri+"Organisation");
+		veto.add(IM.NAMESPACE.iri+"ComputerSystem");
 		List<String> folders=List.of("BasicShapes","DataModelShapes","ConceptShapes","QueryShapes","TransformMapShapes","TransactionalShapes");
 		for (String folder:folders) {
-			String folderIri = IM.NAMESPACE + folder;
+			String folderIri = IM.NAMESPACE.iri + folder;
 			TTEntity heading = getEntity(folderIri);
 			documentation.append("== ").append(heading.getName()).append(" ==\n");
 			String description= convertHtml(heading.getDescription());
@@ -226,7 +226,7 @@ public class WikiGenerator {
 	private void processType(TTNode prop) throws DataFormatException, IOException {
 		TTIriRef type=null;
 		String title="";
-		for (TTIriRef test : List.of(SHACL.NODE, SHACL.NODE_KIND, SHACL.DATATYPE,SHACL.CLASS)) {
+		for (TTIriRef test : List.of(SHACL.NODE.asTTIriRef(), SHACL.NODE_KIND.asTTIriRef(), SHACL.DATATYPE.asTTIriRef(),SHACL.CLASS.asTTIriRef())) {
 			if (prop.get(test) != null) {
 				type = prop.get(test).asIriRef();
 				title = getTitle(type);
@@ -262,15 +262,15 @@ public class WikiGenerator {
 	}
 
 	private String getTitle(TTIriRef iri) throws DataFormatException, IOException {
-		if (iri.equals(SHACL.IRI))
+		if (iri.getIri().equals(SHACL.IRI.iri))
 			return "international resource identifier";
-		else if (iri.equals(XSD.STRING))
+		else if (iri.getIri().equals(XSD.STRING.iri))
 			return "any valid json value characters with json escapes";
-		else if (iri.equals(XSD.INTEGER))
+		else if (iri.getIri().equals(XSD.INTEGER.iri))
 			return "whole number";
-		else if (iri.equals(TTIriRef.iri(IM.NAMESPACE+"DateTime")))
+		else if (iri.getIri().equals(IM.NAMESPACE.iri+"DateTime"))
 			return "im date time format";
-		else if (iri.equals(XSD.BOOLEAN))
+		else if (iri.getIri().equals(XSD.BOOLEAN.iri))
 			return "boolean true or false";
 		else {
 			TTEntity entity = getEntity(iri.getIri());

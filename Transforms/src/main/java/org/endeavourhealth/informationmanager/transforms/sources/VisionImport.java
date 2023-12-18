@@ -48,7 +48,7 @@ public class VisionImport implements TTImport {
 		LOG.info("importing vision codes");
 		LOG.info("retrieving snomed codes from IM");
         try (TTManager manager= new TTManager()) {
-            snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
+            snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE.iri);
             document = manager.createDocument(IM.GRAPH_VISION.getIri());
             document.addEntity(manager.createGraph(IM.GRAPH_VISION.getIri(), "Vision (including Read) codes",
                 "The Vision local code scheme and graph including Read 2 and Vision local codes"));
@@ -209,7 +209,7 @@ public class VisionImport implements TTImport {
 			.setCode("VisionCodes")
 			.setScheme(IM.GRAPH_VISION)
 			.setDescription("Vision and read 2 codes mapped to core");
-		vision.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+		vision.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies"));
 		document.addEntity(vision);
 		for (TTEntity entity:document.getEntities()){
 			String shortCode = entity.getCode();
@@ -300,8 +300,8 @@ public class VisionImport implements TTImport {
 				TTEntity vision = codeToConcept.get(code);
 				if (vision!=null) {
 					if (isSnomed(snomed)) {
-						String iri = SNOMED.NAMESPACE + snomed;
-						vision.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE+snomed));
+						String iri = SNOMED.NAMESPACE.iri + snomed;
+						vision.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE.iri+snomed));
 					}
 				}
 				line = reader.readLine();

@@ -7,6 +7,8 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.Vocabulary;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,15 @@ public class Importer implements TTImportByType {
             return this;
         }
     }
+    @Override
+    public TTImportByType importByType(Vocabulary importType, TTImportConfig config) throws Exception {
+        LOG.info("Importing {}", importType.getIri());
+        try (TTImport importer = getImporter(importType.asTTIriRef())) {
+            importer.validateFiles(config.getFolder());
+            importer.importData(config);
+            return this;
+        }
+    }
 
     @Override
     public TTImportByType validateByType(TTIriRef importType, String inFolder) throws Exception {
@@ -41,50 +52,57 @@ public class Importer implements TTImportByType {
             return this;
         }
     }
+    @Override
+    public TTImportByType validateByType(Vocabulary importType, String inFolder) throws Exception {
+        try (TTImport importer = getImporter(importType.asTTIriRef())) {
+            importer.validateFiles(inFolder);
+            return this;
+        }
+    }
 
 
     private TTImport getImporter(TTIriRef importType) throws Exception {
-        if (TTIriRef.iri(IM.NAMESPACE + "SingleFileImporter").equals(importType))
+        if (TTIriRef.iri(IM.NAMESPACE.iri + "SingleFileImporter").equals(importType))
             return new SingleFileImporter();
-        if (IM.GRAPH_QUERY.equals(importType))
+        if (GRAPH.QUERY.iri.equals(importType.getIri()))
             return new CoreQueryImporter();
-        else if (IM.GRAPH_DISCOVERY.equals(importType))
+        else if (GRAPH.DISCOVERY.iri.equals(importType.getIri()))
             return new CoreImporter();
-        else if (IM.GRAPH_BARTS_CERNER.equals(importType))
+        else if (GRAPH.BARTS_CERNER.iri.equals(importType.getIri()))
             return new BartsCernerImport();
-        else if (SNOMED.GRAPH_SNOMED.equals(importType))
+        else if (SNOMED.GRAPH_SNOMED.iri.equals(importType.getIri()))
             return new SnomedImporter();
-        else if (IM.GRAPH_EMIS.equals(importType))
+        else if (GRAPH.EMIS.iri.equals(importType.getIri()))
             return new EMISImport();
-        else if (IM.GRAPH_TPP.equals(importType))
+        else if (GRAPH.TPP.iri.equals(importType.getIri()))
             return new TPPImporter();
-        else if (IM.GRAPH_OPCS4.equals(importType))
+        else if (GRAPH.OPCS4.iri.equals(importType.getIri()))
             return new OPCS4Importer();
-        else if (IM.GRAPH_ICD10.equals(importType))
+        else if (GRAPH.ICD10.iri.equals(importType.getIri()))
             return new ICD10Importer();
-        else if (IM.GRAPH_ENCOUNTERS.equals(importType))
+        else if (GRAPH.ENCOUNTERS.iri.equals(importType.getIri()))
             return new EncountersImporter();
-        else if (IM.GRAPH_VISION.equals(importType))
+        else if (GRAPH.VISION.iri.equals(importType.getIri()))
             return new VisionImport();
-        else if (IM.GRAPH_PRSB.equals(importType))
+        else if (GRAPH.PRSB.iri.equals(importType.getIri()))
             return new PRSBImport();
-        else if (IM.GRAPH_KINGS_APEX.equals(importType))
+        else if (GRAPH.KINGS_APEX.iri.equals(importType.getIri()))
             return new ApexKingsImport();
-        else if (IM.GRAPH_KINGS_WINPATH.equals(importType))
+        else if (GRAPH.KINGS_WINPATH.iri.equals(importType.getIri()))
             return new WinPathKingsImport();
-        else if (IM.GRAPH_ODS.equals(importType))
+        else if (GRAPH.ODS.iri.equals(importType.getIri()))
             return new OdsImporter();
-        else if (IM.GRAPH_IM1.equals(importType))
+        else if (GRAPH.IM1.iri.equals(importType.getIri()))
             return new IM1MapImport();
-        else if (IM.GRAPH_CEG_QUERY.equals(importType))
+        else if (GRAPH.CEG_QUERY.iri.equals(importType.getIri()))
             return new CEGImporter();
-        else if (IM.GRAPH_NHS_TFC.equals(importType))
+        else if (GRAPH.NHS_TFC.iri.equals(importType.getIri()))
             return new NHSTfcImport();
-        else if (IM.GRAPH_DELTAS.equals(importType))
+        else if (GRAPH.DELTAS.iri.equals(importType.getIri()))
             return new DeltaImporter();
-        else if (TTIriRef.iri(QR.NAMESPACE).equals(importType))
+        else if (QR.NAMESPACE.iri.equals(importType.getIri()))
             return new QImporter();
-        else if (IM.GRAPH_CPRD_MED.equals(importType))
+        else if (GRAPH.CPRD_MED.iri.equals(importType.getIri()))
             return new CPRDImport();
         else
             throw new Exception("Unrecognised import type [" + importType.getIri() + "]");

@@ -32,8 +32,8 @@ import java.util.*;
 
 public class QImporter implements TTImport {
 	private final Client client= ClientBuilder.newClient();
-	private final TTDocument document = new TTDocument(TTIriRef.iri(QR.NAMESPACE));
-	private final TTIriRef projectsFolder= TTIriRef.iri(QR.NAMESPACE+"QProjects");
+	private final TTDocument document = new TTDocument(QR.NAMESPACE.asTTIriRef());
+	private final TTIriRef projectsFolder= TTIriRef.iri(QR.NAMESPACE.iri+"QProjects");
 	private final Map<String,TTEntity> idProjectMap = new HashMap<>();
 	private final Map<String,TTEntity> idCodeGroupMap = new HashMap<>();
 	private final ObjectMapper om = new ObjectMapper();
@@ -44,7 +44,7 @@ public class QImporter implements TTImport {
 	@Override
 	public void importData(TTImportConfig ttImportConfig) throws Exception {
 		TTManager manager = new TTManager();
-		document.addEntity(manager.createGraph(QR.NAMESPACE,
+		document.addEntity(manager.createGraph(QR.NAMESPACE.iri,
 				"Q Research scheme and graph"
 				,"Q Research scheme and graph"));
 		addQFolders();
@@ -65,8 +65,8 @@ public class QImporter implements TTImport {
 		QueryRequest qr= new QueryRequest()
 			.addArgument(new Argument()
 				.setParameter("this")
-				.setValueIri(TTIriRef.iri(QR.NAMESPACE)))
-			.setUpdate(new Update().setIri(IM.NAMESPACE+"DeleteSets"));
+				.setValueIri(QR.NAMESPACE.asTTIriRef()))
+			.setUpdate(new Update().setIri(IM.NAMESPACE.iri+"DeleteSets"));
 
 		LOG.info("Deleting q code groups..");
 		new SearchService().updateIM(qr);
@@ -78,15 +78,15 @@ public class QImporter implements TTImport {
 
 	private void queryQRisk3() throws JsonProcessingException {
 		TTEntity qRisk3= new TTEntity()
-			.setIri(IM.NAMESPACE+"Q_QRisk3")
+			.setIri(IM.NAMESPACE.iri+"Q_QRisk3")
 			.setName("QRisk3 record query")
 			.setDescription("query of health data to set qrisk 3 parameters");
 		Query query= new Query();
 		qRisk3.set(IM.DEFINITION,TTLiteral.literal(query));
 		query
-			.setIri(IM.NAMESPACE+"Q_Qrisk3")
+			.setIri(IM.NAMESPACE.iri+"Q_Qrisk3")
 			.setName("QRisk3 health record query")
-			.setTypeOf(IM.NAMESPACE+"Patient");
+			.setTypeOf(IM.NAMESPACE.iri+"Patient");
 		query.addReturn(new Return());
 		qMatch(query,null,"age","age",false,null,false);
 		qMatch(query,null,"statedGender","sex",false,null,false);
@@ -178,7 +178,7 @@ public class QImporter implements TTImport {
 						TTEntity qGroup = idCodeGroupMap.get(groupId);
 						if (qGroup == null) {
 							qGroup = new TTEntity()
-								.setIri(QR.NAMESPACE + "QCodeGroup_" + groupId)
+								.setIri(QR.NAMESPACE.iri + "QCodeGroup_" + groupId)
 								.setName("Q code group "+codeGroup.get("Name").asText())
 								.addType(IM.CONCEPT_SET);
 						}
@@ -214,7 +214,7 @@ public class QImporter implements TTImport {
 			if (!codes.isEmpty()) {
 				for (Iterator<JsonNode> it = codes.elements(); it.hasNext(); ) {
 					JsonNode code = it.next();
-					String concept = SNOMED.NAMESPACE + code.get("Code").asText();
+					String concept = SNOMED.NAMESPACE.iri + code.get("Code").asText();
 					String term = code.get("Text").asText();
 					qGroup.addObject(IM.HAS_MEMBER, TTIriRef.iri(concept));
 				}
@@ -241,7 +241,7 @@ public class QImporter implements TTImport {
 			 */
 			String id= project.get("Id").asText();
 			TTEntity qset= new TTEntity()
-				.setIri(QR.NAMESPACE+"QPredict_"+ project.get("Id").asText())
+				.setIri(QR.NAMESPACE.iri+"QPredict_"+ project.get("Id").asText())
 				.addType(IM.CONCEPT_SET)
 				.setName(project.get("Name").asText());
 			qset.set(IM.IS_CONTAINED_IN,projectsFolder);
@@ -292,15 +292,15 @@ public class QImporter implements TTImport {
 			.setDescription("Folder containing the Q research  concept groups");
 		folder.addObject(IM.CONTENT_TYPE,IM.CONCEPT_SET);
 		document.addEntity(folder);
-		folder.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets"));
+		folder.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"QueryConceptSets"));
 		TTEntity qFolder= new TTEntity()
-			.setIri(IM.NAMESPACE+"Q_PredictionQueries")
+			.setIri(IM.NAMESPACE.iri+"Q_PredictionQueries")
 			.addType(IM.FOLDER)
 			.setName("Predication queries")
 			.setDescription("Folder containing queries for prediction algorithms");
 		qFolder.addObject(IM.CONTENT_TYPE,IM.QUERY);
 		document.addEntity(qFolder);
-		qFolder.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"Q_Queries"));
+		qFolder.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"Q_Queries"));
 	}
 
 	@Override

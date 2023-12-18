@@ -41,7 +41,7 @@ public class NHSTfcImport implements TTImport {
 			.setCode("0")
 			.addType(IM.CONCEPT)
 			.setStatus(IM.ACTIVE);
-		nhs.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+		nhs.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies"));
 		document.addEntity(nhs);
 	}
 
@@ -66,7 +66,7 @@ public class NHSTfcImport implements TTImport {
 					.addType(IM.CONCEPT)
 					.setStatus(IM.ACTIVE);
 				tfc.addObject(IM.IS_CHILD_OF,nhsTfc);
-				tfc.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+				tfc.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+snomed));
 				document.addEntity(tfc);
 				line= reader.readLine();
 			}

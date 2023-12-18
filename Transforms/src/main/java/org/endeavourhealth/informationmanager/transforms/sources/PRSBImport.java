@@ -32,8 +32,8 @@ public class PRSBImport implements TTImport {
 	public void importData(TTImportConfig config) throws Exception {
 		validateFiles(config.getFolder());
 		try (TTManager dmanager= new TTManager()) {
-            document = dmanager.createDocument(IM.GRAPH_PRSB.getIri());
-            document.addEntity(dmanager.createGraph(IM.GRAPH_PRSB.getIri(), "PRSB code scheme and graph"
+            document = dmanager.createDocument(IM.GRAPH_PRSB.iri);
+            document.addEntity(dmanager.createGraph(IM.GRAPH_PRSB.iri, "PRSB code scheme and graph"
                 , "The professional records standards board code scheme and graph"));
             importEntityFiles(config.getFolder());
             //TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());
@@ -44,7 +44,7 @@ public class PRSBImport implements TTImport {
 
 	private void initializeMaps() {
         axiomMap = new HashMap<>();
-        axiomMap.put("prsb03-dataelement-10868", getAxioms(IM.NAMESPACE + "Patient"));
+        axiomMap.put("prsb03-dataelement-10868", getAxioms(IM.NAMESPACE.iri + "Patient"));
 
     }
 
@@ -86,8 +86,8 @@ public class PRSBImport implements TTImport {
 	}
 
 	private void parsePRSBModel(JSONObject dataModel) throws DataFormatException {
-		TTEntity dm= newEntity(dataModel,SHACL.NODESHAPE);
-		dm.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE+"DiscoveryOntology"));
+		TTEntity dm= newEntity(dataModel,SHACL.NODESHAPE.asTTIriRef());
+		dm.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"DiscoveryOntology"));
 		JSONArray recordTypes= (JSONArray) dataModel.entrySet();
 		dataModel.entrySet().forEach(c ->{
 			try {
@@ -100,14 +100,14 @@ public class PRSBImport implements TTImport {
 
 	private void parseRecordType(JSONObject c) throws DataFormatException {
 		String prsbId= (String) c.get("iddisplay");
-		TTEntity rt= newEntity(c,SHACL.NODESHAPE);
+		TTEntity rt= newEntity(c,SHACL.NODESHAPE.asTTIriRef());
 		TTArray axioms= axiomMap.get(prsbId);
 
 	}
 
 	private TTIriRef mapStatus(String status) throws DataFormatException {
 		if (status.equals("draft"))
-			return IM.DRAFT;
+			return IM.DRAFT.asTTIriRef();
 			else
 				throw new DataFormatException("unknown status type - "+ status);
 
@@ -120,12 +120,12 @@ public class PRSBImport implements TTImport {
 		String prsbId= c.get("iddisplay").toString();
 		entity.setCode(prsbId);
 		String name= getObjectArrayliteral(c,"name","#text");
-		String iri= (PRSB.NAMESPACE + prsbId);
+		String iri= (PRSB.NAMESPACE.iri + prsbId);
 
 		entity.setName(name);
 		if (c.get("shortName")!=null) {
 			String shortName = (String) c.get("shortName");
-			entity.set(TTIriRef.iri(IM.NAMESPACE + "shortName"), TTLiteral.literal((shortName)));
+			entity.set(TTIriRef.iri(IM.NAMESPACE.iri + "shortName"), TTLiteral.literal((shortName)));
 		}
 		entity.setIri(iri);
 		String description= getObjectArrayliteral(c,"desc","#text");
@@ -133,7 +133,7 @@ public class PRSBImport implements TTImport {
 			entity.setDescription(description);
 		String background= getObjectArrayliteral(c,"context","#text");
 		if (background!=null)
-			entity.set(TTIriRef.iri(IM.NAMESPACE+"backgroundContext"),TTLiteral.literal(background));
+			entity.set(TTIriRef.iri(IM.NAMESPACE.iri+"backgroundContext"),TTLiteral.literal(background));
 		if (entity.isType(SHACL.NODESHAPE))
 			return entity;
 		return entity;

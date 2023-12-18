@@ -93,7 +93,7 @@ public class Preload {
             .validateByType(IM.GRAPH_CEG_QUERY, cfg.getFolder())
             .validateByType(IM.GRAPH_IM1, cfg.getFolder())
           //.validateByType(IM.GRAPH_CPRD_MED, cfg.getFolder())
-            .validateByType(TTIriRef.iri(QR.NAMESPACE),cfg.getFolder());
+            .validateByType(QR.NAMESPACE.asTTIriRef(),cfg.getFolder());
         if (!cfg.isSkipBulk()) {
 
             LOG.info("Importing files...");
@@ -130,7 +130,7 @@ public class Preload {
         importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
         importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
         importer.importByType(IM.GRAPH_CEG_QUERY, cfg);
-        importer.importByType(TTIriRef.iri(QR.NAMESPACE),cfg);
+        importer.importByType(QR.NAMESPACE,cfg);
         try ( TTImport deltaImporter = new DeltaImporter()) {
             deltaImporter.importData(cfg);
         }

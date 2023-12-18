@@ -158,13 +158,13 @@ public class SnomedImporter implements TTImport {
     private void addSpecials(TTDocument document) {
         //Snomed telephone is a device
         TTEntity telephone = new TTEntity()
-            .setIri(SNOMED.NAMESPACE + "359993007")
+            .setIri(SNOMED.NAMESPACE.iri + "359993007")
             .setCrud(IM.ADD_QUADS)
             .setGraph(IM.CODE_SCHEME_DISCOVERY);
-        telephone.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(IM.NAMESPACE + "71000252102"));
+        telephone.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(IM.NAMESPACE.iri + "71000252102"));
         document.addEntity(telephone);
         TTEntity specific = conceptMap.get("10362801000001104");
-        specific.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(SNOMED.NAMESPACE + "127489000"));
+        specific.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(SNOMED.NAMESPACE.iri + "127489000"));
     }
 
     private void removeQualifiers(TTDocument document) {
@@ -187,10 +187,10 @@ public class SnomedImporter implements TTImport {
     }
 
     private void setRefSetRoot() {
-        TTEntity root = new TTEntity().setIri(SNOMED.NAMESPACE + "900000000000455006");
+        TTEntity root = new TTEntity().setIri(SNOMED.NAMESPACE.iri + "900000000000455006");
         document.addEntity(root);
         conceptMap.put(root.getIri(), root);
-        root.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "QueryConceptSets")));
+        root.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE.iri + "QueryConceptSets")));
     }
 
     private void importQof(String path) throws IOException {
@@ -202,21 +202,21 @@ public class SnomedImporter implements TTImport {
             String qofFile = file.toFile().getName();
             String version = qofFile.split("_")[0];
             TTEntity clusters = new TTEntity()
-                .setIri(IM.NAMESPACE + "QofClusters")
+                .setIri(IM.NAMESPACE.iri + "QofClusters")
                 .setName("QOF Code clusters")
                 .setDescription("QOF code cluster reference sets issued on " + version)
                 .addType(IM.FOLDER);
             clusters.addObject(IM.CONTENT_TYPE, IM.CONCEPT_SET);
             clusters
-                .addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "QueryConceptSets"));
+                .addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE.iri + "QueryConceptSets"));
             document.addEntity(clusters);
             TTEntity clusterFolder = new TTEntity()
-                .setIri(IM.NAMESPACE + "QofClusters" + version)
+                .setIri(IM.NAMESPACE.iri + "QofClusters" + version)
                 .setName("QOF Code clusters - " + version)
                 .setDescription("QOF code cluster reference sets issued on " + version)
                 .addType(IM.FOLDER);
             clusterFolder
-                .addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE + "QofClusters"));
+                .addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE.iri + "QofClusters"));
             clusterFolder.addObject(IM.CONTENT_TYPE, IM.CONCEPT_SET);
             document.addEntity(clusterFolder);
 
@@ -361,7 +361,7 @@ public class SnomedImporter implements TTImport {
                 c.set(IM.DEFINITIONAL_STATUS, IM.SUFFICIENTLY_DEFINED);
             c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
             if (fields[0].equals("138875005")) { // snomed root
-                c.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "HealthModelOntology")));
+                c.set(IM.IS_CONTAINED_IN, new TTArray().add(TTIriRef.iri(IM.NAMESPACE.iri + "HealthModelOntology")));
             }
             document.addEntity(c);
             conceptMap.put(fields[0], c);
@@ -411,7 +411,7 @@ public class SnomedImporter implements TTImport {
                 document.addEntity(c);
             }
           */
-            c.addObject(IM.HAS_MEMBER, TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
+            c.addObject(IM.HAS_MEMBER, TTIriRef.iri(SNOMED.NAMESPACE.iri + fields[5]));
         }
     }
 
@@ -450,11 +450,11 @@ public class SnomedImporter implements TTImport {
             if (FULLY_SPECIFIED.equals(fields[6]) || c.getName() == null) {
                 c.setName(fields[7]);
             }
-            if (c.getStatus().equals(IM.ACTIVE)) {
+            if (c.getStatus().getIri().equals(IM.ACTIVE.iri)) {
                 if (ACTIVE.equals(fields[2]))
-              TTManager.addTermCode(c, term, fields[0], IM.ACTIVE);
+              TTManager.addTermCode(c, term, fields[0], IM.ACTIVE.asTTIriRef());
                 else
-              TTManager.addTermCode(c, term, fields[0], IM.INACTIVE);
+              TTManager.addTermCode(c, term, fields[0], IM.INACTIVE.asTTIriRef());
           }
           if (term.contains(" General practice data extraction - ")) {
             term = term.split(" General practice data extraction - ")[1];
@@ -472,8 +472,8 @@ public class SnomedImporter implements TTImport {
         int i = 0;
         OWLToTT owlConverter = new OWLToTT();
         TTContext statedContext = new TTContext();
-        statedContext.add(SNOMED.NAMESPACE, "");
-        statedContext.add(IM.NAMESPACE, "im");
+        statedContext.add(SNOMED.NAMESPACE.iri, "");
+        statedContext.add(IM.NAMESPACE.iri, "im");
         for (String relationshipFile : statedAxioms) {
             Path file = ImportUtils.findFilesForId(path, relationshipFile).get(0);
             LOG.info("Processing owl expressions in {}", file.getFileName().toString());
@@ -630,7 +630,7 @@ public class SnomedImporter implements TTImport {
     }
 
     private void addIsa(TTEntity entity, String parent) {
-        TTIriRef isa = RDFS.SUBCLASSOF;
+        TTIriRef isa = RDFS.SUBCLASSOF.asTTIriRef();
         if (entity.get(isa) == null) {
             TTArray isas = new TTArray();
             entity.set(isa, isas);

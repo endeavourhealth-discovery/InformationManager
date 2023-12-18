@@ -19,8 +19,8 @@ public class ConfigImporter implements TTImport {
     @Override
     public void importData(TTImportConfig ttImportConfig) throws Exception {
 
-        document = manager.createDocument(IM.GRAPH_CONFIG.getIri());
-        document.addEntity(manager.createGraph(IM.GRAPH_CONFIG.getIri(), "Config", "Config"));
+        document = manager.createDocument(IM.GRAPH_CONFIG.iri);
+        document.addEntity(manager.createGraph(IM.GRAPH_CONFIG.iri, "Config", "Config"));
 
         importConfig(ttImportConfig.getFolder());
 

@@ -77,7 +77,7 @@ public class ComplexMapImporter {
     }
 
     private void setMapsForEntity(String snomed, List<ComplexMap> mapList) throws JsonProcessingException {
-        TTEntity entity = new TTEntity().setIri((SNOMED.NAMESPACE + snomed));  // snomed entity reference
+        TTEntity entity = new TTEntity().setIri((SNOMED.NAMESPACE.iri + snomed));  // snomed entity reference
         document.addEntity(entity);
         for (ComplexMap sourceMap : mapList) {
             TTNode ttComplexMap = new TTNode();
@@ -94,7 +94,7 @@ public class ComplexMapImporter {
             for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
                 TTEntity legacy = legacyCodeToEntity.get(sourceTarget.getTarget());
                 if (legacy != null) {
-                    legacy.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+                    legacy.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE.iri + snomed));
                     addMapTarget(ttTargetGroup, sourceTarget);
                 }
             }
