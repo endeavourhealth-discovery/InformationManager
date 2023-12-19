@@ -4,6 +4,7 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;
 
 import java.io.IOException;
@@ -19,8 +20,8 @@ public class ConfigImporter implements TTImport {
     @Override
     public void importData(TTImportConfig ttImportConfig) throws Exception {
 
-        document = manager.createDocument(IM.GRAPH_CONFIG.iri);
-        document.addEntity(manager.createGraph(IM.GRAPH_CONFIG.iri, "Config", "Config"));
+        document = manager.createDocument(GRAPH.CONFIG.iri);
+        document.addEntity(manager.createGraph(GRAPH.CONFIG.iri, "Config", "Config"));
 
         importConfig(ttImportConfig.getFolder());
 

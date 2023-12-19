@@ -10,6 +10,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;
@@ -76,41 +77,41 @@ public class Preload {
 
         LOG.info("Validating data files...");
         TTImportByType importer = new Importer()
-            .validateByType(IM.GRAPH_DISCOVERY, cfg.getFolder())
+            .validateByType(GRAPH.DISCOVERY, cfg.getFolder())
             .validateByType(SNOMED.GRAPH_SNOMED, cfg.getFolder())
-            .validateByType(IM.GRAPH_QUERY, cfg.getFolder())
-            .validateByType(IM.GRAPH_ENCOUNTERS, cfg.getFolder())
-            .validateByType(IM.GRAPH_EMIS, cfg.getFolder())
-            .validateByType(IM.GRAPH_TPP, cfg.getFolder())
-            .validateByType(IM.GRAPH_OPCS4, cfg.getFolder())
-            .validateByType(IM.GRAPH_ICD10, cfg.getFolder())
-            .validateByType(IM.GRAPH_VISION, cfg.getFolder())
-            .validateByType(IM.GRAPH_KINGS_APEX, cfg.getFolder())
-            .validateByType(IM.GRAPH_KINGS_WINPATH, cfg.getFolder())
-            .validateByType(IM.GRAPH_BARTS_CERNER, cfg.getFolder())
-            .validateByType(IM.GRAPH_ODS, cfg.getFolder())
-            .validateByType(IM.GRAPH_NHS_TFC, cfg.getFolder())
-            .validateByType(IM.GRAPH_CEG_QUERY, cfg.getFolder())
-            .validateByType(IM.GRAPH_IM1, cfg.getFolder())
-          //.validateByType(IM.GRAPH_CPRD_MED, cfg.getFolder())
+            .validateByType(GRAPH.QUERY, cfg.getFolder())
+            .validateByType(GRAPH.ENCOUNTERS, cfg.getFolder())
+            .validateByType(GRAPH.EMIS, cfg.getFolder())
+            .validateByType(GRAPH.TPP, cfg.getFolder())
+            .validateByType(GRAPH.OPCS4, cfg.getFolder())
+            .validateByType(GRAPH.ICD10, cfg.getFolder())
+            .validateByType(GRAPH.VISION, cfg.getFolder())
+            .validateByType(GRAPH.KINGS_APEX, cfg.getFolder())
+            .validateByType(GRAPH.KINGS_WINPATH, cfg.getFolder())
+            .validateByType(GRAPH.BARTS_CERNER, cfg.getFolder())
+            .validateByType(GRAPH.ODS, cfg.getFolder())
+            .validateByType(GRAPH.NHS_TFC, cfg.getFolder())
+            .validateByType(GRAPH.CEG_QUERY, cfg.getFolder())
+            .validateByType(GRAPH.IM1, cfg.getFolder())
+          //.validateByType(GRAPH.CPRD_MED, cfg.getFolder())
             .validateByType(QR.NAMESPACE.asTTIriRef(),cfg.getFolder());
         if (!cfg.isSkipBulk()) {
 
             LOG.info("Importing files...");
-            importer.importByType(IM.GRAPH_DISCOVERY, cfg);
+            importer.importByType(GRAPH.DISCOVERY, cfg);
             importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
-            importer.importByType(IM.GRAPH_QUERY, cfg);
-            importer.importByType(IM.GRAPH_ENCOUNTERS, cfg);
-            importer.importByType(IM.GRAPH_EMIS, cfg);
-            importer.importByType(IM.GRAPH_TPP, cfg);
-            importer.importByType(IM.GRAPH_OPCS4, cfg);
-            importer.importByType(IM.GRAPH_ICD10, cfg);
-            importer.importByType(IM.GRAPH_VISION, cfg);
-            importer.importByType(IM.GRAPH_BARTS_CERNER, cfg);
-            importer.importByType(IM.GRAPH_ODS, cfg);
-            importer.importByType(IM.GRAPH_NHS_TFC, cfg);
-            importer.importByType(IM.GRAPH_IM1, cfg);
-            //importer.importByType(IM.GRAPH_CPRD_MED, cfg);
+            importer.importByType(GRAPH.QUERY, cfg);
+            importer.importByType(GRAPH.ENCOUNTERS, cfg);
+            importer.importByType(GRAPH.EMIS, cfg);
+            importer.importByType(GRAPH.TPP, cfg);
+            importer.importByType(GRAPH.OPCS4, cfg);
+            importer.importByType(GRAPH.ICD10, cfg);
+            importer.importByType(GRAPH.VISION, cfg);
+            importer.importByType(GRAPH.BARTS_CERNER, cfg);
+            importer.importByType(GRAPH.ODS, cfg);
+            importer.importByType(GRAPH.NHS_TFC, cfg);
+            importer.importByType(GRAPH.IM1, cfg);
+            //importer.importByType(GRAPH.CPRD_MED, cfg);
 
 
             LOG.info("Generating closure...");
@@ -127,9 +128,9 @@ public class Preload {
         LOG.info("Filing into live graph");
         TTFilerFactory.setBulk(false);
         TTFilerFactory.setTransactional(true);
-        importer.importByType(IM.GRAPH_KINGS_APEX, cfg);
-        importer.importByType(IM.GRAPH_KINGS_WINPATH, cfg);
-        importer.importByType(IM.GRAPH_CEG_QUERY, cfg);
+        importer.importByType(GRAPH.KINGS_APEX, cfg);
+        importer.importByType(GRAPH.KINGS_WINPATH, cfg);
+        importer.importByType(GRAPH.CEG_QUERY, cfg);
         importer.importByType(QR.NAMESPACE,cfg);
         try ( TTImport deltaImporter = new DeltaImporter()) {
             deltaImporter.importData(cfg);

@@ -17,6 +17,7 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,13 +52,13 @@ public class CEGImporter implements TTImport {
     @Override
 	public void importData(TTImportConfig config) throws Exception {
 		TTManager manager= new TTManager();
-		TTDocument document= manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
+		TTDocument document= manager.createDocument(GRAPH.CEG_QUERY.getIri());
 		TTEntity graph= new TTEntity()
-			.setIri(IM.GRAPH_CEG_QUERY.getIri())
+			.setIri(GRAPH.CEG_QUERY.getIri())
 				.setName("CEG (QMUL) graph")
 					.setDescription("CEG library of value sets, queries and profiles")
 						.addType(IM.GRAPH);
-			graph.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
+			graph.addObject(RDFS.SUBCLASS_OF,IM.GRAPH);
 		document.addEntity(graph);
 		createOrg(document);
 		 CEGEthnicityImport ethnicImport= new CEGEthnicityImport();
@@ -72,7 +73,7 @@ public class CEGImporter implements TTImport {
 		loadAndConvert(config.getFolder());
 
 		if (!conceptSets.isEmpty()) {
-			document = new TTDocument(IM.GRAPH_CEG_QUERY);
+			document = new TTDocument(GRAPH.CEG_QUERY);
 			for (ConceptSet set : conceptSets) {
 				if (!querySet.contains(set.getIri())) {
 					TTEntity ttSet = new TTEntity()
@@ -98,23 +99,23 @@ public class CEGImporter implements TTImport {
 
 
 	private void createFolders(TTDocument document) {
-		valueSetFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets");
+		valueSetFolder= TTIriRef.iri(GRAPH.CEG_QUERY.getIri()+"CSET_CEGConceptSets");
 		TTEntity folder= new TTEntity()
-			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries")
+			.setIri(GRAPH.CEG_QUERY.getIri()+"Q_CEGQueries")
 			.setName("QMUL CEG query library")
 			.addType(IM.FOLDER)
 			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"Q_Queries"));
 			folder.addObject(IM.CONTENT_TYPE,IM.QUERY);
 		document.addEntity(folder);
 		folder= new TTEntity()
-			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_CEGConceptSets")
+			.setIri(GRAPH.CEG_QUERY.getIri()+"CSET_CEGConceptSets")
 			.setName("QMUL CEG value set library")
 			.addType(IM.FOLDER)
 			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"QueryConceptSets"));
 		folder.addObject(IM.CONTENT_TYPE,IM.CONCEPT_SET);
 		document.addEntity(folder);
 		folder= new TTEntity()
-			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGFieldGroups")
+			.setIri(GRAPH.CEG_QUERY.getIri()+"Q_CEGFieldGroups")
 			.setName("QMUL CEG Field group library")
 			.addType(IM.FOLDER)
 			.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"Q_CEGQueries"));
@@ -145,7 +146,7 @@ public class CEGImporter implements TTImport {
         }
 
 		Path directory=  ImportUtils.findFileForId(folder,queries[0]);
-		TTIriRef mainFolder= TTIriRef.iri(IM.GRAPH_CEG_QUERY.getIri()+"Q_CEGQueries");
+		TTIriRef mainFolder= TTIriRef.iri(GRAPH.CEG_QUERY.getIri()+"Q_CEGQueries");
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
 			if (!fileEntry.isDirectory()) {
 				String ext= FilenameUtils.getExtension(fileEntry.getName());
@@ -158,7 +159,7 @@ public class CEGImporter implements TTImport {
 					EqdToIMQ converter= new EqdToIMQ();
 					ModelDocument qDocument= converter.convertEQD(eqd,dataMap,
 						labels);
-					TTDocument document= new TTDocument().setGraph(IM.GRAPH_CEG_QUERY);
+					TTDocument document= new TTDocument().setGraph(GRAPH.CEG_QUERY);
 					if (qDocument.getFolder()!=null){
 						for (Entity qFolder:qDocument.getFolder()){
 							TTEntity ttFolder= new TTEntity()

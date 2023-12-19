@@ -11,6 +11,7 @@ import org.endeavourhealth.imapi.vocabulary.ODS;
 import org.endeavourhealth.imapi.vocabulary.ORG;
 
 import org.endeavourhealth.imapi.vocabulary.RDFS;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,16 +49,16 @@ public class OdsImporter implements TTImport {
     public void importData(TTImportConfig config) throws Exception {
         try (TTManager manager = new TTManager();
              TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            TTDocument doc = manager.createDocument(IM.GRAPH_ODS.iri);
+            TTDocument doc = manager.createDocument(GRAPH.ODS.iri);
             doc.setCrud(IM.UPDATE_ALL);
-            doc.addEntity(manager.createGraph(IM.GRAPH_ODS.iri, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
+            doc.addEntity(manager.createGraph(GRAPH.ODS.iri, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
 
             importCodingSystem(config, doc);
             filer.fileDocument(doc);
 
-            doc = manager.createDocument(IM.GRAPH_ODS.getIri());
+            doc = manager.createDocument(GRAPH.ODS.getIri());
             doc.setCrud(IM.UPDATE_ALL);
-            doc.addEntity(manager.createGraph(IM.GRAPH_ODS.getIri(), "ODS  code scheme and graph", "Official ODS code scheme and graph"));
+            doc.addEntity(manager.createGraph(GRAPH.ODS.getIri(), "ODS  code scheme and graph", "Official ODS code scheme and graph"));
 
             importOrganisationData(config, doc);
             importOrganisationRelationships(config);
@@ -84,20 +85,20 @@ public class OdsImporter implements TTImport {
                     .addType(IM.CONCEPT)
                     .setDescription("The business role the organisation performs")
                     .setStatus(IM.ACTIVE)
-                    .set(RDFS.SUBCLASSOF, londonExtension)
+                    .set(RDFS.SUBCLASS_OF, londonExtension)
             )
             .addEntity(new TTEntity(ODS.ORGANISATION_RELATIONSHIP.iri)
                     .setName("Organisation relationship")
                     .addType(IM.CONCEPT)
                     .setDescription("The type of the relationship with another organisation")
                     .setStatus(IM.ACTIVE)
-                    .set(RDFS.SUBCLASSOF, londonExtension)
+                    .set(RDFS.SUBCLASS_OF, londonExtension)
             ).addEntity(new TTEntity(ODS.ORGANISATION_RECORD_CLASS.iri)
                     .setName("Organisation record class")
                     .addType(IM.CONCEPT)
                     .setDescription("The business role the organisation performs")
                     .setStatus(IM.ACTIVE)
-                    .set(RDFS.SUBCLASSOF, londonExtension)
+                    .set(RDFS.SUBCLASS_OF, londonExtension)
             )
 
             // Add/create value sets
@@ -175,9 +176,9 @@ public class OdsImporter implements TTImport {
             TTEntity concept = new TTEntity(prefix + "_" + fieldByName("Code"))
                 .addType(IM.CONCEPT)
                 .setName(fieldByName("DisplayName") + " " + suffix)
-                .setScheme(IM.CODE_SCHEME_ODS)
+                .setScheme(GRAPH.ODS)
                 .setCode(fieldByName("Id"))
-                .set(RDFS.SUBCLASSOF, new TTArray().add(iri(prefix)))
+                .set(RDFS.SUBCLASS_OF, new TTArray().add(iri(prefix)))
                 .setStatus(IM.ACTIVE);
             doc.addEntity(concept);
         }

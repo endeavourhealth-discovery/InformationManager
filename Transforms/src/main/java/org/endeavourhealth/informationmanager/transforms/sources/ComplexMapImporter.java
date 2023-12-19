@@ -5,6 +5,7 @@ import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +51,9 @@ public class ComplexMapImporter {
         this.legacyCodeToEntity = legacyCodeToEntity;
         document.setCrud(IM.UPDATE_PREDICATES);
         if (refset.equals(OPCS4_REFERENCE_SET))
-            namespace = IM.CODE_SCHEME_OPCS4.getIri();
+            namespace = GRAPH.OPCS4.getIri();
         else if (refset.equals(ICD10_REFERENCE_SET))
-            namespace = IM.CODE_SCHEME_ICD10.getIri();
+            namespace = GRAPH.ICD10.getIri();
         else
             throw new DataFormatException(refset + " reference set is not supported yet");
 

@@ -12,6 +12,7 @@ import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +51,9 @@ public class CEGEthnicityImport implements TTImport {
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
 
-		document = manager.createDocument(IM.GRAPH_CEG_QUERY.getIri());
-		nhsDocument= nhsManager.createDocument(IM.GRAPH_NHSDD_ETHNIC_2001.getIri());
-		document.addEntity(manager.createGraph(IM.GRAPH_NHSDD_ETHNIC_2001.getIri(),
+		document = manager.createDocument(GRAPH.CEG_QUERY.getIri());
+		nhsDocument= nhsManager.createDocument(GRAPH.NHSDD_ETHNIC_2001.getIri());
+		document.addEntity(manager.createGraph(GRAPH.NHSDD_ETHNIC_2001.getIri(),
 				"NHS Ethnicity scheme and graph"
 				,"NHS Ethnicity scheme and graph"));
 		setConceptSetGroups();
@@ -186,7 +187,7 @@ public class CEGEthnicityImport implements TTImport {
                 .addType(IM.CONCEPT_SET)
                 .setName("Value set - "+ catTerm)
                 .setCode(cat16)
-                .setScheme(IM.GRAPH_CEG_QUERY)
+                .setScheme(GRAPH.CEG_QUERY)
                 .setDescription("QMUL CEG 16+ Ethnic category "+cat16)
 				.set(IM.IS_SUBSET_OF,TTIriRef.iri(cegSet.getIri()))
                 .set(IM.DEFINITION,TTLiteral.literal(new Query().addMatch(new Match().setBool(Bool.or))));
@@ -223,7 +224,7 @@ public class CEGEthnicityImport implements TTImport {
 
     private void setConceptSetGroups() {
 		cegSet= new TTEntity()
-			.setIri(IM.GRAPH_CEG_QUERY.getIri()+"CSET_EthnicCategoryCEG16")
+			.setIri(GRAPH.CEG_QUERY.getIri()+"CSET_EthnicCategoryCEG16")
 			.addType(IM.CONCEPT_SET)
 			.setName("CEG 16+1 Ethnic category (set group)")
 			.setDescription("QMUL-CEG categorisations of ethnic groups");

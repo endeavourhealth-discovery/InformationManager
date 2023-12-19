@@ -10,6 +10,7 @@ import org.endeavourhealth.imapi.model.imq.Bool;
 import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.endeavourhealth.informationmanager.common.ECLToIML;
 import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -160,11 +161,11 @@ public class SnomedImporter implements TTImport {
         TTEntity telephone = new TTEntity()
             .setIri(SNOMED.NAMESPACE.iri + "359993007")
             .setCrud(IM.ADD_QUADS)
-            .setGraph(IM.CODE_SCHEME_DISCOVERY);
-        telephone.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(IM.NAMESPACE.iri + "71000252102"));
+            .setGraph(GRAPH.DISCOVERY);
+        telephone.addObject(RDFS.SUBCLASS_OF, TTIriRef.iri(IM.NAMESPACE.iri + "71000252102"));
         document.addEntity(telephone);
         TTEntity specific = conceptMap.get("10362801000001104");
-        specific.addObject(RDFS.SUBCLASSOF, TTIriRef.iri(SNOMED.NAMESPACE.iri + "127489000"));
+        specific.addObject(RDFS.SUBCLASS_OF, TTIriRef.iri(SNOMED.NAMESPACE.iri + "127489000"));
     }
 
     private void removeQualifiers(TTDocument document) {
@@ -630,7 +631,7 @@ public class SnomedImporter implements TTImport {
     }
 
     private void addIsa(TTEntity entity, String parent) {
-        TTIriRef isa = RDFS.SUBCLASSOF.asTTIriRef();
+        TTIriRef isa = RDFS.SUBCLASS_OF.asTTIriRef();
         if (entity.get(isa) == null) {
             TTArray isas = new TTArray();
             entity.set(isa, isas);
@@ -645,7 +646,7 @@ public class SnomedImporter implements TTImport {
         if (relationship.equals(IS_A)) {
             addIsa(c, target);
             if (c.getIri().equals(SNOMED_ATTRIBUTE))
-                c.addObject(RDFS.SUBCLASSOF, RDF.PROPERTY);
+                c.addObject(RDFS.SUBCLASS_OF, RDF.PROPERTY);
         } else {
             TTNode roleGroup = getRoleGroup(c, group);
             roleGroup.set(TTIriRef.iri(SN + relationship), TTIriRef.iri(SN + target));

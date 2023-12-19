@@ -4,6 +4,7 @@ import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -32,8 +33,8 @@ public class PRSBImport implements TTImport {
 	public void importData(TTImportConfig config) throws Exception {
 		validateFiles(config.getFolder());
 		try (TTManager dmanager= new TTManager()) {
-            document = dmanager.createDocument(IM.GRAPH_PRSB.iri);
-            document.addEntity(dmanager.createGraph(IM.GRAPH_PRSB.iri, "PRSB code scheme and graph"
+            document = dmanager.createDocument(GRAPH.PRSB.iri);
+            document.addEntity(dmanager.createGraph(GRAPH.PRSB.iri, "PRSB code scheme and graph"
                 , "The professional records standards board code scheme and graph"));
             importEntityFiles(config.getFolder());
             //TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());

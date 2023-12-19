@@ -9,6 +9,7 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,8 +61,8 @@ public class EMISImport implements TTImport {
 
     public void importData(TTImportConfig config) throws Exception {
         LOG.info("Retrieving filed snomed codes");
-        document = manager.createDocument(IM.GRAPH_EMIS.getIri());
-        document.addEntity(manager.createGraph(IM.GRAPH_EMIS.getIri(), "EMIS original codes",
+        document = manager.createDocument(GRAPH.EMIS.getIri());
+        document.addEntity(manager.createGraph(GRAPH.EMIS.getIri(), "EMIS original codes",
             "The EMIS code scheme including codes directly matched to UK Snomed-CT, and EMIS unmatched local codes."));
 
         checkAndUnzip(config.getFolder());
@@ -227,9 +228,9 @@ public class EMISImport implements TTImport {
                }
                else if (all.get(IM.ROLE_GROUP)!=null)
                    emisEntity.set(IM.ROLE_GROUP,all.get(IM.ROLE_GROUP));
-               if (all.get(RDFS.SUBCLASSOF)!=null){
-                   for (TTValue sup:all.get(RDFS.SUBCLASSOF).getElements()){
-                       emisEntity.addObject(RDFS.SUBCLASSOF,sup.asIriRef());
+               if (all.get(RDFS.SUBCLASS_OF)!=null){
+                   for (TTValue sup:all.get(RDFS.SUBCLASS_OF).getElements()){
+                       emisEntity.addObject(RDFS.SUBCLASS_OF,sup.asIriRef());
                    }
                }
            }
@@ -257,10 +258,10 @@ public class EMISImport implements TTImport {
                 TTArray oldCode= childEntity.get(IM.CODE);
                 childEntity.set(IM.CODE,childEntity.get(IM.ALTERNATIVE_CODE));
                 childEntity.set(IM.ALTERNATIVE_CODE,oldCode);
-                childEntity.setGraph(IM.GRAPH_EMIS_CORE);
-                childEntity.setScheme(IM.GRAPH_EMIS_CORE);
+                childEntity.setGraph(GRAPH.EMIS_CORE);
+                childEntity.setScheme(GRAPH.EMIS_CORE);
                 if (alternateParents.get(childEntity.getCode())!=null){
-                    childEntity.addObject(IM.LOCAL_SUBCLASS_OF,TTIriRef.iri(SNOMED.NAMESPACE+ alternateParents.get(childEntity.getCode())));
+                    childEntity.addObject(IM.LOCAL_SUBCLASS_OF,TTIriRef.iri(SNOMED.NAMESPACE.iri + alternateParents.get(childEntity.getCode())));
                 }
                 else {
                     Set<String> coreParents = new HashSet<>();
@@ -298,15 +299,15 @@ public class EMISImport implements TTImport {
           .setName("EMIS unmatched orphan codes")
           .setDescription("EMIS orphan codes that have no parent and are not matched to UK Snomed-CT."+
             " Each has a code id and an original text code and an EMIS Snomed concept id but no parent code")
-          .setScheme(IM.GRAPH_EMIS);
+          .setScheme(GRAPH.EMIS);
         document.addEntity(c);
-        c = new TTEntity().setIri(IM.GRAPH_EMIS_CORE.getIri());
-        c.setGraph(IM.GRAPH_EMIS_CORE);
-          c.addObject(RDFS.SUBCLASSOF,IM.GRAPH);
+        c = new TTEntity().setIri(GRAPH.EMIS_CORE.getIri());
+        c.setGraph(GRAPH.EMIS_CORE);
+          c.addObject(RDFS.SUBCLASS_OF,IM.GRAPH);
           c.setName("EMIS concepts")
           .setDescription("EMIS Snomed-CT namespace concepts that are subtypes of Snomed-CT UK. "+
             " Does not include unmatched or orphan emis concepts, or legacy concepts that are Snomed-CT equivalents")
-          .setScheme(IM.GRAPH_EMIS_CORE);
+          .setScheme(GRAPH.EMIS_CORE);
         document.addEntity(c);
     }
 
@@ -373,10 +374,10 @@ public class EMISImport implements TTImport {
             if (remaps.get(code) != null)
                 conceptId = remaps.get(code);
             emisConcept = new TTEntity()
-              .setIri(IM.CODE_SCHEME_EMIS.getIri() + codeId)
+              .setIri(GRAPH.EMIS.getIri() + codeId)
               .setCode(code)
               .addType(IM.CONCEPT)
-              .setScheme(IM.CODE_SCHEME_EMIS);
+              .setScheme(GRAPH.EMIS);
             emisConcept
               .setName(name);
 

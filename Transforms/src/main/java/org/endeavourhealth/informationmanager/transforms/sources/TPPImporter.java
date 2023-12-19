@@ -8,6 +8,7 @@ import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +55,8 @@ public class TPPImporter implements TTImport {
         LOG.info("Looking for Snomed codes");
         try (TTManager manager= new TTManager()) {
 
-            document = manager.createDocument(IM.GRAPH_TPP.getIri());
-            document.addEntity(manager.createGraph(IM.GRAPH_TPP.getIri(), "TPP (including CTV3) codes",
+            document = manager.createDocument(GRAPH.TPP.getIri());
+            document.addEntity(manager.createGraph(GRAPH.TPP.getIri(), "TPP (including CTV3) codes",
                 "The TPP local code scheme and graph including CTV3 and TPP local codes"));
 
             //Gets the emis read 2 codes from the IM to use as look up as some are missing
@@ -100,12 +101,12 @@ public class TPPImporter implements TTImport {
 
     private void addDiscoveryMaps() {
         TTEntity entity= new TTEntity()
-          .setIri(IM.CODE_SCHEME_TPP.getIri()+"Y2a0e")
+          .setIri(GRAPH.TPP.getIri()+"Y2a0e")
           .setCrud(IM.ADD_QUADS)
           .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+"1156257007"));
         document.addEntity(entity);
         entity= new TTEntity()
-          .setIri(IM.CODE_SCHEME_TPP.getIri()+"Y29ea")
+          .setIri(GRAPH.TPP.getIri()+"Y29ea")
           .setCrud(IM.ADD_QUADS)
           .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+"1324671000000103"));
         document.addEntity(entity);
@@ -123,7 +124,7 @@ public class TPPImporter implements TTImport {
                   .setIri(vaccine.getIri())
                   .setCrud(IM.ADD_QUADS)
                   .setCode(code)
-                  .setScheme(IM.CODE_SCHEME_TPP)
+                  .setScheme(GRAPH.TPP)
                   .set(IM.MATCHED_TO, vaccine.get(IM.MATCHED_TO));
                 document.addEntity(entity);
 
@@ -176,7 +177,7 @@ public class TPPImporter implements TTImport {
                 String term = fields[1];
                 TTEntity tpp=codeToEntity.get(code);
                 if (tpp==null){
-                    tpp = new TTEntity().setIri(IM.CODE_SCHEME_TPP.getIri()+code.replace(".","_"));
+                    tpp = new TTEntity().setIri(GRAPH.TPP.getIri()+code.replace(".","_"));
                     tpp.setCode(code);
                     tpp.setName(term);
                     tpp.addType(IM.CONCEPT);
@@ -245,9 +246,9 @@ public class TPPImporter implements TTImport {
                     TTEntity tpp= codeToEntity.get(child);
                     if (tpp!=null) {
                         if (!parent.startsWith(".")) {
-                            TTManager.addChildOf(tpp, iri(IM.CODE_SCHEME_TPP.getIri()+ parent.replace(".", "_")));
+                            TTManager.addChildOf(tpp, iri(GRAPH.TPP.getIri()+ parent.replace(".", "_")));
                         } else {
-                            TTManager.addChildOf(tpp, iri(IM.CODE_SCHEME_TPP.getIri()+"TPPCodes"));
+                            TTManager.addChildOf(tpp, iri(GRAPH.TPP.getIri()+"TPPCodes"));
                         }
                     }
                     line = reader.readLine();
@@ -358,11 +359,11 @@ public class TPPImporter implements TTImport {
                         String[] fields = line.split("\\|");
                         String code= fields[0];
                         if (!Character.isLowerCase(code.charAt(0))) {
-                            String iri = IM.CODE_SCHEME_TPP.getIri() +
+                            String iri = GRAPH.TPP.getIri() +
                               (code.replace(".", "_"));
                             TTEntity tpp = new TTEntity().setIri(iri);
                             tpp.setCode(code);
-                            tpp.setScheme(IM.CODE_SCHEME_TPP);
+                            tpp.setScheme(GRAPH.TPP);
                             tpp.setStatus(IM.ACTIVE);
                             tpp.addType(IM.CONCEPT);
                             if (code.startsWith("."))
@@ -382,7 +383,7 @@ public class TPPImporter implements TTImport {
         TTEntity c= new TTEntity().setIri(TPP+"TPPCodes")
           .addType(IM.CONCEPT)
           .setName("TPP (CTV3) and TPP local codes")
-          .setScheme(IM.GRAPH_TPP)
+          .setScheme(GRAPH.TPP)
           .setCode("TPPCodes");
         c.set(IM.IS_CONTAINED_IN,new TTArray());
         c.get(IM.IS_CONTAINED_IN).add(TTIriRef.iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies"));
@@ -391,7 +392,7 @@ public class TPPImporter implements TTImport {
           .set(IM.IS_CHILD_OF, new TTArray().add(iri(TPP + "TPPCodes")))
           .setName("TPP unmatched orphan codes")
           .setDescription("TPP orphan codes whose parent is unknown and are not matched to UK Snomed-CT")
-          .setScheme(IM.GRAPH_TPP);
+          .setScheme(GRAPH.TPP);
         document.addEntity(c);
     }
 
@@ -418,9 +419,9 @@ public class TPPImporter implements TTImport {
                 String snomed = fields[1];
                 TTEntity tpp=codeToEntity.get(code);
                 if (tpp==null){
-                    tpp = new TTEntity().setIri(IM.CODE_SCHEME_TPP.getIri()+code.replace(".","_"));
+                    tpp = new TTEntity().setIri(GRAPH.TPP.getIri()+code.replace(".","_"));
                     tpp.setCode(code);
-                    tpp.setScheme(IM.CODE_SCHEME_TPP);
+                    tpp.setScheme(GRAPH.TPP);
                     tpp.setName("TPP local code. name unknown");
                     tpp.addType(IM.CONCEPT);
                     codeToEntity.put(code, tpp);

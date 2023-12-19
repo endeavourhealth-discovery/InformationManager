@@ -64,8 +64,8 @@ public class WikiGenerator {
 		}
 
 
-		if (shape.get(RDFS.SUBCLASSOF)!=null){
-			TTEntity superShape=  getEntity(shape.get(RDFS.SUBCLASSOF).asIriRef().getIri());
+		if (shape.get(RDFS.SUBCLASS_OF)!=null){
+			TTEntity superShape=  getEntity(shape.get(RDFS.SUBCLASS_OF).asIriRef().getIri());
 			classText.append("\nIs a subtype of " + "[[#").append(superShape.getName()).append("|").append(superShape.getName()).append("]]\n\n");
 			shapesToDo.add(superShape.getIri());
 		}
