@@ -12,7 +12,7 @@ import java.nio.file.Path;
 public class ConfigImporter implements TTImport {
 
     private static final String[] config = {".*\\\\Config.json"};
-    private final TTManager manager= new TTManager();
+    private final TTManager manager = new TTManager();
 
     private TTDocument document;
 
@@ -31,12 +31,12 @@ public class ConfigImporter implements TTImport {
 
     private void importConfig(String folder) throws IOException {
         Path file = ImportUtils.findFileForId(folder, config[0]);
-        document= manager.loadDocument(file.toFile());
+        document = manager.loadDocument(file.toFile());
     }
 
     @Override
     public void validateFiles(String inFolder) throws TTFilerException {
-        ImportUtils.validateFiles(inFolder,config);
+        ImportUtils.validateFiles(inFolder, config);
     }
 
     @Override
