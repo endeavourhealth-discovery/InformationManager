@@ -7,6 +7,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -21,8 +22,8 @@ public class NHSTfcImport implements TTImport {
 
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
-		document = manager.createDocument(IM.GRAPH_NHS_TFC.getIri());
-		document.addEntity(manager.createGraph(IM.GRAPH_NHS_TFC.getIri(),
+		document = manager.createDocument(GRAPH.NHS_TFC.getIri());
+		document.addEntity(manager.createGraph(GRAPH.NHS_TFC.getIri(),
 			"NHS Data Dictionary Speciality and Treatment function codes"
 				,"NHS Data dictionary concepts that are not snomed"));
 		setNHSDD();
@@ -33,11 +34,11 @@ public class NHSTfcImport implements TTImport {
     }
 
 	private void setNHSDD() {
-		nhsTfc= TTIriRef.iri(IM.GRAPH_NHS_TFC.getIri()+"NHSTfc");
+		nhsTfc= TTIriRef.iri(GRAPH.NHS_TFC.getIri()+"NHSTfc");
 		TTEntity nhs= new TTEntity()
 			.setIri(nhsTfc.getIri())
 			.setName("Main Specialty and Treatment Function Codes")
-			.setScheme(IM.GRAPH_NHS_TFC)
+			.setScheme(GRAPH.NHS_TFC)
 			.setCode("0")
 			.addType(IM.CONCEPT)
 			.setStatus(IM.ACTIVE);
@@ -59,9 +60,9 @@ public class NHSTfcImport implements TTImport {
 				String term= fields[1];
 				String snomed= fields[2];
 				TTEntity tfc= new TTEntity()
-					.setIri(IM.GRAPH_NHS_TFC.getIri()+code)
+					.setIri(GRAPH.NHS_TFC.getIri()+code)
 					.setName(term)
-					.setScheme(IM.GRAPH_NHS_TFC)
+					.setScheme(GRAPH.NHS_TFC)
 					.setCode(code)
 					.addType(IM.CONCEPT)
 					.setStatus(IM.ACTIVE);

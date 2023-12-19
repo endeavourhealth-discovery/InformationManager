@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.online;
 import org.endeavourhealth.imapi.filer.TTImportByType;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 
 public class IM1MapApp {
@@ -19,8 +20,8 @@ public class IM1MapApp {
 		// Mandatory/ordered args
 		cfg.setFolder(args[0]);
 		TTImportByType importer= new Importer();
-			importer.validateByType(IM.GRAPH_IM1, cfg.getFolder());
-			importer.importByType(IM.GRAPH_IM1,cfg);
+			importer.validateByType(GRAPH.IM1, cfg.getFolder());
+			importer.importByType(GRAPH.IM1,cfg);
 	}
 
 }

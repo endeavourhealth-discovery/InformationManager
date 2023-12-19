@@ -8,6 +8,7 @@ import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,7 +20,7 @@ public class CoreQueryImporter implements TTImport {
     @Override
     public void importData(TTImportConfig config) throws Exception {
         try (TTManager manager = new TTManager()) {
-            document = manager.createDocument(IM.GRAPH_DISCOVERY.getIri());
+            document = manager.createDocument(GRAPH.DISCOVERY.getIri());
             getIsas();
             getDescendants();
             getConcepts();
@@ -253,7 +254,7 @@ public class CoreQueryImporter implements TTImport {
                   .setDescendantsOrSelfOf(true)
                   .setName("Systolic blood pressure recording"))
                 .addIs(new Node()
-                  .setIri(IM.CODE_SCHEME_EMIS.getIri() + "1994021000006104")
+                  .setIri(GRAPH.EMIS.getIri() + "1994021000006104")
                   .setDescendantsOrSelfOf(true)
                   .setName("Home systolic blood pressure"))
                 .setValueLabel("Office home or self recorded systolic blood pressure"))
@@ -292,7 +293,7 @@ public class CoreQueryImporter implements TTImport {
                   .property(w -> w
                     .setIri(IM.NAMESPACE.iri + "concept")
                     .addIs(new Node()
-                      .setIri(IM.CODE_SCHEME_EMIS.getIri() + "1994021000006104")
+                      .setIri(GRAPH.EMIS.getIri() + "1994021000006104")
                       .setDescendantsOrSelfOf(true)
                       .setName("Home systolic blood pressure"))
                     .setValueLabel("Home blood pressure"))
@@ -481,7 +482,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setDescendantsOrSelfOf(true)
                                 .setName("Systolic blood pressure"))
                             .addIs(new Node()
-                                .setIri(IM.CODE_SCHEME_EMIS.getIri() + "1994021000006104")
+                                .setIri(GRAPH.EMIS.getIri() + "1994021000006104")
                                 .setDescendantsOrSelfOf(true)
                                 .setName("Home systolic blood pressure"))
                             .setValueLabel("Office or home systolic blood pressure"))
@@ -517,7 +518,7 @@ public class CoreQueryImporter implements TTImport {
                                 .property(w -> w
                                     .setIri(IM.NAMESPACE.iri + "concept")
                                     .addIs(new Node()
-                                        .setIri(IM.CODE_SCHEME_EMIS.getIri() + "1994021000006104")
+                                        .setIri(GRAPH.EMIS.getIri() + "1994021000006104")
                                         .setDescendantsOrSelfOf(true)
                                         .setName("Home systolic blood pressure"))
                                     .setValueLabel("Home blood pressure"))
@@ -667,10 +668,10 @@ public class CoreQueryImporter implements TTImport {
         TTEntity entity = new TTEntity()
             .setIri(IM.NAMESPACE.iri + "gpGMSRegisteredPractice")
             .setName("Current GMS registered practice")
-            .setScheme(IM.CODE_SCHEME_DISCOVERY)
+            .setScheme(GRAPH.DISCOVERY)
             .addType(IM.FUNCTION)
             .addType(RDF.PROPERTY);
-        entity.addObject(RDFS.SUBCLASSOF, IM.FUNCTION_PROPERTY);
+        entity.addObject(RDFS.SUBCLASS_OF, IM.FUNCTION_PROPERTY);
         entity.set(IM.DEFINITION, TTLiteral.literal(getGmsPractice()));
         document.addEntity(entity);
     }
@@ -738,7 +739,7 @@ public class CoreQueryImporter implements TTImport {
                         .property(a2 -> a2
                             .setIri(SHACL.PATH.getIri())
                             .setIs(List.of(Node.iri(IM.IS_CONTAINED_IN.getIri())
-                                , Node.iri(RDFS.SUBCLASSOF.getIri()), Node.iri(IM.IS_SUBSET_OF.getIri())))))))
+                                , Node.iri(RDFS.SUBCLASS_OF.getIri()), Node.iri(IM.IS_SUBSET_OF.getIri())))))))
             .match(f -> f
                 .setBool(Bool.or)
                 .match(m1 -> m1
