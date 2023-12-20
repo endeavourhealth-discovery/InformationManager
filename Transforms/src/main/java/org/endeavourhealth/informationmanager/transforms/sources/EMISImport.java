@@ -62,7 +62,7 @@ public class EMISImport implements TTImport {
     public void importData(TTImportConfig config) throws Exception {
         LOG.info("Retrieving filed snomed codes");
         document = manager.createDocument(GRAPH.EMIS.getIri());
-        document.addEntity(manager.createGraph(GRAPH.EMIS.getIri(), "EMIS original codes",
+        document.addEntity(manager.createGraph(GRAPH.EMIS.getIri(), "EMIS codes",
             "The EMIS code scheme including codes directly matched to UK Snomed-CT, and EMIS unmatched local codes."));
 
         checkAndUnzip(config.getFolder());
@@ -258,14 +258,12 @@ public class EMISImport implements TTImport {
                 TTArray oldCode= childEntity.get(IM.CODE);
                 childEntity.set(IM.CODE,childEntity.get(IM.ALTERNATIVE_CODE));
                 childEntity.set(IM.ALTERNATIVE_CODE,oldCode);
-                childEntity.setGraph(GRAPH.EMIS_CORE);
-                childEntity.setScheme(GRAPH.EMIS_CORE);
                 if (alternateParents.get(childEntity.getCode())!=null){
                     childEntity.addObject(IM.LOCAL_SUBCLASS_OF,TTIriRef.iri(SNOMED.NAMESPACE.iri + alternateParents.get(childEntity.getCode())));
                 }
                 else {
                     Set<String> coreParents = new HashSet<>();
-                    getCoreParents(child, childEntity, coreParents);
+                    getCoreParents(child, coreParents);
                     if (!coreParents.isEmpty()) {
                         for (String parent : coreParents) {
                             childEntity.addObject(IM.LOCAL_SUBCLASS_OF, TTIriRef.iri(parent));
@@ -275,7 +273,7 @@ public class EMISImport implements TTImport {
             }
         }
     }
-    private void getCoreParents(String child,TTEntity childEntity,Set<String> coreParents){
+    private void getCoreParents(String child,Set<String> coreParents){
         if (parentMap.get(child)!=null) {
             for (String parentId : parentMap.get(child)) {
                 TTEntity parentEntity = codeIdToEntity.get(parentId);
@@ -286,7 +284,7 @@ public class EMISImport implements TTImport {
                 }
                 else {
                     String parent=parentEntity.get(IM.CODE_ID).asLiteral().getValue();
-                    getCoreParents(parent,parentEntity,coreParents);
+                    getCoreParents(parent,coreParents);
                 }
             }
         }
@@ -301,13 +299,6 @@ public class EMISImport implements TTImport {
             " Each has a code id and an original text code and an EMIS Snomed concept id but no parent code")
           .setScheme(GRAPH.EMIS);
         document.addEntity(c);
-        c = new TTEntity().setIri(GRAPH.EMIS_CORE.getIri());
-        c.setGraph(GRAPH.EMIS_CORE);
-          c.addObject(RDFS.SUBCLASS_OF,IM.GRAPH);
-          c.setName("EMIS concepts")
-          .setDescription("EMIS Snomed-CT namespace concepts that are subtypes of Snomed-CT UK. "+
-            " Does not include unmatched or orphan emis concepts, or legacy concepts that are Snomed-CT equivalents")
-          .setScheme(GRAPH.EMIS_CORE);
         document.addEntity(c);
     }
 
