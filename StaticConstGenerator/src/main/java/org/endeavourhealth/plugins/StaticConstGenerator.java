@@ -9,7 +9,7 @@ import org.gradle.api.Project;
 import java.io.*;
 import java.util.List;
 
-public class VocabGenerator implements Plugin<Project> {
+public class StaticConstGenerator implements Plugin<Project> {
 
     public void apply(Project project) {
         VocabGeneratorExtension extension = project.getExtensions().create("staticConstGenerator", VocabGeneratorExtension.class);

@@ -8,8 +8,8 @@ version = '1.0-SNAPSHOT'
 gradlePlugin {
     plugins {
         VocabGenerator {
-            id = "org.endeavourhealth.plugins.VocabGenerator"
-            implementationClass = 'org.endeavourhealth.plugins.VocabGenerator'
+            id = "org.endeavourhealth.plugins.StaticConstGenerator"
+            implementationClass = 'org.endeavourhealth.plugins.StaticConstGenerator'
         }
     }
 }
