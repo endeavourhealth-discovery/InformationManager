@@ -108,7 +108,7 @@ public class BartsCernerImport implements TTImport {
 					if (snomed.contains("1000252"))
 						barts.addObject(IM.MATCHED_TO,TTIriRef.iri(IM.NAMESPACE.iri+snomed));
 					else
-						barts.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE.iri+snomed));
+						barts.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 					line = reader.readLine();
 					}
 				}

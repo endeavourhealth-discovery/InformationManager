@@ -84,7 +84,7 @@ public class CEGEthnicityImport implements TTImport {
 
 
 	private void retrieveEthnicity(boolean secure) throws TTFilerException, IOException {
-			census2001= importMaps.getDescendants(SNOMED.NAMESPACE.iri+"92381000000106");
+			census2001= importMaps.getDescendants(SNOMED.NAMESPACE+"92381000000106");
 		for (Map.Entry<String,Set<String>> entry:census2001.entrySet()) {
 			String snomed = entry.getKey();
 			for (String term : entry.getValue()) {
@@ -196,7 +196,7 @@ public class CEGEthnicityImport implements TTImport {
 
         }
 				Query cegQuery= cegSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-				cegQuery.getMatch().get(0).match(f->f.setIri(SNOMED.NAMESPACE.iri+snomed));
+				cegQuery.getMatch().get(0).match(f->f.setIri(SNOMED.NAMESPACE+snomed));
 				cegSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(cegQuery)));
         if (cegSubset.get(IM.HAS_TERM_CODE)==null)
             TTManager.addTermCode(cegSubset,catTerm,null);
@@ -217,7 +217,7 @@ public class CEGEthnicityImport implements TTImport {
             if (nhsSubset.get(IM.HAS_TERM_CODE)==null)
                 TTManager.addTermCode(nhsSubset,nhsTerm,null);
 			Query nhsQuery= nhsSubset.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-			nhsQuery.getMatch().get(0).match(f->f.setIri(SNOMED.NAMESPACE.iri+snomed));
+			nhsQuery.getMatch().get(0).match(f->f.setIri(SNOMED.NAMESPACE+snomed));
 			nhsSubset.set(IM.DEFINITION,TTLiteral.literal(setService.setQueryLabels(nhsQuery)));
         }
     }

@@ -142,7 +142,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 		}
 		String conceptIri;
 		if (concept.matches("[0-9]+")) {
-			conceptIri = concept.contains("1000252") ? IM.NAMESPACE.iri + concept : SNOMED.NAMESPACE.iri + concept;
+			conceptIri = concept.contains("1000252") ? IM.NAMESPACE.iri + concept : SNOMED.NAMESPACE + concept;
 		}
 		else
 			conceptIri= concept;
@@ -393,7 +393,7 @@ public class ECLToIML extends ECLBaseVisitor<TTValue> {
 			if (code.contains("1000252"))
 				conRef.setIri(IM.NAMESPACE.iri + code);
 			else
-				conRef.setIri(SNOMED.NAMESPACE.iri + code);
+				conRef.setIri(SNOMED.NAMESPACE + code);
 		} else
 			throw new DataFormatException("ECL converter can only be used for snomed codes at this stage");
 		if (entail!=null) {

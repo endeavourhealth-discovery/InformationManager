@@ -77,7 +77,7 @@ public class ImportApp {
             case "all":
                     importer.validateByType(GRAPH.DISCOVERY, cfg.getFolder())
                   .validateByType(GRAPH.QUERY,cfg.getFolder())
-                    .validateByType(SNOMED.GRAPH_SNOMED, cfg.getFolder())
+                    .validateByType(SNOMED.NAMESPACE, cfg.getFolder())
                     .validateByType(GRAPH.ENCOUNTERS, cfg.getFolder())
                     .validateByType(GRAPH.EMIS, cfg.getFolder())
                     .validateByType(GRAPH.TPP, cfg.getFolder())
@@ -95,7 +95,7 @@ public class ImportApp {
                       .validateByType(GRAPH.DELTAS,cfg.getFolder());
                 importer.importByType(GRAPH.DISCOVERY, cfg);
                 importer.importByType(GRAPH.QUERY,cfg);
-                importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
+                importer.importByType(SNOMED.NAMESPACE, cfg);
                 importer.importByType(GRAPH.ENCOUNTERS, cfg);
                 importer.importByType(GRAPH.EMIS, cfg);
                 importer.importByType(GRAPH.TPP, cfg);
@@ -130,8 +130,8 @@ public class ImportApp {
                 importer.importByType(GRAPH.DISCOVERY, cfg);
                 break;
             case "snomed":
-                importer = new Importer().validateByType(SNOMED.GRAPH_SNOMED, cfg.getFolder());
-                importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
+                importer = new Importer().validateByType(SNOMED.NAMESPACE, cfg.getFolder());
+                importer.importByType(SNOMED.NAMESPACE, cfg);
                 break;
             case "emis":
                 importer = new Importer().validateByType(GRAPH.EMIS, cfg.getFolder());

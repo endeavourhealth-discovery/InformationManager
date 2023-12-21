@@ -34,11 +34,11 @@ public class CoreQueryImporter implements TTImport {
             gpGMSRegisteredPractice();
             deleteSets();
             patientsWithActiveCondition(IM.NAMESPACE.iri + "Q_Diabetics", "Patients with active diabetes",
-                SNOMED.NAMESPACE.iri + "73211009", "Diabetes mellitus",
-                SNOMED.NAMESPACE.iri + "315051004", "Diabetes resolved");
+                SNOMED.NAMESPACE + "73211009", "Diabetes mellitus",
+                SNOMED.NAMESPACE + "315051004", "Diabetes resolved");
             patientsWithActiveCondition(IM.NAMESPACE.iri + "Q_Hypertensives", "Patients with active hypertension",
-                SNOMED.NAMESPACE.iri + "70995007", "Hypertension",
-                SNOMED.NAMESPACE.iri + "162659009", "Hypertension resolved");
+                SNOMED.NAMESPACE + "70995007", "Hypertension",
+                SNOMED.NAMESPACE + "162659009", "Hypertension resolved");
             testQuery();
             getActiveDiabetes();
             latestBPMatch();
@@ -250,7 +250,7 @@ public class CoreQueryImporter implements TTImport {
                 .setIri(IM.NAMESPACE.iri + "concept")
                 .setName("concept")
                 .addInSet(new Node()
-                  .setIri(SNOMED.NAMESPACE.iri + "999035921000230109")
+                  .setIri(SNOMED.NAMESPACE + "999035921000230109")
                   .setDescendantsOrSelfOf(true)
                   .setName("Systolic blood pressure recording"))
                 .addIs(new Node()
@@ -280,7 +280,7 @@ public class CoreQueryImporter implements TTImport {
                   .property(w -> w
                     .setIri(IM.NAMESPACE.iri + "concept")
                     .addIs(new Node()
-                      .setIri(SNOMED.NAMESPACE.iri + "271649006")
+                      .setIri(SNOMED.NAMESPACE + "271649006")
                       .setDescendantsOrSelfOf(true)
                       .setName("Systolic blood pressure"))
                     .setValueLabel("Office blood pressure"))
@@ -326,7 +326,7 @@ public class CoreQueryImporter implements TTImport {
                   .setIri(IM.NAMESPACE.iri + "concept")
                   .setName("concept")
                   .addInSet(new Node()
-                    .setIri(SNOMED.NAMESPACE.iri + "999035921000230109")
+                    .setIri(SNOMED.NAMESPACE + "999035921000230109")
                     .setName("Systolic blood pressure recording")))
                 .property(ww->ww
                   .setIri(IM.NAMESPACE.iri+"value")
@@ -467,7 +467,7 @@ public class CoreQueryImporter implements TTImport {
                         .match(n -> n.setTypeOf(IM.NAMESPACE.iri + "Observation")
                             .property(ob -> ob
                                 .setIri(IM.NAMESPACE.iri + "concept")
-                                .addIs(new Node().setIri(SNOMED.NAMESPACE.iri + "714628002").setDescendantsOf(true))
+                                .addIs(new Node().setIri(SNOMED.NAMESPACE + "714628002").setDescendantsOf(true))
                                 .setValueLabel("Prediabetes"))))))
             .match(m -> m
                 .property(p -> p
@@ -478,7 +478,7 @@ public class CoreQueryImporter implements TTImport {
                             .setIri(IM.NAMESPACE.iri + "concept")
                             .setName("concept")
                             .addIs(new Node()
-                                .setIri(SNOMED.NAMESPACE.iri + "271649006")
+                                .setIri(SNOMED.NAMESPACE + "271649006")
                                 .setDescendantsOrSelfOf(true)
                                 .setName("Systolic blood pressure"))
                             .addIs(new Node()
@@ -505,7 +505,7 @@ public class CoreQueryImporter implements TTImport {
                                 .property(w -> w
                                     .setIri(IM.NAMESPACE.iri + "concept")
                                     .addIs(new Node()
-                                        .setIri(SNOMED.NAMESPACE.iri + "271649006")
+                                        .setIri(SNOMED.NAMESPACE + "271649006")
                                         .setDescendantsOrSelfOf(true)
                                         .setName("Systolic blood pressure"))
                                     .setValueLabel("Office blood pressure"))

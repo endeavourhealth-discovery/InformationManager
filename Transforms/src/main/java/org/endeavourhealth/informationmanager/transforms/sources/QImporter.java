@@ -214,7 +214,7 @@ public class QImporter implements TTImport {
 			if (!codes.isEmpty()) {
 				for (Iterator<JsonNode> it = codes.elements(); it.hasNext(); ) {
 					JsonNode code = it.next();
-					String concept = SNOMED.NAMESPACE.iri + code.get("Code").asText();
+					String concept = SNOMED.NAMESPACE + code.get("Code").asText();
 					String term = code.get("Text").asText();
 					qGroup.addObject(IM.HAS_MEMBER, TTIriRef.iri(concept));
 				}

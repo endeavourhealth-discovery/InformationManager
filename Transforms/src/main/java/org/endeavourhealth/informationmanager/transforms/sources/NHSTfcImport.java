@@ -67,7 +67,7 @@ public class NHSTfcImport implements TTImport {
 					.addType(IM.CONCEPT)
 					.setStatus(IM.ACTIVE);
 				tfc.addObject(IM.IS_CHILD_OF,nhsTfc);
-				tfc.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+snomed));
+				tfc.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 				document.addEntity(tfc);
 				line= reader.readLine();
 			}

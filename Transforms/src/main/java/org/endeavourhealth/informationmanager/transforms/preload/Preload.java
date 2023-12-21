@@ -78,7 +78,7 @@ public class Preload {
         LOG.info("Validating data files...");
         TTImportByType importer = new Importer()
             .validateByType(GRAPH.DISCOVERY, cfg.getFolder())
-            .validateByType(SNOMED.GRAPH_SNOMED, cfg.getFolder())
+            .validateByType(SNOMED.NAMESPACE, cfg.getFolder())
             .validateByType(GRAPH.QUERY, cfg.getFolder())
             .validateByType(GRAPH.ENCOUNTERS, cfg.getFolder())
             .validateByType(GRAPH.EMIS, cfg.getFolder())
@@ -99,7 +99,7 @@ public class Preload {
 
             LOG.info("Importing files...");
             importer.importByType(GRAPH.DISCOVERY, cfg);
-            importer.importByType(SNOMED.GRAPH_SNOMED, cfg);
+            importer.importByType(SNOMED.NAMESPACE, cfg);
             importer.importByType(GRAPH.QUERY, cfg);
             importer.importByType(GRAPH.ENCOUNTERS, cfg);
             importer.importByType(GRAPH.EMIS, cfg);
