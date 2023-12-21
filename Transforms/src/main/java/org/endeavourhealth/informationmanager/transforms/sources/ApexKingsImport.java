@@ -92,7 +92,7 @@ public class ApexKingsImport implements TTImport {
 				apexToRead.put(code,readCode);
 				if (readToSnomed.get(readCode)!=null){
 					for (String snomed:readToSnomed.get(readCode)){
-						entity.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+snomed));
+						entity.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 					}
 				}
 				count.getAndIncrement();

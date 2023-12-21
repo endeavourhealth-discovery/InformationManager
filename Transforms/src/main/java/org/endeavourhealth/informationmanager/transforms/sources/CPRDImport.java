@@ -81,7 +81,7 @@ public class CPRDImport implements TTImport {
 				concept.setScheme(GRAPH.CPRD_PROD);
 				concept.setStatus(IM.ACTIVE);
 				if (!fields[1].equals("")) {
-					concept.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE.iri + fields[1]));
+					concept.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + fields[1]));
 				}
 				document.addEntity(concept);
 				line= reader.readLine();
@@ -112,7 +112,7 @@ public class CPRDImport implements TTImport {
 				concept.setCode(medId);
 				concept.setScheme(GRAPH.CPRD_PROD);
 				concept.setStatus(IM.ACTIVE);
-				concept.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE.iri + fields[5]));
+				concept.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
 				TTNode termCode = new TTNode();
 				termCode.set(IM.CODE, TTLiteral.literal(fields[6]));
 				concept.addObject(IM.HAS_TERM_CODE, termCode);

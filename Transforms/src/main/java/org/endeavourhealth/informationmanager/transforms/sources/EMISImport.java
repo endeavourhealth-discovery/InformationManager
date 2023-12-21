@@ -140,7 +140,7 @@ public class EMISImport implements TTImport {
                     continue;
 
                 TTEntity emisEntity = codeIdToEntity.get(emisCodeId);
-                emisEntity.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE.iri + snomedCode));
+                emisEntity.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + snomedCode));
                 if (status.equals(IM.ACTIVE.getIri()))
                     activeConcepts.add(emisCodeId);
                 if (!descid.equals("")) {
@@ -191,7 +191,7 @@ public class EMISImport implements TTImport {
                 if (notFoundValue(emisConcept,IM.HAS_TERM_CODE.asTTIriRef(),IM.CODE.asTTIriRef(),codeId))
                     TTManager.addTermCode(emisConcept, null, codeId);
                 if (!snomed.equals("NULL")) {
-                    emisConcept.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+snomed));
+                    emisConcept.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
                 }
                 line = reader.readLine();
             }
@@ -210,7 +210,7 @@ public class EMISImport implements TTImport {
 
     private void addSub(String child, String parent) {
         TTEntity childEntity = oldCodeToEntity.get(child);
-        childEntity.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE.iri + parent));
+        childEntity.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + parent));
     }
 
     private void allergyMaps(String folder) throws IOException {
@@ -259,7 +259,7 @@ public class EMISImport implements TTImport {
                 childEntity.set(IM.CODE,childEntity.get(IM.ALTERNATIVE_CODE));
                 childEntity.set(IM.ALTERNATIVE_CODE,oldCode);
                 if (alternateParents.get(childEntity.getCode())!=null){
-                    childEntity.addObject(IM.LOCAL_SUBCLASS_OF,TTIriRef.iri(SNOMED.NAMESPACE.iri + alternateParents.get(childEntity.getCode())));
+                    childEntity.addObject(IM.LOCAL_SUBCLASS_OF,TTIriRef.iri(SNOMED.NAMESPACE + alternateParents.get(childEntity.getCode())));
                 }
                 else {
                     Set<String> coreParents = new HashSet<>();
@@ -383,8 +383,8 @@ public class EMISImport implements TTImport {
         if (isSnomed(conceptId)) {
             if (!isBlackList(conceptId)) {
                 snomedToEmis.put(conceptId, emisConcept);
-                if (notFound(emisConcept, IM.MATCHED_TO.asTTIriRef(), TTIriRef.iri(SNOMED.NAMESPACE.iri + conceptId)))
-                   emisConcept.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE.iri + conceptId));
+                if (notFound(emisConcept, IM.MATCHED_TO.asTTIriRef(), TTIriRef.iri(SNOMED.NAMESPACE + conceptId)))
+                   emisConcept.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + conceptId));
             }
         }
         else {

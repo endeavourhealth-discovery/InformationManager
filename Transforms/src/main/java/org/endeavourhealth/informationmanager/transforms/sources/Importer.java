@@ -28,17 +28,16 @@ public class Importer implements TTImportByType {
      */
     @Override
     public TTImportByType importByType(TTIriRef importType, TTImportConfig config) throws Exception {
-        LOG.info("Importing {}", importType.getIri());
-        try (TTImport importer = getImporter(importType)) {
-            importer.validateFiles(config.getFolder());
-            importer.importData(config);
-            return this;
-        }
+        return importByType(importType.getIri(), config);
     }
     @Override
     public TTImportByType importByType(Vocabulary importType, TTImportConfig config) throws Exception {
-        LOG.info("Importing {}", importType.getIri());
-        try (TTImport importer = getImporter(importType.asTTIriRef())) {
+        return importByType(importType.getIri(), config);
+    }
+    @Override
+    public TTImportByType importByType(String importType, TTImportConfig config) throws Exception {
+        LOG.info("Importing {}", importType);
+        try (TTImport importer = getImporter(importType)) {
             importer.validateFiles(config.getFolder());
             importer.importData(config);
             return this;
@@ -47,65 +46,66 @@ public class Importer implements TTImportByType {
 
     @Override
     public TTImportByType validateByType(TTIriRef importType, String inFolder) throws Exception {
+        return validateByType(importType.getIri(), inFolder);
+    }
+    @Override
+    public TTImportByType validateByType(Vocabulary importType, String inFolder) throws Exception {
+        return validateByType(importType.getIri(), inFolder);
+    }
+    @Override
+    public TTImportByType validateByType(String importType, String inFolder) throws Exception {
         try (TTImport importer = getImporter(importType)) {
             importer.validateFiles(inFolder);
             return this;
         }
     }
-    @Override
-    public TTImportByType validateByType(Vocabulary importType, String inFolder) throws Exception {
-        try (TTImport importer = getImporter(importType.asTTIriRef())) {
-            importer.validateFiles(inFolder);
-            return this;
-        }
-    }
 
 
-    private TTImport getImporter(TTIriRef importType) throws Exception {
+    private TTImport getImporter(String importType) throws Exception {
         if (TTIriRef.iri(IM.NAMESPACE.iri + "SingleFileImporter").equals(importType))
             return new SingleFileImporter();
-        if (GRAPH.QUERY.iri.equals(importType.getIri()))
+        if (GRAPH.QUERY.iri.equals(importType))
             return new CoreQueryImporter();
-        else if (GRAPH.DISCOVERY.iri.equals(importType.getIri()))
+        else if (GRAPH.DISCOVERY.iri.equals(importType))
             return new CoreImporter();
-        else if (GRAPH.BARTS_CERNER.iri.equals(importType.getIri()))
+        else if (GRAPH.BARTS_CERNER.iri.equals(importType))
             return new BartsCernerImport();
-        else if (SNOMED.GRAPH_SNOMED.iri.equals(importType.getIri()))
+        else if (SNOMED.NAMESPACE.equals(importType))
             return new SnomedImporter();
-        else if (GRAPH.EMIS.iri.equals(importType.getIri()))
+        else if (GRAPH.EMIS.iri.equals(importType))
             return new EMISImport();
-        else if (GRAPH.TPP.iri.equals(importType.getIri()))
+        else if (GRAPH.TPP.iri.equals(importType))
             return new TPPImporter();
-        else if (GRAPH.OPCS4.iri.equals(importType.getIri()))
+        else if (GRAPH.OPCS4.iri.equals(importType))
             return new OPCS4Importer();
-        else if (GRAPH.ICD10.iri.equals(importType.getIri()))
+        else if (GRAPH.ICD10.iri.equals(importType))
             return new ICD10Importer();
-        else if (GRAPH.ENCOUNTERS.iri.equals(importType.getIri()))
+        else if (GRAPH.ENCOUNTERS.iri.equals(importType))
             return new EncountersImporter();
-        else if (GRAPH.VISION.iri.equals(importType.getIri()))
+        else if (GRAPH.VISION.iri.equals(importType))
             return new VisionImport();
-        else if (GRAPH.PRSB.iri.equals(importType.getIri()))
+        else if (GRAPH.PRSB.iri.equals(importType))
             return new PRSBImport();
-        else if (GRAPH.KINGS_APEX.iri.equals(importType.getIri()))
+        else if (GRAPH.KINGS_APEX.iri.equals(importType))
             return new ApexKingsImport();
-        else if (GRAPH.KINGS_WINPATH.iri.equals(importType.getIri()))
+        else if (GRAPH.KINGS_WINPATH.iri.equals(importType))
             return new WinPathKingsImport();
-        else if (GRAPH.ODS.iri.equals(importType.getIri()))
+        else if (GRAPH.ODS.iri.equals(importType))
             return new OdsImporter();
-        else if (GRAPH.IM1.iri.equals(importType.getIri()))
+        else if (GRAPH.IM1.iri.equals(importType))
             return new IM1MapImport();
-        else if (GRAPH.CEG_QUERY.iri.equals(importType.getIri()))
+        else if (GRAPH.CEG_QUERY.iri.equals(importType))
             return new CEGImporter();
-        else if (GRAPH.NHS_TFC.iri.equals(importType.getIri()))
+        else if (GRAPH.NHS_TFC.iri.equals(importType))
             return new NHSTfcImport();
-        else if (GRAPH.DELTAS.iri.equals(importType.getIri()))
+        else if (GRAPH.DELTAS.iri.equals(importType))
             return new DeltaImporter();
-        else if (QR.NAMESPACE.iri.equals(importType.getIri()))
+        else if (QR.NAMESPACE.iri.equals(importType))
             return new QImporter();
-        else if (GRAPH.CPRD_MED.iri.equals(importType.getIri()))
+        else if (GRAPH.CPRD_MED.iri.equals(importType))
             return new CPRDImport();
         else
-            throw new Exception("Unrecognised import type [" + importType.getIri() + "]");
+            throw new Exception("Unrecognised import type [" + importType + "]");
     }
 
 

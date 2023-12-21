@@ -49,7 +49,7 @@ public class VisionImport implements TTImport {
 		LOG.info("importing vision codes");
 		LOG.info("retrieving snomed codes from IM");
         try (TTManager manager= new TTManager()) {
-            snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE.iri);
+            snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
             document = manager.createDocument(GRAPH.VISION.getIri());
             document.addEntity(manager.createGraph(GRAPH.VISION.getIri(), "Vision (including Read) codes",
                 "The Vision local code scheme and graph including Read 2 and Vision local codes"));
@@ -301,8 +301,8 @@ public class VisionImport implements TTImport {
 				TTEntity vision = codeToConcept.get(code);
 				if (vision!=null) {
 					if (isSnomed(snomed)) {
-						String iri = SNOMED.NAMESPACE.iri + snomed;
-						vision.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE.iri+snomed));
+						String iri = SNOMED.NAMESPACE + snomed;
+						vision.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE+snomed));
 					}
 				}
 				line = reader.readLine();

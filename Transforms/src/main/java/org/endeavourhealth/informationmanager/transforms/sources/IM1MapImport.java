@@ -140,7 +140,7 @@ public class IM1MapImport implements TTImport {
                 if (!code.contains(",")) {
                     switch (im1Scheme) {
                         case "SNOMED":
-                            scheme = SNOMED.NAMESPACE.iri;
+                            scheme = SNOMED.NAMESPACE;
                             break;
                         case "READ2":
                             scheme = GRAPH.EMIS.getIri();
@@ -322,7 +322,7 @@ public class IM1MapImport implements TTImport {
                                 }
                             }
                         }
-                        else if (scheme.equals(SNOMED.NAMESPACE.iri)){
+                        else if (scheme.equals(SNOMED.NAMESPACE)){
                             String visionNamespace = "1000027";
                             if (getNameSpace(code).equals(visionNamespace)){
                                 scheme= GRAPH.VISION.getIri();

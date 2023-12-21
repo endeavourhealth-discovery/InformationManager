@@ -81,9 +81,9 @@ public class StaticConstGenerator implements Plugin<Project> {
                         throw new IllegalArgumentException("Entry objects must have both a name and a value");
 
                     if (value.isTextual())
-                        writer.write("\t" + prefix.replace("{TYPE}", "String") + " " + format(name) + " = " + value.asText() + ";\n");
+                        writer.write("\t" + prefix.replace("{TYPE}", "String") + " " + name + " = " + value.asText() + ";\n");
                     else if (value.isInt())
-                        writer.write("\t" + prefix.replace("{TYPE}", "int") + " " + format(name) + " = " + value.asText() + ";\n");
+                        writer.write("\t" + prefix.replace("{TYPE}", "int") + " " + name + " = " + value.asText() + ";\n");
                     else
                         throw new IllegalArgumentException("Unsupported type");
                 }
@@ -92,11 +92,5 @@ public class StaticConstGenerator implements Plugin<Project> {
             writer.write("}\n");
             writer.flush();
         }
-    }
-
-    private String format(String pascalCase) {
-        return pascalCase
-            .replaceAll("([a-z])([A-Z]+)", "$1_$2")
-            .toUpperCase();
     }
 }

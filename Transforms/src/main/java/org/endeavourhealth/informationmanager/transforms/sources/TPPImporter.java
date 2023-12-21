@@ -103,12 +103,12 @@ public class TPPImporter implements TTImport {
         TTEntity entity= new TTEntity()
           .setIri(GRAPH.TPP.getIri()+"Y2a0e")
           .setCrud(IM.ADD_QUADS)
-          .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+"1156257007"));
+          .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+"1156257007"));
         document.addEntity(entity);
         entity= new TTEntity()
           .setIri(GRAPH.TPP.getIri()+"Y29ea")
           .setCrud(IM.ADD_QUADS)
-          .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE.iri+"1324671000000103"));
+          .set(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+"1324671000000103"));
         document.addEntity(entity);
     }
 
@@ -209,7 +209,7 @@ public class TPPImporter implements TTImport {
                         TTEntity tpp = codeToEntity.get(code);
                         if (tpp != null) {
                             if (!alreadyMapped(tpp, snomed))
-                                tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE.iri + snomed));
+                                tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + snomed));
                         }
                     }
 
@@ -429,7 +429,7 @@ public class TPPImporter implements TTImport {
 
                 }
                 if (!alreadyMapped(tpp, snomed)) {
-                    tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE.iri + snomed));
+                    tpp.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + snomed));
                 }
             }
             LOG.info("Process ended with {}", count);

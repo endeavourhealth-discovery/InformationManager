@@ -46,7 +46,7 @@ public class OPCS4Importer implements TTImport {
     public void importData(TTImportConfig config) throws Exception {
         LOG.info("Importing OPCS4.....");
         LOG.info("Checking Snomed codes first");
-        snomedCodes= importMaps.getCodes(SNOMED.NAMESPACE.iri);
+        snomedCodes= importMaps.getCodes(SNOMED.NAMESPACE);
         try (TTManager manager= new TTManager()) {
             document = manager.createDocument(GRAPH.OPCS4.iri);
             document.addEntity(manager.createGraph(GRAPH.OPCS4.iri, "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
