@@ -1,0 +1,35 @@
+plugins {
+    id "java-gradle-plugin"
+}
+
+group = 'org.endeavourhealth.plugins'
+version = '1.0-SNAPSHOT'
+
+gradlePlugin {
+    plugins {
+        VocabGenerator {
+            id = "org.endeavourhealth.plugins.StaticConstGenerator"
+            implementationClass = 'org.endeavourhealth.plugins.StaticConstGenerator'
+        }
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+        url = uri('https://maven.discoverydataservice.net/artifactory/libs-release')
+    }
+    maven {
+        url = uri('https://maven.discoverydataservice.net/artifactory/libs-snapshot')
+    }
+}
+
+dependencies {
+    implementation libs.jacksonDatabind
+    implementation libs.gradleApi
+}
+
+test {
+    useJUnitPlatform()
+}
