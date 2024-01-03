@@ -144,7 +144,7 @@ public class QImporter implements TTImport {
 			for (int q=0; q< values.split(";").length-1; q++){
 				String value= values.split(";")[q];
 				if (value.startsWith("http")){
-					property.addInSet(new Node().setIri(value));
+					property.addIs(new Node().setIri(value));
 				}
 				property.setValueVariable(as);
 			}

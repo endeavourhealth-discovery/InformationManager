@@ -249,7 +249,7 @@ public class CoreQueryImporter implements TTImport {
               .property(ww -> ww
                 .setIri(IM.NAMESPACE.iri + "concept")
                 .setName("concept")
-                .addInSet(new Node()
+                .addIs(new Node()
                   .setIri(SNOMED.NAMESPACE + "999035921000230109")
                   .setDescendantsOrSelfOf(true)
                   .setName("Systolic blood pressure recording"))
@@ -325,7 +325,7 @@ public class CoreQueryImporter implements TTImport {
                 .property(ww -> ww
                   .setIri(IM.NAMESPACE.iri + "concept")
                   .setName("concept")
-                  .addInSet(new Node()
+                  .addIs(new Node()
                     .setIri(SNOMED.NAMESPACE + "999035921000230109")
                     .setName("Systolic blood pressure recording")))
                 .property(ww->ww
@@ -358,7 +358,7 @@ public class CoreQueryImporter implements TTImport {
                     .property(ww -> ww
                         .setIri(IM.NAMESPACE.iri + "concept")
                         .setName("concept")
-                        .addInSet(new Node()
+                        .addIs(new Node()
                             .setIri("http://snomed.info/sct#999004691000230108")
                             .setName("Diabetes Mellitus")))
                     .setOrderBy(new OrderLimit()
@@ -376,7 +376,7 @@ public class CoreQueryImporter implements TTImport {
                         .property(ww -> ww
                             .setIri(IM.NAMESPACE.iri + "concept")
                             .setName("concept")
-                            .addInSet(new Node()
+                            .addIs(new Node()
                                 .setIri("http://snomed.info/sct#999003371000230102")
                                 .setName("Diabetes Resolved")))
                         .property(ww -> ww
@@ -444,7 +444,7 @@ public class CoreQueryImporter implements TTImport {
                 "not followed by a screening invite, excluding hypertensives")
             .setTypeOf(IM.NAMESPACE.iri + "Patient")
             .match(m -> m
-                .addInSet(new Node().setIri(IM.NAMESPACE.iri + "Q_RegisteredGMS")
+                .addIs(new Node().setIri(IM.NAMESPACE.iri + "Q_RegisteredGMS")
                     .setName("Registered for GMS services on reference date")))
             .match(m -> m
                 .setBool(Bool.or)
@@ -461,7 +461,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setValue("70")
                                 .setUnit("YEARS")))))
                 .match(or -> or
-                    .addInSet(new Node().setIri(IM.NAMESPACE.iri + "Q_Diabetics")))
+                    .addIs(new Node().setIri(IM.NAMESPACE.iri + "Q_Diabetics")))
                 .match(or -> or
                     .property(p -> p.setIri(IM.NAMESPACE.iri + "observation")
                         .match(n -> n.setTypeOf(IM.NAMESPACE.iri + "Observation")
@@ -533,14 +533,14 @@ public class CoreQueryImporter implements TTImport {
                         .setBool(Bool.and)
                         .property(inv -> inv
                             .setIri(IM.NAMESPACE.iri + "concept")
-                            .addInSet(new Node().setIri(IM.NAMESPACE.iri + "InvitedForScreening")))
+                            .addIs(new Node().setIri(IM.NAMESPACE.iri + "InvitedForScreening")))
                         .property(after -> after
                             .setIri(IM.NAMESPACE.iri + "effectiveDate")
                             .setOperator(Operator.gte)
                             .relativeTo(r -> r.setNodeRef("highBPReading").setIri(IM.NAMESPACE.iri + "effectiveDate"))))))
             .match(m -> m
                 .setExclude(true)
-                .addInSet(new Node().setIri(IM.NAMESPACE.iri + "Q_Hypertensives")
+                .addIs(new Node().setIri(IM.NAMESPACE.iri + "Q_Hypertensives")
                     .setName("Hypertensives")));
         qry.set(IM.DEFINITION, TTLiteral.literal(prof));
         qry.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE.iri + "Q_StandardCohorts"));
