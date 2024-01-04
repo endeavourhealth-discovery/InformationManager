@@ -9,7 +9,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 import org.slf4j.Logger;
@@ -203,8 +203,8 @@ public class ImportApp {
                 importer.importByType(GRAPH.DELTAS, cfg);
                 break;
             case "singlefile" :
-                importer= new Importer().validateByType(TTIriRef.iri(IM.NAMESPACE.iri+"SingleFileImporter"),cfg.getFolder());
-                importer.importByType(TTIriRef.iri(IM.NAMESPACE.iri+"SingleFileImporter"), cfg);
+                importer= new Importer().validateByType(TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter"),cfg.getFolder());
+                importer.importByType(TTIriRef.iri(IM.NAMESPACE+"SingleFileImporter"), cfg);
                 break;
             case "qcodegroups" :
                 importer= new Importer().validateByType(QR.NAMESPACE,cfg.getFolder());

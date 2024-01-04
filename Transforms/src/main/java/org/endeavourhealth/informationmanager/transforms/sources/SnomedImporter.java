@@ -10,7 +10,7 @@ import org.endeavourhealth.imapi.model.imq.Bool;
 import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.common.ECLToIML;
 import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -162,12 +162,12 @@ public class SnomedImporter implements TTImport {
         //Snomed telephone is a device
         TTEntity telephone = new TTEntity()
             .setIri(SNOMED.NAMESPACE + "359993007")
-            .setCrud(IM.ADD_QUADS)
-            .setGraph(GRAPH.DISCOVERY);
-        telephone.addObject(RDFS.SUBCLASS_OF, iri(IM.NAMESPACE.iri + "71000252102"));
+            .setCrud(iri(IM.ADD_QUADS))
+            .setGraph(iri(GRAPH.DISCOVERY));
+        telephone.addObject(iri(RDFS.SUBCLASS_OF), iri(IM.NAMESPACE + "71000252102"));
         document.addEntity(telephone);
         TTEntity specific = conceptMap.get("10362801000001104");
-        specific.addObject(RDFS.SUBCLASS_OF, iri(SNOMED.NAMESPACE + "127489000"));
+        specific.addObject(iri(RDFS.SUBCLASS_OF), iri(SNOMED.NAMESPACE + "127489000"));
     }
 
     private void removeQualifiers(TTDocument document) {
@@ -193,7 +193,7 @@ public class SnomedImporter implements TTImport {
         TTEntity root = new TTEntity().setIri(SNOMED.NAMESPACE + "900000000000455006");
         document.addEntity(root);
         conceptMap.put(root.getIri(), root);
-        root.set(IM.IS_CONTAINED_IN, new TTArray().add(iri(IM.NAMESPACE.iri + "QueryConceptSets")));
+        root.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(IM.NAMESPACE + "QueryConceptSets")));
     }
 
     private void importQof(String path) throws IOException {
@@ -205,22 +205,22 @@ public class SnomedImporter implements TTImport {
             String qofFile = file.toFile().getName();
             String version = qofFile.split("_")[0];
             TTEntity clusters = new TTEntity()
-                .setIri(IM.NAMESPACE.iri + "QofClusters")
+                .setIri(IM.NAMESPACE + "QofClusters")
                 .setName("QOF Code clusters")
                 .setDescription("QOF code cluster reference sets issued on " + version)
-                .addType(IM.FOLDER);
-            clusters.addObject(IM.CONTENT_TYPE, IM.CONCEPT_SET);
+                .addType(iri(IM.FOLDER));
+            clusters.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
             clusters
-                .addObject(IM.IS_CONTAINED_IN, iri(IM.NAMESPACE.iri + "QueryConceptSets"));
+                .addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "QueryConceptSets"));
             document.addEntity(clusters);
             TTEntity clusterFolder = new TTEntity()
-                .setIri(IM.NAMESPACE.iri + "QofClusters" + version)
+                .setIri(IM.NAMESPACE + "QofClusters" + version)
                 .setName("QOF Code clusters - " + version)
                 .setDescription("QOF code cluster reference sets issued on " + version)
-                .addType(IM.FOLDER);
+                .addType(iri(IM.FOLDER));
             clusterFolder
-                .addObject(IM.IS_CONTAINED_IN, iri(IM.NAMESPACE.iri + "QofClusters"));
-            clusterFolder.addObject(IM.CONTENT_TYPE, IM.CONCEPT_SET);
+                .addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "QofClusters"));
+            clusterFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
             document.addEntity(clusterFolder);
 
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -234,10 +234,10 @@ public class SnomedImporter implements TTImport {
           normalTerm=normalTerm.split(" codes")[0]+" (primary care value set)";
                     String imTerm = clusterTerm + " code cluster";
                     TTEntity c = conceptMap.get(refset);
-          c.set(IM.PREFERRED_NAME,TTLiteral.literal(normalTerm));
+          c.set(iri(IM.PREFERRED_NAME),TTLiteral.literal(normalTerm));
                     if (!hasTermCode(c, imTerm)) {
-                        c.addObject(IM.HAS_TERM_CODE, new TTNode().set(RDFS.LABEL, TTLiteral.literal(imTerm)));
-                        c.addObject(IM.IS_CONTAINED_IN, iri(clusterFolder.getIri()));
+                        c.addObject(iri(IM.HAS_TERM_CODE), new TTNode().set(iri(RDFS.LABEL), TTLiteral.literal(imTerm)));
+                        c.addObject(iri(IM.IS_CONTAINED_IN), iri(clusterFolder.getIri()));
                     }
                     line = reader.readLine();
                 }
@@ -246,10 +246,10 @@ public class SnomedImporter implements TTImport {
     }
 
     private boolean hasTermCode(TTEntity entity, String term) {
-        if (entity.get(IM.HAS_TERM_CODE) == null)
+        if (entity.get(iri(IM.HAS_TERM_CODE)) == null)
             return false;
-        for (TTValue tc : entity.get(IM.HAS_TERM_CODE).getElements()) {
-            if (tc.asNode().get(RDFS.LABEL).asLiteral().getValue()
+        for (TTValue tc : entity.get(iri(IM.HAS_TERM_CODE)).getElements()) {
+            if (tc.asNode().get(iri(RDFS.LABEL)).asLiteral().getValue()
                 .equals(term))
                 return true;
         }
@@ -276,16 +276,16 @@ public class SnomedImporter implements TTImport {
                         if (c == null) {
                             c = new TTEntity().setIri(SN + subtype);
                             document.addEntity(c);
-                            c.addType(IM.CONCEPT);
-                            c.setStatus(IM.INACTIVE);
+                            c.addType(iri(IM.CONCEPT));
+                            c.setStatus(iri(IM.INACTIVE));
                             c.setCode(subtype);
                             c.setScheme(iri(SNOMED.NAMESPACE));
                         }
                         switch (provenance) {
-                            case "0" -> c.addObject(IM.SUBSUMED_BY, iri(SN + supertype));
-                            case "1" -> c.addObject(IM.USUALLY_SUBSUMED_BY, iri(SN + supertype));
-                            case "2" -> c.addObject(IM.APPROXIMATE_SUBSUMED_BY, iri(SN + supertype));
-                            case "3" -> c.addObject(IM.MULTIPLE_SUBSUMED_BY, iri(SN + supertype));
+                            case "0" -> c.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
+                            case "1" -> c.addObject(iri(IM.USUALLY_SUBSUMED_BY), iri(SN + supertype));
+                            case "2" -> c.addObject(iri(IM.APPROXIMATE_SUBSUMED_BY), iri(SN + supertype));
+                            case "3" -> c.addObject(iri(IM.MULTIPLE_SUBSUMED_BY), iri(SN + supertype));
                         }
                     }
                     line = reader.readLine();
@@ -323,7 +323,7 @@ public class SnomedImporter implements TTImport {
         String[] fields = line.split("\\|");
         TTEntity c = conceptMap.get(fields[0]);
         if (c != null) {
-            c.set(IM.PREFERRED_NAME, TTLiteral.literal(fields[5]));
+            c.set(iri(IM.PREFERRED_NAME), TTLiteral.literal(fields[5]));
             if (!TTManager.termUsed(c, fields[5]))
                 TTManager.addTermCode(c, fields[5], null);
         }
@@ -357,20 +357,20 @@ public class SnomedImporter implements TTImport {
             c.setCode(fields[0]);
             c.setScheme(iri(SNOMED.NAMESPACE));
             if (conceptFile.contains("Refset") || conceptFile.contains("UKPrimaryCare"))
-                c.addType(IM.CONCEPT_SET);
+                c.addType(iri(IM.CONCEPT_SET));
             else
-                c.addType(IM.CONCEPT);
+                c.addType(iri(IM.CONCEPT));
             if (fields[4].equals(DEFINED))
-                c.set(IM.DEFINITIONAL_STATUS, IM.SUFFICIENTLY_DEFINED);
-            c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
+                c.set(iri(IM.DEFINITIONAL_STATUS), iri(IM.SUFFICIENTLY_DEFINED));
+            c.setStatus(ACTIVE.equals(fields[2]) ? iri(IM.ACTIVE) : iri(IM.INACTIVE));
             if (fields[0].equals("138875005")) { // snomed root
-                c.set(IM.IS_CONTAINED_IN, new TTArray().add(iri(IM.NAMESPACE.iri + "HealthModelOntology")));
+                c.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(IM.NAMESPACE + "HealthModelOntology")));
             }
             document.addEntity(c);
             conceptMap.put(fields[0], c);
         } else {
             TTEntity c = conceptMap.get(fields[0]);
-            c.setStatus(ACTIVE.equals(fields[2]) ? IM.ACTIVE : IM.INACTIVE);
+            c.setStatus(ACTIVE.equals(fields[2]) ? iri(IM.ACTIVE) : iri(IM.INACTIVE));
 
         }
     }
@@ -414,7 +414,7 @@ public class SnomedImporter implements TTImport {
                 document.addEntity(c);
             }
           */
-            c.addObject(IM.HAS_MEMBER, iri(SNOMED.NAMESPACE + fields[5]));
+            c.addObject(iri(IM.HAS_MEMBER), iri(SNOMED.NAMESPACE + fields[5]));
         }
     }
 
@@ -448,23 +448,23 @@ public class SnomedImporter implements TTImport {
 
         if (c != null) {
           if (term.contains("(attribute)")) {
-                c.addType(RDF.PROPERTY);
+                c.addType(iri(RDF.PROPERTY));
             }
             if (FULLY_SPECIFIED.equals(fields[6]) || c.getName() == null) {
                 c.setName(fields[7]);
             }
-            if (c.getStatus().getIri().equals(IM.ACTIVE.iri)) {
+            if (c.getStatus().getIri().equals(IM.ACTIVE)) {
                 if (ACTIVE.equals(fields[2]))
-              TTManager.addTermCode(c, term, fields[0], IM.ACTIVE.asTTIriRef());
+              TTManager.addTermCode(c, term, fields[0], iri(IM.ACTIVE));
                 else
-              TTManager.addTermCode(c, term, fields[0], IM.INACTIVE.asTTIriRef());
+              TTManager.addTermCode(c, term, fields[0], iri(IM.INACTIVE));
           }
           if (term.contains(" General practice data extraction - ")) {
             term = term.split(" General practice data extraction - ")[1];
             if (term.contains(" simple reference set")) {
               term = term.split(" simple reference set")[0];
               term = StringUtils.capitalize(term) + " (NHS GP value set)";
-              c.set(IM.PREFERRED_NAME,TTLiteral.literal(term));
+              c.set(iri(IM.PREFERRED_NAME),TTLiteral.literal(term));
               TTManager.addTermCode(c, term, fields[0]);
             }
             }
@@ -476,7 +476,7 @@ public class SnomedImporter implements TTImport {
         OWLToTT owlConverter = new OWLToTT();
         TTContext statedContext = new TTContext();
         statedContext.add(SNOMED.NAMESPACE, "");
-        statedContext.add(IM.NAMESPACE.iri, "im");
+        statedContext.add(IM.NAMESPACE, "im");
         for (String relationshipFile : statedAxioms) {
             Path file = ImportUtils.findFilesForId(path, relationshipFile).get(0);
             LOG.info("Processing owl expressions in {}", file.getFileName().toString());
@@ -568,11 +568,11 @@ public class SnomedImporter implements TTImport {
         Query expression = eclConverter.getQueryFromECL(ecl);
         for (Match match : expression.getMatch()) {
             if (match.getInstanceOf() != null) {
-                op.addObject(RDFS.RANGE, iri(match.getInstanceOf().getIri()));
+                op.addObject(iri(RDFS.RANGE), iri(match.getInstanceOf().getIri()));
             } else {
                 if (match.getBool().equals(Bool.or)) {
                     for (Match or : match.getMatch()) {
-                        op.addObject(RDFS.RANGE, iri(or.getInstanceOf().getIri()));
+                        op.addObject(iri(RDFS.RANGE), iri(or.getInstanceOf().getIri()));
                     }
                 } else
                     throw new DataFormatException("ecl of this kind is not supported for ranges");
@@ -584,9 +584,9 @@ public class SnomedImporter implements TTImport {
     private void addSnomedPropertyDomain(TTEntity op, String domain) {
         //Assumes all properties may or may nor in a group
         //therefore groups are not modelled in this version
-        if (op.get(RDFS.DOMAIN) == null)
-            op.set(RDFS.DOMAIN, new TTArray());
-        op.get(RDFS.DOMAIN).add(iri(SN + domain));
+        if (op.get(iri(RDFS.DOMAIN)) == null)
+            op.set(iri(RDFS.DOMAIN), new TTArray());
+        op.get(iri(RDFS.DOMAIN)).add(iri(SN + domain));
     }
 
     private void importRelationshipFiles(String path) throws IOException {
@@ -633,7 +633,7 @@ public class SnomedImporter implements TTImport {
     }
 
     private void addIsa(TTEntity entity, String parent) {
-        TTIriRef isa = RDFS.SUBCLASS_OF.asTTIriRef();
+        TTIriRef isa = iri(RDFS.SUBCLASS_OF);
         if (entity.get(isa) == null) {
             TTArray isas = new TTArray();
             entity.set(isa, isas);
@@ -648,7 +648,7 @@ public class SnomedImporter implements TTImport {
         if (relationship.equals(IS_A)) {
             addIsa(c, target);
             if (c.getIri().equals(SNOMED_ATTRIBUTE))
-                c.addObject(RDFS.SUBCLASS_OF, RDF.PROPERTY);
+                c.addObject(iri(RDFS.SUBCLASS_OF), iri(RDF.PROPERTY));
         } else {
             TTNode roleGroup = getRoleGroup(c, group);
             roleGroup.set(iri(SN + relationship), iri(SN + target));
@@ -658,19 +658,19 @@ public class SnomedImporter implements TTImport {
     private TTNode getRoleGroup(TTEntity c, Integer groupNumber) {
         // if (groupNumber==0)
         //  return c;
-        if (c.get(IM.ROLE_GROUP) == null) {
+        if (c.get(iri(IM.ROLE_GROUP)) == null) {
             TTArray roleGroups = new TTArray();
-            c.set(IM.ROLE_GROUP, roleGroups);
+            c.set(iri(IM.ROLE_GROUP), roleGroups);
         }
-        TTArray groups = c.get(IM.ROLE_GROUP);
+        TTArray groups = c.get(iri(IM.ROLE_GROUP));
         for (TTValue group : groups.getElements()) {
-            if (Integer.parseInt(group.asNode().get(IM.GROUP_NUMBER).asLiteral().getValue()) == groupNumber)
+            if (Integer.parseInt(group.asNode().get(iri(IM.GROUP_NUMBER)).asLiteral().getValue()) == groupNumber)
                 return group.asNode();
         }
         TTNode newGroup = new TTNode();
         TTLiteral groupCount = TTLiteral.literal(groupNumber.toString());
-        groupCount.setType(XSD.INTEGER);
-        newGroup.set(IM.GROUP_NUMBER, groupCount);
+        groupCount.setType(iri(XSD.INTEGER));
+        newGroup.set(iri(IM.GROUP_NUMBER), groupCount);
         groups.add(newGroup);
         return newGroup;
     }

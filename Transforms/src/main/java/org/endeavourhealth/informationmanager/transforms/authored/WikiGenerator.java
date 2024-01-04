@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 
+import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+
 public class WikiGenerator {
 	private StringBuilder table;
 	private final List<String> shapesToDo= new ArrayList<>();
@@ -27,11 +29,11 @@ public class WikiGenerator {
 	public String generateDocs(String importFolder) throws DataFormatException, IOException {
 		this.importFolder = importFolder;
 		StringBuilder documentation = new StringBuilder();
-		veto.add(IM.NAMESPACE.iri+"Organisation");
-		veto.add(IM.NAMESPACE.iri+"ComputerSystem");
+		veto.add(IM.NAMESPACE+"Organisation");
+		veto.add(IM.NAMESPACE+"ComputerSystem");
 		List<String> folders=List.of("BasicShapes","DataModelShapes","ConceptShapes","QueryShapes","TransformMapShapes","TransactionalShapes");
 		for (String folder:folders) {
-			String folderIri = IM.NAMESPACE.iri + folder;
+			String folderIri = IM.NAMESPACE + folder;
 			TTEntity heading = getEntity(folderIri);
 			documentation.append("== ").append(heading.getName()).append(" ==\n");
 			String description= convertHtml(heading.getDescription());
@@ -51,8 +53,8 @@ public class WikiGenerator {
 
 		String name= shape.getName();
 		TTIriRef target= null;
-		if (shape.get(SHACL.TARGETCLASS)!=null)
-			target= shape.get(SHACL.TARGETCLASS).asIriRef();
+		if (shape.get(iri(SHACL.TARGETCLASS))!=null)
+			target= shape.get(iri(SHACL.TARGETCLASS)).asIriRef();
 		String link= getLink(shape.getIri());
 
 		classText.append("=== ").append("[")
@@ -64,8 +66,8 @@ public class WikiGenerator {
 		}
 
 
-		if (shape.get(RDFS.SUBCLASS_OF)!=null){
-			TTEntity superShape=  getEntity(shape.get(RDFS.SUBCLASS_OF).asIriRef().getIri());
+		if (shape.get(iri(RDFS.SUBCLASS_OF))!=null){
+			TTEntity superShape=  getEntity(shape.get(iri(RDFS.SUBCLASS_OF)).asIriRef().getIri());
 			classText.append("\nIs a subtype of " + "[[#").append(superShape.getName()).append("|").append(superShape.getName()).append("]]\n\n");
 			shapesToDo.add(superShape.getIri());
 		}
@@ -113,9 +115,9 @@ public class WikiGenerator {
 		StringBuilder classText= new StringBuilder();
 		classText.append(generateHeader(shape));
 		classText.append(getTable(shape));
-		if (shape.get(IM.EXAMPLE)!=null){
+		if (shape.get(iri(IM.EXAMPLE))!=null){
 			classText.append("{{Note| Example <br>");
-			classText.append(shape.get(IM.EXAMPLE).asLiteral().getValue()).append(" }}\n");
+			classText.append(shape.get(iri(IM.EXAMPLE)).asLiteral().getValue()).append(" }}\n");
 		}
 
 
@@ -153,11 +155,11 @@ public class WikiGenerator {
 
 	private int getRowSpan(TTEntity shape){
 		int rowSpan=0;
-		if (shape.get(SHACL.PROPERTY)!=null){
-			for (TTValue prop:shape.get(SHACL.PROPERTY).getElements()){
-				if (prop.asNode().get(IM.INHERITED_FROM)==null) {
-					if (prop.asNode().get(SHACL.OR) != null) {
-						rowSpan = rowSpan + prop.asNode().get(SHACL.OR).size();
+		if (shape.get(iri(SHACL.PROPERTY))!=null){
+			for (TTValue prop:shape.get(iri(SHACL.PROPERTY)).getElements()){
+				if (prop.asNode().get(iri(IM.INHERITED_FROM))==null) {
+					if (prop.asNode().get(iri(SHACL.OR)) != null) {
+						rowSpan = rowSpan + prop.asNode().get(iri(SHACL.OR)).size();
 					} else
 						rowSpan++;
 				}
@@ -170,35 +172,35 @@ public class WikiGenerator {
 
 
 		int rowSpan=0;
-		if (shape.get(SHACL.PROPERTY)!=null)
+		if (shape.get(iri(SHACL.PROPERTY))!=null)
 			rowSpan= getRowSpan(shape);
 		if (rowSpan>0)
 
 
-		if (shape.get(SHACL.PROPERTY)==null){
+		if (shape.get(iri(SHACL.PROPERTY))==null){
 			table.append("\n|-");
 		}
 		else {
 
-			List<TTNode> properties = shape.get(SHACL.PROPERTY).getElements().stream().map(TTValue::asNode)
-				.sorted(Comparator.comparing((TTNode p) -> p.get(SHACL.ORDER).asLiteral().intValue()))
+			List<TTNode> properties = shape.get(iri(SHACL.PROPERTY)).getElements().stream().map(TTValue::asNode)
+				.sorted(Comparator.comparing((TTNode p) -> p.get(iri(SHACL.ORDER)).asLiteral().intValue()))
 				.collect(Collectors.toList());
 			int propCount = 0;
 			for (TTNode property : properties) {
-				if (property.get(IM.INHERITED_FROM)!=null)
+				if (property.get(iri(IM.INHERITED_FROM))!=null)
 					continue;
 				propCount++;
-				if (property.get(SHACL.OR) == null) {
+				if (property.get(iri(SHACL.OR)) == null) {
 					processField(property, 2);
 					processCardinality(property);
 					processType(property);
 					processComment(property);
 				} else {
-					table.append("|rowspan=\"").append(property.get(SHACL.OR).size()).append("\"|");
+					table.append("|rowspan=\"").append(property.get(iri(SHACL.OR)).size()).append("\"|");
 					String card= getCardinality(property);
 					table.append("or<br>").append(card).append("\n|");
 					int orCount = 0;
-					for (TTValue orProp : property.get(SHACL.OR).getElements()) {
+					for (TTValue orProp : property.get(iri(SHACL.OR)).getElements()) {
 						orCount++;
 						processField(orProp.asNode(), 1);
 						if (orCount==1) {
@@ -209,7 +211,7 @@ public class WikiGenerator {
 						}
 						processType(orProp.asNode());
 						processComment(orProp.asNode());
-						if (orCount < property.get(SHACL.OR).getElements().size())
+						if (orCount < property.get(iri(SHACL.OR)).getElements().size())
 							table.append("\n|\n");
 					}
 				}
@@ -226,7 +228,7 @@ public class WikiGenerator {
 	private void processType(TTNode prop) throws DataFormatException, IOException {
 		TTIriRef type=null;
 		String title="";
-		for (TTIriRef test : List.of(SHACL.NODE.asTTIriRef(), SHACL.NODE_KIND.asTTIriRef(), SHACL.DATATYPE.asTTIriRef(),SHACL.CLASS.asTTIriRef())) {
+		for (TTIriRef test : List.of(iri(SHACL.NODE), iri(SHACL.NODE_KIND), iri(SHACL.DATATYPE),iri(SHACL.CLASS))) {
 			if (prop.get(test) != null) {
 				type = prop.get(test).asIriRef();
 				title = getTitle(type);
@@ -236,7 +238,7 @@ public class WikiGenerator {
 			throw new DataFormatException("Unknown property type in shape");
 		String link= getLink(type.getIri());
 		String localType= localName(type.getIri());
-		if (prop.get(SHACL.NODE)!=null) {
+		if (prop.get(iri(SHACL.NODE))!=null) {
 			if (!veto.contains(type.getIri())){
 				if (!shapesToDo.contains(type.getIri())) {
 					shapesToDo.add(type.getIri());
@@ -262,21 +264,21 @@ public class WikiGenerator {
 	}
 
 	private String getTitle(TTIriRef iri) throws DataFormatException, IOException {
-		if (iri.getIri().equals(SHACL.IRI.iri))
+		if (iri.getIri().equals(SHACL.IRI))
 			return "international resource identifier";
-		else if (iri.getIri().equals(XSD.STRING.iri))
+		else if (iri.getIri().equals(XSD.STRING))
 			return "any valid json value characters with json escapes";
-		else if (iri.getIri().equals(XSD.INTEGER.iri))
+		else if (iri.getIri().equals(XSD.INTEGER))
 			return "whole number";
-		else if (iri.getIri().equals(IM.NAMESPACE.iri+"DateTime"))
+		else if (iri.getIri().equals(IM.NAMESPACE+"DateTime"))
 			return "im date time format";
-		else if (iri.getIri().equals(XSD.BOOLEAN.iri))
+		else if (iri.getIri().equals(XSD.BOOLEAN))
 			return "boolean true or false";
 		else {
 			TTEntity entity = getEntity(iri.getIri());
 			if (entity != null) {
-				if (entity.get(RDFS.COMMENT) != null)
-					return entity.get(RDFS.COMMENT).asLiteral().getValue().replaceAll("<br>","");
+				if (entity.get(iri(RDFS.COMMENT)) != null)
+					return entity.get(iri(RDFS.COMMENT)).asLiteral().getValue().replaceAll("<br>","");
 				else
 					return "";
 			} else
@@ -290,8 +292,8 @@ public class WikiGenerator {
 	}
 
 	private String getCardinality(TTNode property){
-		int min = property.get(SHACL.MINCOUNT) == null ? 0 : property.get(SHACL.MINCOUNT).asLiteral().intValue();
-		Integer max = property.get(SHACL.MAXCOUNT) == null ? null : property.get(SHACL.MAXCOUNT).asLiteral().intValue();
+		int min = property.get(iri(SHACL.MINCOUNT)) == null ? 0 : property.get(iri(SHACL.MINCOUNT)).asLiteral().intValue();
+		Integer max = property.get(iri(SHACL.MAXCOUNT)) == null ? null : property.get(iri(SHACL.MAXCOUNT)).asLiteral().intValue();
 		if (min == 0 && max == null)
 			return "0..*";
 		else if (min == 0 )
@@ -311,9 +313,9 @@ public class WikiGenerator {
 	private void processField(TTNode property,int colspan) throws DataFormatException, IOException {
 		if (colspan > 1)
 			table.append("|colspan=\"").append(colspan).append("\"|");
-		String link= getLink(property.get(SHACL.PATH).asIriRef().getIri());
-		String title= getTitle(property.get(SHACL.PATH).asIriRef());
-		String fieldName = localName(property.get(SHACL.PATH).asIriRef().getIri());
+		String link= getLink(property.get(iri(SHACL.PATH)).asIriRef().getIri());
+		String title= getTitle(property.get(iri(SHACL.PATH)).asIriRef());
+		String fieldName = localName(property.get(iri(SHACL.PATH)).asIriRef().getIri());
 		table.append("<span title=\"").append(title).append("\">");
 		table.append("[").append(link).append(" ").append("<span style=\"color:green\">").append(fieldName).append(" ]</span></span>\n");
 		//table.append("<span style=\"color:green\">" + " ["+link+" "+ fieldName + "]</span></span>\n");
@@ -322,8 +324,8 @@ public class WikiGenerator {
 
 	private void processComment(TTNode property){
 		String comment="";
-		if (property.get(RDFS.COMMENT)!=null) {
-			comment = property.get(RDFS.COMMENT).asLiteral().getValue();
+		if (property.get(iri(RDFS.COMMENT))!=null) {
+			comment = property.get(iri(RDFS.COMMENT)).asLiteral().getValue();
 		}
 		table.append(comment).append("\n|-\n");
 	}
@@ -354,14 +356,14 @@ public class WikiGenerator {
 		manager.loadDocument(new File(importFolder+"/DiscoveryCore/CoreOntology.json"));
 		List<TTEntity> folders= new ArrayList<>();
 		for (TTEntity entity:manager.getDocument().getEntities()) {
-			if (entity.get(IM.IS_CONTAINED_IN) != null) {
-				for (TTValue value : entity.get(IM.IS_CONTAINED_IN).getElements()) {
+			if (entity.get(iri(IM.IS_CONTAINED_IN)) != null) {
+				for (TTValue value : entity.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
 					if (value.asIriRef().getIri().equals(iri))
 						folders.add(entity);
 				}
 			}
 		}
-		folders.sort(Comparator.comparing((TTNode p) -> p.get(SHACL.ORDER).asLiteral().intValue()));
+		folders.sort(Comparator.comparing((TTNode p) -> p.get(iri(SHACL.ORDER)).asLiteral().intValue()));
 		return folders;
 	}
 

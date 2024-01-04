@@ -7,7 +7,7 @@ import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +19,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DataFormatException;
 import org.endeavourhealth.imapi.model.imq.*;
+
+import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+
 public class IM1MapImport implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(IM1MapImport.class);
     private static final String[] im1Codes = {".*\\\\IMv1\\\\concepts.txt"};
@@ -80,15 +83,15 @@ public class IM1MapImport implements TTImport {
         LOG.info("Retrieving all entities and matches...");
         entities= importMaps.getAllPlusMatches();
         TTManager manager = new TTManager();
-        document = manager.createDocument(GRAPH.IM1.iri);
-        document.addEntity(manager.createGraph(GRAPH.IM1.iri, "IM1 code scheme and graph",
+        document = manager.createDocument(GRAPH.IM1);
+        document.addEntity(manager.createGraph(GRAPH.IM1, "IM1 code scheme and graph",
                 "The IM1 code scheme and graph"));
-        document.addEntity(manager.createGraph(FHIR.GRAPH_FHIR.iri, "FHIR code scheme and graph",
+        document.addEntity(manager.createGraph(FHIR.GRAPH_FHIR, "FHIR code scheme and graph",
                 "The FHIR code scheme and graph, i.e. codes defined in the FHIR specification"));
-        document.addEntity(manager.createGraph(IM.SYSTEM_NAMESPACE.iri, "Computer system scheme and graph",
+        document.addEntity(manager.createGraph(IM.SYSTEM_NAMESPACE, "Computer system scheme and graph",
                 "Computer system scheme and graph"));
         newSchemes();
-        statsDocument= manager.createDocument(GRAPH.STATS.getIri());
+        statsDocument= manager.createDocument(GRAPH.STATS);
         importv1Codes(inFolder);
       //  importODSCode(inFolder);
         importContext(inFolder);
@@ -143,7 +146,7 @@ public class IM1MapImport implements TTImport {
                             scheme = SNOMED.NAMESPACE;
                             break;
                         case "READ2":
-                            scheme = GRAPH.EMIS.getIri();
+                            scheme = GRAPH.EMIS;
                             break;
                         case "DS_DATE_PREC":
                             scheme = "X";
@@ -152,16 +155,16 @@ public class IM1MapImport implements TTImport {
                             scheme = "X";
                             break;
                         case "CTV3":
-                            scheme = GRAPH.TPP.getIri();
+                            scheme = GRAPH.TPP;
                             break;
                         case "ICD10":
-                            scheme = GRAPH.ICD10.getIri();
+                            scheme = GRAPH.ICD10;
                             break;
                         case "OPCS4":
-                            scheme = GRAPH.OPCS4.getIri();
+                            scheme = GRAPH.OPCS4;
                             break;
                         case "BartsCerner":
-                            scheme = GRAPH.BARTS_CERNER.getIri();
+                            scheme = GRAPH.BARTS_CERNER;
                             break;
                         case "FHIR_RFP":
                         case "FHIR_RFT":
@@ -179,29 +182,29 @@ public class IM1MapImport implements TTImport {
                         case "FHIR_FPR":
                         case "FHIR_LANG":
                             if ("0".equals(draft))
-                                scheme = FHIR.GRAPH_FHIR.iri;
+                                scheme = FHIR.GRAPH_FHIR;
                             else
                                 scheme = "X";
                             break;
                         case "EMIS_LOCAL":
-                            scheme = GRAPH.EMIS.iri;
+                            scheme = GRAPH.EMIS;
                             break;
                         case "TPP_LOCAL":
-                            scheme = GRAPH.TPP.iri;
+                            scheme = GRAPH.TPP;
                             break;
                         case "LE_TYPE":
-                            scheme = GRAPH.ENCOUNTERS.iri;
+                            scheme = GRAPH.ENCOUNTERS;
                             break;
                         case "VISION_LOCAL":
-                            scheme = GRAPH.VISION.iri;
+                            scheme = GRAPH.VISION;
                             break;
                         case "CM_DiscoveryCode":
                             if(oldIri.startsWith("FHIR_")) {
-                                scheme = FHIR.GRAPH_FHIR.iri;
+                                scheme = FHIR.GRAPH_FHIR;
                             } else if (oldIri.startsWith("CM_Sys_")) {
-                                scheme = IM.SYSTEM_NAMESPACE.iri;
+                                scheme = IM.SYSTEM_NAMESPACE;
                             } else {
-                                scheme = GRAPH.DISCOVERY.iri;
+                                scheme = GRAPH.DISCOVERY;
                                 if (code.startsWith("LPV_Imp_Crn"))
                                     scheme= "X";
                             }
@@ -211,7 +214,7 @@ public class IM1MapImport implements TTImport {
                             break;
                         case "NULL":
                             if(oldIri.startsWith("FHIR_")) {
-                                scheme = FHIR.GRAPH_FHIR.iri;
+                                scheme = FHIR.GRAPH_FHIR;
                             } else {
                                 scheme = "X";
                             }
@@ -226,13 +229,13 @@ public class IM1MapImport implements TTImport {
                         throw new IOException();
 
                     if (code.startsWith("_") && scheme.equals("X")){
-                        scheme=GRAPH.ENCOUNTERS.iri;
+                        scheme=GRAPH.ENCOUNTERS;
                     }
 
                     if (!scheme.equals("X")) {
                         String lname = code;
 
-                        if (scheme.equals(GRAPH.TPP.getIri())) {
+                        if (scheme.equals(GRAPH.TPP)) {
                             lname = lname.replace(".", "_");
                             if (entities.containsKey(scheme+lname)) {
                                 checkEntity(scheme, lname, im1Scheme, term, code, oldIri,description);
@@ -240,7 +243,7 @@ public class IM1MapImport implements TTImport {
                             else {
                                 TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
                                 if (core != null) {
-                                    addNewEntity(scheme+lname,core.getIri(),term,code,im1Scheme,oldIri,description,IM.CONCEPT.asTTIriRef());
+                                    addNewEntity(scheme+lname,core.getIri(),term,code,im1Scheme,oldIri,description,iri(IM.CONCEPT));
                                 }
                                 else {
                                     checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
@@ -249,14 +252,14 @@ public class IM1MapImport implements TTImport {
                             }
                         }
 
-                        else if (scheme.equals(GRAPH.EMIS.getIri())) {
+                        else if (scheme.equals(GRAPH.EMIS)) {
                             if (!(".....").equals(code)) {
                                 if (im1Scheme.equals("READ2"))
                                     code= code.replaceAll("\\.","");
-                                String emisConcept = codeToIri.get(GRAPH.EMIS.getIri() + code);
+                                String emisConcept = codeToIri.get(GRAPH.EMIS + code);
                                 if (emisConcept == null) {
                                     if (term.contains("SHHAPT")) {
-                                        emisConcept = codeToIri.get(GRAPH.EMIS.getIri() + code + "-SHHAPT");
+                                        emisConcept = codeToIri.get(GRAPH.EMIS + code + "-SHHAPT");
                                     }
                                 }
                                 if (emisConcept == null) {
@@ -267,7 +270,7 @@ public class IM1MapImport implements TTImport {
                             }
                         }
 
-                        else if (scheme.equals(GRAPH.ENCOUNTERS.getIri())) {
+                        else if (scheme.equals(GRAPH.ENCOUNTERS)) {
                             lname = "LE_" + lname;
                             if (entities.containsKey(scheme+lname))
                                 checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
@@ -283,7 +286,7 @@ public class IM1MapImport implements TTImport {
                             }
                         }
 
-                        else if (scheme.equals(GRAPH.ICD10.getIri())) {
+                        else if (scheme.equals(GRAPH.ICD10)) {
                             String icd10 = lname.replace(".", "");
                             if (entities.containsKey(scheme + icd10)){
                                 checkEntity(scheme,icd10,im1Scheme,term,code,oldIri,description);
@@ -296,12 +299,12 @@ public class IM1MapImport implements TTImport {
                                 }
                         }
 
-                        else if (scheme.equals(GRAPH.OPCS4.getIri())) {
+                        else if (scheme.equals(GRAPH.OPCS4)) {
                             lname = lname.replace(".", "");
                             checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
                         }
 
-                        else if (scheme.equals(GRAPH.DISCOVERY.getIri())) {
+                        else if (scheme.equals(GRAPH.DISCOVERY)) {
                             if (!checkOld(scheme, lname, term, code, oldIri, description,im1Scheme)) {
                                 String original=lname;
                                 if (original.contains("_")) {
@@ -325,20 +328,20 @@ public class IM1MapImport implements TTImport {
                         else if (scheme.equals(SNOMED.NAMESPACE)){
                             String visionNamespace = "1000027";
                             if (getNameSpace(code).equals(visionNamespace)){
-                                scheme= GRAPH.VISION.getIri();
-                                addNewEntity(scheme+code,null,term,code,im1Scheme,oldIri,description,IM.CONCEPT.asTTIriRef());
+                                scheme= GRAPH.VISION;
+                                addNewEntity(scheme+code,null,term,code,im1Scheme,oldIri,description,iri(IM.CONCEPT));
                             }
                             checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
                         }
 
-                        else if (scheme.equals(GRAPH.BARTS_CERNER.getIri())){
+                        else if (scheme.equals(GRAPH.BARTS_CERNER)){
                             if (entities.containsKey(scheme+lname)){
                                 checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
                             }
                             else {
                                 TTIriRef core = importMaps.getReferenceFromCoreTerm(term);
                                 if (core != null) {
-                                    addNewEntity(scheme+lname,core.getIri(),term,code,scheme,oldIri,description,IM.CONCEPT.asTTIriRef());
+                                    addNewEntity(scheme+lname,core.getIri(),term,code,scheme,oldIri,description,iri(IM.CONCEPT));
                                 }
                                 else {
                                     checkEntity(scheme,lname,im1Scheme,term,code,oldIri,description);
@@ -346,7 +349,7 @@ public class IM1MapImport implements TTImport {
 
                             }
                         }
-                        else if (scheme.equals((FHIR.GRAPH_FHIR.getIri()))) {
+                        else if (scheme.equals((FHIR.GRAPH_FHIR))) {
                             addFhir(oldIri, term, im1Scheme, code);
                         }
                         else {
@@ -366,7 +369,7 @@ public class IM1MapImport implements TTImport {
 	}
 
     private void addFhir(String oldIri, String term, String im1Scheme, String code) throws IOException {
-        String scheme = FHIR.GRAPH_FHIR.getIri() + "ValueSet/";
+        String scheme = FHIR.GRAPH_FHIR + "ValueSet/";
         LOG.info("Writing Fhir ValueSet");
         TTEntity entity = new TTEntity();
         TTEntity concept = new TTEntity();
@@ -383,17 +386,17 @@ public class IM1MapImport implements TTImport {
                     LOG.error("Unknown IM1 scheme [{}]", im1Scheme);
                     throw new IOException();
                 }
-                entity.setIri(FHIR.GRAPH_FHIR.getIri() + iriTerm + "/" + (code.toLowerCase().replaceAll(" ", "-")))
+                entity.setIri(FHIR.GRAPH_FHIR + iriTerm + "/" + (code.toLowerCase().replaceAll(" ", "-")))
                         .setCode(code)
-                        .addType(IM.CONCEPT)
-                        .set(IM.IS_A, FHIR.GRAPH_FHIR.getIri() + iriTerm);
+                        .addType(iri(IM.CONCEPT))
+                        .set(iri(IM.IS_A), FHIR.GRAPH_FHIR + iriTerm);
 
-                TTEntity parent = iriToConcept.get(FHIR.GRAPH_FHIR.getIri() + iriTerm);
+                TTEntity parent = iriToConcept.get(FHIR.GRAPH_FHIR + iriTerm);
                 if (parent != null) {
-                    TTArray arr = parent.get(IM.HAS_CHILDREN);
+                    TTArray arr = parent.get(iri(IM.HAS_CHILDREN));
                     if (arr == null) {
                         arr = new TTArray();
-                        parent.set(IM.HAS_CHILDREN, arr);
+                        parent.set(iri(IM.HAS_CHILDREN), arr);
                     }
                     arr.add(TTIriRef.iri(entity.getIri()));
                 } else {
@@ -402,9 +405,9 @@ public class IM1MapImport implements TTImport {
             }
         }
         if(concept.getIri() != null) {
-            concept.setName(term).setScheme(FHIR.GRAPH_FHIR).set(IM.IM1ID, TTLiteral.literal(oldIri));
+            concept.setName(term).setScheme(iri(FHIR.GRAPH_FHIR)).set(iri(IM.IM1ID), TTLiteral.literal(oldIri));
             document.addEntity(concept);
-            entity.set(IM.DEFINITION, TTLiteral.literal(
+            entity.set(iri(IM.DEFINITION), TTLiteral.literal(
                     new Query().match(m->m
                             .setName(term)
                             .setInstanceOf(new Node().setIri(concept.getIri())
@@ -412,11 +415,11 @@ public class IM1MapImport implements TTImport {
                     )));
         }
         entity.setName(term)
-                .setScheme(FHIR.GRAPH_FHIR)
-                .set(IM.IM1ID, TTLiteral.literal(oldIri));
+                .setScheme(iri(FHIR.GRAPH_FHIR))
+                .set(iri(IM.IM1ID), TTLiteral.literal(oldIri));
 
         if(!"NULL".equals(im1Scheme)) {
-            entity .set(IM.IM1SCHEME,TTLiteral.literal(im1Scheme));
+            entity .set(iri(IM.IM1SCHEME),TTLiteral.literal(im1Scheme));
         }
         document.addEntity(entity);
     }
@@ -424,9 +427,9 @@ public class IM1MapImport implements TTImport {
     private void setParentConceptAndValueSet(String oldIri, String term, String scheme, TTEntity entity, TTEntity concept,String im1Scheme) throws JsonProcessingException {
         im1SchemeToIriTerm.put(oldIri,getFhirIriTerm(term));
         entity.setIri(scheme + im1SchemeToIriTerm.get(oldIri))
-                .addType(IM.VALUESET);
-        entity.set(IM.IS_CONTAINED_IN, FHIR.VALUESET_FOLDER);
-        concept.setIri(FHIR.GRAPH_FHIR.getIri() + im1SchemeToIriTerm.get(oldIri)).addType(IM.CONCEPT);
+                .addType(iri(IM.VALUESET));
+        entity.set(iri(IM.IS_CONTAINED_IN), iri(FHIR.VALUESET_FOLDER));
+        concept.setIri(FHIR.GRAPH_FHIR + im1SchemeToIriTerm.get(oldIri)).addType(iri(IM.CONCEPT));
         iriToConcept.put(concept.getIri(), concept);
 
     }
@@ -462,8 +465,8 @@ public class IM1MapImport implements TTImport {
         if (oldIriTerm.containsKey(lname)) {
             if (oldIriSnomed.get(lname) != null) {
                 String newCode= oldIriSnomed.get(lname);
-                if (entities.containsKey(IM.NAMESPACE.iri + newCode)) {
-                    checkEntity(IM.NAMESPACE.iri, newCode, im1Scheme, term, code,
+                if (entities.containsKey(IM.NAMESPACE + newCode)) {
+                    checkEntity(IM.NAMESPACE, newCode, im1Scheme, term, code,
                       oldIri, description);
                     return true;
                 } else {
@@ -518,29 +521,29 @@ public class IM1MapImport implements TTImport {
         TTEntity unassigned = new TTEntity();
         unassigned.setGraph(TTIriRef.iri(scheme));
         unassigned.setIri(scheme + lname);
-        unassigned.addType(IM.CONCEPT);
-        unassigned.setStatus(IM.UNASSIGNED);
-        unassigned.set(IM.IM1ID, TTLiteral.literal(oldIri));
+        unassigned.addType(iri(IM.CONCEPT));
+        unassigned.setStatus(iri(IM.UNASSIGNED));
+        unassigned.set(iri(IM.IM1ID), TTLiteral.literal(oldIri));
         unassigned.setName(term);
         if (description != null)
             unassigned.setDescription(description);
         if (code != null) {
-            unassigned.set(IM.CODE, TTLiteral.literal(code));
+            unassigned.set(iri(IM.CODE), TTLiteral.literal(code));
             unassigned.setScheme(TTIriRef.iri(scheme));
         }
-        unassigned.set(IM.IM1SCHEME, TTLiteral.literal(im1Scheme));
-        if (scheme.equals(GRAPH.ENCOUNTERS.getIri()))
-            unassigned.set(IM.PRIVACY_LEVEL, TTLiteral.literal(1));
+        unassigned.set(iri(IM.IM1SCHEME), TTLiteral.literal(im1Scheme));
+        if (scheme.equals(GRAPH.ENCOUNTERS))
+            unassigned.set(iri(IM.PRIVACY_LEVEL), TTLiteral.literal(1));
         if (used.get(oldIri) != null)
             if (used.get(oldIri) > 0)
-                unassigned.set(IM.USAGE_TOTAL, TTLiteral.literal(used.get(oldIri)));
-        if (scheme.equals(IM.NAMESPACE.iri)) {
+                unassigned.set(iri(IM.USAGE_TOTAL), TTLiteral.literal(used.get(oldIri)));
+        if (scheme.equals(IM.NAMESPACE)) {
             if (oldIri.startsWith("DM_")) {
-                unassigned.set(RDF.TYPE, RDF.PROPERTY);
+                unassigned.set(iri(RDF.TYPE), iri(RDF.PROPERTY));
             } else
-                unassigned.set(RDF.TYPE, IM.CONCEPT);
+                unassigned.set(iri(RDF.TYPE), iri(IM.CONCEPT));
         } else
-            unassigned.set(RDF.TYPE, IM.CONCEPT);
+            unassigned.set(iri(RDF.TYPE), iri(IM.CONCEPT));
         oldIriEntity.put(oldIri,unassigned);
         document.addEntity(unassigned);
         writer.write(oldIri + "\t" + term + "\t" + im1Scheme + "\t" + code + "\t" + description + "\t" + (used.getOrDefault(oldIri, 0)) + "\n");
@@ -585,26 +588,26 @@ public class IM1MapImport implements TTImport {
             entity.setDescription(description);
         }
         if (oldIri!=null)
-          entity.set(IM.IM1ID,TTLiteral.literal(oldIri));
+          entity.set(iri(IM.IM1ID),TTLiteral.literal(oldIri));
         if (scheme!=null)
-          entity.set(IM.IM1SCHEME,TTLiteral.literal(scheme));
+          entity.set(iri(IM.IM1SCHEME),TTLiteral.literal(scheme));
         if (matchedIri!=null) {
-            entity.addObject(IM.MATCHED_TO, TTIriRef.iri(matchedIri));
-            entity.setStatus(IM.DRAFT);
+            entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(matchedIri));
+            entity.setStatus(iri(IM.DRAFT));
             Set<String> matches = entities.get(matchedIri);
             if (matches != null) {
                 for (String iri : matches)
-                    entity.addObject(IM.MATCHED_TO, TTIriRef.iri(iri));
+                    entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(iri));
             }
         }
         else {
-            if (entity.getScheme().equals(GRAPH.DISCOVERY))
-                entity.setStatus(IM.DRAFT);
+            if (entity.getScheme().equals(iri(GRAPH.DISCOVERY)))
+                entity.setStatus(iri(IM.DRAFT));
             else
-                entity.setStatus(IM.UNASSIGNED);
+                entity.setStatus(iri(IM.UNASSIGNED));
         }
         if (used.containsKey(oldIri))
-            entity.set(IM.USAGE_TOTAL,TTLiteral.literal(used.get(oldIri)));
+            entity.set(iri(IM.USAGE_TOTAL),TTLiteral.literal(used.get(oldIri)));
         document.addEntity(entity);
         if (oldIri.equals("CM_CritCareSrcLctn04"))
             LOG.info("CM_CritCareSrcLctn04");
@@ -612,28 +615,28 @@ public class IM1MapImport implements TTImport {
         return entity;
     }
     private void addIM1id(String iri,String oldIri){
-        TTEntity im1= new TTEntity().setIri(iri).addType(IM.CONCEPT);
+        TTEntity im1= new TTEntity().setIri(iri).addType(iri(IM.CONCEPT));
         TTIriRef graph=TTIriRef.iri(iri.substring(0,iri.lastIndexOf("#")+1));
         im1.setGraph(graph);
-        im1.addObject(IM.IM1ID,TTLiteral.literal(oldIri));
+        im1.addObject(iri(IM.IM1ID),TTLiteral.literal(oldIri));
 
         Integer usedCount=0;
         if (used.containsKey(oldIri)){
-            if (im1.get(IM.USAGE_TOTAL)!=null)
-              usedCount= im1.get(IM.USAGE_TOTAL).asLiteral().intValue();
+            if (im1.get(iri(IM.USAGE_TOTAL))!=null)
+              usedCount= im1.get(iri(IM.USAGE_TOTAL)).asLiteral().intValue();
         }
         if (used.get(oldIri)!=null)
             usedCount= used.get(oldIri);
         if (IdToDbid.get(oldIri)!=null){
             Integer dbid= IdToDbid.get(oldIri);
             if (numericConcepts.contains(dbid))
-              im1.set(IM.HAS_NUMERIC,TTLiteral.literal("true"));
+              im1.set(iri(IM.HAS_NUMERIC),TTLiteral.literal("true"));
             Integer dbused= usedDbid.get(dbid);
             if (dbused!=null)
                 usedCount=usedCount+dbused;
         }
         if (usedCount>0)
-            im1.set(IM.USAGE_TOTAL,TTLiteral.literal(usedCount));
+            im1.set(iri(IM.USAGE_TOTAL),TTLiteral.literal(usedCount));
         if (oldIri.equals("CM_CritCareSrcLctn04"))
           LOG.info("CM_CritCareSrcLctn04");
         oldIriEntity.put(oldIri,im1);
@@ -703,21 +706,21 @@ public class IM1MapImport implements TTImport {
                     TTIriRef propertyIri;
                     if (propertyEntity==null) {
                         String lname= targetProperty.split("_")[1];
-                        if (!entities.containsKey(IM.NAMESPACE.iri+lname)) {
-                            propertyEntity = addNewEntity(IM.NAMESPACE.iri + lname,
-                              null, getTerm(lname), null, "CM_DiscoveryCode", targetProperty, null, RDF.PROPERTY.asTTIriRef());
+                        if (!entities.containsKey(IM.NAMESPACE+lname)) {
+                            propertyEntity = addNewEntity(IM.NAMESPACE + lname,
+                              null, getTerm(lname), null, "CM_DiscoveryCode", targetProperty, null, iri(RDF.PROPERTY));
                             propertyIri= TTIriRef.iri(propertyEntity.getIri());
-                            propertyEntity.addObject(RDFS.SUBCLASS_OF, TTIriRef.iri(IM.NAMESPACE.iri+"dataModelObjectProperty"));
+                            propertyEntity.addObject(iri(RDFS.SUBCLASS_OF), TTIriRef.iri(IM.NAMESPACE+"dataModelObjectProperty"));
                         }
                         else {
-                            propertyIri= TTIriRef.iri(IM.NAMESPACE.iri+ lname);
+                            propertyIri= TTIriRef.iri(IM.NAMESPACE+ lname);
                         }
                     }
                     else
                         propertyIri= TTIriRef.iri(propertyEntity.getIri());
 
                     String contextId = publisher + "/" + system + "/" + schema + "/" + table + "/" + field;
-                    String nodeIri = IM.CONTEXT_NODE.getIri() + node;
+                    String nodeIri = IM.CONTEXT_NODE + node;
 
                     if (!contexts.contains(contextId)) {
                         createContextEntity(contexts, publisher, system, schema, table, field, contextId, nodeIri);
@@ -728,7 +731,7 @@ public class IM1MapImport implements TTImport {
                         mapNode = createMapNode(nodeMaps, nodeIri, node, propertyIri);
                     }
 
-                    TTArray maps = mapNode.get(IM.HAS_MAP);
+                    TTArray maps = mapNode.get(iri(IM.HAS_MAP));
 
                     String oldIri = "NULL".equals(lookupConcept) ? regexConcept : lookupConcept;
 
@@ -743,17 +746,17 @@ public class IM1MapImport implements TTImport {
                             nodeValues.add(node + "/" + sourceValue);
                             TTNode map = new TTNode();
                             maps.add(map);
-                            map.set(IM.SOURCE_VALUE, sourceValue);
-                            map.set(IM.CONCEPT, entity.getIri());
+                            map.set(iri(IM.SOURCE_VALUE), sourceValue);
+                            map.set(iri(IM.CONCEPT), entity.getIri());
                         }
                     } else if (regexSrc!=null) {
                         if (!nodeValues.contains(node + "/" + regexSrc + "/" + regex)) {
                             nodeValues.add(node + "/" + regexSrc + "/" + regex);
                             TTNode map = new TTNode();
                             maps.add(map);
-                            map.set(IM.SOURCE_VALUE, regexSrc);
-                            map.set(IM.SOURCE_REGEX, regex);
-                            map.set(IM.CONCEPT, entity.getIri());
+                            map.set(iri(IM.SOURCE_VALUE), regexSrc);
+                            map.set(iri(IM.SOURCE_REGEX), regex);
+                            map.set(iri(IM.CONCEPT), entity.getIri());
                         }
                     } else {
                         LOG.error("Both source value and regex is null - unhandled context function?");
@@ -767,10 +770,10 @@ public class IM1MapImport implements TTImport {
 
     private static TTEntity createMapNode(HashMap<String, TTEntity> nodeMaps, String nodeIri, String node, TTIriRef propertyIri) {
         TTEntity mapNode = new TTEntity(nodeIri)
-            .addType(IM.CONCEPT)
-            .set(IM.HAS_MAP, new TTArray())
+            .addType(iri(IM.CONCEPT))
+            .set(iri(IM.HAS_MAP), new TTArray())
             .setName(node)
-            .set(IM.TARGET_PROPERTY, propertyIri);
+            .set(iri(IM.TARGET_PROPERTY), propertyIri);
 
         document.addEntity(mapNode);
         nodeMaps.put(nodeIri, mapNode);
@@ -780,21 +783,21 @@ public class IM1MapImport implements TTImport {
 
     private void createContextEntity(Set<String> contexts, String publisher, String system, String schema, String table, String field, String contextId, String nodeIri) {
         contexts.add(contextId);
-        TTEntity context = new TTEntity(IM.SOURCE_CONTEXT.getIri() + "/" + UUID.randomUUID());
-        context.addType(IM.CONCEPT);
+        TTEntity context = new TTEntity(IM.SOURCE_CONTEXT + "/" + UUID.randomUUID());
+        context.addType(iri(IM.CONCEPT));
         document.addEntity(context);
         TTIriRef organisation;
         if (organisationMap.get(publisher)!=null) {
-            organisation = new TTIriRef().setIri(ORG.ORGANISATION_NAMESPACE.iri + organisationMap.get(publisher));
+            organisation = new TTIriRef().setIri(ORG.ORGANISATION_NAMESPACE + organisationMap.get(publisher));
         }
         else
-            organisation= new TTIriRef().setIri(ORG.ORGANISATION_NAMESPACE.iri + UUID.randomUUID());
-        context.set(IM.SOURCE_PUBLISHER, organisation);
-        if (!"NULL".equals(system)) context.set(IM.SOURCE_SYSTEM,new TTIriRef(IM.SYSTEM_NAMESPACE.iri + system));
-        if (!"NULL".equals(schema)) context.set(IM.SOURCE_SCHEMA,TTLiteral.literal(schema));
-        if (!"NULL".equals(table)) context.set(IM.SOURCE_TABLE,TTLiteral.literal(table));
-        if (!"NULL".equals(field)) context.set(IM.SOURCE_FIELD,TTLiteral.literal(field));
-        context.set(IM.CONTEXT_NODE, new TTIriRef(nodeIri));
+            organisation= new TTIriRef().setIri(ORG.ORGANISATION_NAMESPACE + UUID.randomUUID());
+        context.set(iri(IM.SOURCE_PUBLISHER), organisation);
+        if (!"NULL".equals(system)) context.set(iri(IM.SOURCE_SYSTEM),new TTIriRef(IM.SYSTEM_NAMESPACE + system));
+        if (!"NULL".equals(schema)) context.set(iri(IM.SOURCE_SCHEMA),TTLiteral.literal(schema));
+        if (!"NULL".equals(table)) context.set(iri(IM.SOURCE_TABLE),TTLiteral.literal(table));
+        if (!"NULL".equals(field)) context.set(iri(IM.SOURCE_FIELD),TTLiteral.literal(field));
+        context.set(iri(IM.CONTEXT_NODE), new TTIriRef(nodeIri));
     }
 
     private static String getPhrase(String iri) {
@@ -847,19 +850,19 @@ public class IM1MapImport implements TTImport {
         TTEntity entity= new TTEntity()
           .setGraph(newScheme)
           .setIri(newScheme.getIri()+oldIri)
-            .addType(IM.CONCEPT)
+            .addType(iri(IM.CONCEPT))
           .setName(term)
           .setScheme(newScheme)
           .setCode(value)
-          .set(IM.IM1ID,TTLiteral.literal(oldIri))
-            .setStatus(IM.UNASSIGNED);
+          .set(iri(IM.IM1ID),TTLiteral.literal(oldIri))
+            .setStatus(iri(IM.UNASSIGNED));
         document.addEntity(entity);
         oldIriEntity.put(oldIri,entity);
         if (value!=null) {
             String coreTerm = getPhrase(oldIri);
             TTIriRef core = importMaps.getReferenceFromCoreTerm(coreTerm);
             if (core != null)
-                entity.addObject(IM.MATCHED_TO, TTIriRef.iri(core.getIri()));
+                entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(core.getIri()));
         }
 
         return entity;
@@ -868,53 +871,53 @@ public class IM1MapImport implements TTImport {
     private TTIriRef getScheme(String publisher, String system) throws DataFormatException {
         if (publisher.equals("CM_Org_Barts"))
             if (system.equals("CM_Sys_Cerner"))
-                return GRAPH.BARTS_CERNER.asTTIriRef();
+                return iri(GRAPH.BARTS_CERNER);
         if (publisher.equals("CM_Org_BHRUT"))
             if (system.equals("CM_Sys_Medway"))
-                return (TTIriRef.iri(IM.DOMAIN.iri+"bhrutm#"));
+                return (TTIriRef.iri(IM.DOMAIN+"bhrutm#"));
         if (publisher.equals("CM_Org_CWH"))
             if (system.equals("CM_Sys_Cerner"))
-                return (TTIriRef.iri(IM.DOMAIN.iri+"cwhcc#"));
+                return (TTIriRef.iri(IM.DOMAIN+"cwhcc#"));
         if (publisher.equals("CM_Org_Imperial"))
             if (system.equals("CM_Sys_Cerner"))
-                return (TTIriRef.iri(IM.DOMAIN.iri+"impc#"));
+                return (TTIriRef.iri(IM.DOMAIN+"impc#"));
         if (publisher.equals("CM_Org_Kings"))
             if (system.equals("CM_Sys_PIMS"))
-                return (TTIriRef.iri(IM.DOMAIN.iri+"kingsp#"));
+                return (TTIriRef.iri(IM.DOMAIN+"kingsp#"));
         if (publisher.equals("CM_Org_LNWH"))
             if (system.equals("CM_Sys_Silverlink"))
-                return (TTIriRef.iri(IM.DOMAIN.iri+"lnwhsl#"));
+                return (TTIriRef.iri(IM.DOMAIN+"lnwhsl#"));
             else if (system.equals("CM_Sys_Symphony"))
-                return TTIriRef.iri(IM.DOMAIN.iri+"lnwhsy#");
+                return TTIriRef.iri(IM.DOMAIN+"lnwhsy#");
         if (publisher.equals("CM_Org_THH"))
             if (system.equals("CM_Sys_Silverlink"))
-                return (TTIriRef.iri(IM.DOMAIN.iri+"thhsl#"));
+                return (TTIriRef.iri(IM.DOMAIN+"thhsl#"));
         throw new DataFormatException("Unrecognised publisher and system : "+ publisher+" "+ system);
 
     }
 
     private void newSchemes(){
-        TTEntity newScheme= addNewCoreEntity(IM.DOMAIN.iri+"bhrutm#","BHRUT Medway code scheme and graph",
-          null,null,IM.GRAPH.asTTIriRef());
-        newScheme.addObject(RDFS.SUBCLASS_OF,IM.GRAPH);
-        newScheme= addNewCoreEntity(IM.DOMAIN.iri+"cwhcc#","CWHC Cerner code scheme and graph",
-          null,null,IM.GRAPH.asTTIriRef());
-        newScheme.addObject(RDFS.SUBCLASS_OF,IM.GRAPH);
-        newScheme= addNewCoreEntity(IM.DOMAIN.iri+"impc#","Imperial Cerner code scheme and graph",
-          null,null,IM.GRAPH.asTTIriRef());
-        newScheme.addObject(RDFS.SUBCLASS_OF,IM.GRAPH);
-        newScheme= addNewCoreEntity(IM.DOMAIN.iri+"kingsp#","KCH PIMS code scheme and graph",
-          null,null,IM.GRAPH.asTTIriRef());
-        newScheme.addObject(RDFS.SUBCLASS_OF,IM.GRAPH);
-        newScheme= addNewCoreEntity(IM.DOMAIN.iri+"lnwhsl#","LNWH Silverlink code scheme and graph",
-          null,null,IM.GRAPH.asTTIriRef());
-        newScheme.addObject(RDFS.SUBCLASS_OF,IM.GRAPH);
-        newScheme= addNewCoreEntity(IM.DOMAIN.iri+"lnwhsy#","LNWH Symphony code scheme and graph",
-                null,null,IM.GRAPH.asTTIriRef());
-        newScheme.addObject(RDFS.SUBCLASS_OF,IM.GRAPH);
-        newScheme= addNewCoreEntity(IM.DOMAIN.iri+"thhsl#","THH Silverlink code scheme and graph",
-          null,null,IM.GRAPH.asTTIriRef());
-        newScheme.addObject(RDFS.SUBCLASS_OF,IM.GRAPH);
+        TTEntity newScheme= addNewCoreEntity(IM.DOMAIN+"bhrutm#","BHRUT Medway code scheme and graph",
+          null,null,iri(IM.GRAPH));
+        newScheme.addObject(iri(RDFS.SUBCLASS_OF),iri(IM.GRAPH));
+        newScheme= addNewCoreEntity(IM.DOMAIN+"cwhcc#","CWHC Cerner code scheme and graph",
+          null,null,iri(IM.GRAPH));
+        newScheme.addObject(iri(RDFS.SUBCLASS_OF),iri(IM.GRAPH));
+        newScheme= addNewCoreEntity(IM.DOMAIN+"impc#","Imperial Cerner code scheme and graph",
+          null,null,iri(IM.GRAPH));
+        newScheme.addObject(iri(RDFS.SUBCLASS_OF),iri(IM.GRAPH));
+        newScheme= addNewCoreEntity(IM.DOMAIN+"kingsp#","KCH PIMS code scheme and graph",
+          null,null,iri(IM.GRAPH));
+        newScheme.addObject(iri(RDFS.SUBCLASS_OF),iri(IM.GRAPH));
+        newScheme= addNewCoreEntity(IM.DOMAIN+"lnwhsl#","LNWH Silverlink code scheme and graph",
+          null,null,iri(IM.GRAPH));
+        newScheme.addObject(iri(RDFS.SUBCLASS_OF),iri(IM.GRAPH));
+        newScheme= addNewCoreEntity(IM.DOMAIN+"lnwhsy#","LNWH Symphony code scheme and graph",
+                null,null,iri(IM.GRAPH));
+        newScheme.addObject(iri(RDFS.SUBCLASS_OF),iri(IM.GRAPH));
+        newScheme= addNewCoreEntity(IM.DOMAIN+"thhsl#","THH Silverlink code scheme and graph",
+          null,null,iri(IM.GRAPH));
+        newScheme.addObject(iri(RDFS.SUBCLASS_OF),iri(IM.GRAPH));
 
     }
 
@@ -959,14 +962,14 @@ public class IM1MapImport implements TTImport {
                             if (coreEntity == null) {
                                 coreEntity = new TTEntity();
                                 coreEntity.setIri(coreIri);
-                                coreEntity.addType(IM.CONCEPT);
+                                coreEntity.addType(iri(IM.CONCEPT));
                                 statsDocument.addEntity(coreEntity);
                                 weightedEntities.put(coreIri,coreEntity);
                             }
-                            if (coreEntity.get(IM.WEIGHTING) != null)
-                                coreEntity.set(IM.WEIGHTING, TTLiteral.literal(coreEntity.get(IM.WEIGHTING).asLiteral().intValue() + count));
+                            if (coreEntity.get(iri(IM.WEIGHTING)) != null)
+                                coreEntity.set(iri(IM.WEIGHTING), TTLiteral.literal(coreEntity.get(iri(IM.WEIGHTING)).asLiteral().intValue() + count));
                             else
-                                coreEntity.set(IM.WEIGHTING, TTLiteral.literal(count));
+                                coreEntity.set(iri(IM.WEIGHTING), TTLiteral.literal(count));
                         }
                     }
                 }

@@ -10,7 +10,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;
@@ -94,7 +94,7 @@ public class Preload {
             .validateByType(GRAPH.CEG_QUERY, cfg.getFolder())
             .validateByType(GRAPH.IM1, cfg.getFolder())
           //.validateByType(GRAPH.CPRD_MED, cfg.getFolder())
-            .validateByType(QR.NAMESPACE.asTTIriRef(),cfg.getFolder());
+            .validateByType(QR.NAMESPACE,cfg.getFolder());
         if (!cfg.isSkipBulk()) {
 
             LOG.info("Importing files...");

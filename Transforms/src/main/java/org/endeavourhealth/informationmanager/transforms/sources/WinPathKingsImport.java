@@ -9,7 +9,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+
 public class WinPathKingsImport implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(WinPathKingsImport.class);
 
@@ -33,8 +35,8 @@ public class WinPathKingsImport implements TTImport {
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
 		try (TTManager manager = new TTManager()) {
-            document = manager.createDocument(GRAPH.KINGS_WINPATH.iri);
-            document.addEntity(manager.createGraph(GRAPH.KINGS_WINPATH.iri,
+            document = manager.createDocument(GRAPH.KINGS_WINPATH);
+            document.addEntity(manager.createGraph(GRAPH.KINGS_WINPATH,
                 "Kings Winpath pathology code scheme and graph",
                 "The Kings pathology Winpath LIMB local code scheme and graph"));
             setTopLevel();
@@ -47,13 +49,13 @@ public class WinPathKingsImport implements TTImport {
 	}
 	private void setTopLevel() {
 		TTEntity kings= new TTEntity()
-			.setIri(GRAPH.KINGS_WINPATH.iri+"KingsWinPathCodes")
-			.addType(IM.CONCEPT)
+			.setIri(GRAPH.KINGS_WINPATH+"KingsWinPathCodes")
+			.addType(iri(IM.CONCEPT))
 			.setName("Kings College Hospital  Winpath codes")
 			.setCode("KingsWinPathCodes")
-			.setScheme(GRAPH.KINGS_WINPATH)
+			.setScheme(iri(GRAPH.KINGS_WINPATH))
 			.setDescription("Local codes for the Winpath pathology system in kings")
-			.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies")));
+			.set(iri(IM.IS_CONTAINED_IN),new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies")));
 		document.addEntity(kings);
 	}
 
@@ -76,19 +78,19 @@ public class WinPathKingsImport implements TTImport {
 				String[] fields = line.split("\t");
 				String readCode = fields[2];
 				String code = fields[0];
-				String iri = GRAPH.KINGS_WINPATH.iri + (fields[0].replaceAll("[ %,.\"]", ""));
+				String iri = GRAPH.KINGS_WINPATH + (fields[0].replaceAll("[ %,.\"]", ""));
 				TTEntity entity = new TTEntity()
 					.setIri(iri)
-					.addType(IM.CONCEPT)
+					.addType(iri(IM.CONCEPT))
 					.setName(fields[1])
 					.setDescription("Local winpath Kings trust pathology system entity ")
-					.setScheme(GRAPH.KINGS_WINPATH)
-					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(GRAPH.KINGS_APEX.iri+"KingsWinPathCodes")))
+					.setScheme(iri(GRAPH.KINGS_WINPATH))
+					.set(iri(IM.IS_CHILD_OF),new TTArray().add(TTIriRef.iri(GRAPH.KINGS_APEX+"KingsWinPathCodes")))
 					.setCode(code);
 				document.addEntity(entity);
 				if (readToSnomed.get(readCode) != null) {
 					for (String snomed : readToSnomed.get(readCode)) {
-						entity.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+						entity.addObject(iri(IM.MATCHED_TO),TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 					}
 				}
 
