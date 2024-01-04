@@ -6,7 +6,7 @@ import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +103,7 @@ public class CoreImporter implements TTImport {
 
     private void importNamespaces() throws Exception {
         TTManager manager = new TTManager();
-        manager.createDocument(GRAPH.DISCOVERY.getIri());
+        manager.createDocument(GRAPH.DISCOVERY);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(manager.getDocument());
         }

@@ -9,7 +9,7 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,8 +61,8 @@ public class EMISImport implements TTImport {
 
     public void importData(TTImportConfig config) throws Exception {
         LOG.info("Retrieving filed snomed codes");
-        document = manager.createDocument(GRAPH.EMIS.getIri());
-        document.addEntity(manager.createGraph(GRAPH.EMIS.getIri(), "EMIS codes",
+        document = manager.createDocument(GRAPH.EMIS);
+        document.addEntity(manager.createGraph(GRAPH.EMIS, "EMIS codes",
             "The EMIS code scheme including codes directly matched to UK Snomed-CT, and EMIS unmatched local codes."));
 
         checkAndUnzip(config.getFolder());
@@ -136,12 +136,12 @@ public class EMISImport implements TTImport {
                     descid = fields[3];
                     name = fields[4];
                 }
-                if (status.equals(IM.INACTIVE.getIri()) && activeConcepts.contains(emisCodeId))
+                if (status.equals(IM.INACTIVE) && activeConcepts.contains(emisCodeId))
                     continue;
 
                 TTEntity emisEntity = codeIdToEntity.get(emisCodeId);
-                emisEntity.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + snomedCode));
-                if (status.equals(IM.ACTIVE.getIri()))
+                emisEntity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + snomedCode));
+                if (status.equals(IM.ACTIVE))
                     activeConcepts.add(emisCodeId);
                 if (!descid.equals("")) {
                     setDescriptionId(descid, name, emisEntity);
@@ -152,11 +152,11 @@ public class EMISImport implements TTImport {
     }
 
     private void setDescriptionId(String descid, String name, TTEntity emisEntity) {
-        if (notFoundValue(emisEntity, IM.HAS_TERM_CODE.asTTIriRef(), IM.CODE.asTTIriRef(), descid)) {
+        if (notFoundValue(emisEntity, iri(IM.HAS_TERM_CODE), iri(IM.CODE), descid)) {
             TTNode termCode = new TTNode();
-            termCode.set(IM.CODE, TTLiteral.literal(descid));
-            termCode.set(RDFS.LABEL, TTLiteral.literal(name));
-            emisEntity.addObject(IM.HAS_TERM_CODE, termCode);
+            termCode.set(iri(IM.CODE), TTLiteral.literal(descid));
+            termCode.set(iri(RDFS.LABEL), TTLiteral.literal(name));
+            emisEntity.addObject(iri(IM.HAS_TERM_CODE), termCode);
         }
     }
 
@@ -177,7 +177,7 @@ public class EMISImport implements TTImport {
                       .setIri(EMIS+codeId)
                       .setScheme(TTIriRef.iri(EMIS))
                       .setName(term)
-                      .set(IM.CODE_ID,TTLiteral.literal(codeId));
+                      .set(iri(IM.CODE_ID),TTLiteral.literal(codeId));
                     TTEntity mainConcept= termToEmis.get(term);
                     String code=codeId;
                     if (mainConcept!=null)
@@ -186,12 +186,12 @@ public class EMISImport implements TTImport {
                     document.addEntity(emisConcept);
                 }
                 if (emisConcept.getStatus()==null){
-                    emisConcept.setStatus(snomed.equals("NULL") ?IM.INACTIVE: IM.ACTIVE);
+                    emisConcept.setStatus(snomed.equals("NULL") ?iri(IM.INACTIVE): iri(IM.ACTIVE));
                 }
-                if (notFoundValue(emisConcept,IM.HAS_TERM_CODE.asTTIriRef(),IM.CODE.asTTIriRef(),codeId))
+                if (notFoundValue(emisConcept,iri(IM.HAS_TERM_CODE),iri(IM.CODE),codeId))
                     TTManager.addTermCode(emisConcept, null, codeId);
                 if (!snomed.equals("NULL")) {
-                    emisConcept.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+                    emisConcept.addObject(iri(IM.MATCHED_TO),TTIriRef.iri(SNOMED.NAMESPACE+snomed));
                 }
                 line = reader.readLine();
             }
@@ -210,7 +210,7 @@ public class EMISImport implements TTImport {
 
     private void addSub(String child, String parent) {
         TTEntity childEntity = oldCodeToEntity.get(child);
-        childEntity.addObject(IM.MATCHED_TO, iri(SNOMED.NAMESPACE + parent));
+        childEntity.addObject(iri(IM.MATCHED_TO), iri(SNOMED.NAMESPACE + parent));
     }
 
     private void allergyMaps(String folder) throws IOException {
@@ -221,16 +221,16 @@ public class EMISImport implements TTImport {
                String oldCode= all.getIri().substring(all.getIri().lastIndexOf("#")+1);
                oldCode= oldCode.replaceAll("_",".");
                TTEntity emisEntity = oldCodeToEntity.get(oldCode);
-               if (all.get(IM.MATCHED_TO)!=null){
-                for (TTValue superClass : all.get(IM.MATCHED_TO).getElements()) {
-                   emisEntity.addObject(IM.MATCHED_TO, superClass);
+               if (all.get(iri(IM.MATCHED_TO))!=null){
+                for (TTValue superClass : all.get(iri(IM.MATCHED_TO)).getElements()) {
+                   emisEntity.addObject(iri(IM.MATCHED_TO), superClass);
                 }
                }
-               else if (all.get(IM.ROLE_GROUP)!=null)
-                   emisEntity.set(IM.ROLE_GROUP,all.get(IM.ROLE_GROUP));
-               if (all.get(RDFS.SUBCLASS_OF)!=null){
-                   for (TTValue sup:all.get(RDFS.SUBCLASS_OF).getElements()){
-                       emisEntity.addObject(RDFS.SUBCLASS_OF,sup.asIriRef());
+               else if (all.get(iri(IM.ROLE_GROUP))!=null)
+                   emisEntity.set(iri(IM.ROLE_GROUP),all.get(iri(IM.ROLE_GROUP)));
+               if (all.get(iri(RDFS.SUBCLASS_OF))!=null){
+                   for (TTValue sup:all.get(iri(RDFS.SUBCLASS_OF)).getElements()){
+                       emisEntity.addObject(iri(RDFS.SUBCLASS_OF),sup.asIriRef());
                    }
                }
            }
@@ -254,19 +254,19 @@ public class EMISImport implements TTImport {
         for (Map.Entry<String, List<String>> entry : parentMap.entrySet()) {
             String child = entry.getKey();
             TTEntity childEntity = codeIdToEntity.get(child);
-            if (childEntity.get(IM.MATCHED_TO) == null) {
-                TTArray oldCode= childEntity.get(IM.CODE);
-                childEntity.set(IM.CODE,childEntity.get(IM.ALTERNATIVE_CODE));
-                childEntity.set(IM.ALTERNATIVE_CODE,oldCode);
+            if (childEntity.get(iri(IM.MATCHED_TO)) == null) {
+                TTArray oldCode= childEntity.get(iri(IM.CODE));
+                childEntity.set(iri(IM.CODE),childEntity.get(iri(IM.ALTERNATIVE_CODE)));
+                childEntity.set(iri(IM.ALTERNATIVE_CODE),oldCode);
                 if (alternateParents.get(childEntity.getCode())!=null){
-                    childEntity.addObject(IM.LOCAL_SUBCLASS_OF,TTIriRef.iri(SNOMED.NAMESPACE + alternateParents.get(childEntity.getCode())));
+                    childEntity.addObject(iri(IM.LOCAL_SUBCLASS_OF),TTIriRef.iri(SNOMED.NAMESPACE + alternateParents.get(childEntity.getCode())));
                 }
                 else {
                     Set<String> coreParents = new HashSet<>();
                     getCoreParents(child, coreParents);
                     if (!coreParents.isEmpty()) {
                         for (String parent : coreParents) {
-                            childEntity.addObject(IM.LOCAL_SUBCLASS_OF, TTIriRef.iri(parent));
+                            childEntity.addObject(iri(IM.LOCAL_SUBCLASS_OF), TTIriRef.iri(parent));
                         }
                     }
                 }
@@ -277,13 +277,13 @@ public class EMISImport implements TTImport {
         if (parentMap.get(child)!=null) {
             for (String parentId : parentMap.get(child)) {
                 TTEntity parentEntity = codeIdToEntity.get(parentId);
-                if (parentEntity.get(IM.MATCHED_TO) != null) {
-                    for (TTValue parent : parentEntity.get(IM.MATCHED_TO).getElements()) {
+                if (parentEntity.get(iri(IM.MATCHED_TO)) != null) {
+                    for (TTValue parent : parentEntity.get(iri(IM.MATCHED_TO)).getElements()) {
                         coreParents.add(parent.asIriRef().getIri());
                     }
                 }
                 else {
-                    String parent=parentEntity.get(IM.CODE_ID).asLiteral().getValue();
+                    String parent=parentEntity.get(iri(IM.CODE_ID)).asLiteral().getValue();
                     getCoreParents(parent,coreParents);
                 }
             }
@@ -293,11 +293,11 @@ public class EMISImport implements TTImport {
 
     private void addEMISTopLevel() {
         TTEntity c = new TTEntity().setIri(EMIS + "EMISOrphanCodes")
-          .set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS + "1669671000006112")))
+          .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(EMIS + "1669671000006112")))
           .setName("EMIS unmatched orphan codes")
           .setDescription("EMIS orphan codes that have no parent and are not matched to UK Snomed-CT."+
             " Each has a code id and an original text code and an EMIS Snomed concept id but no parent code")
-          .setScheme(GRAPH.EMIS);
+          .setScheme(iri(GRAPH.EMIS));
         document.addEntity(c);
         document.addEntity(c);
     }
@@ -365,17 +365,17 @@ public class EMISImport implements TTImport {
             if (remaps.get(code) != null)
                 conceptId = remaps.get(code);
             emisConcept = new TTEntity()
-              .setIri(GRAPH.EMIS.getIri() + codeId)
+              .setIri(GRAPH.EMIS + codeId)
               .setCode(code)
-              .addType(IM.CONCEPT)
-              .setScheme(GRAPH.EMIS);
+              .addType(iri(IM.CONCEPT))
+              .setScheme(iri(GRAPH.EMIS));
             emisConcept
               .setName(name);
 
             codeIdToEntity.put(codeId,emisConcept);
             document.addEntity(emisConcept);
         }
-        emisConcept.addObject(IM.CODE_ID,codeId);
+        emisConcept.addObject(iri(IM.CODE_ID),codeId);
         setDescriptionId(descid, name, emisConcept);
 
         oldCodeToEntity.put(code,emisConcept);
@@ -383,23 +383,23 @@ public class EMISImport implements TTImport {
         if (isSnomed(conceptId)) {
             if (!isBlackList(conceptId)) {
                 snomedToEmis.put(conceptId, emisConcept);
-                if (notFound(emisConcept, IM.MATCHED_TO.asTTIriRef(), TTIriRef.iri(SNOMED.NAMESPACE + conceptId)))
-                   emisConcept.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + conceptId));
+                if (notFound(emisConcept, iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + conceptId)))
+                   emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + conceptId));
             }
         }
         else {
-            emisConcept.set(IM.ALTERNATIVE_CODE,TTLiteral.literal(conceptId));
+            emisConcept.set(iri(IM.ALTERNATIVE_CODE),TTLiteral.literal(conceptId));
         }
         if (code.equals("EMISNHH2")) {
-            emisConcept.set(IM.IS_CONTAINED_IN, new TTArray()
-              .add(iri(IM.NAMESPACE.iri + "CodeBasedTaxonomies")));
+            emisConcept.set(iri(IM.IS_CONTAINED_IN), new TTArray()
+              .add(iri(IM.NAMESPACE + "CodeBasedTaxonomies")));
         }
         else {
-            if (parentId == null && emisConcept.get(IM.MATCHED_TO) == null) {
-                emisConcept.set(IM.IS_CHILD_OF, new TTArray().add(iri(EMIS + "EMISOrphanCodes")));
+            if (parentId == null && emisConcept.get(iri(IM.MATCHED_TO)) == null) {
+                emisConcept.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(EMIS + "EMISOrphanCodes")));
             }
             else if (parentId!=null){
-                emisConcept.addObject(IM.IS_CHILD_OF,TTIriRef.iri(EMIS+ parentId));
+                emisConcept.addObject(iri(IM.IS_CHILD_OF),TTIriRef.iri(EMIS+ parentId));
                 parentMap.computeIfAbsent(codeId, k -> new ArrayList<>());
                 parentMap.get(codeId).add(parentId);
             }

@@ -30,10 +30,12 @@ import jakarta.ws.rs.core.Response;
 import java.io.File;
 import java.util.*;
 
+import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+
 public class QImporter implements TTImport {
 	private final Client client= ClientBuilder.newClient();
-	private final TTDocument document = new TTDocument(QR.NAMESPACE.asTTIriRef());
-	private final TTIriRef projectsFolder= TTIriRef.iri(QR.NAMESPACE.iri+"QProjects");
+	private final TTDocument document = new TTDocument(iri(QR.NAMESPACE));
+	private final TTIriRef projectsFolder= TTIriRef.iri(QR.NAMESPACE+"QProjects");
 	private final Map<String,TTEntity> idProjectMap = new HashMap<>();
 	private final Map<String,TTEntity> idCodeGroupMap = new HashMap<>();
 	private final ObjectMapper om = new ObjectMapper();
@@ -44,7 +46,7 @@ public class QImporter implements TTImport {
 	@Override
 	public void importData(TTImportConfig ttImportConfig) throws Exception {
 		TTManager manager = new TTManager();
-		document.addEntity(manager.createGraph(QR.NAMESPACE.iri,
+		document.addEntity(manager.createGraph(QR.NAMESPACE,
 				"Q Research scheme and graph"
 				,"Q Research scheme and graph"));
 		addQFolders();
@@ -65,8 +67,8 @@ public class QImporter implements TTImport {
 		QueryRequest qr= new QueryRequest()
 			.addArgument(new Argument()
 				.setParameter("this")
-				.setValueIri(QR.NAMESPACE.asTTIriRef()))
-			.setUpdate(new Update().setIri(IM.NAMESPACE.iri+"DeleteSets"));
+				.setValueIri(iri(QR.NAMESPACE)))
+			.setUpdate(new Update().setIri(IM.NAMESPACE+"DeleteSets"));
 
 		LOG.info("Deleting q code groups..");
 		new SearchService().updateIM(qr);
@@ -78,15 +80,15 @@ public class QImporter implements TTImport {
 
 	private void queryQRisk3() throws JsonProcessingException {
 		TTEntity qRisk3= new TTEntity()
-			.setIri(IM.NAMESPACE.iri+"Q_QRisk3")
+			.setIri(IM.NAMESPACE+"Q_QRisk3")
 			.setName("QRisk3 record query")
 			.setDescription("query of health data to set qrisk 3 parameters");
 		Query query= new Query();
-		qRisk3.set(IM.DEFINITION,TTLiteral.literal(query));
+		qRisk3.set(iri(IM.DEFINITION),TTLiteral.literal(query));
 		query
-			.setIri(IM.NAMESPACE.iri+"Q_Qrisk3")
+			.setIri(IM.NAMESPACE+"Q_Qrisk3")
 			.setName("QRisk3 health record query")
-			.setTypeOf(IM.NAMESPACE.iri+"Patient");
+			.setTypeOf(IM.NAMESPACE+"Patient");
 		query.addReturn(new Return());
 		qMatch(query,null,"age","age",false,null,false);
 		qMatch(query,null,"statedGender","sex",false,null,false);
@@ -144,7 +146,7 @@ public class QImporter implements TTImport {
 			for (int q=0; q< values.split(";").length-1; q++){
 				String value= values.split(";")[q];
 				if (value.startsWith("http")){
-					property.addInSet(new Node().setIri(value));
+					property.addIs(new Node().setIri(value));
 				}
 				property.setValueVariable(as);
 			}
@@ -163,7 +165,7 @@ public class QImporter implements TTImport {
 			LOG.info("Fetching  code groups for project "+projectId+"...");
 			int page=0;
 			TTEntity projectEntity= project.getValue();
-			String projectVersion= projectEntity.get(IM.VERSION).asLiteral().getValue();
+			String projectVersion= projectEntity.get(iri(IM.VERSION)).asLiteral().getValue();
 			boolean results=true;
 			while (results) {
 				page++;
@@ -178,12 +180,12 @@ public class QImporter implements TTImport {
 						TTEntity qGroup = idCodeGroupMap.get(groupId);
 						if (qGroup == null) {
 							qGroup = new TTEntity()
-								.setIri(QR.NAMESPACE.iri + "QCodeGroup_" + groupId)
+								.setIri(QR.NAMESPACE + "QCodeGroup_" + groupId)
 								.setName("Q code group "+codeGroup.get("Name").asText())
-								.addType(IM.CONCEPT_SET);
+								.addType(iri(IM.CONCEPT_SET));
 						}
-						qGroup.addObject(IM.IS_SUBSET_OF, TTIriRef.iri(project.getValue().getIri()));
-						qGroup.set(IM.VERSION, TTLiteral.literal(version));
+						qGroup.addObject(iri(IM.IS_SUBSET_OF), TTIriRef.iri(project.getValue().getIri()));
+						qGroup.set(iri(IM.VERSION), TTLiteral.literal(version));
 						if (idCodeGroupMap.get(groupId)==null) {
 							idCodeGroupMap.put(groupId, qGroup);
 							codeGroupVersion.put(groupId, version);
@@ -203,7 +205,7 @@ public class QImporter implements TTImport {
 	}
 
 	private void importCodes(String projectId, TTEntity qGroup,String id) throws JsonProcessingException {
-		String version = qGroup.get(IM.VERSION).asLiteral().getValue();
+		String version = qGroup.get(iri(IM.VERSION)).asLiteral().getValue();
 		int page=0;
 		boolean results=true;
 		LOG.info("Fetching  members for  "+projectId+" "+ qGroup.getName()+"...");
@@ -216,7 +218,7 @@ public class QImporter implements TTImport {
 					JsonNode code = it.next();
 					String concept = SNOMED.NAMESPACE + code.get("Code").asText();
 					String term = code.get("Text").asText();
-					qGroup.addObject(IM.HAS_MEMBER, TTIriRef.iri(concept));
+					qGroup.addObject(iri(IM.HAS_MEMBER), TTIriRef.iri(concept));
 				}
 			}
 			else
@@ -241,13 +243,13 @@ public class QImporter implements TTImport {
 			 */
 			String id= project.get("Id").asText();
 			TTEntity qset= new TTEntity()
-				.setIri(QR.NAMESPACE.iri+"QPredict_"+ project.get("Id").asText())
-				.addType(IM.CONCEPT_SET)
+				.setIri(QR.NAMESPACE+"QPredict_"+ project.get("Id").asText())
+				.addType(iri(IM.CONCEPT_SET))
 				.setName(project.get("Name").asText());
-			qset.set(IM.IS_CONTAINED_IN,projectsFolder);
-			qset.set(SHACL.ORDER,TTLiteral.literal(1));
+			qset.set(iri(IM.IS_CONTAINED_IN),projectsFolder);
+			qset.set(iri(SHACL.ORDER),TTLiteral.literal(1));
 			String version = project.get("Version").asText();
-			qset.set(IM.VERSION,TTLiteral.literal(version));
+			qset.set(iri(IM.VERSION),TTLiteral.literal(version));
 			if (idProjectMap.get(id)==null) {
 				idProjectMap.put(id, qset);
 				projectVersion.put(id,version);
@@ -287,20 +289,20 @@ public class QImporter implements TTImport {
 	private void addQFolders() {
 		TTEntity folder= new TTEntity()
 			.setIri(projectsFolder.getIri())
-			.addType(IM.FOLDER)
+			.addType(iri(IM.FOLDER))
 			.setName("Q Project based code groups")
 			.setDescription("Folder containing the Q research  concept groups");
-		folder.addObject(IM.CONTENT_TYPE,IM.CONCEPT_SET);
+		folder.addObject(iri(IM.CONTENT_TYPE),iri(IM.CONCEPT_SET));
 		document.addEntity(folder);
-		folder.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"QueryConceptSets"));
+		folder.set(iri(IM.IS_CONTAINED_IN),TTIriRef.iri(IM.NAMESPACE+"QueryConceptSets"));
 		TTEntity qFolder= new TTEntity()
-			.setIri(IM.NAMESPACE.iri+"Q_PredictionQueries")
-			.addType(IM.FOLDER)
+			.setIri(IM.NAMESPACE+"Q_PredictionQueries")
+			.addType(iri(IM.FOLDER))
 			.setName("Predication queries")
 			.setDescription("Folder containing queries for prediction algorithms");
-		qFolder.addObject(IM.CONTENT_TYPE,IM.QUERY);
+		qFolder.addObject(iri(IM.CONTENT_TYPE),iri(IM.QUERY));
 		document.addEntity(qFolder);
-		qFolder.set(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"Q_Queries"));
+		qFolder.set(iri(IM.IS_CONTAINED_IN),TTIriRef.iri(IM.NAMESPACE+"Q_Queries"));
 	}
 
 	@Override

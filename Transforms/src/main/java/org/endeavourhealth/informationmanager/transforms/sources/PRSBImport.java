@@ -4,7 +4,7 @@ import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
+import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class PRSBImport implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(PRSBImport.class);
@@ -33,8 +34,8 @@ public class PRSBImport implements TTImport {
 	public void importData(TTImportConfig config) throws Exception {
 		validateFiles(config.getFolder());
 		try (TTManager dmanager= new TTManager()) {
-            document = dmanager.createDocument(GRAPH.PRSB.iri);
-            document.addEntity(dmanager.createGraph(GRAPH.PRSB.iri, "PRSB code scheme and graph"
+            document = dmanager.createDocument(GRAPH.PRSB);
+            document.addEntity(dmanager.createGraph(GRAPH.PRSB, "PRSB code scheme and graph"
                 , "The professional records standards board code scheme and graph"));
             importEntityFiles(config.getFolder());
             //TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());
@@ -45,7 +46,7 @@ public class PRSBImport implements TTImport {
 
 	private void initializeMaps() {
         axiomMap = new HashMap<>();
-        axiomMap.put("prsb03-dataelement-10868", getAxioms(IM.NAMESPACE.iri + "Patient"));
+        axiomMap.put("prsb03-dataelement-10868", getAxioms(IM.NAMESPACE + "Patient"));
 
     }
 
@@ -87,8 +88,8 @@ public class PRSBImport implements TTImport {
 	}
 
 	private void parsePRSBModel(JSONObject dataModel) throws DataFormatException {
-		TTEntity dm= newEntity(dataModel,SHACL.NODESHAPE.asTTIriRef());
-		dm.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"DiscoveryOntology"));
+		TTEntity dm= newEntity(dataModel,iri(SHACL.NODESHAPE));
+		dm.addObject(iri(IM.IS_CONTAINED_IN),TTIriRef.iri(IM.NAMESPACE+"DiscoveryOntology"));
 		JSONArray recordTypes= (JSONArray) dataModel.entrySet();
 		dataModel.entrySet().forEach(c ->{
 			try {
@@ -101,14 +102,14 @@ public class PRSBImport implements TTImport {
 
 	private void parseRecordType(JSONObject c) throws DataFormatException {
 		String prsbId= (String) c.get("iddisplay");
-		TTEntity rt= newEntity(c,SHACL.NODESHAPE.asTTIriRef());
+		TTEntity rt= newEntity(c,iri(SHACL.NODESHAPE));
 		TTArray axioms= axiomMap.get(prsbId);
 
 	}
 
 	private TTIriRef mapStatus(String status) throws DataFormatException {
 		if (status.equals("draft"))
-			return IM.DRAFT.asTTIriRef();
+			return iri(IM.DRAFT);
 			else
 				throw new DataFormatException("unknown status type - "+ status);
 
@@ -116,17 +117,17 @@ public class PRSBImport implements TTImport {
 
 	private TTEntity newEntity(JSONObject c, TTIriRef... types) throws DataFormatException {
 		TTEntity entity= new TTEntity();
-		entity.set(IM.HAS_STATUS,mapStatus(c.get("statusCode").toString()));
+		entity.set(iri(IM.HAS_STATUS),mapStatus(c.get("statusCode").toString()));
 		Arrays.stream(types).forEach( type-> entity.addType(type));
 		String prsbId= c.get("iddisplay").toString();
 		entity.setCode(prsbId);
 		String name= getObjectArrayliteral(c,"name","#text");
-		String iri= (PRSB.NAMESPACE.iri + prsbId);
+		String iri= (PRSB.NAMESPACE + prsbId);
 
 		entity.setName(name);
 		if (c.get("shortName")!=null) {
 			String shortName = (String) c.get("shortName");
-			entity.set(TTIriRef.iri(IM.NAMESPACE.iri + "shortName"), TTLiteral.literal((shortName)));
+			entity.set(TTIriRef.iri(IM.NAMESPACE + "shortName"), TTLiteral.literal((shortName)));
 		}
 		entity.setIri(iri);
 		String description= getObjectArrayliteral(c,"desc","#text");
@@ -134,8 +135,8 @@ public class PRSBImport implements TTImport {
 			entity.setDescription(description);
 		String background= getObjectArrayliteral(c,"context","#text");
 		if (background!=null)
-			entity.set(TTIriRef.iri(IM.NAMESPACE.iri+"backgroundContext"),TTLiteral.literal(background));
-		if (entity.isType(SHACL.NODESHAPE))
+			entity.set(TTIriRef.iri(IM.NAMESPACE+"backgroundContext"),TTLiteral.literal(background));
+		if (entity.isType(iri(SHACL.NODESHAPE)))
 			return entity;
 		return entity;
 

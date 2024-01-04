@@ -7,12 +7,14 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
+
+import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class NHSTfcImport implements TTImport {
 	private static final String[] treatmentCodes = {".*\\\\NHSDD\\\\TreatmentFunctionCodes.txt"};
@@ -22,8 +24,8 @@ public class NHSTfcImport implements TTImport {
 
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
-		document = manager.createDocument(GRAPH.NHS_TFC.getIri());
-		document.addEntity(manager.createGraph(GRAPH.NHS_TFC.getIri(),
+		document = manager.createDocument(GRAPH.NHS_TFC);
+		document.addEntity(manager.createGraph(GRAPH.NHS_TFC,
 			"NHS Data Dictionary Speciality and Treatment function codes"
 				,"NHS Data dictionary concepts that are not snomed"));
 		setNHSDD();
@@ -34,15 +36,15 @@ public class NHSTfcImport implements TTImport {
     }
 
 	private void setNHSDD() {
-		nhsTfc= TTIriRef.iri(GRAPH.NHS_TFC.getIri()+"NHSTfc");
+		nhsTfc= TTIriRef.iri(GRAPH.NHS_TFC+"NHSTfc");
 		TTEntity nhs= new TTEntity()
 			.setIri(nhsTfc.getIri())
 			.setName("Main Specialty and Treatment Function Codes")
-			.setScheme(GRAPH.NHS_TFC)
+			.setScheme(iri(GRAPH.NHS_TFC))
 			.setCode("0")
-			.addType(IM.CONCEPT)
-			.setStatus(IM.ACTIVE);
-		nhs.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies"));
+			.addType(iri(IM.CONCEPT))
+			.setStatus(iri(IM.ACTIVE));
+		nhs.addObject(iri(IM.IS_CONTAINED_IN),TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
 		document.addEntity(nhs);
 	}
 
@@ -60,14 +62,14 @@ public class NHSTfcImport implements TTImport {
 				String term= fields[1];
 				String snomed= fields[2];
 				TTEntity tfc= new TTEntity()
-					.setIri(GRAPH.NHS_TFC.getIri()+code)
+					.setIri(GRAPH.NHS_TFC+code)
 					.setName(term)
-					.setScheme(GRAPH.NHS_TFC)
+					.setScheme(iri(GRAPH.NHS_TFC))
 					.setCode(code)
-					.addType(IM.CONCEPT)
-					.setStatus(IM.ACTIVE);
-				tfc.addObject(IM.IS_CHILD_OF,nhsTfc);
-				tfc.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+					.addType(iri(IM.CONCEPT))
+					.setStatus(iri(IM.ACTIVE));
+				tfc.addObject(iri(IM.IS_CHILD_OF),nhsTfc);
+				tfc.addObject(iri(IM.MATCHED_TO),TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 				document.addEntity(tfc);
 				line= reader.readLine();
 			}
