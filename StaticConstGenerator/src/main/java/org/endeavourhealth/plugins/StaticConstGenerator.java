@@ -5,9 +5,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.internal.impldep.org.apache.commons.io.FileUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.StringJoiner;
 
 public class StaticConstGenerator implements Plugin<Project> {
 
@@ -49,7 +54,7 @@ public class StaticConstGenerator implements Plugin<Project> {
         }
     }
 
-    private void generateJava(String javaOut, VocabDef def) throws IOException {
+    private void generateJava(String javaOut, VocabDef def) {
         generateCode(
             def,
             javaOut + def.name.toUpperCase() + ".java",
@@ -58,7 +63,7 @@ public class StaticConstGenerator implements Plugin<Project> {
         );
     }
 
-    private void generateTypeScript(String tsOut, VocabDef def) throws IOException {
+    private void generateTypeScript(String tsOut, VocabDef def) {
         generateCode(
             def,
             tsOut + def.name.toUpperCase() + ".ts",
@@ -67,30 +72,53 @@ public class StaticConstGenerator implements Plugin<Project> {
         );
     }
 
-    private void generateCode(VocabDef def, String filename, String header, String prefix) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+    private void generateCode(VocabDef def, String filename, String header, String prefix) {
+        StringJoiner output = new StringJoiner("\n");
 
-            writer.write(header.replace("{NAME}", def.name.toUpperCase()));
+        output.add(header.replace("{NAME}", def.name.toUpperCase()));
 
-            if (def.entries != null && !def.entries.isEmpty()) {
-                for (VocabDef.Entry entry : def.entries) {
-                    String name = entry.name;
-                    JsonNode value = entry.value;
+        if (def.entries != null && !def.entries.isEmpty()) {
+            for (VocabDef.Entry entry : def.entries) {
+                String name = entry.name;
+                JsonNode value = entry.value;
 
-                    if (name == null || value == null)
-                        throw new IllegalArgumentException("Entry objects must have both a name and a value");
+                if (name == null || value == null)
+                    throw new IllegalArgumentException("Entry objects must have both a name and a value");
 
-                    if (value.isTextual())
-                        writer.write("\t" + prefix.replace("{TYPE}", "String") + " " + name + " = " + value.asText() + ";\n");
-                    else if (value.isInt())
-                        writer.write("\t" + prefix.replace("{TYPE}", "int") + " " + name + " = " + value.asText() + ";\n");
-                    else
-                        throw new IllegalArgumentException("Unsupported type");
-                }
+                if (value.isTextual())
+                    output.add("\t" + prefix.replace("{TYPE}", "String") + " " + name + " = " + value.asText() + ";");
+                else if (value.isInt())
+                    output.add("\t" + prefix.replace("{TYPE}", "int") + " " + name + " = " + value.asText() + ";");
+                else
+                    throw new IllegalArgumentException("Unsupported type");
             }
+        }
 
-            writer.write("}\n");
-            writer.flush();
+        output.add("}");
+
+        writeIfChangedOrNotExists(filename, output.toString());
+    }
+
+    private void writeIfChangedOrNotExists(String filename, String output) {
+
+        File f = new File(filename);
+
+        try {
+            String original = FileUtils.readFileToString(f);
+            if (original.equals(output)) {
+                // System.out.println(f.getName() + " unchanged...");
+                return;
+            }
+            System.out.println(f.getName() + " changed, overwriting...");
+        } catch (IOException e) {
+            System.out.println(f.getName() + " does not exist, creating...");
+        }
+
+        try {
+            Files.write(Paths.get(filename), output.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            System.err.println("Error writing output " + f.getName());
+            System.exit(-1);
         }
     }
 }
