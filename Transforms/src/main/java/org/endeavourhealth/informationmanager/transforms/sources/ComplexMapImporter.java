@@ -5,7 +5,7 @@ import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +14,7 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
+import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 /**
  * Imports the RF2 format extended complex backward mapping from snomed to ICD10 or OPCS 4
@@ -49,11 +50,11 @@ public class ComplexMapImporter {
         this.refset = refset;
         this.sourceCodes = sourceCodes;
         this.legacyCodeToEntity = legacyCodeToEntity;
-        document.setCrud(IM.UPDATE_PREDICATES);
+        document.setCrud(iri(IM.UPDATE_PREDICATES));
         if (refset.equals(OPCS4_REFERENCE_SET))
-            namespace = GRAPH.OPCS4.getIri();
+            namespace = GRAPH.OPCS4;
         else if (refset.equals(ICD10_REFERENCE_SET))
-            namespace = GRAPH.ICD10.getIri();
+            namespace = GRAPH.ICD10;
         else
             throw new DataFormatException(refset + " reference set is not supported yet");
 
@@ -82,7 +83,7 @@ public class ComplexMapImporter {
         document.addEntity(entity);
         for (ComplexMap sourceMap : mapList) {
             TTNode ttComplexMap = new TTNode();
-            entity.addObject(IM.HAS_MAP, ttComplexMap);
+            entity.addObject(iri(IM.HAS_MAP), ttComplexMap);
             processMap(snomed, sourceMap, ttComplexMap);
         }
     }
@@ -91,22 +92,22 @@ public class ComplexMapImporter {
         if (sourceMap.getMapGroups().size() == 1) {
             ComplexMapGroup targetGroup = sourceMap.getMapGroups().get(0);
             TTArray ttTargetGroup = new TTArray();
-            ttComplexMap.set(IM.SOME_OF, ttTargetGroup);
+            ttComplexMap.set(iri(IM.SOME_OF), ttTargetGroup);
             for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
                 TTEntity legacy = legacyCodeToEntity.get(sourceTarget.getTarget());
                 if (legacy != null) {
-                    legacy.addObject(IM.MATCHED_TO, TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+                    legacy.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + snomed));
                     addMapTarget(ttTargetGroup, sourceTarget);
                 }
             }
         } else {
             TTArray targetGroups = new TTArray();
-            ttComplexMap.set(IM.COMBINATION_OF, targetGroups);
+            ttComplexMap.set(iri(IM.COMBINATION_OF), targetGroups);
             for (ComplexMapGroup targetGroup : sourceMap.getMapGroups()) {
                 TTNode ttTargetGroup = new TTNode();
                 targetGroups.add(ttTargetGroup);
                 TTArray ttTargetChoice = new TTArray();
-                ttTargetGroup.set(IM.ONE_OF, ttTargetChoice);
+                ttTargetGroup.set(iri(IM.ONE_OF), ttTargetChoice);
                 for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
                     if (legacyCodeToEntity.get(sourceTarget.getTarget()) != null)
                         addMapTarget(ttTargetChoice, sourceTarget);
@@ -118,12 +119,12 @@ public class ComplexMapImporter {
     public void addMapTarget(TTArray targetGroup, ComplexMapTarget sourceTarget) {
         TTNode mapNode = new TTNode();
         targetGroup.add(mapNode);
-        mapNode.set(IM.MAPPED_TO, TTIriRef.iri(legacyCodeToEntity.get(sourceTarget.getTarget()).getIri()));
+        mapNode.set(iri(IM.MAPPED_TO), TTIriRef.iri(legacyCodeToEntity.get(sourceTarget.getTarget()).getIri()));
         if (sourceTarget.getAdvice() != null)
-            mapNode.set(IM.MAP_ADVICE, TTLiteral.literal(sourceTarget.getAdvice()));
+            mapNode.set(iri(IM.MAP_ADVICE), TTLiteral.literal(sourceTarget.getAdvice()));
         if (sourceTarget.getPriority() != null)
-            mapNode.set(IM.MAP_PRIORITY, TTLiteral.literal(sourceTarget.getPriority()));
-        mapNode.set(IM.ASSURANCE_LEVEL, IM.NATIONALLY_ASSURED);
+            mapNode.set(iri(IM.MAP_PRIORITY), TTLiteral.literal(sourceTarget.getPriority()));
+        mapNode.set(iri(IM.ASSURANCE_LEVEL), iri(IM.NATIONALLY_ASSURED));
     }
 
 

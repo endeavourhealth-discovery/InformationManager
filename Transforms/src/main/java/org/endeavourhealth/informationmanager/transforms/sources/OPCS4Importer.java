@@ -12,7 +12,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ public class OPCS4Importer implements TTImport {
 
     private TTDocument document;
     private TTDocument mapDocument;
-    private TTIriRef opcscodes= TTIriRef.iri(GRAPH.ICD10.iri+"OPCS49Classification");
+    private TTIriRef opcscodes= TTIriRef.iri(GRAPH.ICD10+"OPCS49Classification");
 
     private Set<String> snomedCodes;
     private final Map<String,TTEntity> codeToEntity= new HashMap<>();
@@ -48,12 +48,12 @@ public class OPCS4Importer implements TTImport {
         LOG.info("Checking Snomed codes first");
         snomedCodes= importMaps.getCodes(SNOMED.NAMESPACE);
         try (TTManager manager= new TTManager()) {
-            document = manager.createDocument(GRAPH.OPCS4.iri);
-            document.addEntity(manager.createGraph(GRAPH.OPCS4.iri, "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
+            document = manager.createDocument(GRAPH.OPCS4);
+            document.addEntity(manager.createGraph(GRAPH.OPCS4, "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
             importChapters(config.getFolder(), document);
             importEntities(config.getFolder(), document);
 
-            mapDocument = manager.createDocument(GRAPH.OPCS4.iri);
+            mapDocument = manager.createDocument(GRAPH.OPCS4);
             importMaps(config.getFolder());
             //Important to file after maps set
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
@@ -76,12 +76,12 @@ public class OPCS4Importer implements TTImport {
         Path file =  ImportUtils.findFileForId(inFolder, chapters[0]);
         TTEntity opcs= new TTEntity()
           .setIri(opcscodes.getIri())
-          .addType(IM.CONCEPT)
+          .addType(iri(IM.CONCEPT))
           .setName("OPCS 4-9 Classification")
           .setCode("OPCS49Classification")
-          .setScheme(GRAPH.OPCS4)
+          .setScheme(iri(GRAPH.OPCS4))
           .setDescription("Classification of OPCS4 with chapter headings");
-           opcs.addObject(IM.IS_CONTAINED_IN,TTIriRef.iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies"));
+           opcs.addObject(iri(IM.IS_CONTAINED_IN),TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
         document.addEntity(opcs);
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -91,23 +91,23 @@ public class OPCS4Importer implements TTImport {
                 String chapter= fields[0];
                 String term= fields[1];
                 TTEntity c= new TTEntity();
-                c.setIri(GRAPH.OPCS4.iri+chapter)
+                c.setIri(GRAPH.OPCS4+chapter)
                     .setName(term+" (chapter "+chapter+")")
                     .setCode(chapter)
-                  .setScheme(GRAPH.OPCS4)
-                  .addType(IM.CONCEPT)
-                    .set(IM.IS_CHILD_OF,new TTArray().add(iri(opcs.getIri())));
+                  .setScheme(iri(GRAPH.OPCS4))
+                  .addType(iri(IM.CONCEPT))
+                    .set(iri(IM.IS_CHILD_OF),new TTArray().add(iri(opcs.getIri())));
                 codeToEntity.put(chapter,c);
                 document.addEntity(c);
                 line= reader.readLine();
             }
         }
         TTEntity c= new TTEntity()
-        .setIri(GRAPH.OPCS4.iri+"O")
+        .setIri(GRAPH.OPCS4+"O")
           .setName("Overflow codes (chapter "+"O"+")")
           .setCode("O")
-          .addType(IM.CONCEPT)
-          .set(IM.IS_CHILD_OF,new TTArray().add(iri(opcs.getIri())));
+          .addType(iri(IM.CONCEPT))
+          .set(iri(IM.IS_CHILD_OF),new TTArray().add(iri(opcs.getIri())));
         codeToEntity.put("O",c);
         document.addEntity(c);
     }
@@ -130,17 +130,17 @@ public class OPCS4Importer implements TTImport {
                 String altCode= fields[1];
                 TTEntity c = new TTEntity()
                         .setCode(fields[0])
-                  .setScheme(GRAPH.OPCS4)
-                        .setIri(GRAPH.OPCS4.iri + (fields[0].replace(".","")))
-                        .addType(IM.CONCEPT);
+                  .setScheme(iri(GRAPH.OPCS4))
+                        .setIri(GRAPH.OPCS4 + (fields[0].replace(".","")))
+                        .addType(iri(IM.CONCEPT));
                 if (code.contains(".")){
                     String qParent= code.substring(0, code.indexOf("."));
                     TTEntity parent=codeToEntity.get(qParent);
-                    c.addObject(IM.IS_CHILD_OF,TTIriRef.iri(parent.getIri()));
+                    c.addObject(iri(IM.IS_CHILD_OF),TTIriRef.iri(parent.getIri()));
                 } else {
                     String qParent= code.substring(0,1);
                     TTEntity parent=codeToEntity.get(qParent);
-                    c.addObject(IM.IS_CHILD_OF,TTIriRef.iri(parent.getIri()));
+                    c.addObject(iri(IM.IS_CHILD_OF),TTIriRef.iri(parent.getIri()));
                 }
                 codeToEntity.put(fields[0],c);
                 altCodeToEntity.put(fields[0].replace(".",""),c);

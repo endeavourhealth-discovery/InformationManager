@@ -11,7 +11,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
+import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class ICD10Importer implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(ICD10Importer.class);
@@ -30,7 +31,7 @@ public class ICD10Importer implements TTImport {
     private static final String[] maps = {".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
     private static final String[] chapters = {".*\\\\ICD10\\\\ICD10-Chapters.txt"};
 
-    private final TTIriRef icd10Codes = TTIriRef.iri(GRAPH.ICD10.getIri() + "ICD10Codes");
+    private final TTIriRef icd10Codes = TTIriRef.iri(GRAPH.ICD10 + "ICD10Codes");
     private final TTManager manager = new TTManager();
     private Set<String> snomedCodes;
     private final Map<String, TTEntity> startChapterMap = new HashMap<>();
@@ -47,15 +48,15 @@ public class ICD10Importer implements TTImport {
         LOG.info("Importing ICD10....");
         LOG.info("Getting snomed codes");
         snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
-        document = manager.createDocument(GRAPH.ICD10.getIri());
-        document.addEntity(manager.createGraph(GRAPH.ICD10.getIri(), "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
+        document = manager.createDocument(GRAPH.ICD10);
+        document.addEntity(manager.createGraph(GRAPH.ICD10, "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
         createTaxonomy();
         importChapters(config.getFolder(), document);
         importEntities(config.getFolder(), document);
         createHierarchy();
 
 
-        mapDocument = manager.createDocument(GRAPH.ICD10.getIri());
+        mapDocument = manager.createDocument(GRAPH.ICD10);
         importMaps(config.getFolder());
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(document);
@@ -73,7 +74,7 @@ public class ICD10Importer implements TTImport {
             if (code.contains(".")) {
                 String qParent = code.substring(0, code.indexOf("."));
                 TTEntity parent = codeToEntity.get(qParent);
-                icd10Entity.addObject(IM.IS_CHILD_OF, TTIriRef.iri(parent.getIri()));
+                icd10Entity.addObject(iri(IM.IS_CHILD_OF), TTIriRef.iri(parent.getIri()));
             } else {
                 int insertion = Collections.binarySearch(startChapterList, code);
                 int parentIndex;
@@ -84,7 +85,7 @@ public class ICD10Importer implements TTImport {
                 String qParent = startChapterList.get(parentIndex);
                 TTEntity parent = startChapterMap.get(qParent);
                 // LOG.info("{} in {}?", code, parent.getCode());
-                icd10Entity.addObject(IM.IS_CHILD_OF, TTIriRef.iri(parent.getIri()));
+                icd10Entity.addObject(iri(IM.IS_CHILD_OF), TTIriRef.iri(parent.getIri()));
             }
 
         }
@@ -95,11 +96,11 @@ public class ICD10Importer implements TTImport {
         TTEntity icd10 = new TTEntity()
             .setIri(icd10Codes.getIri())
             .setName("ICD10 5th edition classification codes")
-            .addType(IM.CONCEPT)
+            .addType(iri(IM.CONCEPT))
             .setCode("ICD10Codes")
-            .setScheme(GRAPH.ICD10)
+            .setScheme(iri(GRAPH.ICD10))
             .setDescription("ICD1O classification used in backward maps from Snomed");
-        icd10.addObject(IM.IS_CONTAINED_IN, TTIriRef.iri(IM.NAMESPACE.iri + "CodeBasedTaxonomies"));
+        icd10.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
         document.addEntity(icd10);
 
     }
@@ -126,17 +127,17 @@ public class ICD10Importer implements TTImport {
                     LOG.info("Processed {} records", count);
                 }
                 String[] fields = line.split("\t");
-                String iri = GRAPH.ICD10.getIri() + fields[1];
+                String iri = GRAPH.ICD10 + fields[1];
                 String code = fields[1];
                 String label = "Chapter " + fields[0] + ": " + fields[2];
                 TTEntity c = new TTEntity()
                     .setCode(code)
                     .setName(label)
                     .setIri(iri)
-                    .setScheme(GRAPH.ICD10)
-                    .setStatus(IM.ACTIVE)
-                    .addType(IM.CONCEPT);
-                c.addObject(IM.IS_CHILD_OF, icd10Codes);
+                    .setScheme(iri(GRAPH.ICD10))
+                    .setStatus(iri(IM.ACTIVE))
+                    .addType(iri(IM.CONCEPT));
+                c.addObject(iri(IM.IS_CHILD_OF), icd10Codes);
                 startChapterMap.put(code.substring(0, code.indexOf("-")), c);
                 startChapterList.add(code.substring(0, code.indexOf("-")));
                 document.addEntity(c);
@@ -163,9 +164,9 @@ public class ICD10Importer implements TTImport {
                 String[] fields = line.split("\t");
                 TTEntity c = new TTEntity()
                     .setCode(fields[0])
-                    .setScheme(GRAPH.ICD10)
-                    .setIri(GRAPH.ICD10.getIri() + (fields[0].replace(".", "")))
-                    .addType(IM.CONCEPT);
+                    .setScheme(iri(GRAPH.ICD10))
+                    .setIri(GRAPH.ICD10 + (fields[0].replace(".", "")))
+                    .addType(iri(IM.CONCEPT));
                 if (fields[4].length() > 250) {
                     c.setName(fields[4].substring(0, 200));
                     c.setDescription(fields[4]);

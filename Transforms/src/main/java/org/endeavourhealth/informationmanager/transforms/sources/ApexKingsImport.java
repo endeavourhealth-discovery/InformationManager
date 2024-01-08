@@ -6,7 +6,7 @@ import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.imapi.vocabulary.im.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +20,13 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+
 public class ApexKingsImport implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(ApexKingsImport.class);
 
 	private static final String[] kingsPath = {".*\\\\Kings\\\\KingsPathMap.txt"};
-	private static final String KINGS_APEX_CODES = GRAPH.KINGS_APEX.getIri()+"KingsApexCodes";
+	private static final String KINGS_APEX_CODES = GRAPH.KINGS_APEX+"KingsApexCodes";
 	private TTDocument document;
 	private Map<String, Set<String>> readToSnomed = new HashMap<>();
 	private final Map<String, String> apexToRead = new HashMap<>();
@@ -35,8 +37,8 @@ public class ApexKingsImport implements TTImport {
 	public void importData(TTImportConfig config) throws Exception {
 
         try (TTManager manager = new TTManager()) {
-            document = manager.createDocument(GRAPH.KINGS_APEX.getIri());
-            document.addEntity(manager.createGraph(GRAPH.KINGS_APEX.getIri(), "Kings Apex pathology code scheme and graph",
+            document = manager.createDocument(GRAPH.KINGS_APEX);
+            document.addEntity(manager.createGraph(GRAPH.KINGS_APEX, "Kings Apex pathology code scheme and graph",
                 "The Kings Apex LIMB local code scheme and graph"));
 
             importR2Matches();
@@ -51,12 +53,12 @@ public class ApexKingsImport implements TTImport {
 	private void setTopLevel() {
 		TTEntity kings= new TTEntity()
 			.setIri(KINGS_APEX_CODES)
-			.addType(IM.CONCEPT)
+			.addType(iri(IM.CONCEPT))
 			.setName("Kings College Hospital Apex path codes")
 			.setCode("KingsApexCodes")
-			.setScheme(GRAPH.KINGS_APEX)
+			.setScheme(iri(GRAPH.KINGS_APEX))
 			.setDescription("Local codes for the Apex pathology system in kings")
-			.set(IM.IS_CONTAINED_IN,new TTArray().add(TTIriRef.iri(IM.NAMESPACE.iri+"CodeBasedTaxonomies")));
+			.set(iri(IM.IS_CONTAINED_IN),new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies")));
 			document.addEntity(kings);
 	}
 
@@ -79,20 +81,20 @@ public class ApexKingsImport implements TTImport {
 				String[] fields = line.split("\t");
 				String readCode= fields[0];
 				String code= fields[1];
-				String iri = GRAPH.KINGS_APEX.getIri()+ (fields[1].replaceAll("[ .,\"%]",""));
+				String iri = GRAPH.KINGS_APEX+ (fields[1].replaceAll("[ .,\"%]",""));
 				TTEntity entity= new TTEntity()
 					.setIri(iri)
-					.addType(IM.CONCEPT)
+					.addType(iri(IM.CONCEPT))
 					.setName(fields[2])
 					.setDescription("Local apex Kings trust pathology system entity ")
 					.setCode(code)
-					.setScheme(GRAPH.KINGS_APEX)
-					.set(IM.IS_CHILD_OF,new TTArray().add(TTIriRef.iri(KINGS_APEX_CODES)));
+					.setScheme(iri(GRAPH.KINGS_APEX))
+					.set(iri(IM.IS_CHILD_OF),new TTArray().add(TTIriRef.iri(KINGS_APEX_CODES)));
 				document.addEntity(entity);
 				apexToRead.put(code,readCode);
 				if (readToSnomed.get(readCode)!=null){
 					for (String snomed:readToSnomed.get(readCode)){
-						entity.addObject(IM.MATCHED_TO,TTIriRef.iri(SNOMED.NAMESPACE+snomed));
+						entity.addObject(iri(IM.MATCHED_TO),TTIriRef.iri(SNOMED.NAMESPACE+snomed));
 					}
 				}
 				count.getAndIncrement();
