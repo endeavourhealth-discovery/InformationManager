@@ -39,7 +39,7 @@ public class QImporter implements TTImport {
 	private final Map<String,TTEntity> idProjectMap = new HashMap<>();
 	private final Map<String,TTEntity> idCodeGroupMap = new HashMap<>();
 	private final ObjectMapper om = new ObjectMapper();
-	private final Map<String,String> codeGroupVersion = new HashMap<>();
+
 	private final Map<String,String> projectVersion= new HashMap<>();
 
 	private static final Logger LOG = LoggerFactory.getLogger(QImporter.class);
@@ -188,11 +188,6 @@ public class QImporter implements TTImport {
 						qGroup.set(iri(IM.VERSION), TTLiteral.literal(version));
 						if (idCodeGroupMap.get(groupId)==null) {
 							idCodeGroupMap.put(groupId, qGroup);
-							codeGroupVersion.put(groupId, version);
-						}
-						else if (Integer.parseInt(version)>Integer.parseInt(codeGroupVersion.get(groupId))){
-							idCodeGroupMap.put(groupId, qGroup);
-							codeGroupVersion.put(groupId, version);
 						}
 						importCodes(projectId, qGroup, id);
 
