@@ -446,7 +446,7 @@ public class CoreQueryImporter implements TTImport {
                 "not followed by a screening invite, excluding hypertensives")
             .setTypeOf(IM.NAMESPACE + "Patient")
             .match(m -> m
-                .addInSet(new Node().setIri(IM.NAMESPACE + "Q_RegisteredGMS")
+                .addIs(new Node().setIri(IM.NAMESPACE + "Q_RegisteredGMS")
                     .setName("Registered for GMS services on reference date")))
             .match(m -> m
                 .setBool(Bool.or)
@@ -463,7 +463,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setValue("70")
                                 .setUnit("YEARS")))))
                 .match(or -> or
-                    .addInSet(new Node().setIri(IM.NAMESPACE + "Q_Diabetics")))
+                    .addIs(new Node().setIri(IM.NAMESPACE + "Q_Diabetics")))
                 .match(or -> or
                     .property(p -> p.setIri(IM.NAMESPACE + "observation")
                         .match(n -> n.setTypeOf(IM.NAMESPACE + "Observation")
@@ -542,7 +542,7 @@ public class CoreQueryImporter implements TTImport {
                             .relativeTo(r -> r.setNodeRef("highBPReading").setIri(IM.NAMESPACE + "effectiveDate"))))))
             .match(m -> m
                 .setExclude(true)
-                .addInSet(new Node().setIri(IM.NAMESPACE + "Q_Hypertensives")
+                .addIs(new Node().setIri(IM.NAMESPACE + "Q_Hypertensives")
                     .setName("Hypertensives")));
         qry.set(iri(IM.DEFINITION), TTLiteral.literal(prof));
         qry.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
