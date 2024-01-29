@@ -28,6 +28,7 @@ public class IM1MapImport implements TTImport {
     private static final String[] oldIris= {  ".*\\\\IMv1\\\\oldiris.txt"};
     private static final String[] context= {  ".*\\\\IMv1\\\\ContextMaps.txt"};
     private static final String[] emisCodes = {".*\\\\EMIS\\\\emis_codes.txt"};
+    private static final String[] fhirMaps = {".*\\\\FHIR\\\\FHIR_Core_Maps.txt"};
     private static final String[] usageDbid = {
         ".*\\\\DiscoveryLive\\\\stats1.txt",
         ".*\\\\DiscoveryLive\\\\stats2.txt",
@@ -62,6 +63,7 @@ public class IM1MapImport implements TTImport {
             "CM_Org_BHRUT", "RF4",
             "CM_Org_CQC", "8HN02"
     );
+    private final Map<String,String> fhirToCore= new HashMap<>();
     private final Map<String,String> odsCodeIriMap = new HashMap<>();
     private final Map<String,String> im1SchemeToIriTerm = new HashMap<>();
     private List<String> valueSetsList= new ArrayList<>();
@@ -73,6 +75,7 @@ public class IM1MapImport implements TTImport {
     }
 
     public void importData(String inFolder, boolean secure) throws Exception {
+        createFHIRMaps(inFolder);
         EMISImport.populateRemaps(remaps);
         codeToIri= importMaps.getCodeToIri();
 
@@ -102,6 +105,20 @@ public class IM1MapImport implements TTImport {
 
         try (TTDocumentFiler filer= TTFilerFactory.getDocumentFiler()) {
             filer.fileDocument(statsDocument);
+        }
+    }
+
+    private void createFHIRMaps(String inFolder) throws IOException {
+        LOG.info("Importing FHIR maps");
+        Path file =  ImportUtils.findFileForId(inFolder, fhirMaps[0]);
+        int count = 0;
+        try (BufferedReader reader= new BufferedReader(new FileReader(file.toFile()))) {
+            String line = reader.readLine();
+            while (line != null && !line.isEmpty()) {
+                String[] fields= line.split("\t");
+                fhirToCore.put(fields[0],fields[1]);
+                line= reader.readLine();
+            }
         }
     }
 
@@ -390,6 +407,9 @@ public class IM1MapImport implements TTImport {
                         .setCode(code)
                         .addType(iri(IM.CONCEPT))
                         .set(iri(IM.IS_A), FHIR.GRAPH_FHIR + iriTerm);
+                if (fhirToCore.get(oldIri)!=null) {
+                    entity.addObject(TTIriRef.iri(IM.MATCHED_TO),TTIriRef.iri(fhirToCore.get(oldIri)));
+                }
 
                 TTEntity parent = iriToConcept.get(FHIR.GRAPH_FHIR + iriTerm);
                 if (parent != null) {
@@ -984,7 +1004,7 @@ public class IM1MapImport implements TTImport {
 
     @Override
 	public void validateFiles(String inFolder)  {
-         ImportUtils.validateFiles(inFolder,im1Codes,oldIris,context,usageDbid);
+         ImportUtils.validateFiles(inFolder,im1Codes,oldIris,context,usageDbid,fhirMaps);
 	}
 
     @Override

@@ -154,7 +154,6 @@ public class CEGImporter implements TTImport {
 				String ext= FilenameUtils.getExtension(fileEntry.getName());
 				if (ext.equalsIgnoreCase("xml")) {
                     LOG.info("...{}", fileEntry.getName());
-                    
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(fileEntry);
@@ -183,6 +182,20 @@ public class CEGImporter implements TTImport {
 								ttFolder.addObject(iri(IM.IS_CONTAINED_IN),mainFolder);
 						}
 					}
+					if (qDocument.getConceptSet()!=null){
+						for (ConceptSet set:qDocument.getConceptSet()){
+							TTEntity setEntity= new TTEntity()
+								.setIri(set.getIri())
+								.addType(TTIriRef.iri(IM.CONCEPT_SET))
+								.setName("Unknown value set")
+								.set(TTIriRef.iri(IM.DEFINITION),TTLiteral.literal(set.getDefinition()));
+							for (TTIriRef used:set.getUsedIn()){
+								setEntity.addObject(TTIriRef.iri(IM.USED_IN),used);
+							}
+							setEntity.addObject(TTIriRef.iri(IM.IS_CONTAINED_IN),TTIriRef.iri("http://endhealth.info/ceg/qry#CSET_CEGConceptSets)"));
+							document.addEntity(setEntity);
+						}
+					}
 					if (qDocument.getQuery()!=null){
 						for (QueryEntity qq:qDocument.getQuery()){
 							querySet.add(qq.getIri());
@@ -206,7 +219,6 @@ public class CEGImporter implements TTImport {
 						try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 							filer.fileDocument(document);
 						}
-					this.conceptSets.addAll(converter.getValueSets().values());
 					}
 				}
 			}
