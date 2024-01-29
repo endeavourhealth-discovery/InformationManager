@@ -50,7 +50,6 @@ public class CoreImporter implements TTImport {
     public void importData(TTImportConfig config) throws Exception {
         LOG.info("Generating inferred ontologies...");
         generateInferred(config);
-        importNamespaces();
         LOG.info("Importing Core entities");
         for (String coreFile : coreEntities) {
             if (!coreFile.contains(INFERRED_SUFFIX))
@@ -101,13 +100,7 @@ public class CoreImporter implements TTImport {
         });
     }
 
-    private void importNamespaces() throws Exception {
-        TTManager manager = new TTManager();
-        manager.createDocument(GRAPH.DISCOVERY);
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(manager.getDocument());
-        }
-    }
+
 
     /**
      * Loads the core ontology document, available as TTDocument for various purposes

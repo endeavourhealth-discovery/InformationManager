@@ -175,8 +175,8 @@ public class CEGImporter implements TTImport {
 							}
 							document.addEntity(ttFolder);
 							if (qFolder.getIsContainedIn() != null) {
-								for (TTIriRef inFolder : qFolder.getIsContainedIn())
-									ttFolder.addObject(iri(IM.IS_CONTAINED_IN), inFolder);
+								for (TTEntity inFolder : qFolder.getIsContainedIn())
+									ttFolder.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(inFolder.getIri()));
 							}
 							else
 								ttFolder.addObject(iri(IM.IS_CONTAINED_IN),mainFolder);
@@ -208,8 +208,8 @@ public class CEGImporter implements TTImport {
 								ttQuery.set(iri(IM.RETURN_TYPE),TTIriRef.iri(IM.NAMESPACE+"Patient"));
 							document.addEntity(ttQuery);
 							if (qq.getIsContainedIn()!=null){
-								for (TTIriRef inFolder:qq.getIsContainedIn()){
-									ttQuery.addObject(iri(IM.IS_CONTAINED_IN),inFolder);
+								for (TTEntity inFolder:qq.getIsContainedIn()){
+									ttQuery.addObject(iri(IM.IS_CONTAINED_IN),TTIriRef.iri(inFolder.getIri()));
 								}
 							}
 							ttQuery.set(iri(IM.DEFINITION),TTLiteral.literal(qq.getDefinition()));
