@@ -187,8 +187,12 @@ public class CEGImporter implements TTImport {
 							TTEntity setEntity= new TTEntity()
 								.setIri(set.getIri())
 								.addType(TTIriRef.iri(IM.CONCEPT_SET))
-								.setName("Unknown value set")
 								.set(TTIriRef.iri(IM.DEFINITION),TTLiteral.literal(set.getDefinition()));
+							if (set.getName()!=null){
+								setEntity.setName(set.getName());
+							}
+							else
+								setEntity.setName("Unknown value set");
 							for (TTIriRef used:set.getUsedIn()){
 								setEntity.addObject(TTIriRef.iri(IM.USED_IN),used);
 							}
