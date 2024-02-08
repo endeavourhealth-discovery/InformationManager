@@ -28,7 +28,8 @@ public class CoreImporter implements TTImport {
         ".*\\\\DiscoveryCore\\\\CoreOntology-more-inferred.json",
         ".*\\\\DiscoveryCore\\\\StatsReports.json",
         ".*\\\\DiscoveryCore\\\\QueryHelpers.json",
-        ".*\\\\DiscoveryCore\\\\Sets.json"
+        ".*\\\\DiscoveryCore\\\\Sets.json",
+        ".*\\\\DiscoveryCore\\\\Sets-KnowDiabetes.json"
     };
 
     private static final String INFERRED_SUFFIX = "-inferred.json";
