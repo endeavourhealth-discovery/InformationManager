@@ -22,6 +22,7 @@ import java.util.Date;
  */
 public class ImportApp {
     private static final Logger LOG = LoggerFactory.getLogger(ImportApp.class);
+    private static boolean expandValueSets;
 
     public static String testDirectory;
 
@@ -37,6 +38,7 @@ public class ImportApp {
         // Mandatory/ordered args
         cfg.setFolder(args[0]);
         cfg.setImportType(args[1].toLowerCase());
+        expandValueSets= true;
 
         // Optional switch args
         if (args.length >= 3) {
@@ -47,6 +49,9 @@ public class ImportApp {
                         break;
                     case "skiptct":
                         cfg.setSkiptct(true);
+                        break;
+                    case "skipvaluesets":
+                        expandValueSets= false;
                         break;
                     case "skipsearch":
                         cfg.setSkipsearch(true);
@@ -214,10 +219,11 @@ public class ImportApp {
                 throw new Exception("Unknown import type");
 
         }
-
-        if (cfg.getImportType().equals("all")||cfg.getImportType().equals("core")) {
+        if (expandValueSets) {
+            if (cfg.getImportType().equals("all") || cfg.getImportType().equals("core")) {
                 LOG.info("expanding value sets");
                 new SetExpander().expandAllSets();
+            }
         }
 
         if (!cfg.isSkiplucene())

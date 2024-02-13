@@ -7,6 +7,7 @@ import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.logic.service.SetService;
 import org.endeavourhealth.imapi.model.imq.Bool;
 import org.endeavourhealth.imapi.model.imq.Match;
+import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -198,7 +199,7 @@ public class CEGEthnicityImport implements TTImport {
 
         }
 				Query cegQuery= cegSubset.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-				cegQuery.getMatch().get(0).match(f->f.setIri(SNOMED.NAMESPACE+snomed));
+				cegQuery.getMatch().get(0).match(f->f.setInstanceOf(new Node().setIri(SNOMED.NAMESPACE+snomed)));
 				cegSubset.set(iri(IM.DEFINITION),TTLiteral.literal(setService.setQueryLabels(cegQuery)));
         if (cegSubset.get(iri(IM.HAS_TERM_CODE))==null)
             TTManager.addTermCode(cegSubset,catTerm,null);
@@ -219,7 +220,7 @@ public class CEGEthnicityImport implements TTImport {
             if (nhsSubset.get(iri(IM.HAS_TERM_CODE))==null)
                 TTManager.addTermCode(nhsSubset,nhsTerm,null);
 			Query nhsQuery= nhsSubset.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-			nhsQuery.getMatch().get(0).match(f->f.setIri(SNOMED.NAMESPACE+snomed));
+			nhsQuery.getMatch().get(0).match(f->f.setInstanceOf(new Node().setIri(SNOMED.NAMESPACE+snomed)));
 			nhsSubset.set(iri(IM.DEFINITION),TTLiteral.literal(setService.setQueryLabels(nhsQuery)));
         }
     }
