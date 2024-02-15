@@ -329,7 +329,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setVariable("rangeIsa")
                                 .property(p -> p
                                         .setIri(IM.IS_A)
-                                        .addIs(new Node().setRef("range"))
+                                        .addIs(new Node().setNodeRef("range"))
                                 )
                         )
                         .return_(r -> r
@@ -785,7 +785,7 @@ public class CoreQueryImporter implements TTImport {
                                         .setBool(Bool.and)
                                         .property(a2 -> a2
                                                 .setIri(SHACL.NODE)
-                                                .addIs(new Node().setRef("thisType")))
+                                                .addIs(new Node().setNodeRef("thisType")))
                                         .property(a2 -> a2
                                                 .setIri(SHACL.PATH)
                                                 .setIs(List.of(Node.iri(IM.IS_CONTAINED_IN)
@@ -794,13 +794,13 @@ public class CoreQueryImporter implements TTImport {
                         .setBool(Bool.or)
                         .match(m1 -> m1
                                 .setNodeRef("concept")
-                                .setInstanceOf(new Node().setRef("thisType")))
+                                .setInstanceOf(new Node().setNodeRef("thisType")))
                         .match(m1 -> m1
                                 .setInstanceOf(new Node()
                                         .setParameter("$this"))
                                 .property(p -> p
                                         .setIri(IM.CONTENT_TYPE)
-                                        .is(in -> in.setRef("concept"))
+                                        .is(in -> in.setNodeRef("concept"))
                                         .is(in -> in.setIri(IM.FOLDER))))
                         .match(m1 -> m1
                                 .setBool(Bool.and)
