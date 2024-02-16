@@ -33,7 +33,6 @@ public class CoreQueryImporter implements TTImport {
             currentGMS();
             currentGMSAsMatch();
             agedOver18AsMatch();
-            gpGMSRegisteredPractice();
             deleteSets();
             getAncestors();
             getAllowableRangeSuggestions();
@@ -401,9 +400,8 @@ public class CoreQueryImporter implements TTImport {
     private Match getActiveDiabetesMatch() {
         return new Match()
                 .setName("Active diabetics")
-                .property(p -> p
-                        .setIri(IM.NAMESPACE + "observation")
-                        .match(n -> n.setTypeOf(IM.NAMESPACE + "Observation")
+          .addPath(new Property().setIri(IM.NAMESPACE+"patient"))
+          .setTypeOf(IM.NAMESPACE + "Observation")
                                 .setVariable("latestDiabetes")
                                 .property(ww -> ww
                                         .setIri(IM.NAMESPACE + "concept")
@@ -415,12 +413,9 @@ public class CoreQueryImporter implements TTImport {
                                         .setProperty(new OrderDirection()
                                                 .setIri(IM.NAMESPACE + "effectiveDate")
                                                 .setDirection(Order.descending))
-                                        .setLimit(1))))
+                                        .setLimit(1))
                 .then(m1 -> m1
                         .setExclude(true)
-                        .property(p -> p
-                                .setIri(IM.NAMESPACE + "observation")
-                                .match(n -> n.setTypeOf(IM.NAMESPACE + "Observation")
                                         .setBool(Bool.and)
                                         .setVariable("ResolvedDiabetes")
                                         .property(ww -> ww
@@ -432,7 +427,7 @@ public class CoreQueryImporter implements TTImport {
                                         .property(ww -> ww
                                                 .setIri(IM.NAMESPACE + "effectiveDate")
                                                 .setOperator(Operator.gte)
-                                                .relativeTo(r -> r.setNodeRef("latestDiabetes").setIri(IM.NAMESPACE + "effectiveDate"))))));
+                                                .relativeTo(r -> r.setNodeRef("latestDiabetes").setIri(IM.NAMESPACE + "effectiveDate"))));
     }
 
     private void patientsWithActiveCondition(String iri, String name, String activeIri, String activeName, String inactiveIri, String inactiveName) throws JsonProcessingException {
@@ -446,9 +441,9 @@ public class CoreQueryImporter implements TTImport {
                 .setName(name)
                 .setTypeOf(IM.NAMESPACE + "Patient")
                 .match(m -> m
-                        .property(p -> p
-                                .setIri(IM.NAMESPACE + "observation")
-                                .match(m1 -> m1.setTypeOf(IM.NAMESPACE + "Observation")
+                        .path(p -> p
+                                .setIri(IM.NAMESPACE + "patient"))
+                                .setTypeOf(IM.NAMESPACE + "Observation")
                                         .setBool(Bool.and)
                                         .property(ww -> ww
                                                 .setIri(IM.NAMESPACE + "concept")
@@ -473,7 +468,7 @@ public class CoreQueryImporter implements TTImport {
                                                         .addIs(new Node()
                                                                 .setIri(activeIri)
                                                                 .setName(activeName)
-                                                                .setDescendantsOrSelfOf(true)))))));
+                                                                .setDescendantsOrSelfOf(true)))));
 
         qry.set(iri(IM.DEFINITION), TTLiteral.literal(definition));
         qry.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
@@ -513,16 +508,16 @@ public class CoreQueryImporter implements TTImport {
                         .match(or -> or
                                 .addIs(new Node().setIri(IM.NAMESPACE + "Q_Diabetics")))
                         .match(or -> or
-                                .property(p -> p.setIri(IM.NAMESPACE + "observation")
-                                        .match(n -> n.setTypeOf(IM.NAMESPACE + "Observation")
+                                .path(p -> p.setIri(IM.NAMESPACE + "patient"))
+                                        .setTypeOf(IM.NAMESPACE + "Observation")
                                                 .property(ob -> ob
                                                         .setIri(IM.NAMESPACE + "concept")
                                                         .addIs(new Node().setIri(SNOMED.NAMESPACE + "714628002").setDescendantsOf(true))
-                                                        .setValueLabel("Prediabetes"))))))
+                                                        .setValueLabel("Prediabetes"))))
                 .match(m -> m
-                        .property(p -> p
-                                .setIri(IM.NAMESPACE + "observation")
-                                .match(m1 -> m1.setTypeOf(IM.NAMESPACE + "Observation")
+                        .path(p -> p
+                                .setIri(IM.NAMESPACE + "patient"))
+                                .setTypeOf(IM.NAMESPACE + "Observation")
                                         .setBool(Bool.and)
                                         .property(ww -> ww
                                                 .setIri(IM.NAMESPACE + "concept")
@@ -575,11 +570,11 @@ public class CoreQueryImporter implements TTImport {
                                                         .property(w -> w
                                                                 .setIri(IM.NAMESPACE + "numericValue")
                                                                 .setOperator(Operator.gt)
-                                                                .setValue("130")))))))
+                                                                .setValue("130")))))
                 .match(m -> m
                         .setExclude(true)
-                        .property(w -> w.setIri(IM.NAMESPACE + "observation")
-                                .match(n -> n.setTypeOf(IM.NAMESPACE + "Observation")
+                        .path(w -> w.setIri(IM.NAMESPACE + "patient"))
+                                .setTypeOf(IM.NAMESPACE + "Observation")
                                         .setBool(Bool.and)
                                         .property(inv -> inv
                                                 .setIri(IM.NAMESPACE + "concept")
@@ -587,7 +582,7 @@ public class CoreQueryImporter implements TTImport {
                                         .property(after -> after
                                                 .setIri(IM.NAMESPACE + "effectiveDate")
                                                 .setOperator(Operator.gte)
-                                                .relativeTo(r -> r.setNodeRef("highBPReading").setIri(IM.NAMESPACE + "effectiveDate"))))))
+                                                .relativeTo(r -> r.setNodeRef("highBPReading").setIri(IM.NAMESPACE + "effectiveDate"))))
                 .match(m -> m
                         .setExclude(true)
                         .addIs(new Node().setIri(IM.NAMESPACE + "Q_Hypertensives")
@@ -659,10 +654,9 @@ public class CoreQueryImporter implements TTImport {
     private Match getGMSMatch() {
         return new Match()
                 .setName("Registered GMS services on the reference date")
-                .property(p -> p
-                        .setIri(IM.NAMESPACE + "gpRegistration")
-                        .match(m1 -> m1
-                                .setTypeOf(IM.NAMESPACE + "GPRegistration")
+                .path(p -> p
+                        .setIri(IM.NAMESPACE + "patient"))
+                                .setTypeOf(IM.NAMESPACE + "GPRegistrationEpisode")
                                 .setBool(Bool.and)
                                 .property(p1 -> p1
                                         .setIri(IM.NAMESPACE + "gpPatientType")
@@ -679,7 +673,7 @@ public class CoreQueryImporter implements TTImport {
                                         .property(pv1 -> pv1
                                                 .setIri(IM.NAMESPACE + "endDate")
                                                 .setOperator(Operator.gt)
-                                                .setRelativeTo(new Property().setParameter("$referenceDate"))))));
+                                                .setRelativeTo(new Property().setParameter("$referenceDate"))));
     }
 
     private void getSearchAll() throws JsonProcessingException {
@@ -714,52 +708,6 @@ public class CoreQueryImporter implements TTImport {
                         )));
     }
 
-    private void gpGMSRegisteredPractice() throws IOException {
-        TTEntity entity = new TTEntity()
-                .setIri(IM.NAMESPACE + "gpGMSRegisteredPractice")
-                .setName("Current GMS registered practice")
-                .setScheme(iri(GRAPH.DISCOVERY))
-                .addType(iri(IM.FUNCTION))
-                .addType(iri(RDF.PROPERTY));
-        entity.addObject(iri(RDFS.SUBCLASS_OF), iri(IM.FUNCTION_PROPERTY));
-        entity.set(iri(IM.DEFINITION), TTLiteral.literal(getGmsPractice()));
-        document.addEntity(entity);
-    }
-
-    private Query getGmsPractice() {
-        Query query = new Query();
-        query
-                .setName("GMS registered practice on reference date")
-                .return_(r -> r
-                        .setNodeRef("practice")
-                        .property(s -> s
-                                .setIri(IM.NAMESPACE + "recordOwner")))
-                .match(f -> f
-                        .setInstanceOf(new Node()
-                                .setParameter("this"))
-                        .property(p -> p
-                                .setIri(IM.NAMESPACE + "gpRegistration")
-                                .match(n -> n
-                                        .setTypeOf(IM.NAMESPACE + "GPRegistration")
-                                        .setBool(Bool.and)
-                                        .property(pv -> pv
-                                                .setIri(IM.NAMESPACE + "patientType")
-                                                .addIs(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
-                                        .property(pv -> pv
-                                                .setIri(IM.NAMESPACE + "effectiveDate")
-                                                .setOperator(Operator.lte)
-                                                .setRelativeTo(new Property().setParameter("$referenceDate")))
-                                        .property(pv -> pv
-                                                .setBool(Bool.or)
-                                                .property(pv1 -> pv1
-                                                        .setIri(IM.NAMESPACE + "endDate"))
-                                                .property(pv1 -> pv1
-                                                        .setIri(IM.NAMESPACE + "endDate")
-                                                        .setOperator(Operator.gt)
-                                                        .setRelativeTo(new Property().setParameter("$referenceDate")))))));
-        return query;
-
-    }
 
     private void allowableSubTypes() throws IOException {
         TTEntity entity = getQuery("AllowableChildTypes", "for a parent entity, the types that can be child types", "used in the editor to select the type of entity being created as a subtype");
