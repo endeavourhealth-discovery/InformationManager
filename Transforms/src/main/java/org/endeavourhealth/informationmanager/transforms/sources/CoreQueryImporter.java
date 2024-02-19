@@ -362,7 +362,7 @@ public class CoreQueryImporter implements TTImport {
             TTLiteral.literal(new Query()
                 .setName("All subtypes of an entity, active only")
                 .setActiveOnly(true)
-                .match(m -> m.setVariable("isa").setInstanceOf(new Node().setRef("range").setDescendantsOf(true)))
+                .match(m -> m.setVariable("isa").setInstanceOf(new Node().setNodeRef("range").setDescendantsOf(true)))
                 .match(w -> w
                     .setVariable("range")
                     .property(p -> p.setInverse(true).setIri(RDFS.RANGE).addIs(new Node().setParameter("this")))
