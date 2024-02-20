@@ -36,6 +36,7 @@ public class CoreQueryImporter implements TTImport {
             deleteSets();
             getAncestors();
             getAllowableRangeSuggestions();
+            getValuesFromPropertyRange();
             patientsWithActiveCondition(IM.NAMESPACE + "Q_Diabetics", "Patients with active diabetes",
                     SNOMED.NAMESPACE + "73211009", "Diabetes mellitus",
                     SNOMED.NAMESPACE + "315051004", "Diabetes resolved");
@@ -354,6 +355,21 @@ public class CoreQueryImporter implements TTImport {
                         .return_(s -> s.setNodeRef("isa")
                                 .property(p -> p.setIri(RDFS.LABEL))
                                 .property(p -> p.setIri(IM.CODE)))));
+    }
+    private void getValuesFromPropertyRange() throws JsonProcessingException {
+        TTEntity query = getQuery("GetValuesFromPropertyRange", "Get concepts possible for a property using it's range", "returns the available property range values for a given property iri");
+        query.set(iri(IM.DEFINITION),
+            TTLiteral.literal(new Query()
+                .setName("All subtypes of an entity, active only")
+                .setActiveOnly(true)
+                .match(m -> m.setVariable("isa").setInstanceOf(new Node().setNodeRef("range").setDescendantsOf(true)))
+                .match(w -> w
+                    .setVariable("range")
+                    .property(p -> p.setInverse(true).setIri(RDFS.RANGE).addIs(new Node().setParameter("this")))
+                )
+                .return_(s -> s.setNodeRef("isa")
+                    .property(p -> p.setIri(RDFS.LABEL))
+                    .property(p -> p.setIri(IM.CODE)))));
     }
 
     private void latestBPMatch() throws JsonProcessingException {
