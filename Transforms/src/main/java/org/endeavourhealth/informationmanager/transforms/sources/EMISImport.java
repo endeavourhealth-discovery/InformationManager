@@ -177,6 +177,7 @@ public class EMISImport implements TTImport {
                       .setIri(EMIS+codeId)
                       .setScheme(TTIriRef.iri(EMIS))
                       .setName(term)
+                      .addType(TTIriRef.iri(IM.CONCEPT))
                       .set(iri(IM.CODE_ID),TTLiteral.literal(codeId));
                     TTEntity mainConcept= termToEmis.get(term);
                     String code=codeId;
@@ -255,9 +256,6 @@ public class EMISImport implements TTImport {
             String child = entry.getKey();
             TTEntity childEntity = codeIdToEntity.get(child);
             if (childEntity.get(iri(IM.MATCHED_TO)) == null) {
-                TTArray oldCode= childEntity.get(iri(IM.CODE));
-                childEntity.set(iri(IM.CODE),childEntity.get(iri(IM.ALTERNATIVE_CODE)));
-                childEntity.set(iri(IM.ALTERNATIVE_CODE),oldCode);
                 if (alternateParents.get(childEntity.getCode())!=null){
                     childEntity.addObject(iri(IM.LOCAL_SUBCLASS_OF),TTIriRef.iri(SNOMED.NAMESPACE + alternateParents.get(childEntity.getCode())));
                 }
@@ -346,8 +344,6 @@ public class EMISImport implements TTImport {
         String term = ec.getTerm();
         String code = ec.getCode();
         String conceptId = ec.getConceptId();
-        //if (conceptId.equals("906241000006109"))
-          //  LOG.info("rfc concept");
         String descid = ec.getDescid();
         String parentId = ec.getParentId();
         if (parentId!=null)
@@ -366,7 +362,8 @@ public class EMISImport implements TTImport {
                 conceptId = remaps.get(code);
             emisConcept = new TTEntity()
               .setIri(GRAPH.EMIS + codeId)
-              .setCode(code)
+              .setCode(ec.conceptId)
+              .set(TTIriRef.iri(IM.ALTERNATIVE_CODE),TTLiteral.literal(code))
               .addType(iri(IM.CONCEPT))
               .setScheme(iri(GRAPH.EMIS));
             emisConcept
@@ -386,9 +383,6 @@ public class EMISImport implements TTImport {
                 if (notFound(emisConcept, iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + conceptId)))
                    emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + conceptId));
             }
-        }
-        else {
-            emisConcept.set(iri(IM.ALTERNATIVE_CODE),TTLiteral.literal(conceptId));
         }
         if (code.equals("EMISNHH2")) {
             emisConcept.set(iri(IM.IS_CONTAINED_IN), new TTArray()

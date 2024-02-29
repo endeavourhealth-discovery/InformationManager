@@ -1,7 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.rdf4j.common.text.StringUtil;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
@@ -35,6 +34,9 @@ public class SnomedImporter implements TTImport {
     private final ECLToIML eclConverter = new ECLToIML();
     private TTDocument document;
     private Integer counter;
+    private Map<String,Set<String>> vmp_ingredient= new HashMap<>();
+    private Map<String,String> vmp_route = new HashMap<>();
+    private Map<String,String> vmp_form = new HashMap<>();
 
     public static final String[] concepts = {
         ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_InternationalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_Snapshot_INT_.*\\.txt",
@@ -51,13 +53,29 @@ public class SnomedImporter implements TTImport {
         ".*\\\\PRIMARY\\\\.*\\\\SnomedCT_UKPrimaryCareRF2_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleUKPCSnapshot_.*\\.txt"
     };
 
-    public static final String[] vmp = {
+    public static final String[] dmd_vmp = {
         ".*\\\\DMD\\\\.*\\\\f_vmp_VmpType.csv"
     };
 
-    public static final String[] amp = {
-        ".*\\\\DMD\\\\.*\\\\.*\\\\f_amp_AmpType.csv"
+    public static final String[] dmd_amp = {
+        ".*\\\\DMD\\\\.*\\\\f_amp_AmpType.csv"
     };
+
+
+  public static final String[] dmd_vpi = {
+    ".*\\\\DMD\\\\.*\\\\f_vmp_VpiType.csv"
+  };
+
+  public static final String[] dmd_route = {
+    ".*\\\\DMD\\\\.*\\\\f_vmp_DrugRouteType.csv"
+  };
+
+
+  public static final String[] dmd_form = {
+    ".*\\\\DMD\\\\.*\\\\f_vmp_DrugFormType.csv"
+  };
+
+
 
 
     public static final String[] qofClusters = {
@@ -139,8 +157,9 @@ public class SnomedImporter implements TTImport {
             // importStatedFiles(config.folder); No longer bothers with OWL axioms;
             importRelationshipFiles(config.getFolder());
             importSubstitution(config.getFolder());
+            importDmdContents(config.getFolder());
             importVmp(config.getFolder());
-
+            importAmp(config.getFolder());
             addSpecials(document);
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
@@ -168,6 +187,10 @@ public class SnomedImporter implements TTImport {
         document.addEntity(telephone);
         TTEntity specific = conceptMap.get("10362801000001104");
         specific.addObject(iri(RDFS.SUBCLASS_OF), iri(SNOMED.NAMESPACE + "127489000"));
+
+        TTEntity dmd= conceptMap.get("8653001000001100");
+        dmd.addObject(TTIriRef.iri(RDFS.DOMAIN),TTIriRef.iri(SNOMED.NAMESPACE+"763158003"));
+        dmd.addObject(TTIriRef.iri(RDFS.RANGE),TTIriRef.iri(SNOMED.NAMESPACE+"8653201000001106"));
     }
 
     private void removeQualifiers(TTDocument document) {
@@ -259,7 +282,6 @@ public class SnomedImporter implements TTImport {
 
     private void importSubstitution(String path) throws IOException {
         int i = 0;
-        counter = 0;
         for (String relationshipFile : substitutions) {
             Path file = ImportUtils.findFilesForId(path, relationshipFile).get(0);
             LOG.info("Processing substitutions in {}", file.getFileName().toString());
@@ -267,42 +289,76 @@ public class SnomedImporter implements TTImport {
                 reader.readLine(); // NOSONAR - Skip header
                 String line = reader.readLine();
                 while (line != null && !line.isEmpty()) {
-                    String[] fields = line.split("\t");
-                    String supertype = fields[0];
-                    if (!supertype.equals("138875005")) {
-                        String subtype = fields[1];
-                        String provenance = fields[2];
-                        TTEntity c = conceptMap.get(subtype);
-                        if (c == null) {
-                            c = new TTEntity().setIri(SN + subtype);
-                            document.addEntity(c);
-                            c.addType(iri(IM.CONCEPT));
-                            c.setStatus(iri(IM.INACTIVE));
-                            c.setCode(subtype);
-                            c.setScheme(iri(SNOMED.NAMESPACE));
-                        }
+                  String[] fields = line.split("\t");
+                  String supertype = fields[0];
+                  if (!supertype.equals("138875005")) {
+                    String subtype = fields[1];
+                    if (!subtype.equals(supertype)) {
+                      String provenance = fields[2];
+                      TTEntity c = conceptMap.get(subtype);
+                      if (c == null) {
+                        c = new TTEntity().setIri(SN + subtype);
+                        document.addEntity(c);
+                        c.addType(iri(IM.CONCEPT));
+                        c.setStatus(iri(IM.INACTIVE));
+                        c.setCode(subtype);
+                        c.setScheme(iri(SNOMED.NAMESPACE));
+                      }
+                      TTEntity c2 = conceptMap.get(supertype);
+                      if (c2.getStatus().getIri().equals(IM.INACTIVE) && (c.getStatus().getIri().equals(IM.INACTIVE))) {
+                        i++;
                         switch (provenance) {
-                            case "0" -> c.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
-                            case "1" -> c.addObject(iri(IM.USUALLY_SUBSUMED_BY), iri(SN + supertype));
-                            case "2" -> c.addObject(iri(IM.APPROXIMATE_SUBSUMED_BY), iri(SN + supertype));
-                            case "3" -> c.addObject(iri(IM.MULTIPLE_SUBSUMED_BY), iri(SN + supertype));
+                          case "0" -> c.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
+                          case "1" -> c.addObject(iri(IM.USUALLY_SUBSUMED_BY), iri(SN + supertype));
+                          case "2" -> c.addObject(iri(IM.APPROXIMATE_SUBSUMED_BY), iri(SN + supertype));
+                          case "3" -> c.addObject(iri(IM.MULTIPLE_SUBSUMED_BY), iri(SN + supertype));
                         }
+                      }
                     }
-                    line = reader.readLine();
+                  }
+                line = reader.readLine();
                 }
             }
-
         }
-        LOG.info("Imported {} relationships", i);
-        LOG.info("isas added {}", counter);
+        LOG.info("Imported {} subsumed concepts", i);
     }
 
 
     //=================private methods========================
 
+
+  private void importDmdContents(String path) throws IOException {
+    int i = 0;
+    for (String[] dmdFile : List.of(dmd_vpi,dmd_route,dmd_form)) {
+      for (String conceptFile : dmdFile) {
+        Path file = ImportUtils.findFilesForId(path, conceptFile).get(0);
+        LOG.info("Processing concepts in {}", file.getFileName().toString());
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+          reader.readLine();     // NOSONAR - Skip header
+          String line = reader.readLine();
+          while (line != null && !line.isEmpty()) {
+            String[] fields = line.split("\\|");
+            if (dmdFile==dmd_vpi){
+              vmp_ingredient.computeIfAbsent(fields[0],e -> new HashSet<>()).add(fields[1]);
+            }
+            else if (dmdFile==dmd_route){
+              vmp_route.put(fields[0], fields[1]);
+            }
+            else if (dmdFile== dmd_form){
+              vmp_form.put(fields[0],fields[1]);
+            }
+            i++;
+            line = reader.readLine();
+          }
+        }
+      }
+    }
+    LOG.info("Imported {} concepts", i);
+  }
+
     private void importVmp(String path) throws IOException {
         int i = 0;
-        for (String conceptFile : vmp) {
+        for (String conceptFile : dmd_vmp) {
             Path file = ImportUtils.findFilesForId(path, conceptFile).get(0);
             LOG.info("Processing concepts in {}", file.getFileName().toString());
             try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -320,17 +376,89 @@ public class SnomedImporter implements TTImport {
     }
 
     private void processVmpLine(String line) {
-        String[] fields = line.split("\\|");
-        TTEntity c = conceptMap.get(fields[0]);
-        if (c != null) {
-            c.set(iri(IM.PREFERRED_NAME), TTLiteral.literal(fields[5]));
-            if (!TTManager.termUsed(c, fields[5]))
-                TTManager.addTermCode(c, fields[5], null);
+      String[] fields = line.split("\\|");
+      String code=fields[0];
+      TTEntity c = conceptMap.get(code);
+      if (c != null) {
+        c.set(iri(IM.PREFERRED_NAME), TTLiteral.literal(fields[5]));
+        if (!TTManager.termUsed(c, fields[5]))
+          TTManager.addTermCode(c, fields[5], null);
+        if (!fields[2].equals("")) {
+          TTEntity prev = conceptMap.get(fields[2]);
+          if ( prev!= null) {
+            prev.addObject(TTIriRef.iri(IM.PREVIOUS_ENTITY_OF),TTIriRef.iri(c.getIri()));
+          }
+        }
+        setDmdProperties(c,code);
+      }
+    }
+
+  private void setDmdProperties(TTEntity entity,String code) {
+      if (entity.get(iri(IM.ROLE_GROUP))==null){
+          String route=vmp_route.get(code);
+          String form=vmp_form.get(code);
+          Set<String> ingredients= vmp_ingredient.get(code);
+          if (route!=null||form!=null||ingredients!=null){
+            TTNode group= new TTNode();
+            entity.addObject(iri(IM.ROLE_GROUP),group);
+            if (route!=null) {
+              group.set(iri(SNOMED.NAMESPACE + "26643006"), iri(SNOMED.NAMESPACE + route));
+            }
+            if (form!=null) {
+              group.set(iri(SNOMED.NAMESPACE + "10362901000001105"), iri(SNOMED.NAMESPACE + form));
+            }
+            if (ingredients!=null){
+              int i=0;
+              for (String ingredient:ingredients){
+                i++;
+                if (i==1)
+                  group.set(iri(SNOMED.NAMESPACE+"127489000"),iri(SNOMED.NAMESPACE+ingredient));
+                else {
+                  TTNode newGroup= new TTNode();
+                  entity.addObject(iri(IM.ROLE_GROUP),newGroup);
+                  newGroup.set(iri(SNOMED.NAMESPACE+"127489000"),iri(SNOMED.NAMESPACE+ingredient));
+                }
+              }
+            }
+          }
         }
     }
 
 
-    private void importConceptFiles(String path) throws IOException {
+
+  private void importAmp(String path) throws IOException {
+    int i = 0;
+    for (String conceptFile : dmd_amp) {
+      Path file = ImportUtils.findFilesForId(path, conceptFile).get(0);
+      LOG.info("Processing concepts in {}", file.getFileName().toString());
+      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        reader.readLine();     // NOSONAR - Skip header
+        String line = reader.readLine();
+        while (line != null && !line.isEmpty()) {
+          processAmpLine(line);
+          i++;
+          line = reader.readLine();
+        }
+      }
+    }
+    LOG.info("Imported {} concepts", i);
+  }
+
+  private void processAmpLine(String line) {
+    String[] fields = line.split("\\|");
+    TTEntity amp = conceptMap.get(fields[0]);
+    if (amp != null) {
+      if (amp.get(iri(IM.ROLE_GROUP))==null){
+        String vmpid= fields[2];
+        if (amp.get(iri(IM.ROLE_GROUP))==null){
+          setDmdProperties(amp,vmpid);
+        }
+      }
+    }
+  }
+
+
+  private void importConceptFiles(String path) throws IOException {
         int i = 0;
         for (String conceptFile : concepts) {
             Path file = ImportUtils.findFilesForId(path, conceptFile).get(0);
@@ -607,7 +735,6 @@ public class SnomedImporter implements TTImport {
 
         }
         LOG.info("Imported {} relationships", i);
-        LOG.info("isas added {}", counter);
     }
 
     private void processRelationshipLine(String line) {
@@ -677,7 +804,7 @@ public class SnomedImporter implements TTImport {
 
     public void validateFiles(String inFolder) {
         ImportUtils.validateFiles(inFolder, concepts, descriptions,
-            relationships, refsets, attributeRanges, attributeDomains, substitutions, qofClusters, vmp);
+            relationships, refsets, attributeRanges, attributeDomains, substitutions, qofClusters, dmd_vmp,dmd_amp,dmd_form,dmd_route,dmd_vpi);
     }
 
     @Override

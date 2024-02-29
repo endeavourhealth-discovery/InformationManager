@@ -183,14 +183,13 @@ public class QImporter implements TTImport {
 								.setIri(QR.NAMESPACE + "QCodeGroup_" + groupId)
 								.setName("Q code group "+codeGroup.get("Name").asText())
 								.addType(iri(IM.CONCEPT_SET));
+							if (idCodeGroupMap.get(groupId)==null) {
+								idCodeGroupMap.put(groupId, qGroup);
+							}
+							qGroup.set(iri(IM.VERSION), TTLiteral.literal(version));
+							importCodes(projectId, qGroup, id);
 						}
 						qGroup.addObject(iri(IM.IS_SUBSET_OF), TTIriRef.iri(project.getValue().getIri()));
-						qGroup.set(iri(IM.VERSION), TTLiteral.literal(version));
-						if (idCodeGroupMap.get(groupId)==null) {
-							idCodeGroupMap.put(groupId, qGroup);
-						}
-						importCodes(projectId, qGroup, id);
-
 					}
 				}
 				else
