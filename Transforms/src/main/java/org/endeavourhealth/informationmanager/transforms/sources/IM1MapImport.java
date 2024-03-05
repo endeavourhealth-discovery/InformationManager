@@ -142,6 +142,7 @@ public class IM1MapImport implements TTImport {
                 }
                 Integer dbid= Integer.parseInt(fields[0]);
                 String oldIri = fields[1];
+
                 if (oldIri.equals("CM_DidNotAttendEncounter"))
                     LOG.info("");
                 if (usedDbid.get(dbid)!=null)
@@ -322,6 +323,7 @@ public class IM1MapImport implements TTImport {
                         }
 
                         else if (scheme.equals(GRAPH.DISCOVERY)) {
+                            lname = lname.replace("\"", "%22");
                             if (!checkOld(scheme, lname, term, code, oldIri, description,im1Scheme)) {
                                 String original=lname;
                                 if (original.contains("_")) {
@@ -464,21 +466,6 @@ public class IM1MapImport implements TTImport {
             }
         }
         return iriTerm.toString();
-    }
-
-    private void getOldIriToIriTermMap(String inFolder) throws IOException {
-        Path file =  ImportUtils.findFileForId(inFolder, im1Codes[0]);
-        try (BufferedReader reader= new BufferedReader(new FileReader(file.toFile()))) {
-            reader.readLine();
-            String line = reader.readLine();
-            while (line != null && !line.isEmpty()) {
-                String[] fields = line.split("\t");
-                String oldIri = fields[1];
-                String term = fields[2];
-                String code = fields[5];
-                line = reader.readLine();
-            }
-        }
     }
 
     private boolean checkOld(String scheme, String lname, String term, String code, String oldIri, String description,String im1Scheme) throws Exception {
