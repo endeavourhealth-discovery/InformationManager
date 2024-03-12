@@ -130,8 +130,8 @@ public class QImporter implements TTImport {
 			match.setOptional(true);
 		if (path!=null) {
 			for (int i = 0; i < path.split("/").length - 1; i++) {
-				Property property = new Property();
-				match.addProperty(property);
+				Where property = new Where();
+				match.addWhere(property);
 				property.setIri(path.split("/")[i]);
 				match = match.setMatch(new Match().getMatch());
 			}
@@ -139,9 +139,9 @@ public class QImporter implements TTImport {
 		for (int i=0; i<propertyValues.split(",").length-1;i++){
 			String pv= propertyValues.split(",")[i];
 			String field= pv.split("=")[0];
-			Property property= new Property();
+			Where property= new Where();
 			property.setIri(field);
-			match.addProperty(property);
+			match.addWhere(property);
 			String values= pv.split("=")[1];
 			for (int q=0; q< values.split(";").length-1; q++){
 				String value= values.split(";")[q];
