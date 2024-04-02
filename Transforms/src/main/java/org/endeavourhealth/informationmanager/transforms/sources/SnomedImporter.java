@@ -9,8 +9,8 @@ import org.endeavourhealth.imapi.model.imq.Bool;
 import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.imapi.transforms.ECLToIMQ;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.informationmanager.common.ECLToIML;
 import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
@@ -31,7 +31,7 @@ public class SnomedImporter implements TTImport {
 
     private Map<String, TTEntity> conceptMap;
   private Map<String, TTEntity> refsetMap;
-    private final ECLToIML eclConverter = new ECLToIML();
+    private final ECLToIMQ eclConverter = new ECLToIMQ();
     private TTDocument document;
     private Integer counter;
     private Map<String,Set<String>> vmp_ingredient= new HashMap<>();
@@ -694,18 +694,25 @@ public class SnomedImporter implements TTImport {
             return;
         }
         Query expression = eclConverter.getQueryFromECL(ecl);
-        for (Match match : expression.getMatch()) {
-            if (match.getInstanceOf() != null) {
-                op.addObject(iri(RDFS.RANGE), iri(match.getInstanceOf().getIri()));
-            } else {
-                if (match.getBool().equals(Bool.or)) {
-                    for (Match or : match.getMatch()) {
-                        op.addObject(iri(RDFS.RANGE), iri(or.getInstanceOf().getIri()));
-                    }
-                } else
-                    throw new DataFormatException("ecl of this kind is not supported for ranges");
-            }
+        if (expression.getInstanceOf()!=null){
+          op.addObject(iri(RDFS.RANGE), iri(expression.getInstanceOf().getIri()));
         }
+        if (expression.getMatch()!=null) {
+         for (Match match : expression.getMatch()) {
+           if (match.getInstanceOf() != null) {
+            op.addObject(iri(RDFS.RANGE), iri(match.getInstanceOf().getIri()));
+           }
+          else {
+            if (match.getBool().equals(Bool.or)) {
+              for (Match or : match.getMatch()) {
+                op.addObject(iri(RDFS.RANGE), iri(or.getInstanceOf().getIri()));
+              }
+            }
+            else
+              throw new DataFormatException("ecl of this kind is not supported for ranges");
+          }
+        }
+      }
     }
 
 
