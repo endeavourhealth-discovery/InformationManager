@@ -92,6 +92,7 @@ public class Preload {
             .validateByType(GRAPH.ODS, cfg.getFolder())
             .validateByType(GRAPH.NHS_TFC, cfg.getFolder())
             .validateByType(GRAPH.CEG_QUERY, cfg.getFolder())
+          .validateByType(GRAPH.BNF, cfg.getFolder())
             .validateByType(GRAPH.IM1, cfg.getFolder())
           //.validateByType(GRAPH.CPRD_MED, cfg.getFolder())
             .validateByType(QR.NAMESPACE,cfg.getFolder());
@@ -101,6 +102,7 @@ public class Preload {
             importer.importByType(GRAPH.DISCOVERY, cfg);
             importer.importByType(SNOMED.NAMESPACE, cfg);
             importer.importByType(GRAPH.QUERY, cfg);
+            importer.importByType(GRAPH.BNF, cfg);
             importer.importByType(GRAPH.ENCOUNTERS, cfg);
             importer.importByType(GRAPH.EMIS, cfg);
             importer.importByType(GRAPH.TPP, cfg);
