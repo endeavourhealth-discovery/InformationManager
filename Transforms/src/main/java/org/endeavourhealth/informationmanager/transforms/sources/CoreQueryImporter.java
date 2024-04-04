@@ -35,6 +35,7 @@ public class CoreQueryImporter implements TTImport {
             agedOver18AsMatch();
             deleteSets();
             getAncestors();
+            getSubsets();
             patientsWithActiveCondition(IM.NAMESPACE + "Q_Diabetics", "Patients with active diabetes",
                     SNOMED.NAMESPACE + "73211009", "Diabetes mellitus",
                     SNOMED.NAMESPACE + "315051004", "Diabetes resolved");
@@ -916,6 +917,27 @@ public class CoreQueryImporter implements TTImport {
                         .return_(s -> s.setNodeRef("isa")
                                 .property(p -> p.setIri(RDFS.LABEL))
                                 .property(p -> p.setIri(IM.CODE)))));
+    }
+
+    private void getSubsets() throws JsonProcessingException {
+        TTEntity query = getQuery("GetSubsets", "Get subsets using superset iri", "return items which have a isSubsetOf predicate linked to the iri provided");
+        query.getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE + "query"));
+        query.set(iri(IM.DEFINITION),
+            TTLiteral.literal(new Query()
+                .setName("All subsets of an entity, active only")
+                .setActiveOnly(true)
+                .return_(r -> r
+                    .property(s -> s.setIri(IM.CODE))
+                    .property(s -> s.setIri(RDFS.LABEL)))
+                .match(f -> f
+                    .addWhere(new Where()
+                        .setIri(IM.IS_SUBSET_OF)
+                        .addIs(new Node().setParameter("this")
+                        )
+                    )
+                )
+            )
+        );
     }
 
     private TTEntity getQuery(String iri, String name, String comment) {
