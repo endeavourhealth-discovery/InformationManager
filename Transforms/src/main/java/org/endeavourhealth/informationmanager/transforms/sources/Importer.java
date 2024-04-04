@@ -57,6 +57,8 @@ public class Importer implements TTImportByType {
             return new SingleFileImporter();
         if (GRAPH.QUERY.equals(importType))
             return new CoreQueryImporter();
+        if (GRAPH.BNF.equals(importType))
+            return new BNFImporter();
         else if (GRAPH.DISCOVERY.equals(importType))
             return new CoreImporter();
         else if (GRAPH.BARTS_CERNER.equals(importType))

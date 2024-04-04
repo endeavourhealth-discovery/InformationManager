@@ -95,6 +95,7 @@ public class ImportApp {
                     .validateByType(GRAPH.ODS, cfg.getFolder())
                   .validateByType(GRAPH.NHS_TFC, cfg.getFolder())
                  .validateByType(GRAPH.CEG_QUERY, cfg.getFolder())
+                      .validateByType(GRAPH.BNF, cfg.getFolder())
                   .validateByType(GRAPH.IM1, cfg.getFolder())
 //                    .validateByType(GRAPH.CONFIG, cfg.getFolder())
                       .validateByType(GRAPH.DELTAS,cfg.getFolder());
@@ -112,6 +113,7 @@ public class ImportApp {
                 importer.importByType(GRAPH.BARTS_CERNER, cfg);
                 importer.importByType(GRAPH.ODS, cfg);
                 importer.importByType(GRAPH.NHS_TFC,cfg);
+                importer.importByType(GRAPH.BNF,cfg);
                 importer.importByType(GRAPH.CEG_QUERY,cfg);
 //                importer.importByType(GRAPH.CONFIG,cfg);
                 importer.importByType(GRAPH.IM1, cfg);
@@ -124,6 +126,10 @@ public class ImportApp {
             case "imv1":
                 importer = new Importer().validateByType(GRAPH.IM1, cfg.getFolder());
                 importer.importByType(GRAPH.IM1, cfg);
+                break;
+            case "bnf":
+                importer = new Importer().validateByType(GRAPH.BNF, cfg.getFolder());
+                importer.importByType(GRAPH.BNF, cfg);
                 break;
             case "prsb":
                 importer = new Importer().validateByType(GRAPH.PRSB, cfg.getFolder());
