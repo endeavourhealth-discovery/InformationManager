@@ -196,6 +196,7 @@ public class BNFImporter implements TTImport {
 		TTEntity entity= new TTEntity()
 			.setIri(IM.NAMESPACE+"BNF_"+ code)
 			.addType(iri(type))
+			.setScheme(iri(IM.NAMESPACE))
 			.setName(name);
 		if (parent!=null){
 			entity.addObject(iri(IM.IS_CONTAINED_IN),iri(parent));
