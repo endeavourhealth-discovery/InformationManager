@@ -3,10 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
+import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -57,30 +54,46 @@ public class BNFImporter implements TTImport {
 
 
 	private void flattenSets() {
-		List<TTEntity> toRemove= new ArrayList<>();
-		for (TTEntity set:document.getEntities()) {
-			if (set.isType(iri(IM.CONCEPT_SET))) {
-				String name = set.getName();
-				if (set.get(iri(IM.IS_SUBSET_OF)) != null) {
-					TTIriRef parent = set.get(iri(IM.IS_SUBSET_OF)).get(0).asIriRef();
-					TTEntity parentEntity = manager.getEntity(parent.getIri());
-					String parentName= parentEntity.getName();
-					if (parentName.substring(parentName.indexOf(" ")).equals(name.substring(name.indexOf(" ")))) {
-						if (children.get(parentEntity.getIri()).size() == 1) {
-							if (set.getIri().endsWith("0")) {
-								parentEntity.set(iri(IM.HAS_MEMBER), set.get(iri(IM.HAS_MEMBER)));
-								toRemove.add(set);
-							}
-						}
-					}
-
+		List<TTEntity> toRemove = new ArrayList<>();
+		for (TTEntity set : document.getEntities()) {
+			if (!toRemove.contains(set)) {
+				if (set.isType(iri(IM.CONCEPT_SET))) {
+					flattenParent(set,toRemove);
 				}
 			}
 		}
-		for (TTEntity remove:toRemove){
+		for (TTEntity remove : toRemove) {
 			document.getEntities().remove(remove);
 		}
 	}
+
+	private void flattenParent(TTEntity set,List<TTEntity> toRemove) {
+		TTEntity parent = getParent(set);
+		if (!set.getIri().equals(parent.getIri())) {
+			toRemove.add(set);
+			if (set.get(iri(IM.HAS_MEMBER)) != null) {
+				parent.set(iri(IM.HAS_MEMBER), set.get(iri(IM.HAS_MEMBER)));
+				parent.setType(new TTArray().add(iri(IM.CONCEPT_SET)));
+			}
+		}
+	}
+	private TTEntity getParent(TTEntity set){
+		if (!set.getIri().endsWith("0"))
+			return set;
+		TTIriRef parent;
+		if (set.get(iri(IM.IS_CONTAINED_IN)) != null) {
+			parent = set.get(iri(IM.IS_CONTAINED_IN)).get(0).asIriRef();
+		}
+		else
+			parent = set.get(iri(IM.IS_SUBSET_OF)).get(0).asIriRef();
+		TTEntity parentEntity = manager.getEntity(parent.getIri());
+		if (children.get(parentEntity.getIri()).size() == 1) {
+				return getParent(parentEntity);
+		}
+		return set;
+	}
+
+
 
 	private void topFolder() {
 		TTEntity entity = new TTEntity()
@@ -210,6 +223,7 @@ public class BNFImporter implements TTImport {
 					order= Integer.parseInt(code);
 				entity.set(iri(SHACL.ORDER), TTLiteral.literal(order));
 			}
+			children.computeIfAbsent(parent, p -> new HashSet<>()).add(entity.getIri());
 		}
 		if (superset!=null){
 			entity.addObject(iri(IM.IS_SUBSET_OF),iri(superset));
