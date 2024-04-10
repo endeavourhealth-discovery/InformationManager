@@ -54,7 +54,7 @@ public class CEGEthnicityImport implements TTImport {
 	@Override
 	public void importData(TTImportConfig config) throws Exception {
 
-		document = manager.createDocument(GRAPH.CEG_QUERY);
+		document = manager.createDocument(GRAPH.CEG16);
 		nhsDocument= nhsManager.createDocument(GRAPH.NHSDD_ETHNIC_2001);
 		document.addEntity(manager.createGraph(GRAPH.NHSDD_ETHNIC_2001,
 				"NHS Ethnicity scheme and graph"
@@ -186,11 +186,11 @@ public class CEGEthnicityImport implements TTImport {
         TTEntity cegSubset= cegCatMap.get(cat16);
         if (cegSubset==null){
             cegSubset= new TTEntity()
-                .setIri(IM.NAMESPACE+"CSET_EthnicCategoryCEG16_"+cat16)
+                .setIri(GRAPH.CEG16+"CSET_EthnicCategoryCEG16_"+cat16)
                 .addType(iri(IM.CONCEPT_SET))
                 .setName("Value set - "+ catTerm)
                 .setCode(cat16)
-                .setScheme(iri(GRAPH.CEG_QUERY))
+                .setScheme(iri(GRAPH.CEG16))
                 .setDescription("QMUL CEG 16+ Ethnic category "+cat16)
 				.set(iri(IM.IS_SUBSET_OF),TTIriRef.iri(cegSet.getIri()))
                 .set(iri(IM.DEFINITION),TTLiteral.literal(new Query().addMatch(new Match().setBool(Bool.or))));
@@ -227,7 +227,7 @@ public class CEGEthnicityImport implements TTImport {
 
     private void setConceptSetGroups() {
 		cegSet= new TTEntity()
-			.setIri(GRAPH.CEG_QUERY+"CSET_EthnicCategoryCEG16")
+			.setIri(GRAPH.CEG16+"CSET_EthnicCategoryCEG16")
 			.addType(iri(IM.CONCEPT_SET))
 			.setName("CEG 16+1 Ethnic category (set group)")
 			.setDescription("QMUL-CEG categorisations of ethnic groups");
