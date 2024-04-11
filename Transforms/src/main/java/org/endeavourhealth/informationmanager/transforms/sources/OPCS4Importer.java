@@ -34,14 +34,14 @@ public class OPCS4Importer implements TTImport {
     private static final String[] chapters = {".*\\\\OPCS4\\\\OPCSChapters.txt"};
     private static final String[] maps = {".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
 
-    private TTDocument document;
-    private TTDocument mapDocument;
-    private TTIriRef opcscodes= TTIriRef.iri(GRAPH.ICD10+"OPCS49Classification");
-
-    private Set<String> snomedCodes;
+    private final TTIriRef opcscodes= TTIriRef.iri(GRAPH.OPCS4+"OPCS49Classification");
     private final Map<String,TTEntity> codeToEntity= new HashMap<>();
     private final Map<String,TTEntity> altCodeToEntity= new HashMap<>();
-    private ImportMaps importMaps = new ImportMaps();
+    private final ImportMaps importMaps = new ImportMaps();
+
+    private TTDocument document;
+    private TTDocument mapDocument;
+    private Set<String> snomedCodes;
 
     public void importData(TTImportConfig config) throws Exception {
         LOG.info("Importing OPCS4.....");
@@ -127,7 +127,6 @@ public class OPCS4Importer implements TTImport {
                 }
                 String[] fields = line.split("\t");
                 String code=fields[0];
-                String altCode= fields[1];
                 TTEntity c = new TTEntity()
                         .setCode(fields[0])
                   .setScheme(iri(GRAPH.OPCS4))
