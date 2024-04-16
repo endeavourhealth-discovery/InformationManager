@@ -30,7 +30,6 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
  */
 public class TPPImporter implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(TPPImporter.class);
-    public static final String TPP = "http://endhealth.info/tpp#";
 
     private static final String[] concepts = {".*\\\\TPP\\\\Concept.v3"};
     private static final String[] dcf = {".*\\\\TPP\\\\Dcf.v3"};
@@ -94,7 +93,7 @@ public class TPPImporter implements TTImport {
             TTEntity tppEntity= entry.getValue();
             if (tppEntity.get(iri(IM.MATCHED_TO))==null){
                 if (tppEntity.get(iri(IM.IS_CHILD_OF))==null)
-                    tppEntity.addObject(iri(IM.IS_CHILD_OF),TTIriRef.iri(TPP+"TPPOrphanCodes"));
+                    tppEntity.addObject(iri(IM.IS_CHILD_OF),TTIriRef.iri(GRAPH.TPP+"TPPOrphanCodes"));
             }
         }
     }
@@ -380,7 +379,7 @@ public class TPPImporter implements TTImport {
     }
 
     private void addTPPTopLevel(){
-        TTEntity c= new TTEntity().setIri(TPP+"TPPCodes")
+        TTEntity c= new TTEntity().setIri(GRAPH.TPP+"TPPCodes")
           .addType(iri(IM.CONCEPT))
           .setName("TPP (CTV3) and TPP local codes")
           .setScheme(iri(GRAPH.TPP))
@@ -388,8 +387,8 @@ public class TPPImporter implements TTImport {
         c.set(iri(IM.IS_CONTAINED_IN),new TTArray());
         c.get(iri(IM.IS_CONTAINED_IN)).add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
         document.addEntity(c);
-         c = new TTEntity().setIri(TPP + "TPPOrphanCodes")
-          .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(TPP + "TPPCodes")))
+         c = new TTEntity().setIri(GRAPH.TPP + "TPPOrphanCodes")
+          .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(GRAPH.TPP + "TPPCodes")))
           .setName("TPP unmatched orphan codes")
           .setDescription("TPP orphan codes whose parent is unknown and are not matched to UK Snomed-CT")
           .setScheme(iri(GRAPH.TPP));
