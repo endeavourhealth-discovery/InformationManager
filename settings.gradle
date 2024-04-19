@@ -8,10 +8,10 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
         maven {
-            url = uri('https://maven.discoverydataservice.net/artifactory/libs-snapshot')
+            url = uri('https://artifactory.endhealth.co.uk/repository/maven-releases')
         }
         maven {
-            url = uri('https://maven.discoverydataservice.net/artifactory/libs-release')
+            url = uri('https://artifactory.endhealth.co.uk/repository/maven-snapshots')
         }
     }
 }

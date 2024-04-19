@@ -11,7 +11,7 @@ repositories {
 
 apply from: "dependencies.gradle"
 
-def sonarLogin= System.getenv('SONAR_LOGIN')
+def sonarLogin= SONAR_LOGIN
 
 sonar {
     properties {
@@ -23,7 +23,10 @@ sonar {
     }
 }
 
-build.finalizedBy 'sonar'
+println "Build environment = [$ENV]"
+if (ENV == 'prod') {
+    build.finalizedBy 'sonar'
+}
 
 allprojects {
     apply plugin: 'java-library'
@@ -53,10 +56,10 @@ allprojects {
         mavenLocal()
         mavenCentral()
         maven {
-            url = uri('https://maven.discoverydataservice.net/artifactory/libs-release')
+            url = uri('https://artifactory.endhealth.co.uk/repository/maven-releases')
         }
         maven {
-            url = uri('https://maven.discoverydataservice.net/artifactory/libs-snapshot')
+            url = uri('https://artifactory.endhealth.co.uk/repository/maven-snapshots')
         }
     }
 

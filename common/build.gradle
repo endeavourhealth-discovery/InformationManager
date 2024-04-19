@@ -23,7 +23,11 @@ dependencies {
 publishing {
     repositories {
         maven {
-            url = uri('https://maven.discoverydataservice.net/artifactory/libs-snapshot')
+            url = uri('https://artifactory.endhealth.co.uk/repository/maven-snapshots')
+            credentials {
+                username = MAVEN_USERNAME
+                password = MAVEN_PASSWORD
+            }
         }
     }
 }
