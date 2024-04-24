@@ -116,6 +116,9 @@ public class SnomedImporter implements TTImport {
     public static final String[] statedAxioms = {
         ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_InternationalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_sRefset_OWLExpressionSnapshot_INT_.*\\.txt"
     };
+  public static final String[] usage_clinical = {
+    ".*\\\\DiscoveryNoneCore\\\\SNOMED_code_usage_[0-9\\\\-]*.txt"
+  };
 
     public static final String[] importList = {"991181000000109"};
 
@@ -168,6 +171,7 @@ public class SnomedImporter implements TTImport {
             document = dmanager.createDocument(SNOMED.NAMESPACE);
             setRefSetRoot();
             importRefsetFiles(config.getFolder());
+            importUsage(config.getFolder());
             importQof(config.getFolder());
 
             conceptMap.clear();
@@ -503,7 +507,41 @@ public class SnomedImporter implements TTImport {
         }
     }
 
-    private void importRefsetFiles(String path) throws IOException {
+  private void importUsage(String path) throws IOException {
+    int i = 0;
+    refsetMap= new HashMap<>();
+    for (String usageFile : usage_clinical) {
+      List<Path> paths = ImportUtils.findFilesForId(path, usageFile);
+      Path file = paths.get(0);
+      LOG.info("Processing usages in {}", file.getFileName().toString());
+      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        reader.readLine();     // NOSONAR - Skip header
+        String line = reader.readLine();
+        while (line != null && !line.isEmpty()) {
+          processUsageLine(line);
+          i++;
+          line = reader.readLine();
+        }
+
+      }
+    }
+    LOG.info("Imported {} usages", i);
+  }
+
+  private void processUsageLine(String line) {
+    String[] fields = line.split("\t");
+      TTEntity c = conceptMap.get(fields[0]);
+      try {
+        Integer usage= Integer.parseInt(fields[1]);
+        c.set(iri(IM.USAGE_TOTAL),TTLiteral.literal(usage));
+      } catch (NumberFormatException ignored) {
+      }
+
+  }
+
+
+
+  private void importRefsetFiles(String path) throws IOException {
         int i = 0;
       refsetMap= new HashMap<>();
         for (String refsetFile : refsets) {
@@ -703,7 +741,7 @@ public class SnomedImporter implements TTImport {
             op.addObject(iri(RDFS.RANGE), iri(match.getInstanceOf().getIri()));
            }
           else {
-            if (match.getBool().equals(Bool.or)) {
+            if (match.getBoolMatch().equals(Bool.or)) {
               for (Match or : match.getMatch()) {
                 op.addObject(iri(RDFS.RANGE), iri(or.getInstanceOf().getIri()));
               }
@@ -810,7 +848,7 @@ public class SnomedImporter implements TTImport {
     }
 
     public void validateFiles(String inFolder) {
-        ImportUtils.validateFiles(inFolder, concepts, descriptions,
+        ImportUtils.validateFiles(inFolder, usage_clinical,concepts, descriptions,
             relationships, refsets, attributeRanges, attributeDomains, substitutions, qofClusters, dmd_vmp,dmd_amp,dmd_form,dmd_route,dmd_vpi);
     }
 

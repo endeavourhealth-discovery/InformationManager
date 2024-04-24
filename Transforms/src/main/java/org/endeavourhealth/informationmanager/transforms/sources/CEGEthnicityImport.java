@@ -193,7 +193,7 @@ public class CEGEthnicityImport implements TTImport {
                 .setScheme(iri(GRAPH.CEG16))
                 .setDescription("QMUL CEG 16+ Ethnic category "+cat16)
 				.set(iri(IM.IS_SUBSET_OF),TTIriRef.iri(cegSet.getIri()))
-                .set(iri(IM.DEFINITION),TTLiteral.literal(new Query().addMatch(new Match().setBool(Bool.or))));
+                .set(iri(IM.DEFINITION),TTLiteral.literal(new Query().addMatch(new Match().setBoolMatch(Bool.or))));
             document.addEntity(cegSubset);
             cegCatMap.put(cat16,cegSubset);
 
@@ -213,7 +213,7 @@ public class CEGEthnicityImport implements TTImport {
 				.setName("Value set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
                 .setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
 				.set(iri(IM.IS_SUBSET_OF),TTIriRef.iri(nhsSet.getIri()))
-				.set(iri(IM.DEFINITION),TTLiteral.literal(new Query().addMatch(new Match().setBool(Bool.or))));
+				.set(iri(IM.DEFINITION),TTLiteral.literal(new Query().addMatch(new Match().setBoolMatch(Bool.or))));
                 nhsDocument.addEntity(nhsSubset);
                 nhsCatmap.put(snoNhs, nhsSubset);
             }

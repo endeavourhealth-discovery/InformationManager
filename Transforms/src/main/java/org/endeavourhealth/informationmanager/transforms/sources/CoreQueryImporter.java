@@ -94,7 +94,7 @@ public class CoreQueryImporter implements TTImport {
                         .setDescription("get node, class or datatype values (ranges)  of property objects that have 4this as their path")
                         .match(m -> m
                           .addWhere(new Where()
-                                .setBool(Bool.or)
+                                .setBoolWhere(Bool.or)
           .where(p -> p
                   .setIri(SHACL.NODE)
                   .match(n -> n
@@ -186,7 +186,7 @@ public class CoreQueryImporter implements TTImport {
                           .is(in -> in
                                   .setParameter("myProperty")))
                   .where(p2 -> p2
-                          .setBool(Bool.or)
+                          .setBoolWhere(Bool.or)
                           .where(p3 -> p3
                                   .setIri(SHACL.CLASS)
                                   .match(m3 -> m3
@@ -273,7 +273,7 @@ public class CoreQueryImporter implements TTImport {
                   .setDirection(Order.descending))
           .setLimit(1))
           .then(t -> t.setVariable("highBPReading")
-            .setBool(Bool.or)
+            .setBoolMatch(Bool.or)
             .match(m4 -> m4
                 .where(w -> w
                   .setIri(IM.NAMESPACE + "concept")
@@ -288,7 +288,7 @@ public class CoreQueryImporter implements TTImport {
                           .setValue("140"))))
             .match(m4 -> m4
               .addWhere (new Where()
-                .setBool(Bool.and)
+                .setBoolWhere(Bool.and)
                 .where(w -> w
                           .setIri(IM.NAMESPACE + "concept")
                           .addIs(new Node()
@@ -456,7 +456,7 @@ public class CoreQueryImporter implements TTImport {
                         .addIs(new Node().setIri(IM.NAMESPACE + "Q_RegisteredGMS")
                                 .setName("Registered for GMS services on reference date")))
                 .match(m -> m
-                        .setBool(Bool.or)
+                        .setBoolMatch(Bool.or)
                         .match(or -> or
                           .addWhere(new Where()
                             .setIri(IM.NAMESPACE + "age")
@@ -507,7 +507,7 @@ public class CoreQueryImporter implements TTImport {
                           .setDirection(Order.descending))
                   .setLimit(1))
           .then(t -> t.setVariable("highBPReading")
-                  .setBool(Bool.or)
+                  .setBoolMatch(Bool.or)
                   .match(m4 -> m4
                           .where(w -> w
                             .setIri(IM.NAMESPACE + "concept")
@@ -521,6 +521,7 @@ public class CoreQueryImporter implements TTImport {
                                   .setOperator(Operator.gt)
                                   .setValue("140")))
                   .match(m4 -> m4
+                    .setBoolWhere(Bool.and)
                           .where(w -> w
                             .setIri(IM.NAMESPACE + "concept")
                             .addIs(new Node()
@@ -533,6 +534,7 @@ public class CoreQueryImporter implements TTImport {
                                   .setOperator(Operator.gt)
                                   .setValue("130")))))
                 .match(m -> m
+                  .setBoolWhere(Bool.and)
                   .setExclude(true)
                   .path(w -> w.setIri(IM.NAMESPACE + "patient"))
                   .setTypeOf(IM.NAMESPACE + "Observation")
@@ -613,6 +615,7 @@ public class CoreQueryImporter implements TTImport {
 
     private Match getGMSMatch() {
         return new Match()
+          .setBoolWhere(Bool.and)
           .setName("Registered GMS services on the reference date")
           .path(p -> p
             .setIri(IM.NAMESPACE + "patient"))
@@ -625,7 +628,7 @@ public class CoreQueryImporter implements TTImport {
                 .setOperator(Operator.lte)
                 .setRelativeTo(new PropertyRef().setParameter("$referenceDate")))
             .where(pv -> pv
-                .setBool(Bool.or)
+                .setBoolWhere(Bool.or)
                 .where(pv1 -> pv1
                   .setIri(IM.NAMESPACE + "endDate")
                   .setIsNull(true))
@@ -642,7 +645,7 @@ public class CoreQueryImporter implements TTImport {
                         .setActiveOnly(true)
                         .setName("Search for all main types")
                         .match(f -> f
-                                .setBool(Bool.or)
+                                .setBoolMatch(Bool.or)
                                 .match(w -> w
           .setTypeOf(IM.CONCEPT))
                                 .match(w -> w
@@ -698,7 +701,7 @@ public class CoreQueryImporter implements TTImport {
                         .setIs(List.of(Node.iri(IM.IS_CONTAINED_IN)
                           , Node.iri(RDFS.SUBCLASS_OF), Node.iri(IM.IS_SUBSET_OF)))))))
                 .match(m -> m
-                        .setBool(Bool.or)
+                        .setBoolMatch(Bool.or)
                         .match(m1 -> m1
                                 .setNodeRef("concept")
                                 .setInstanceOf(new Node().setNodeRef("thisType")))
@@ -710,7 +713,7 @@ public class CoreQueryImporter implements TTImport {
                             .is(in -> in.setNodeRef("concept"))
                             .is(in -> in.setIri(IM.FOLDER))))
                         .match(m1 -> m1
-                          .setBool(Bool.and)
+                          .setBoolMatch(Bool.and)
                           .match(m2 -> m2
                             .setInstanceOf(new Node()
                             .setParameter("$this"))
@@ -868,7 +871,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setVariable("folder")
                                 .setTypeOf(IM.FOLDER)
                             .addWhere(new Where()
-                                .setBool(Bool.or)
+                                .setBoolWhere(Bool.or)
                                 .where(p -> p
                                 .setIri(IM.CONTENT_TYPE)
                                 .setIsNull(true))
