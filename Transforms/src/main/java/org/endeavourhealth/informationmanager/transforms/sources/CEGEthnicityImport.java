@@ -192,15 +192,12 @@ public class CEGEthnicityImport implements TTImport {
                 .setCode(cat16)
                 .setScheme(iri(GRAPH.CEG16))
                 .setDescription("QMUL CEG 16+ Ethnic category "+cat16)
-				.set(iri(IM.IS_SUBSET_OF),TTIriRef.iri(cegSet.getIri()))
-                .set(iri(IM.DEFINITION),TTLiteral.literal(new Query().addMatch(new Match().setBoolMatch(Bool.or))));
+				.set(iri(IM.IS_SUBSET_OF),TTIriRef.iri(cegSet.getIri()));
             document.addEntity(cegSubset);
             cegCatMap.put(cat16,cegSubset);
 
         }
-				Query cegQuery= cegSubset.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-				cegQuery.getMatch().get(0).match(f->f.setInstanceOf(new Node().setIri(SNOMED.NAMESPACE+snomed)));
-				cegSubset.set(iri(IM.DEFINITION),TTLiteral.literal(setService.setQueryLabels(cegQuery)));
+				cegSubset.addObject(iri(IM.HAS_MEMBER),iri(SNOMED.NAMESPACE+snomed));
         if (cegSubset.get(iri(IM.HAS_TERM_CODE))==null)
             TTManager.addTermCode(cegSubset,catTerm,null);
         if (!UNCLASSIFIED.equals(snoNhs)){
@@ -212,16 +209,13 @@ public class CEGEthnicityImport implements TTImport {
                 .addType(iri(IM.CONCEPT_SET))
 				.setName("Value set - "+ nhsTerm+" (2001 census ethnic category "+nhs16+")")
                 .setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
-				.set(iri(IM.IS_SUBSET_OF),TTIriRef.iri(nhsSet.getIri()))
-				.set(iri(IM.DEFINITION),TTLiteral.literal(new Query().addMatch(new Match().setBoolMatch(Bool.or))));
+				.set(iri(IM.IS_SUBSET_OF),TTIriRef.iri(nhsSet.getIri()));
                 nhsDocument.addEntity(nhsSubset);
                 nhsCatmap.put(snoNhs, nhsSubset);
             }
             if (nhsSubset.get(iri(IM.HAS_TERM_CODE))==null)
                 TTManager.addTermCode(nhsSubset,nhsTerm,null);
-			Query nhsQuery= nhsSubset.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-			nhsQuery.getMatch().get(0).match(f->f.setInstanceOf(new Node().setIri(SNOMED.NAMESPACE+snomed)));
-			nhsSubset.set(iri(IM.DEFINITION),TTLiteral.literal(setService.setQueryLabels(nhsQuery)));
+						nhsSubset.addObject(iri(IM.HAS_MEMBER),iri(SNOMED.NAMESPACE+ snomed));
         }
     }
 

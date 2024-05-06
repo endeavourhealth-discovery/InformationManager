@@ -5,6 +5,7 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
 import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
+import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -141,6 +142,7 @@ public class Preload {
 
         LOG.info("expanding value sets");
         new SetExpander().expandAllSets();
+        new SetBinder().bindSets();
         LOG.info("Finished - " + (new Date()));
 
 

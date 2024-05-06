@@ -186,8 +186,14 @@ public class CEGImporter implements TTImport {
 						for (ConceptSet set:qDocument.getConceptSet()){
 							TTEntity setEntity= new TTEntity()
 								.setIri(set.getIri())
-								.addType(TTIriRef.iri(IM.CONCEPT_SET))
-								.set(TTIriRef.iri(IM.DEFINITION),TTLiteral.literal(set.getDefinition()));
+								.addType(TTIriRef.iri(IM.CONCEPT_SET));
+							if (set.getDefinition()!=null)
+								setEntity.set(TTIriRef.iri(IM.DEFINITION),TTLiteral.literal(set.getDefinition()));
+							if (set.getHasMember()!=null){
+								for (TTIriRef iri:set.getHasMember()){
+									setEntity.addObject(iri(IM.HAS_MEMBER),iri);
+								}
+							}
 							if (set.getName()!=null){
 								setEntity.setName(set.getName());
 							}
