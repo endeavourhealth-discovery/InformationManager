@@ -4,7 +4,7 @@ ext {
             antlr               : '4.13.1',
             collections4        : '4.4',
             commonsIO           : '2.15.0',
-            commonsCompress     : '1.25.0',
+            commonsCompress     : '1.26.1',
             csv                 : '1.10.0',
             factPlusPlus        : '1.6.5',
             gradleApi           : '8.4',
@@ -26,6 +26,7 @@ ext {
             slf4j               : '2.0.9',
             snomed              : '1.2.0',
             wsrs                : '3.1.0',
+            zip4j               : '2.11.5'
     ]
     libs = [
             imapi               : "org.endeavourhealth.imapi:api:1.0-SNAPSHOT",
@@ -70,5 +71,6 @@ ext {
             slf4j               : "org.slf4j:slf4j-api:$versions.slf4j",
             snomed              : "org.snomed.languages:snomed-ecl-parser:$versions.snomed",
             wsrs                : "jakarta.ws.rs:jakarta.ws.rs-api:$versions.wsrs",
+            zip4j               : "net.lingala.zip4j:zip4j:$versions.zip4j"
     ]
 }

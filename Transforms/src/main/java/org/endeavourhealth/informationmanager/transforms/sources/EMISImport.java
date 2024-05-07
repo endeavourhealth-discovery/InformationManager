@@ -10,10 +10,12 @@ import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.common.ZipUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,9 +30,9 @@ public class EMISImport implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(EMISImport.class);
     public static final String EMIS = "http://endhealth.info/emis#";
 
-    private static final String[] emisCodes = {".*\\\\EMIS\\\\emis_codes.txt"};
+    private static final String[] emisCodes = {".*\\\\EMIS\\\\emis_codes.zip"};
     private static final String[] allergies = {".*\\\\EMIS\\\\Allergies.json"};
-    private static final String[] drugIds = {".*\\\\EMIS\\\\EMISDrugs.txt"};
+    private static final String[] drugIds = {".*\\\\EMIS\\\\EMISDrugs.zip"};
     private static final String[] localCodeMaps = {".*\\\\EMIS\\\\LocalCodeMaps.txt"};
     private final Map<String, TTEntity> codeIdToEntity = new HashMap<>();
     private final Map<String,TTEntity> oldCodeToEntity = new HashMap<>();
@@ -162,8 +164,9 @@ public class EMISImport implements TTImport {
 
 
     private void importDrugs(String folder) throws IOException {
-        Path file =  ImportUtils.findFileForId(folder, drugIds[0]);
-        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        Path zip =  ImportUtils.findFileForId(folder, drugIds[0]);
+        File file = ZipUtils.unzipFile(zip.getFileName().toString(), zip.getParent().toString());
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             reader.readLine();
             String line = reader.readLine();
             while (line != null && !line.isEmpty()) {
@@ -301,9 +304,10 @@ public class EMISImport implements TTImport {
     }
 
     private void importEMISCodes(String folder) throws IOException {
-        Path file =  ImportUtils.findFileForId(folder, emisCodes[0]);
+        Path zip =  ImportUtils.findFileForId(folder, emisCodes[0]);
+        File file = ZipUtils.unzipFile(zip.getFileName().toString(), zip.getParent().toString());
         //place holder for unlinked emis codes betlow the emis root code
-        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             reader.readLine();
             int count = 0;
             String line = reader.readLine();

@@ -2,6 +2,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 
 import org.endeavourhealth.imapi.model.tripletree.TTArray;
+import org.endeavourhealth.informationmanager.common.ZipUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,11 +50,6 @@ public class ImportUtils {
 
         if (exit.get())
             System.exit(-1);
-    }
-
-
-    private enum FilerType {
-        JDBC, RDF4J
     }
 
     /**

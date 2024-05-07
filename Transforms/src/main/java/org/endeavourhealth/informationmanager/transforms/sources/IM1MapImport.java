@@ -11,13 +11,11 @@ import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.informationmanager.common.ZipUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DataFormatException;
@@ -26,7 +24,7 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class IM1MapImport implements TTImport {
     private static final Logger LOG = LoggerFactory.getLogger(IM1MapImport.class);
-    private static final String[] im1Codes = {".*\\\\IMv1\\\\concepts.txt"};
+    private static final String[] im1Codes = {".*\\\\IMv1\\\\concepts.zip"};
     private static final String[] oldIris = {".*\\\\IMv1\\\\oldiris.txt"};
     private static final String[] context = {".*\\\\IMv1\\\\ContextMaps.txt"};
     private static final String[] fhirMaps = {".*\\\\FHIR\\\\FHIR_Core_Maps.txt"};
@@ -137,10 +135,12 @@ public class IM1MapImport implements TTImport {
 
     private void importv1Codes(String inFolder) throws Exception {
         LOG.info("Importing IMv1");
-        Path file = ImportUtils.findFileForId(inFolder, im1Codes[0]);
+        Path zip = ImportUtils.findFileForId(inFolder, im1Codes[0]);
+        File file = ZipUtils.unzipFile(zip.getFileName().toString(), zip.getParent().toString());
+
         int count = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-            writer = new FileWriter(file.toFile().getParentFile().toString() + "/UnmappedConcepts.txt");
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            writer = new FileWriter(file.getParentFile().toString() + "/UnmappedConcepts.txt");
             writer.write("oldIri" + "\t" + "term" + "\t" + "im1Scheme" + "\t" + "code" + "\t" + "description" + "\t" + "used" + "\n");
             reader.readLine();
             String line = reader.readLine();
