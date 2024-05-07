@@ -65,7 +65,7 @@ public class CoreQueryImporter implements TTImport {
     private void agedOver18AsMatch() throws JsonProcessingException {
         TTEntity qry = new TTEntity().addType(iri(IM.MATCH_CLAUSE));
         qry.set(iri(IM.RETURN_TYPE), TTIriRef.iri(IM.NAMESPACE + "Patient"));
-        qry.set(iri(IM.WEIGHTING), TTLiteral.literal(10000));
+        qry.set(iri(IM.USAGE_TOTAL), TTLiteral.literal(10000));
         qry.set(iri(SHACL.ORDER), 3);
         qry.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
         qry.setIri(IM.NAMESPACE + "M_AgedOverEighteen")
@@ -573,7 +573,7 @@ public class CoreQueryImporter implements TTImport {
 
         TTEntity qry = new TTEntity().addType(iri(IM.COHORT_QUERY));
         qry.set(iri(IM.RETURN_TYPE), TTIriRef.iri(IM.NAMESPACE + "Patient"));
-        qry.set(iri(IM.WEIGHTING), TTLiteral.literal(10000));
+        qry.set(iri(IM.USAGE_TOTAL), TTLiteral.literal(10000));
         qry.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"));
         qry
                 .setIri(IM.NAMESPACE + "Q_RegisteredGMS")
@@ -588,7 +588,7 @@ public class CoreQueryImporter implements TTImport {
 
         TTEntity qry = new TTEntity().addType(iri(IM.MATCH_CLAUSE));
         qry.set(iri(IM.RETURN_TYPE), TTIriRef.iri(IM.NAMESPACE + "Patient"));
-        qry.set(iri(IM.WEIGHTING), TTLiteral.literal(10000));
+        qry.set(iri(IM.USAGE_TOTAL), TTLiteral.literal(10000));
         qry.set(iri(SHACL.ORDER), 1);
         qry.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
         qry
@@ -666,7 +666,7 @@ public class CoreQueryImporter implements TTImport {
           .return_(r -> r.property(rp -> rp.setIri(RDFS.LABEL))))
                                 .property(p -> p.setIri(RDF.TYPE)
           .return_(r -> r.property(rp -> rp.setIri(RDFS.LABEL))))
-                                .property(p -> p.setIri(IM.WEIGHTING))
+                                .property(p -> p.setIri(IM.USAGE_TOTAL))
                         )));
     }
 

@@ -94,7 +94,6 @@ public class IM1MapImport implements TTImport {
 
             importv1Codes(inFolder);
             importContext(inFolder);
-            calculateWeightings();
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
             }
@@ -943,34 +942,4 @@ public class IM1MapImport implements TTImport {
         }
     }
 
-    private void calculateWeightings() {
-        Map<String, TTEntity> weightedEntities = new HashMap<>();
-        for (Map.Entry<String, Integer> usage : used.entrySet()) {
-            String oldIri = usage.getKey();
-            Integer count = usage.getValue();
-            if (count > 0) {
-                TTEntity im1 = oldIriEntity.get(oldIri);
-                if (im1 != null) {
-                    String im1Iri = im1.getIri();
-                    if (entities.get(im1Iri) != null) {
-                        for (String coreIri : entities.get(im1Iri)) {
-                            TTEntity coreEntity = weightedEntities.get(coreIri);
-                            if (coreEntity == null) {
-                                coreEntity = new TTEntity();
-                                coreEntity.setIri(coreIri);
-                                coreEntity.addType(iri(IM.CONCEPT));
-                                statsDocument.addEntity(coreEntity);
-                                weightedEntities.put(coreIri, coreEntity);
-                            }
-                            if (coreEntity.get(iri(IM.WEIGHTING)) != null)
-                                coreEntity.set(iri(IM.WEIGHTING), TTLiteral.literal(coreEntity.get(iri(IM.WEIGHTING)).asLiteral().intValue() + count));
-                            else
-                                coreEntity.set(iri(IM.WEIGHTING), TTLiteral.literal(count));
-                        }
-                    }
-                }
-            }
-        }
-
-    }
 }

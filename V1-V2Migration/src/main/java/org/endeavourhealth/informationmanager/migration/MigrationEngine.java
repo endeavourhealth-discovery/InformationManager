@@ -115,7 +115,7 @@ public class MigrationEngine {
                     .setCode(rs.getString("code"))
                     .setScheme(rs.getInt("scheme"))
                     .setStatus(rs.getByte("draft"))
-                    .setWeighting(rs.getInt("use_count"))
+                    .setUsageTotal(rs.getInt("use_count"))
                     .setUpdated(rs.getTimestamp("updated"));
 
                 entities.add(entity);
@@ -186,7 +186,7 @@ public class MigrationEngine {
             v2InsEntity.setString(8, entity.getCode());
             v2InsEntity.setInt(9, entity.getScheme());
             v2InsEntity.setInt(10, entity.getStatus());
-            v2InsEntity.setInt(11, entity.getWeighting());
+            v2InsEntity.setInt(11, entity.getUsageTotal());
             v2InsEntity.setTimestamp(12, entity.getUpdated());
             v2InsEntity.executeUpdate();
 

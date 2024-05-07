@@ -17,7 +17,7 @@ public class DBEntity {
     private String code;
     private Integer scheme;
     private byte status;
-    private int weighting;
+    private int usageTotal;
     private Timestamp updated;
     private List<DBAxiom> axioms = new ArrayList<>();
 
@@ -111,12 +111,12 @@ public class DBEntity {
         return this;
     }
 
-    public int getWeighting() {
-        return weighting;
+    public int getUsageTotal() {
+        return usageTotal;
     }
 
-    public DBEntity setWeighting(int weighting) {
-        this.weighting = weighting;
+    public DBEntity setUsageTotal(int usageTotal) {
+        this.usageTotal = usageTotal;
         return this;
     }
 
