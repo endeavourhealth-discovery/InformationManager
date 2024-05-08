@@ -5,6 +5,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 INSERT DATA {
     GRAPH cfg: {
 		cfg:monitoring rdfs:label 'Monitoring config'.
-        cfg:monitoring im:hasConfig '{\n    "graphite": {\n        "address": "graphite.endeavourhealth.net",\n        "port": 2003\n    }\n}' .
+#        cfg:monitoring im:hasConfig '{\n    "graphite": {\n        "address": "3.8.137.218",\n        "port": 2003\n    }\n}' .
+        cfg:monitoring im:hasConfig '{\n    "console": true\n}' .
     }
 }
