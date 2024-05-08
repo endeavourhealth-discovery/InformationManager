@@ -803,7 +803,7 @@ public class SnomedImporter implements TTImport {
         }
         TTNode newGroup = new TTNode();
         TTLiteral groupCount = TTLiteral.literal(groupNumber.toString());
-        groupCount.setType(iri(XSD.INTEGER));
+        groupCount.setType(iri(XS.INTEGER));
         newGroup.set(iri(IM.GROUP_NUMBER), groupCount);
         groups.add(newGroup);
         return newGroup;

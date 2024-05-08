@@ -12,7 +12,7 @@ public class DBNamespace {
     public static DBNamespace SNOMED = new DBNamespace(6, "sn:", "http://snomed.info/sct#");
     public static DBNamespace XML = new DBNamespace(7, "xml:", "http://www.w3.org/XML/1998/namespace#");
     public static DBNamespace OWL = new DBNamespace(8, "owl:", "http://www.w3.org/2002/07/owl#");
-    public static DBNamespace XSD = new DBNamespace(9, "xsd:", "http://www.w3.org/2001/XMLSchema#");
+    public static DBNamespace XS = new DBNamespace(9, "xs:", "http://www.w3.org/2001/XMLSchema#");
     public static DBNamespace READ2 = new DBNamespace(10, "r2:", "http://www.EndeavourHealth.org/InformationModel/Legacy/READ2#");
     public static DBNamespace CTV3 = new DBNamespace(11, "ctv3:", "http://www.EndeavourHealth.org/InformationModel/Legacy/CTV3#");
     public static DBNamespace EMIS = new DBNamespace(12, "emis:", "http://www.EndeavourHealth.org/InformationModel/Legacy/EMIS#");
@@ -26,7 +26,7 @@ public class DBNamespace {
     public static DBNamespace FHIRESD = new DBNamespace(20, "fhiresd:", "http://endeavourhealth.org/fhir/StructureDefinition/");
 
     public static List<DBNamespace> namespaces = Arrays.asList(
-        EMPTY, RDFS, PROV, CORE, RDF, SNOMED, XML, OWL, XSD, READ2, CTV3, EMIS, TPP, BARTS, OROLE, ICD10, OPCS4, FHIRVS, FHIRESD
+        EMPTY, RDFS, PROV, CORE, RDF, SNOMED, XML, OWL, XS, READ2, CTV3, EMIS, TPP, BARTS, OROLE, ICD10, OPCS4, FHIRVS, FHIRESD
     );
 
     public int dbid;

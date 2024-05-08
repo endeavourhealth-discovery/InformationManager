@@ -6,7 +6,7 @@ Prefices
 	rdfs : http://www.w3.org/2000/01/rdf-schema#
 	owl : http://www.w3.org/2002/07/owl#
 	onto : http://www.ontotext.com/
-	xsd : http://www.w3.org/2001/XMLSchema#
+	xs : http://www.w3.org/2001/XMLSchema#
         im: http://endhealth.info/im#
 }
 
