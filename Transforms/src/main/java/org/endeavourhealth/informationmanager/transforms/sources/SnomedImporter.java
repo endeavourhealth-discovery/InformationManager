@@ -5,6 +5,7 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.model.customexceptions.EclFormatException;
 import org.endeavourhealth.imapi.model.imq.Bool;
 import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Query;
@@ -703,7 +704,7 @@ public class SnomedImporter implements TTImport {
         LOG.info("Imported {} property domain axioms", i);
     }
 
-    private void importMRCMRangeFiles(String path) throws IOException, DataFormatException {
+    private void importMRCMRangeFiles(String path) throws IOException, DataFormatException,EclFormatException {
         int i = 0;
         //gets attribute range files (usually only 1)
         for (String rangeFile : attributeRanges) {
@@ -726,7 +727,7 @@ public class SnomedImporter implements TTImport {
         LOG.info("Imported {} property range axioms", i);
     }
 
-    private void addSnomedPropertyRange(TTEntity op, String ecl) throws DataFormatException {
+    private void addSnomedPropertyRange(TTEntity op, String ecl) throws DataFormatException, EclFormatException {
         if (ecl.matches("^[a-zA-Z].*")) {
             return;
         }
