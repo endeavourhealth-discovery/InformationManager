@@ -164,6 +164,7 @@ public class SnomedImporter implements TTImport {
             importVmp(config.getFolder());
             importAmp(config.getFolder());
             addSpecials(document);
+            importUsage(config.getFolder());
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
             }
@@ -171,9 +172,7 @@ public class SnomedImporter implements TTImport {
             document = dmanager.createDocument(SNOMED.NAMESPACE);
             setRefSetRoot();
             importRefsetFiles(config.getFolder());
-            importUsage(config.getFolder());
             importQof(config.getFolder());
-
             conceptMap.clear();
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);

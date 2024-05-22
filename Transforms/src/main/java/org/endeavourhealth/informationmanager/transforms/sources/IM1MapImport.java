@@ -28,12 +28,7 @@ public class IM1MapImport implements TTImport {
     private static final String[] oldIris = {".*\\\\IMv1\\\\oldiris.txt"};
     private static final String[] context = {".*\\\\IMv1\\\\ContextMaps.txt"};
     private static final String[] fhirMaps = {".*\\\\FHIR\\\\FHIR_Core_Maps.txt"};
-    private static final String[] usageDbid = {
-        ".*\\\\DiscoveryLive\\\\stats1.txt",
-        ".*\\\\DiscoveryLive\\\\stats2.txt",
-        ".*\\\\DiscoveryLive\\\\stats3.txt",
-        ".*\\\\DiscoveryLive\\\\stats4.txt"
-    };
+
     private static final Map<String, String> organisationMap = Map.of(
         "CM_Org_Barts", "RQX42",
         "CM_Org_Imperial", "8HL46",
@@ -73,7 +68,6 @@ public class IM1MapImport implements TTImport {
         codeToIri = importMaps.getCodeToIri();
 
         importOld(inFolder);
-        importUsage(inFolder);
 
 
         LOG.info("Retrieving all entities and matches...");
@@ -104,7 +98,7 @@ public class IM1MapImport implements TTImport {
 
     @Override
     public void validateFiles(String inFolder) {
-        ImportUtils.validateFiles(inFolder, im1Codes, oldIris, context, usageDbid, fhirMaps);
+        ImportUtils.validateFiles(inFolder, im1Codes, oldIris, context, fhirMaps);
     }
 
     @Override
@@ -650,31 +644,6 @@ public class IM1MapImport implements TTImport {
         oldIriEntity.put(oldIri, im1);
         document.addEntity(im1);
     }
-
-    private void importUsage(String inFolder) throws IOException {
-
-        for (String statsFile : usageDbid) {
-            Path file = ImportUtils.findFilesForId(inFolder, statsFile).get(0);
-            LOG.info("Retrieving counts from... {}", file.toString());
-            try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-                reader.readLine();  // NOSONAR - Skipping header
-                String line = reader.readLine();
-                while (line != null && !line.isEmpty()) {
-                    String[] fields = line.split("\t");
-                    Integer dbid = Integer.parseInt(fields[1]);
-                    String numeric = fields[3];
-                    int count = Integer.parseInt(fields[4]);
-                    usedDbid.putIfAbsent(dbid, 0);
-                    usedDbid.put(dbid, usedDbid.get(dbid) + count);
-                    if (numeric.equals("Y"))
-                        numericConcepts.add(dbid);
-                    line = reader.readLine();
-                }
-            }
-        }
-
-    }
-
 
     private void importContext(String inFolder) throws IOException, DataFormatException {
         Set<String> contexts = new HashSet<>();
