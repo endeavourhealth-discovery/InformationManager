@@ -61,7 +61,11 @@ public class CoreImporter implements TTImport {
             TTDocument document = manager.getDocument();
             LOG.info("Filing {} from {}", document.getGraph().getIri(), coreFile);
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-                filer.fileDocument(document);
+                try {
+                    filer.fileDocument(document);
+                } catch (TTFilerException e) {
+                    throw new Exception(e.getMessage());
+                }
             }
         }
 
