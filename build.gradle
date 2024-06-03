@@ -28,6 +28,10 @@ if (ENV == 'prod') {
     build.finalizedBy 'sonar'
 }
 
+configurations.all {
+    resolutionStrategy.cacheDynamicVersionsFor 30, 'minutes'
+}
+
 allprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
