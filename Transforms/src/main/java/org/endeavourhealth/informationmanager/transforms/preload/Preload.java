@@ -134,7 +134,6 @@ public class Preload {
         importer.importByType(GRAPH.KINGS_APEX, cfg);
         importer.importByType(GRAPH.KINGS_WINPATH, cfg);
         importer.importByType(GRAPH.CEG_QUERY, cfg);
-        importer.importByType(QR.NAMESPACE,cfg);
         try ( TTImport deltaImporter = new DeltaImporter()) {
             deltaImporter.importData(cfg);
         }
@@ -143,9 +142,8 @@ public class Preload {
         LOG.info("expanding value sets");
         new SetExpander().expandAllSets();
         new SetBinder().bindSets();
+        importer.importByType(QR.NAMESPACE,cfg);
         LOG.info("Finished - " + (new Date()));
-
-
         LOG.info("Building text index");
         new LuceneIndexer().buildIndexes();
         System.exit(0);

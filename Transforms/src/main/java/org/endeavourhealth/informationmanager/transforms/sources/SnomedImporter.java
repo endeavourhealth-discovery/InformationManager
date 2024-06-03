@@ -191,6 +191,8 @@ public class SnomedImporter implements TTImport {
         document.addEntity(telephone);
         TTEntity specific = conceptMap.get("10362801000001104");
         specific.addObject(iri(RDFS.SUBCLASS_OF), iri(SNOMED.NAMESPACE + "127489000"));
+      specific = conceptMap.get("10363001000001101");
+      specific.addObject(iri(RDFS.SUBCLASS_OF), iri(SNOMED.NAMESPACE + "127489000"));
 
         TTEntity dmd= conceptMap.get("8653001000001100");
         dmd.addObject(TTIriRef.iri(RDFS.DOMAIN),TTIriRef.iri(SNOMED.NAMESPACE+"763158003"));
@@ -850,6 +852,7 @@ public class SnomedImporter implements TTImport {
     public void validateFiles(String inFolder) {
         ImportUtils.validateFiles(inFolder, usage_clinical,concepts, descriptions,
             relationships, refsets, attributeRanges, attributeDomains, substitutions, qofClusters, dmd_vmp,dmd_amp,dmd_form,dmd_route,dmd_vpi);
+
     }
 
     @Override

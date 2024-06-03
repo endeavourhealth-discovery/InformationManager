@@ -7,12 +7,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.rdf4j.TTTransactionFiler;
+import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.service.SearchService;
 import org.endeavourhealth.imapi.model.imq.*;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
+import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
@@ -75,6 +73,30 @@ public class QImporter implements TTImport {
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 				filer.fileDocument(document);
 			}
+		LOG.info("Binding sets and if drugs then refiling as mamber Parents");
+			TTDocument drugDocument= new TTDocument().setGraph(iri(QR.NAMESPACE));
+			SetBinder binder= new SetBinder();
+			for (TTEntity entity:document.getEntities()){
+				if (entity.isType(iri(IM.CONCEPT_SET))){
+					if (entity.get(iri(IM.HAS_MEMBER))!=null){
+						Set<TTNode> datamodels= binder.bindSet(entity.getIri());
+						Optional<TTNode> medication= datamodels.stream().filter(dm->dm.getIri().contains("Medication")).findFirst();
+						if (medication.isPresent()){
+							entity.set(iri(IM.ROLE_GROUP),new TTNode());
+							entity.get(iri(IM.ROLE_GROUP)).asNode().set(iri(IM.HAS_MEMBER_PARENT),entity.get(iri(IM.HAS_MEMBER)));
+							entity.getPredicateMap().remove(iri(IM.HAS_MEMBER));
+							for (TTNode datamodel:datamodels){
+								entity.addObject(iri(IM.BINDING),datamodel);
+							}
+							drugDocument.addEntity(entity);
+						}
+					}
+				}
+			}
+			LOG.info("Refiling drug sets");
+		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+			filer.fileDocument(drugDocument);
+		}
 
 	}
 

@@ -37,6 +37,7 @@ public class TPPImporter implements TTImport {
     private static final String[] terms = {".*\\\\TPP\\\\Terms.v3"};
     private static final String[] hierarchies = {".*\\\\TPP\\\\V3hier.v3"};
     private static final String[] nhsMap = {".*\\\\TPP\\\\CTV3SCTMAP.txt"};
+    private static final String[] localCodeMap = {".*\\\\TPP\\\\TPP-Local-Snomed.txt"};
     private static final String[] vaccineMaps = {".*\\\\TPP\\\\VaccineMaps.json"};
     private static final String[] tppCtv3Lookup = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_lookup_2.csv"};
     private static final String[] tppCtv3ToSnomed = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_to_snomed.csv"};
@@ -78,6 +79,7 @@ public class TPPImporter implements TTImport {
             addDiscoveryMaps();
             importVaccineMaps(manager, config.getFolder());
             setOrphanC0des();
+            importTppLocalMaps(config.getFolder());
 
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
                 filer.fileDocument(document);
@@ -143,7 +145,7 @@ public class TPPImporter implements TTImport {
                     String scode = code.replace(".", "");
                     if (emisToSnomed.get(scode) != null) {
                         for (String snomed : emisToSnomed.get(scode)) {
-                            if (!alreadyMapped(entity, snomed)) {
+                            if (!alreadyMapped(entity, snomed.split("#")[1])) {
                                 entity.addObject(iri(IM.MATCHED_TO), iri(snomed));
                             }
                         }
@@ -349,6 +351,7 @@ public class TPPImporter implements TTImport {
 
     private void inportTPPConcepts(String path) throws IOException {
             int i = 0;
+            LOG.info("importing concepts..");
             for (String conceptFile : concepts) {
                 Path file =  ImportUtils.findFilesForId(path, conceptFile).get(0);
                 LOG.info("Processing concepts in {}", file.getFileName().toString());
@@ -390,6 +393,7 @@ public class TPPImporter implements TTImport {
          c = new TTEntity().setIri(GRAPH.TPP + "TPPOrphanCodes")
           .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(GRAPH.TPP + "TPPCodes")))
           .setName("TPP unmatched orphan codes")
+           .addType(iri(IM.CONCEPT))
           .setDescription("TPP orphan codes whose parent is unknown and are not matched to UK Snomed-CT")
           .setScheme(iri(GRAPH.TPP));
         document.addEntity(c);
@@ -397,9 +401,8 @@ public class TPPImporter implements TTImport {
 
     @Override
     public void validateFiles(String inFolder) {
-         ImportUtils.validateFiles(inFolder,concepts,descriptions,dcf,terms,hierarchies,tppCtv3Lookup,tppCtv3ToSnomed,nhsMap,vaccineMaps);
+         ImportUtils.validateFiles(inFolder,concepts,descriptions,dcf,terms,hierarchies,tppCtv3Lookup,tppCtv3ToSnomed,nhsMap,vaccineMaps,localCodeMap);
     }
-
 
 
     private void importTppCtv3ToSnomed(String folder) throws IOException, CsvValidationException {
@@ -430,6 +433,48 @@ public class TPPImporter implements TTImport {
                 if (!alreadyMapped(tpp, snomed)) {
                     tpp.addObject(iri(IM.MATCHED_TO), iri(SNOMED.NAMESPACE + snomed));
                 }
+            }
+            LOG.info("Process ended with {}", count);
+        }
+    }
+
+
+
+
+
+    private void importTppLocalMaps(String folder) throws IOException, CsvValidationException {
+        Path file =  ImportUtils.findFileForId(folder, localCodeMap[0]);
+        LOG.info("Importing TPP Local Code map");
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            String line= reader.readLine();
+            int count = 0;
+            while (line != null && !line.isEmpty()) {
+                count++;
+                if (count % 50000 == 0) {
+                    LOG.info("{} Local maps imported ",count);
+                }
+                String[] fields= line.split("\t");
+                String code = fields[0].split("#")[1];
+                String name= fields[1];
+                if (name==null){
+                    name="TPP Local code name unknown";
+                }
+                String snomed = fields[2];
+                TTEntity tpp=codeToEntity.get(code);
+                if (tpp==null){
+                    tpp = new TTEntity().setIri(GRAPH.TPP+code.replace(".","_"));
+                    tpp.setCode(code);
+                    tpp.setScheme(iri(GRAPH.TPP));
+                    tpp.setName(name);
+                    tpp.addType(iri(IM.CONCEPT));
+                    codeToEntity.put(code, tpp);
+                    document.addEntity(tpp);
+
+                }
+                if (!alreadyMapped(tpp, snomed.split("#")[1])) {
+                    tpp.addObject(iri(IM.MATCHED_TO), iri(snomed));
+                }
+                line= reader.readLine();
             }
             LOG.info("Process ended with {}", count);
         }

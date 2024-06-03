@@ -225,12 +225,6 @@ public class ImportApp {
                 throw new Exception("Unknown import type");
 
         }
-        if (expandValueSets) {
-            if (cfg.getImportType().equals("all") || cfg.getImportType().equals("core")) {
-                LOG.info("expanding value sets");
-                new SetExpander().expandAllSets();
-            }
-        }
 
         if (!cfg.isSkiplucene())
             new LuceneIndexer().buildIndexes();
