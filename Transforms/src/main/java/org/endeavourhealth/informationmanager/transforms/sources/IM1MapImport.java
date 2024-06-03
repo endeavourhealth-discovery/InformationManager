@@ -209,8 +209,9 @@ public class IM1MapImport implements TTImport {
             }
             case GRAPH.EMIS -> {
                 if (!(".....").equals(code)) {
-                    if (im1Scheme.equals("READ2"))
+                    if (im1Scheme.equals("READ2") || ("EMIS_LOCAL".equals(im1Scheme) && code.endsWith(".") && !code.contains("|")))
                         code = code.replaceAll("\\.", "");
+
                     String emisConcept = codeToIri.get(GRAPH.EMIS + code);
                     if (emisConcept == null) {
                         if (term.contains("SHHAPT")) {
