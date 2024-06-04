@@ -73,14 +73,14 @@ public class QImporter implements TTImport {
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 				filer.fileDocument(document);
 			}
-		LOG.info("Binding sets and if drugs then refiling as mamber Parents");
+		LOG.info("Binding sets and if drugs then refiling as member Parents");
 			TTDocument drugDocument= new TTDocument().setGraph(iri(QR.NAMESPACE));
 			SetBinder binder= new SetBinder();
 			for (TTEntity entity:document.getEntities()){
 				if (entity.isType(iri(IM.CONCEPT_SET))){
 					if (entity.get(iri(IM.HAS_MEMBER))!=null){
 						Set<TTNode> datamodels= binder.bindSet(entity.getIri());
-						Optional<TTNode> medication= datamodels.stream().filter(dm->dm.getIri().contains("Medication")).findFirst();
+						Optional<TTNode> medication= datamodels.stream().filter(dm->dm.get(iri(SHACL.NODE)).asIriRef().getIri().contains("Medication")).findFirst();
 						if (medication.isPresent()){
 							entity.set(iri(IM.ROLE_GROUP),new TTNode());
 							entity.get(iri(IM.ROLE_GROUP)).asNode().set(iri(IM.HAS_MEMBER_PARENT),entity.get(iri(IM.HAS_MEMBER)));
