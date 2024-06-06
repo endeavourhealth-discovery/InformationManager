@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns="http://www.e-mis.com/emisopen" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.e-mis.com/emisopen" elementFormDefault="qualified" attributeFormDefault="unqualified">
- <xs:include schemaLocation="datatypes.xsd"/>
- <xs:include schemaLocation="vocabulary.xsd"/>
+ <xs:include schemaLocation="datatypes.xs"/>
+ <xs:include schemaLocation="vocabulary.xs"/>
  <xs:element name="enquiryDocument" type="EnquiryDocument"/>
  <xs:complexType name="EnquiryDocument">
   <xs:sequence>
@@ -478,7 +478,7 @@
   <xs:sequence>
    <xs:element name="id" type="dt.uid" minOccurs="0" maxOccurs="0">
     <xs:annotation>
-     <xs:documentation>Needed to make xsd.exe create a class</xs:documentation>
+     <xs:documentation>Needed to make xs.exe create a class</xs:documentation>
     </xs:annotation>
    </xs:element>
    <xs:element name="column" type="xs:token" maxOccurs="unbounded"/>
@@ -685,7 +685,7 @@
   </xs:sequence>
   <xs:attribute name="id" type="dt.uid" use="optional">
    <xs:annotation>
-    <xs:documentation>This exists to force xsd.exe to build a class</xs:documentation>
+    <xs:documentation>This exists to force xs.exe to build a class</xs:documentation>
    </xs:annotation>
   </xs:attribute>
  </xs:complexType>
