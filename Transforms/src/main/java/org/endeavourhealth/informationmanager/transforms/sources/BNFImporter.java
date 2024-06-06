@@ -72,7 +72,9 @@ public class BNFImporter implements TTImport {
 			toRemove.add(set);
 			if (set.get(iri(IM.ROLE_GROUP)) != null) {
 				parent.set(iri(IM.ROLE_GROUP), set.get(iri(IM.ROLE_GROUP)));
-				parent.set(iri(IM.DEFINITION),set.get(iri(IM.DEFINITION)));
+				String query= set.get(iri(IM.DEFINITION)).asLiteral().getValue();
+				query=query.replace(set.getIri(),parent.getIri());
+				parent.set(iri(IM.DEFINITION),TTLiteral.literal(query));
 				parent.setType(new TTArray().add(iri(IM.CONCEPT_SET)));
 			}
 		}

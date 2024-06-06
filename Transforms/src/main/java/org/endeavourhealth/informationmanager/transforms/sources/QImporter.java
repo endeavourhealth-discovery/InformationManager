@@ -73,7 +73,7 @@ public class QImporter implements TTImport {
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 				filer.fileDocument(document);
 			}
-		LOG.info("Binding sets and if drugs then refiling as member Parents");
+		LOG.info("if drugs then refiling as member Parents");
 			TTDocument drugDocument= new TTDocument().setGraph(iri(QR.NAMESPACE));
 			SetBinder binder= new SetBinder();
 			for (TTEntity entity:document.getEntities()){
@@ -85,9 +85,16 @@ public class QImporter implements TTImport {
 							entity.set(iri(IM.ROLE_GROUP),new TTNode());
 							entity.get(iri(IM.ROLE_GROUP)).asNode().set(iri(IM.HAS_MEMBER_PARENT),entity.get(iri(IM.HAS_MEMBER)));
 							entity.getPredicateMap().remove(iri(IM.HAS_MEMBER));
-							for (TTNode datamodel:datamodels){
-								entity.addObject(iri(IM.BINDING),datamodel);
-							}
+							entity.set(iri(IM.DEFINITION),TTLiteral.literal(new Query()
+								.match(m->m
+									.setInstanceOf(new Node()
+										.setDescendantsOrSelfOf(true))
+									.where(w->w
+										.setInverse(true)
+										.setAnyRoleGroup(true)
+										.setIri(IM.HAS_MEMBER_PARENT)
+										.setName("that have member parents in")
+										.is(i->i.setIri(entity.getIri()))))));
 							drugDocument.addEntity(entity);
 						}
 					}
