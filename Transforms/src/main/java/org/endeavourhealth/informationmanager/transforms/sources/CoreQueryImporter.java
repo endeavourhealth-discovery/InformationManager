@@ -241,6 +241,7 @@ public class CoreQueryImporter implements TTImport {
 
     private void latestHighBP() throws JsonProcessingException {
         Match match = new Match()
+          .setName("Latest systolic in the last year is >140 (office) or >130 (home)")
             .path(p -> p
                 .setIri(IM.NAMESPACE + "patient"))
             .setTypeOf(IM.NAMESPACE + "Observation")
@@ -333,6 +334,7 @@ public class CoreQueryImporter implements TTImport {
 
     private void latestBPMatch() throws JsonProcessingException {
         Match match = new Match()
+          .setName("Latest systolic blood pressure in the last 12 months")
             .path(p -> p
                 .setIri(IM.NAMESPACE + "patient"))
             .where(ww -> ww
@@ -406,6 +408,7 @@ public class CoreQueryImporter implements TTImport {
             .setName(name)
             .setTypeOf(IM.NAMESPACE + "Patient")
             .match(m -> m
+              .setName("Active {condition}")
                 .path(p -> p
                     .setIri(IM.NAMESPACE + "patient"))
                 .setTypeOf(IM.NAMESPACE + "Observation")
@@ -456,6 +459,7 @@ public class CoreQueryImporter implements TTImport {
             .match(m -> m
                 .setBoolMatch(Bool.or)
                 .match(or -> or
+                  .setName("aged between 65 and 70")
                     .addWhere(new Where()
                         .setIri(IM.NAMESPACE + "age")
                         .range(r -> r
@@ -468,8 +472,10 @@ public class CoreQueryImporter implements TTImport {
                                 .setValue("70")
                                 .setUnit("YEARS")))))
                 .match(or -> or
+                  .setName("Is on diabetic register")
                     .addIs(new Node().setIri(IM.NAMESPACE + "Q_Diabetics")))
                 .match(or -> or
+                  .setName("has pre-diabetes")
                     .path(p -> p.setIri(IM.NAMESPACE + "patient"))
                     .setTypeOf(IM.NAMESPACE + "Observation")
                     .addWhere(new Where()
@@ -477,6 +483,7 @@ public class CoreQueryImporter implements TTImport {
                         .addIs(new Node().setIri(SNOMED.NAMESPACE + "714628002").setDescendantsOf(true))
                         .setValueLabel("Prediabetes"))))
             .match(m -> m
+              .setName("Latest systolic in the last year is >140 (office) or >130 (home)")
                 .path(p -> p
                     .setIri(IM.NAMESPACE + "patient"))
                 .setTypeOf(IM.NAMESPACE + "Observation")
@@ -532,6 +539,7 @@ public class CoreQueryImporter implements TTImport {
                             .setOperator(Operator.gt)
                             .setValue("130")))))
             .match(m -> m
+              .setName("invited for screening since high BP reading")
                 .setBoolWhere(Bool.and)
                 .setExclude(true)
                 .path(w -> w.setIri(IM.NAMESPACE + "patient"))
@@ -544,6 +552,7 @@ public class CoreQueryImporter implements TTImport {
                     .setOperator(Operator.gte)
                     .relativeTo(r -> r.setNodeRef("highBPReading").setIri(IM.NAMESPACE + "effectiveDate"))))
             .match(m -> m
+              .setName("on hypertension register")
                 .setExclude(true)
                 .addIs(new Node().setIri(IM.NAMESPACE + "Q_Hypertensives")
                     .setName("Hypertensives")));

@@ -119,6 +119,7 @@ public class SnomedImporter implements TTImport {
     };
   public static final String[] usage_clinical = {
     ".*\\\\DiscoveryNoneCore\\\\SNOMED_code_usage_[0-9\\\\-]*.txt"
+    //".*\\\\DiscoveryNoneCore\\\\SNOMED_drug_usage_[0-9\\\\-]*.txt"
   };
 
     public static final String[] importList = {"991181000000109"};

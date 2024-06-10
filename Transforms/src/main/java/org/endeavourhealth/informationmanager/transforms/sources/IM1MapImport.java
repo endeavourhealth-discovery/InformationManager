@@ -9,6 +9,7 @@ import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.imapi.transforms.SnomedConcept;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.common.ZipUtils;
@@ -248,8 +249,13 @@ public class IM1MapImport implements TTImport {
                 LOG.trace("IM1 - Invalid EMIS concept - exists as VISION/READ2, ignoring (scheme/code|term) [{}/{}|{}]", im1Scheme, code, term);
             else if (codeToIri.containsKey(GRAPH.TPP + code))
                 LOG.trace("IM1 - Invalid EMIS concept - exists as TPP/CTV3, ignoring (scheme/code|term) [{}/{}|{}]", im1Scheme, code, term);
-            else
-                LOG.warn("IM1 - Invalid EMIS concept (scheme/code|term) [{}/{}|{}]", im1Scheme, code, term);
+            else {
+                if (code.length()<6) {
+                    createUnassigned(GRAPH.VISION, lname, im1Scheme, term, code, oldIri, "");
+                }
+                else
+                    LOG.warn("IM1 - Invalid EMIS concept (scheme/code|term) [{}/{}|{}]", im1Scheme, code, term);
+            }
         } else
             addIM1id(emisConcept, oldIri);
     }
@@ -309,6 +315,11 @@ public class IM1MapImport implements TTImport {
     }
 
     private void processSnomedCode(String code, String scheme, String im1Scheme, String term, String oldIri, String description, String lname) throws IOException {
+        //Crap snomed code
+        if (!code.matches("[0-9]+"))
+            return;
+
+
         String visionNamespace = "1000027";
         if (getNameSpace(code).equals(visionNamespace)) {
             scheme = GRAPH.VISION;
@@ -555,7 +566,9 @@ public class IM1MapImport implements TTImport {
                 } else
                     createUnassigned(scheme, lname, im1Scheme, term, code, oldIri, description);
             } else {
-                createUnassigned(scheme, lname, im1Scheme, term, code, oldIri, description);
+                if (!scheme.equals(SNOMED.NAMESPACE)) {
+                    createUnassigned(scheme, lname, im1Scheme, term, code, oldIri, description);
+                }
 
             }
         }
@@ -565,6 +578,7 @@ public class IM1MapImport implements TTImport {
     private void createUnassigned(String scheme, String lname, String im1Scheme, String term, String code, String oldIri,
                                   String description) throws IOException {
         TTEntity unassigned = new TTEntity();
+
         unassigned.setGraph(TTIriRef.iri(scheme));
         unassigned.setIri(scheme + lname);
         unassigned.addType(iri(IM.CONCEPT));
@@ -616,6 +630,7 @@ public class IM1MapImport implements TTImport {
             .setIri(newIri)
             .setName(term)
             .setScheme(TTIriRef.iri(newIri.substring(0, newIri.lastIndexOf("#") + 1)));
+
         if (code != null)
             entity.setCode(code);
         if (description != null) {
@@ -849,6 +864,7 @@ public class IM1MapImport implements TTImport {
             oldIri = oldIri.split("_")[1];
         if (value == null)
             value = oldIri;
+
 
         TTEntity entity = new TTEntity()
             .setGraph(newScheme)
