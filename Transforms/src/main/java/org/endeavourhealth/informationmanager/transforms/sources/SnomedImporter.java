@@ -119,7 +119,9 @@ public class SnomedImporter implements TTImport {
     };
   public static final String[] usage_clinical = {
     ".*\\\\DiscoveryNoneCore\\\\SNOMED_code_usage_[0-9\\\\-]*.txt"
-    //".*\\\\DiscoveryNoneCore\\\\SNOMED_drug_usage_[0-9\\\\-]*.txt"
+  };
+  public static final String[] usage_drug = {
+    ".*\\\\DiscoveryNoneCore\\\\SNOMED_drug_usage_[0-9\\\\-]*.txt"
   };
 
     public static final String[] importList = {"991181000000109"};
@@ -166,9 +168,13 @@ public class SnomedImporter implements TTImport {
             importVmp(config.getFolder());
             importAmp(config.getFolder());
             addSpecials(document);
-            importUsage(config.getFolder());
+            importClinicalUsage(config.getFolder());
+          importDrugUsage(config.getFolder());
+
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-                filer.fileDocument(document);
+              TTEntity snomedEntity= dmanager.getEntity("http://snomed.info/sct#999019211000230102");
+              System.out.println(snomedEntity.getName());
+                //filer.fileDocument(document);
             }
 
             document = dmanager.createDocument(SNOMED.NAMESPACE);
@@ -177,7 +183,10 @@ public class SnomedImporter implements TTImport {
             importQof(config.getFolder());
             conceptMap.clear();
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-                filer.fileDocument(document);
+              TTEntity snomedEntity= dmanager.getEntity("http://snomed.info/sct#999019211000230102");
+              System.out.println(snomedEntity.getName());
+
+                //filer.fileDocument(document);
             }
         }
     }
@@ -263,7 +272,8 @@ public class SnomedImporter implements TTImport {
           String normalTerm= StringUtils.capitalize(fields[1]);
           normalTerm=normalTerm.split(" codes")[0]+" (primary care value set)";
                     String imTerm = clusterTerm + " code cluster";
-                    TTEntity c = conceptMap.get(refset);
+                    TTEntity c = new TTEntity().setIri(SNOMED.NAMESPACE+refset);
+                    c.setCrud(iri(IM.ADD_QUADS));
           c.set(iri(IM.PREFERRED_NAME),TTLiteral.literal(normalTerm));
                     if (!hasTermCode(c, imTerm)) {
                         c.addObject(iri(IM.HAS_TERM_CODE), new TTNode().set(iri(RDFS.LABEL), TTLiteral.literal(imTerm)));
@@ -510,7 +520,7 @@ public class SnomedImporter implements TTImport {
         }
     }
 
-  private void importUsage(String path) throws IOException {
+  private void importClinicalUsage(String path) throws IOException {
     int i = 0;
     refsetMap= new HashMap<>();
     for (String usageFile : usage_clinical) {
@@ -521,7 +531,7 @@ public class SnomedImporter implements TTImport {
         reader.readLine();     // NOSONAR - Skip header
         String line = reader.readLine();
         while (line != null && !line.isEmpty()) {
-          processUsageLine(line);
+          processClinicalUsageLine(line);
           i++;
           line = reader.readLine();
         }
@@ -531,7 +541,7 @@ public class SnomedImporter implements TTImport {
     LOG.info("Imported {} usages", i);
   }
 
-  private void processUsageLine(String line) {
+  private void processClinicalUsageLine(String line) {
     String[] fields = line.split("\t");
       TTEntity c = conceptMap.get(fields[0]);
       try {
@@ -539,6 +549,38 @@ public class SnomedImporter implements TTImport {
         c.set(iri(IM.USAGE_TOTAL),TTLiteral.literal(usage));
       } catch (NumberFormatException ignored) {
       }
+
+  }
+
+  private void importDrugUsage(String path) throws IOException {
+    int i = 0;
+    refsetMap= new HashMap<>();
+    for (String usageFile : usage_drug) {
+      List<Path> paths = ImportUtils.findFilesForId(path, usageFile);
+      Path file = paths.get(0);
+      LOG.info("Processing usages in {}", file.getFileName().toString());
+      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        reader.readLine();     // NOSONAR - Skip header
+        String line = reader.readLine();
+        while (line != null && !line.isEmpty()) {
+          processDrugUsageLine(line);
+          i++;
+          line = reader.readLine();
+        }
+
+      }
+    }
+    LOG.info("Imported {} usages", i);
+  }
+
+  private void processDrugUsageLine(String line) {
+    String[] fields = line.split("\t");
+    TTEntity c = conceptMap.get(fields[0]);
+    try {
+      Integer usage= Integer.parseInt(fields[2]);
+      c.set(iri(IM.USAGE_TOTAL),TTLiteral.literal(usage));
+    } catch (NumberFormatException ignored) {
+    }
 
   }
 
@@ -826,7 +868,7 @@ public class SnomedImporter implements TTImport {
                 c.addObject(iri(RDFS.SUBCLASS_OF), iri(RDF.PROPERTY));
         } else {
             TTNode roleGroup = getRoleGroup(c, group);
-            roleGroup.set(iri(SN + relationship), iri(SN + target));
+            roleGroup.addObject(iri(SN + relationship), iri(SN + target));
         }
     }
 
@@ -852,7 +894,7 @@ public class SnomedImporter implements TTImport {
 
     public void validateFiles(String inFolder) {
         ImportUtils.validateFiles(inFolder, usage_clinical,concepts, descriptions,
-            relationships, refsets, attributeRanges, attributeDomains, substitutions, qofClusters, dmd_vmp,dmd_amp,dmd_form,dmd_route,dmd_vpi);
+            relationships, refsets, attributeRanges, attributeDomains, substitutions, qofClusters, dmd_vmp,dmd_amp,dmd_form,dmd_route,dmd_vpi,usage_clinical,usage_drug);
 
     }
 

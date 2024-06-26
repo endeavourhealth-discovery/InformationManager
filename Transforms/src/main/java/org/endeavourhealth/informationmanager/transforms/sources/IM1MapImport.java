@@ -253,8 +253,12 @@ public class IM1MapImport implements TTImport {
                 if (code.length()<6) {
                     createUnassigned(GRAPH.VISION, lname, im1Scheme, term, code, oldIri, "");
                 }
-                else
+                else {
+                    if (code.matches("[0-9]+")&&code.length()>5){
+                        System.out.println("Snomed as Read?");
+                    }
                     LOG.warn("IM1 - Invalid EMIS concept (scheme/code|term) [{}/{}|{}]", im1Scheme, code, term);
+                }
             }
         } else
             addIM1id(emisConcept, oldIri);
@@ -481,12 +485,15 @@ public class IM1MapImport implements TTImport {
         if (concept.getIri() != null) {
             concept.setName(term).setScheme(iri(FHIR.GRAPH_FHIR)).set(iri(IM.IM1ID), TTLiteral.literal(oldIri));
             document.addEntity(concept);
+            /*
             entity.set(iri(IM.DEFINITION), TTLiteral.literal(
                 new Query().match(m -> m
                     .setName(term)
                     .setInstanceOf(new Node().setIri(concept.getIri())
                         .setDescendantsOrSelfOf(true))
                 )));
+
+             */
         }
         entity.setName(term)
             .setScheme(iri(FHIR.GRAPH_FHIR))
