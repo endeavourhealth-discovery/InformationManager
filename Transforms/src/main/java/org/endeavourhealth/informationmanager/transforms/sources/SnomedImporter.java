@@ -172,9 +172,7 @@ public class SnomedImporter implements TTImport {
           importDrugUsage(config.getFolder());
 
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-              TTEntity snomedEntity= dmanager.getEntity("http://snomed.info/sct#999019211000230102");
-              System.out.println(snomedEntity.getName());
-                //filer.fileDocument(document);
+                filer.fileDocument(document);
             }
 
             document = dmanager.createDocument(SNOMED.NAMESPACE);
@@ -183,10 +181,7 @@ public class SnomedImporter implements TTImport {
             importQof(config.getFolder());
             conceptMap.clear();
             try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-              TTEntity snomedEntity= dmanager.getEntity("http://snomed.info/sct#999019211000230102");
-              System.out.println(snomedEntity.getName());
-
-                //filer.fileDocument(document);
+              filer.fileDocument(document);
             }
         }
     }
