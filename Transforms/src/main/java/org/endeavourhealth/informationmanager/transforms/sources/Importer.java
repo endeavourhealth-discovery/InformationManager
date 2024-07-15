@@ -53,11 +53,11 @@ public class Importer implements TTImportByType {
 
 
     private TTImport getImporter(String importType) throws Exception {
-        if (TTIriRef.iri(IM.NAMESPACE + "SingleFileImporter").equals(importType))
+        if (importType.equals(IM.NAMESPACE+"SingleFileImporter"))
             return new SingleFileImporter();
-        if (GRAPH.QUERY.equals(importType))
+        else if (GRAPH.QUERY.equals(importType))
             return new CoreQueryImporter();
-        if (GRAPH.BNF.equals(importType))
+        else if (GRAPH.BNF.equals(importType))
             return new BNFImporter();
         else if (GRAPH.DISCOVERY.equals(importType))
             return new CoreImporter();

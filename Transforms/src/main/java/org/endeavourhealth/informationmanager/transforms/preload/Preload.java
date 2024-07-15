@@ -144,8 +144,8 @@ public class Preload {
         new SetBinder().bindSets();
         importer.importByType(QR.NAMESPACE,cfg);
         LOG.info("Finished - " + (new Date()));
-        LOG.info("Building text index");
-        new LuceneIndexer().buildIndexes();
+       // LOG.info("Building text index");
+        //new LuceneIndexer().buildIndexes();
         System.exit(0);
     }
 
