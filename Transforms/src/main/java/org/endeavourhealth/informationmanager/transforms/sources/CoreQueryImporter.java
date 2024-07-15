@@ -125,7 +125,7 @@ public class CoreQueryImporter implements TTImport {
                     .match(m -> m
                         .setName("Data model property")
                         .setDescription("A given property ($myProperty) of a given data model ($myDataModel)")
-                        .setInstanceOf(new Node()
+                        .addInstanceOf(new Node()
                             .setParameter("myDataModel"))
                         .addWhere(new Where()
                             .setIri(SHACL.PROPERTY)
@@ -184,7 +184,7 @@ public class CoreQueryImporter implements TTImport {
                     .match(m -> m
                         .setName("Data model property ranges")
                         .setDescription("The range (node, class or datatype) of $myProperty on $myDataModel")
-                        .setInstanceOf(new Node()
+                        .addInstanceOf(new Node()
                             .setParameter("myDataModel"))
                         .addWhere(new Where()
                             .setIri("http://www.w3.org/ns/shacl#property")
@@ -349,7 +349,7 @@ public class CoreQueryImporter implements TTImport {
                     .setName("All subtypes")
                     .setDescription("All subtypes of an entity (where the entity 'is a' $this)")
                     .setVariable("isa")
-                    .setInstanceOf(new Node()
+                    .addInstanceOf(new Node()
                         .setParameter("this")
                         .setAncestorsOf(true)))
                 .return_(s -> s.setNodeRef("isa")
@@ -490,7 +490,7 @@ public class CoreQueryImporter implements TTImport {
             .match(m -> m
                 .setName("Patients registered for GMS services on the reference date")
                 .setDescription("For any registration period, a registration start date before the reference date and no end date, or an end date after the reference date.")
-                .addIs(new Node().setIri(IM.NAMESPACE + "Q_RegisteredGMS")
+                .addInstanceOf(new Node().setIri(IM.NAMESPACE + "Q_RegisteredGMS").setMemberOf(true)
                     .setName("Registered for GMS services on reference date")))
             .match(m -> m
                 .setName("Patients 65-70, or diabetes or prediabetes")
@@ -511,7 +511,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setUnit("YEARS")))))
                 .match(or -> or
                     .setName("Is on diabetic register")
-                    .addIs(new Node().setIri(IM.NAMESPACE + "Q_Diabetics")))
+                    .addInstanceOf(new Node().setIri(IM.NAMESPACE + "Q_Diabetics").setMemberOf(true)))
                 .match(or -> or
                     .setName("has pre-diabetes")
                     .path(p -> p.setIri(IM.NAMESPACE + "patient"))
@@ -599,7 +599,7 @@ public class CoreQueryImporter implements TTImport {
                 .setName("on hypertension register")
                 .setDescription("is registered on the hypertensives register")
                 .setExclude(true)
-                .addIs(new Node().setIri(IM.NAMESPACE + "Q_Hypertensives")
+                .addInstanceOf(new Node().setIri(IM.NAMESPACE + "Q_Hypertensives").setMemberOf(true)
                     .setName("Hypertensives")));
 
         TTEntity qry = new TTEntity().addType(iri(IM.COHORT_QUERY))
@@ -746,7 +746,7 @@ public class CoreQueryImporter implements TTImport {
             .match(m -> m
                 .setName("Child types")
                 .setDescription("Instances of $this")
-                .setInstanceOf(new Node()
+                .addInstanceOf(new Node()
                     .setParameter("$this"))
                 .addWhere(new Where()
                     .setIri(RDF.TYPE)
@@ -781,11 +781,11 @@ public class CoreQueryImporter implements TTImport {
                     .setName("Instance of $thisType")
                     .setDescription("Instance of $thisType")
                     .setNodeRef("concept")
-                    .setInstanceOf(new Node().setNodeRef("thisType")))
+                    .addInstanceOf(new Node().setNodeRef("thisType")))
                 .match(m1 -> m1
                     .setName("instance of $this where its content type is $concept or a folder")
                     .setDescription("instance of $this where its content type is $concept or a folder")
-                    .setInstanceOf(new Node()
+                    .addInstanceOf(new Node()
                         .setParameter("$this"))
                     .addWhere(new Where()
                         .setIri(IM.CONTENT_TYPE)
@@ -798,7 +798,7 @@ public class CoreQueryImporter implements TTImport {
                     .match(m2 -> m2
                         .setName("instance of $this and a Folder")
                         .setDescription("instance of $this and a Folder")
-                        .setInstanceOf(new Node()
+                        .addInstanceOf(new Node()
                             .setParameter("$this"))
                         .addWhere(new Where()
                             .setIri(RDF.TYPE)
@@ -806,7 +806,7 @@ public class CoreQueryImporter implements TTImport {
                     .match(m2 -> m2
                         .setName("instance of $this is content type")
                         .setDescription("instance of $this is content type")
-                        .setInstanceOf(new Node()
+                        .addInstanceOf(new Node()
                             .setParameter("$this"))
                         .setExclude(true)
                         .addWhere(new Where()
@@ -830,41 +830,46 @@ public class CoreQueryImporter implements TTImport {
         getQuery("AllowableRanges", "Allowable ranges for a particular property or its ancestors", "uses inverse range property to return the ranges of the property as authored. Should be used with another ")
             .set(iri(IM.DEFINITION), TTLiteral.literal(
                 new Query()
+                    .setImQuery(true)
                     .setName("Allowable Ranges for a property and super properties")
                     .setDescription("Allowable Ranges for a property and super properties")
                     .setActiveOnly(true)
-                    .return_(r -> r
-                        .property(s -> s.setIri(IM.CODE))
-                        .property(s -> s.setIri(RDFS.LABEL)))
                     .match(f -> f
                         .setName("Inverse of range is $this or its ancestors")
                         .addWhere(new Where()
                             .setInverse(true)
                             .setIri(RDFS.RANGE)
                             .addIs(new Node().setParameter("this")
-                                .setAncestorsOf(true))))));
+                                .setAncestorsOf(true))))
+                  .query(q1->q1
+                    .return_(r -> r
+                      .property(s -> s.setIri(IM.CODE))
+                      .property(s -> s.setIri(RDFS.LABEL)))
+                    .match(m->m
+                      .addInstanceOf(new Node()
+                        .setDescendantsOrSelfOf(true))))));
     }
 
     private void getAllowableProperties() throws JsonProcessingException {
         getQuery("AllowableProperties", "Allowable properties for a terminology concept", "Returns a list of properties for a particular term concept, used in value set definitions with RCL")
             .set(iri(IM.DEFINITION), TTLiteral.literal(
                 new Query()
+                    .setImQuery(true)
                     .setName("Allowable Properties for a terminology concept")
                     .setDescription("Allowable Properties for a terminology concept")
                     .setActiveOnly(true)
-                    .return_(r -> r
-                        .setNodeRef("concept")
-                        .property(p -> p.setIri(IM.CODE))
-                        .property(p -> p.setIri(RDFS.LABEL)))
                     .match(f -> f
                         .setName("property that has $this (or supertype) as a domain")
                         .setDescription("property that has $this (or supertype) as a domain")
                         .setVariable("concept")
-                        .setTypeOf(IM.CONCEPT)
                         .addWhere(new Where()
                             .setIri(RDFS.DOMAIN)
                             .addIs(new Node().setParameter("this").setAncestorsOf(true))
-                        ))));
+                        ))
+                  .query(q->q
+                    .match(m->m
+                      .addInstanceOf(new Node()
+                        .setDescendantsOrSelfOf(true))))));
     }
 
     private void searchProperties() throws JsonProcessingException {
@@ -1004,7 +1009,7 @@ public class CoreQueryImporter implements TTImport {
                         .setName("$this or its descendants")
                         .setDescription("Is a descendant of, or $this")
                         .setVariable("isa")
-                        .setInstanceOf(new Node()
+                        .addInstanceOf(new Node()
                             .setParameter("this")
                             .setDescendantsOrSelfOf(true)))
                     .return_(s -> s.setNodeRef("isa")

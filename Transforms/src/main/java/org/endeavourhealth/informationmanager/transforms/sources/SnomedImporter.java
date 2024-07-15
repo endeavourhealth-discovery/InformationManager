@@ -773,17 +773,17 @@ public class SnomedImporter implements TTImport {
         }
         Query expression = eclConverter.getQueryFromECL(ecl);
         if (expression.getInstanceOf()!=null){
-          op.addObject(iri(RDFS.RANGE), iri(expression.getInstanceOf().getIri()));
+          op.addObject(iri(RDFS.RANGE), iri(expression.getInstanceOf().get(0).getIri()));
         }
         if (expression.getMatch()!=null) {
          for (Match match : expression.getMatch()) {
            if (match.getInstanceOf() != null) {
-            op.addObject(iri(RDFS.RANGE), iri(match.getInstanceOf().getIri()));
+            op.addObject(iri(RDFS.RANGE), iri(match.getInstanceOf().get(0).getIri()));
            }
           else {
             if (match.getBoolMatch().equals(Bool.or)) {
               for (Match or : match.getMatch()) {
-                op.addObject(iri(RDFS.RANGE), iri(or.getInstanceOf().getIri()));
+                op.addObject(iri(RDFS.RANGE), iri(or.getInstanceOf().get(0).getIri()));
               }
             }
             else

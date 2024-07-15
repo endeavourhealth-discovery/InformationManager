@@ -238,7 +238,7 @@ public class BNFImporter implements TTImport {
 		if (type.equals(IM.CONCEPT_SET)){
 			entity.set(iri(IM.DEFINITION),TTLiteral.literal(new Query()
 				.match(m->m
-					.setInstanceOf(new Node()
+					.addInstanceOf(new Node()
 						.setDescendantsOrSelfOf(true))
 					.where(w->w
 						.setInverse(true)

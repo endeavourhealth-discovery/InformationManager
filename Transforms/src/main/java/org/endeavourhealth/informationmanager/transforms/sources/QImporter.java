@@ -87,7 +87,7 @@ public class QImporter implements TTImport {
 							entity.getPredicateMap().remove(iri(IM.HAS_MEMBER));
 							entity.set(iri(IM.DEFINITION),TTLiteral.literal(new Query()
 								.match(m->m
-									.setInstanceOf(new Node()
+									.addInstanceOf(new Node()
 										.setDescendantsOrSelfOf(true))
 									.where(w->w
 										.setInverse(true)
