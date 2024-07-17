@@ -110,7 +110,7 @@ public class CoreQueryImporter implements TTImport {
                         .setDescription("have $this as their path")
                         .addWhere(new Where()
                             .setIri(SHACL.PATH)
-                            .addIs(new Node().setParameter("this"))))
+                            .addInstanceOf(new Node().setParameter("this"))))
                     .return_(r -> r.setNodeRef("range").property(p -> p.setIri(RDFS.LABEL)))));
 
         document.addEntity(query);
@@ -135,7 +135,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setVariable("shaclProperty")
                                 .addWhere(new Where()
                                     .setIri(SHACL.PATH)
-                                    .addIs(new Node().setParameter("myProperty"))))))
+                                    .addInstanceOf(new Node().setParameter("myProperty"))))))
                     .return_(r -> r.
                         setNodeRef("shaclProperty")
                         .setProperty(List.of(
@@ -194,7 +194,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setVariable("shaclProperty")
                                 .where(p2 -> p2
                                     .setIri(SHACL.PATH)
-                                    .is(in -> in
+                                    .instanceOf(in -> in
                                         .setParameter("myProperty")))
                                 .where(p2 -> p2
                                     .setBoolWhere(Bool.or)
@@ -236,7 +236,7 @@ public class CoreQueryImporter implements TTImport {
                         .setDescription("have $this as their path")
                         .addWhere(new Where()
                             .setIri(SHACL.PATH)
-                            .addIs(new Node().setParameter("this"))))
+                            .addInstanceOf(new Node().setParameter("this"))))
                     .return_(s -> s.setNodeRef("range").property(p -> p.setIri(RDFS.LABEL)))));
 
         document.addEntity(query);
@@ -266,11 +266,11 @@ public class CoreQueryImporter implements TTImport {
             .where(ww -> ww
                 .setIri(IM.NAMESPACE + "concept")
                 .setName("concept")
-                .addIs(new Node()
+                .addInstanceOf(new Node()
                     .setIri(SNOMED.NAMESPACE + "999035921000230109")
                     .setDescendantsOrSelfOf(true)
                     .setName("Systolic blood pressure recording"))
-                .addIs(new Node()
+                .addInstanceOf(new Node()
                     .setIri(GRAPH.EMIS + "1994021000006104")
                     .setDescendantsOrSelfOf(true)
                     .setName("Home systolic blood pressure"))
@@ -300,7 +300,7 @@ public class CoreQueryImporter implements TTImport {
                     .setDescription("Is an office systolic blood pressure with a value greater than 140")
                     .where(w -> w
                         .setIri(IM.NAMESPACE + "concept")
-                        .addIs(new Node()
+                        .addInstanceOf(new Node()
                             .setIri(SNOMED.NAMESPACE + "271649006")
                             .setDescendantsOrSelfOf(true)
                             .setName("Systolic blood pressure"))
@@ -316,7 +316,7 @@ public class CoreQueryImporter implements TTImport {
                         .setBoolWhere(Bool.and)
                         .where(w -> w
                             .setIri(IM.NAMESPACE + "concept")
-                            .addIs(new Node()
+                            .addInstanceOf(new Node()
                                 .setIri(GRAPH.EMIS + "1994021000006104")
                                 .setDescendantsOrSelfOf(true)
                                 .setName("Home systolic blood pressure"))
@@ -366,7 +366,7 @@ public class CoreQueryImporter implements TTImport {
             .where(ww -> ww
                 .setIri(IM.NAMESPACE + "concept")
                 .setName("concept")
-                .addIs(new Node()
+                .addInstanceOf(new Node()
                     .setIri(SNOMED.NAMESPACE + "999035921000230109")
                     .setName("Systolic blood pressure recording")))
             .where(ww -> ww
@@ -407,7 +407,7 @@ public class CoreQueryImporter implements TTImport {
             .where(ww -> ww
                 .setIri(IM.NAMESPACE + "concept")
                 .setName("concept")
-                .addIs(new Node()
+                .addInstanceOf(new Node()
                     .setIri("http://snomed.info/sct#999004691000230108")
                     .setName("Diabetes Mellitus")))
             .setOrderBy(new OrderLimit()
@@ -423,7 +423,7 @@ public class CoreQueryImporter implements TTImport {
                 .where(ww -> ww
                     .setIri(IM.NAMESPACE + "concept")
                     .setName("concept")
-                    .addIs(new Node()
+                    .addInstanceOf(new Node()
                         .setIri("http://snomed.info/sct#999003371000230102")
                         .setName("Diabetes Resolved")))
                 .where(ww -> ww
@@ -447,11 +447,11 @@ public class CoreQueryImporter implements TTImport {
                 .where(ww -> ww
                     .setIri(IM.NAMESPACE + "concept")
                     .setName("concept")
-                    .addIs(new Node()
+                    .addInstanceOf(new Node()
                         .setIri(activeIri)
                         .setName(activeName)
                         .setDescendantsOrSelfOf(true))
-                    .addIs(new Node()
+                    .addInstanceOf(new Node()
                         .setIri(inactiveIri)
                         .setName(inactiveName)
                         .setDescendantsOrSelfOf(true))
@@ -466,7 +466,7 @@ public class CoreQueryImporter implements TTImport {
                     .setDescription("Is " + activeName)
                     .addWhere(new Where()
                         .setIri(IM.NAMESPACE + "concept")
-                        .addIs(new Node()
+                        .addInstanceOf(new Node()
                             .setIri(activeIri)
                             .setName(activeName)
                             .setDescendantsOrSelfOf(true)))));
@@ -518,7 +518,7 @@ public class CoreQueryImporter implements TTImport {
                     .setTypeOf(IM.NAMESPACE + "Observation")
                     .addWhere(new Where()
                         .setIri(IM.NAMESPACE + "concept")
-                        .addIs(new Node().setIri(SNOMED.NAMESPACE + "714628002").setDescendantsOf(true))
+                        .addInstanceOf(new Node().setIri(SNOMED.NAMESPACE + "714628002").setDescendantsOf(true))
                         .setValueLabel("Prediabetes"))))
             .match(m -> m
                 .setName("Have high blood pressure in the last year")
@@ -529,11 +529,11 @@ public class CoreQueryImporter implements TTImport {
                 .where(ww -> ww
                     .setIri(IM.NAMESPACE + "concept")
                     .setName("concept")
-                    .addIs(new Node()
+                    .addInstanceOf(new Node()
                         .setIri(SNOMED.NAMESPACE + "271649006")
                         .setDescendantsOrSelfOf(true)
                         .setName("Systolic blood pressure"))
-                    .addIs(new Node()
+                    .addInstanceOf(new Node()
                         .setIri(GRAPH.EMIS + "1994021000006104")
                         .setDescendantsOrSelfOf(true)
                         .setName("Home systolic blood pressure"))
@@ -557,7 +557,7 @@ public class CoreQueryImporter implements TTImport {
                         .setDescription("Office based systolic blood pressure with value greater than 140")
                         .where(w -> w
                             .setIri(IM.NAMESPACE + "concept")
-                            .addIs(new Node()
+                            .addInstanceOf(new Node()
                                 .setIri(SNOMED.NAMESPACE + "271649006")
                                 .setDescendantsOrSelfOf(true)
                                 .setName("Systolic blood pressure"))
@@ -572,7 +572,7 @@ public class CoreQueryImporter implements TTImport {
                         .setBoolWhere(Bool.and)
                         .where(w -> w
                             .setIri(IM.NAMESPACE + "concept")
-                            .addIs(new Node()
+                            .addInstanceOf(new Node()
                                 .setIri(GRAPH.EMIS + "1994021000006104")
                                 .setDescendantsOrSelfOf(true)
                                 .setName("Home systolic blood pressure"))
@@ -590,7 +590,7 @@ public class CoreQueryImporter implements TTImport {
                 .setTypeOf(IM.NAMESPACE + "Observation")
                 .where(inv -> inv
                     .setIri(IM.NAMESPACE + "concept")
-                    .addIs(new Node().setIri(IM.NAMESPACE + "InvitedForScreening")))
+                    .addInstanceOf(new Node().setIri(IM.NAMESPACE + "InvitedForScreening")))
                 .where(after -> after
                     .setIri(IM.NAMESPACE + "effectiveDate")
                     .setOperator(Operator.gte)
@@ -680,7 +680,7 @@ public class CoreQueryImporter implements TTImport {
             .setTypeOf(IM.NAMESPACE + "GPRegistrationEpisode")
             .where(p1 -> p1
                 .setIri(IM.NAMESPACE + "gpPatientType")
-                .addIs(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
+                .addInstanceOf(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
             .where(pv -> pv
                 .setIri(IM.NAMESPACE + "effectiveDate")
                 .setOperator(Operator.lte)
@@ -757,7 +757,7 @@ public class CoreQueryImporter implements TTImport {
                 .setVariable("concept")
                 .addWhere(new Where()
                     .setIri(IM.IS_CONTAINED_IN)
-                    .addIs(IM.NAMESPACE + "EntityTypes")))
+                    .addInstanceOf(IM.NAMESPACE + "EntityTypes")))
             .match(m -> m
                 .setName("Is of type and is a child")
                 .setDescription("Is of the given type and is a child (contained in, subclass of, or subset of)")
@@ -770,10 +770,10 @@ public class CoreQueryImporter implements TTImport {
                         .setVariable("predicate")
                         .where(a2 -> a2
                             .setIri(SHACL.NODE)
-                            .addIs(new Node().setNodeRef("thisType")))
+                            .addInstanceOf(new Node().setNodeRef("thisType")))
                         .where(a2 -> a2
                             .setIri(SHACL.PATH)
-                            .setIs(List.of(Node.iri(IM.IS_CONTAINED_IN), Node.iri(RDFS.SUBCLASS_OF), Node.iri(IM.IS_SUBSET_OF)))))))
+                            .setInstanceOf(List.of(Node.iri(IM.IS_CONTAINED_IN), Node.iri(RDFS.SUBCLASS_OF), Node.iri(IM.IS_SUBSET_OF)))))))
             .match(m -> m
                 .setName("Is instance of $concept, $this (if content type is folder), excluding if $this is a content type itself")
                 .setBoolMatch(Bool.or)
@@ -789,8 +789,8 @@ public class CoreQueryImporter implements TTImport {
                         .setParameter("$this"))
                     .addWhere(new Where()
                         .setIri(IM.CONTENT_TYPE)
-                        .is(in -> in.setNodeRef("concept"))
-                        .is(in -> in.setIri(IM.FOLDER))))
+                        .instanceOf(in -> in.setNodeRef("concept"))
+                        .instanceOf(in -> in.setIri(IM.FOLDER))))
                 .match(m1 -> m1
                     .setName("instance of $this is a folder and not content type")
                     .setDescription("instance of $this is a folder and not content type")
@@ -802,7 +802,7 @@ public class CoreQueryImporter implements TTImport {
                             .setParameter("$this"))
                         .addWhere(new Where()
                             .setIri(RDF.TYPE)
-                            .is(in -> in.setIri(IM.FOLDER))))
+                            .instanceOf(in -> in.setIri(IM.FOLDER))))
                     .match(m2 -> m2
                         .setName("instance of $this is content type")
                         .setDescription("instance of $this is content type")
@@ -839,7 +839,7 @@ public class CoreQueryImporter implements TTImport {
                         .addWhere(new Where()
                             .setInverse(true)
                             .setIri(RDFS.RANGE)
-                            .addIs(new Node().setParameter("this")
+                            .addInstanceOf(new Node().setParameter("this")
                                 .setAncestorsOf(true))))
                   .query(q1->q1
                     .return_(r -> r
@@ -864,7 +864,7 @@ public class CoreQueryImporter implements TTImport {
                         .setVariable("concept")
                         .addWhere(new Where()
                             .setIri(RDFS.DOMAIN)
-                            .addIs(new Node().setParameter("this").setAncestorsOf(true))
+                            .addInstanceOf(new Node().setParameter("this").setAncestorsOf(true))
                         ))
                   .query(q->q
                     .match(m->m
@@ -940,7 +940,7 @@ public class CoreQueryImporter implements TTImport {
                         .setDescription("Conained in $value")
                         .addWhere(new Where()
                             .setIri(IM.IS_CONTAINED_IN)
-                            .is(i -> i
+                            .instanceOf(i -> i
                                 .setParameter("value")
                             )
                         )
@@ -960,7 +960,7 @@ public class CoreQueryImporter implements TTImport {
                         .setDescription("Subtypes (i.e. 'Is a') of $value")
                         .addWhere(new Where()
                             .setIri(RDF.TYPE)
-                            .is(i -> i
+                            .instanceOf(i -> i
                                 .setParameter("value")
                             )
                         )
@@ -987,7 +987,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setIsNull(true))
                             .where(p -> p
                                 .setIri(IM.CONTENT_TYPE)
-                                .is(i -> i.setParameter("value")))
+                                .instanceOf(i -> i.setParameter("value")))
 
                         )
                     )
@@ -1032,7 +1032,7 @@ public class CoreQueryImporter implements TTImport {
                         .setDescription("Is a subset of $this")
                         .addWhere(new Where()
                             .setIri(IM.IS_SUBSET_OF)
-                            .addIs(new Node().setParameter("this")
+                            .addInstanceOf(new Node().setParameter("this")
                             )
                         )
                     )
