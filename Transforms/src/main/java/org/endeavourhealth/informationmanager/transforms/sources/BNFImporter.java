@@ -245,7 +245,7 @@ public class BNFImporter implements TTImport {
 						.setAnyRoleGroup(true)
 						.setIri(IM.HAS_MEMBER_PARENT)
 						.setName("that have member parents in")
-						.instanceOf(i->i.setIri(entity.getIri()))))));
+						.is(i->i.setIri(entity.getIri()))))));
 		}
 		document.addEntity(entity);
 		codeToEntity.put(code,entity);
