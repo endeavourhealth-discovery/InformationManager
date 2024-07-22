@@ -26,6 +26,7 @@ public class CoreQueryImporter implements TTImport {
             getDescendants();
             getConcepts();
             getAllowableProperties();
+            boundEntities();
             getAllowableRanges();
             getSearchAll();
             allowableSubTypes();
@@ -306,7 +307,7 @@ public class CoreQueryImporter implements TTImport {
                             .setName("Systolic blood pressure"))
                         .setValueLabel("Office blood pressure"))
                     .where(w -> w
-                        .setIri(IM.NAMESPACE + "numericValue")
+                        .setIri(IM.NAMESPACE + "value")
                         .setOperator(Operator.gt)
                         .setValue("140")))
                 .match(m4 -> m4
@@ -322,7 +323,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setName("Home systolic blood pressure"))
                             .setValueLabel("Home blood pressure"))
                         .where(w -> w
-                            .setIri(IM.NAMESPACE + "numericValue")
+                            .setIri(IM.NAMESPACE + "value")
                             .setOperator(Operator.gt)
                             .setValue("130")))));
 
@@ -563,7 +564,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setName("Systolic blood pressure"))
                             .setValueLabel("Office blood pressure"))
                         .where(w -> w
-                            .setIri(IM.NAMESPACE + "numericValue")
+                            .setIri(IM.NAMESPACE + "value")
                             .setOperator(Operator.gt)
                             .setValue("140")))
                     .match(m4 -> m4
@@ -578,7 +579,7 @@ public class CoreQueryImporter implements TTImport {
                                 .setName("Home systolic blood pressure"))
                             .setValueLabel("Home blood pressure"))
                         .where(w -> w
-                            .setIri(IM.NAMESPACE + "numericValue")
+                            .setIri(IM.NAMESPACE + "value")
                             .setOperator(Operator.gt)
                             .setValue("130")))))
             .match(m -> m
@@ -590,7 +591,7 @@ public class CoreQueryImporter implements TTImport {
                 .setTypeOf(IM.NAMESPACE + "Observation")
                 .where(inv -> inv
                     .setIri(IM.NAMESPACE + "concept")
-                    .addIs(new Node().setIri(IM.NAMESPACE + "InvitedForScreening")))
+                    .addIs(new Node().setIri(IM.NAMESPACE + "InvitedForScreening").setName("invited for screening").setMemberOf(true)))
                 .where(after -> after
                     .setIri(IM.NAMESPACE + "effectiveDate")
                     .setOperator(Operator.gte)
@@ -826,7 +827,27 @@ public class CoreQueryImporter implements TTImport {
             .set(iri(IM.DEFINITION), TTLiteral.literal(query));
     }
 
-    private void getAllowableRanges() throws JsonProcessingException {
+    private void boundEntities() throws JsonProcessingException {
+       TTEntity queryEntity= getQuery("BoundEntities", "Data model bound concepts and sets","For a known data model type and property. Filters by entities that are bound via the value set ");
+          queryEntity.set(iri(IM.DEFINITION), TTLiteral.literal(
+              new Query()
+                .setName("Data model bound concepts and sets")
+                .setDescription("For a known data model type and property. Filters by entities that are bound via the value set")
+            .match(m -> m
+              .where(w -> w
+                .setIri(IM.BINDING)
+                .match(m1 -> m1
+                  .where(w1 -> w1
+                    .setIri(SHACL.PATH)
+                    .is(is -> is.setIri(IM.NAMESPACE + "concept")))
+                  .where(w1 -> w1
+                    .setIri(SHACL.NODE)
+                    .is(is -> is.setIri(IM.NAMESPACE + "Observation"))))))));
+
+    }
+
+
+        private void getAllowableRanges() throws JsonProcessingException {
         getQuery("AllowableRanges", "Allowable ranges for a particular property or its ancestors", "uses inverse range property to return the ranges of the property as authored. Should be used with another ")
             .set(iri(IM.DEFINITION), TTLiteral.literal(
                 new Query()
