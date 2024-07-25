@@ -5,7 +5,7 @@
 	<!--Author: Jonathan Homer (jonathan.homer@e-mis.com)-->
 	<!--Created: 01/01/2006-->
 	<!--Modified:: 26/01/2007 12:00-->
-	<xs:include schemaLocation="vocabulary.xsd"/>
+	<xs:include schemaLocation="vocabulary.xs"/>
 	<xs:complexType name="dt.dbo">
 		<xs:annotation>
 			<xs:documentation>Database Object</xs:documentation>

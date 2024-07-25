@@ -1,7 +1,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix rep: <http://www.openrdf.org/config/repository#> .
 @prefix sail: <http://www.openrdf.org/config/sail#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix xs: <http://www.w3.org/2001/XMLSchema#> .
 <#im> a rep:Repository;
       rep:repositoryID "im";
       rep:repositoryImpl [

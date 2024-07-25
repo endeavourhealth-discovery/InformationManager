@@ -6,7 +6,7 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
-import org.endeavourhealth.imapi.vocabulary.XSD;
+import org.endeavourhealth.imapi.vocabulary.XS;
 
 import java.io.File;
 import java.io.IOException;
@@ -266,13 +266,13 @@ public class WikiGenerator {
 	private String getTitle(TTIriRef iri) throws DataFormatException, IOException {
 		if (iri.getIri().equals(SHACL.IRI))
 			return "international resource identifier";
-		else if (iri.getIri().equals(XSD.STRING))
+		else if (iri.getIri().equals(XS.STRING))
 			return "any valid json value characters with json escapes";
-		else if (iri.getIri().equals(XSD.INTEGER))
+		else if (iri.getIri().equals(XS.INTEGER))
 			return "whole number";
 		else if (iri.getIri().equals(IM.NAMESPACE+"DateTime"))
 			return "im date time format";
-		else if (iri.getIri().equals(XSD.BOOLEAN))
+		else if (iri.getIri().equals(XS.BOOLEAN))
 			return "boolean true or false";
 		else {
 			TTEntity entity = getEntity(iri.getIri());
