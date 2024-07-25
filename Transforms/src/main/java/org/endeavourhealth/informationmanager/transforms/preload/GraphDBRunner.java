@@ -11,33 +11,34 @@ import java.util.List;
 
 public class GraphDBRunner implements Runnable {
 
-	private String graphdb;
+  private String graphdb;
 
 
-	public GraphDBRunner (String graphStart){
-		this.graphdb= graphStart;
-	}
-	@Override
-	public void run() {
-		List<String> cmds = new ArrayList();
-		if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-			ProcessBuilder processBuilder = new ProcessBuilder();
-			processBuilder.command("cmd", "/c", graphdb);
-			File dir = new File(TTBulkFiler.getPreload()+"\\");
-			processBuilder.directory(dir);
-			try {
-				Process process=processBuilder.start();
-				BufferedReader reader = new BufferedReader(
-					new InputStreamReader(process.getInputStream()));
-				String line;
-				while ((line = reader.readLine()) != null) {
-					//System.out.println(line);
-					Thread.sleep(500);
-				}
+  public GraphDBRunner(String graphStart) {
+    this.graphdb = graphStart;
+  }
 
-			} catch (IOException | InterruptedException e) {
-				e.printStackTrace();
-			}
+  @Override
+  public void run() {
+    List<String> cmds = new ArrayList();
+    if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+      ProcessBuilder processBuilder = new ProcessBuilder();
+      processBuilder.command("cmd", "/c", graphdb);
+      File dir = new File(TTBulkFiler.getPreload() + "\\");
+      processBuilder.directory(dir);
+      try {
+        Process process = processBuilder.start();
+        BufferedReader reader = new BufferedReader(
+          new InputStreamReader(process.getInputStream()));
+        String line;
+        while ((line = reader.readLine()) != null) {
+          //System.out.println(line);
+          Thread.sleep(500);
+        }
+
+      } catch (IOException | InterruptedException e) {
+        e.printStackTrace();
+      }
 
 			/*
 			ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -67,19 +68,18 @@ public class GraphDBRunner implements Runnable {
 
 			 */
 
-		}
-		else {
-			cmds.add(graphdb);
+    } else {
+      cmds.add(graphdb);
 
-			try {
-				new ProcessBuilder()
-					.directory(new File(TTBulkFiler.getPreload()))
-					.command(cmds)
-					.start();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+      try {
+        new ProcessBuilder()
+          .directory(new File(TTBulkFiler.getPreload()))
+          .command(cmds)
+          .start();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
 
-	}
+  }
 }

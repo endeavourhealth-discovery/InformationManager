@@ -25,96 +25,97 @@ import java.util.Set;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class WinPathKingsImport implements TTImport {
-    private static final Logger LOG = LoggerFactory.getLogger(WinPathKingsImport.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WinPathKingsImport.class);
 
-	private static final String[] kingsWinPath = {".*\\\\Kings\\\\Winpath.txt"};
-	private TTDocument document;
-	private Map<String, Set<String>> readToSnomed = new HashMap<>();
-	private final ImportMaps importMaps = new ImportMaps();
+  private static final String[] kingsWinPath = {".*\\\\Kings\\\\Winpath.txt"};
+  private TTDocument document;
+  private Map<String, Set<String>> readToSnomed = new HashMap<>();
+  private final ImportMaps importMaps = new ImportMaps();
 
-	@Override
-	public void importData(TTImportConfig config) throws Exception {
-		try (TTManager manager = new TTManager()) {
-            document = manager.createDocument(GRAPH.KINGS_WINPATH);
-            document.addEntity(manager.createGraph(GRAPH.KINGS_WINPATH,
-                "Kings Winpath pathology code scheme and graph",
-                "The Kings pathology Winpath LIMB local code scheme and graph"));
-            setTopLevel();
-            importR2Matches();
-            importWinPathKings(config.getFolder());
-            try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-                filer.fileDocument(document);
-            }
-        }
-	}
-	private void setTopLevel() {
-		TTEntity kings= new TTEntity()
-			.setIri(GRAPH.KINGS_WINPATH+"KingsWinPathCodes")
-			.addType(iri(IM.CONCEPT))
-			.setName("Kings College Hospital  Winpath codes")
-			.setCode("KingsWinPathCodes")
-			.setScheme(iri(GRAPH.KINGS_WINPATH))
-			.setDescription("Local codes for the Winpath pathology system in kings")
-			.set(iri(IM.IS_CONTAINED_IN),new TTArray().add(TTIriRef.iri(IM.NAMESPACE+"CodeBasedTaxonomies")));
-		document.addEntity(kings);
-	}
-
-
-	private void importR2Matches() throws  TTFilerException, IOException {
-		LOG.info("Retrieving read vision 2 snomed map");
-		readToSnomed= importMaps.importReadToSnomed();
-
-	}
-
-	private void importWinPathKings(String folder) throws IOException {
-		LOG.info("Importing kings code file");
-
-		Path file = ImportUtils.findFileForId(folder, kingsWinPath[0]);
-		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-			reader.readLine(); // NOSONAR - Skip header
-			String line = reader.readLine();
-			int count = 0;
-			while (line != null && !line.isEmpty()) {
-				String[] fields = line.split("\t");
-				String readCode = fields[2];
-				String code = fields[0];
-				String iri = GRAPH.KINGS_WINPATH + (fields[0].replaceAll("[ %,.\"]", ""));
-				TTEntity entity = new TTEntity()
-					.setIri(iri)
-					.addType(iri(IM.CONCEPT))
-					.setName(fields[1])
-					.setDescription("Local winpath Kings trust pathology system entity ")
-					.setScheme(iri(GRAPH.KINGS_WINPATH))
-					.set(iri(IM.IS_CHILD_OF),new TTArray().add(TTIriRef.iri(GRAPH.KINGS_APEX+"KingsWinPathCodes")))
-					.setCode(code);
-				document.addEntity(entity);
-				if (readToSnomed.get(readCode) != null) {
-					for (String snomed : readToSnomed.get(readCode)) {
-						entity.addObject(iri(IM.MATCHED_TO),TTIriRef.iri(SNOMED.NAMESPACE+snomed));
-					}
-				}
-
-				count++;
-				if (count % 500 == 0) {
-					LOG.info("Processed {} records", count);
-				}
-				line = reader.readLine();
-			}
-			LOG.info("Process ended with {} records", count);
-		}
-
-	}
-
-
-	@Override
-	public void validateFiles(String inFolder) {
-		ImportUtils.validateFiles(inFolder,kingsWinPath);
-	}
-
-
-    @Override
-    public void close() throws Exception {
-        readToSnomed.clear();
-        importMaps.close();
+  @Override
+  public void importData(TTImportConfig config) throws Exception {
+    try (TTManager manager = new TTManager()) {
+      document = manager.createDocument(GRAPH.KINGS_WINPATH);
+      document.addEntity(manager.createGraph(GRAPH.KINGS_WINPATH,
+        "Kings Winpath pathology code scheme and graph",
+        "The Kings pathology Winpath LIMB local code scheme and graph"));
+      setTopLevel();
+      importR2Matches();
+      importWinPathKings(config.getFolder());
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
     }
+  }
+
+  private void setTopLevel() {
+    TTEntity kings = new TTEntity()
+      .setIri(GRAPH.KINGS_WINPATH + "KingsWinPathCodes")
+      .addType(iri(IM.CONCEPT))
+      .setName("Kings College Hospital  Winpath codes")
+      .setCode("KingsWinPathCodes")
+      .setScheme(iri(GRAPH.KINGS_WINPATH))
+      .setDescription("Local codes for the Winpath pathology system in kings")
+      .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies")));
+    document.addEntity(kings);
+  }
+
+
+  private void importR2Matches() throws TTFilerException, IOException {
+    LOG.info("Retrieving read vision 2 snomed map");
+    readToSnomed = importMaps.importReadToSnomed();
+
+  }
+
+  private void importWinPathKings(String folder) throws IOException {
+    LOG.info("Importing kings code file");
+
+    Path file = ImportUtils.findFileForId(folder, kingsWinPath[0]);
+    try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+      reader.readLine(); // NOSONAR - Skip header
+      String line = reader.readLine();
+      int count = 0;
+      while (line != null && !line.isEmpty()) {
+        String[] fields = line.split("\t");
+        String readCode = fields[2];
+        String code = fields[0];
+        String iri = GRAPH.KINGS_WINPATH + (fields[0].replaceAll("[ %,.\"]", ""));
+        TTEntity entity = new TTEntity()
+          .setIri(iri)
+          .addType(iri(IM.CONCEPT))
+          .setName(fields[1])
+          .setDescription("Local winpath Kings trust pathology system entity ")
+          .setScheme(iri(GRAPH.KINGS_WINPATH))
+          .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(GRAPH.KINGS_APEX + "KingsWinPathCodes")))
+          .setCode(code);
+        document.addEntity(entity);
+        if (readToSnomed.get(readCode) != null) {
+          for (String snomed : readToSnomed.get(readCode)) {
+            entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+          }
+        }
+
+        count++;
+        if (count % 500 == 0) {
+          LOG.info("Processed {} records", count);
+        }
+        line = reader.readLine();
+      }
+      LOG.info("Process ended with {} records", count);
+    }
+
+  }
+
+
+  @Override
+  public void validateFiles(String inFolder) {
+    ImportUtils.validateFiles(inFolder, kingsWinPath);
+  }
+
+
+  @Override
+  public void close() throws Exception {
+    readToSnomed.clear();
+    importMaps.close();
+  }
 }

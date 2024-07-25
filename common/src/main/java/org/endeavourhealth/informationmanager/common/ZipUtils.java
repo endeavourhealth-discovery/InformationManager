@@ -9,8 +9,8 @@ import java.io.*;
 import java.util.List;
 
 public class ZipUtils {
-    private static final Logger LOG = LoggerFactory.getLogger(ZipUtils.class);
-    private static final Integer ZIP_BUFFER = 1024 * 32;
+  private static final Logger LOG = LoggerFactory.getLogger(ZipUtils.class);
+  private static final Integer ZIP_BUFFER = 1024 * 32;
 
 /*    public static void zipFile(String sourceFile, String destZip, String workDir) throws IOException, InterruptedException {
         deleteZipParts(workDir + destZip);
@@ -26,23 +26,23 @@ public class ZipUtils {
         Files.delete(fileToZip.toPath());
     }*/
 
-    public static File unzipFile(String sourceZip, String workDir) throws IOException {
-        LOG.info("Unzipping {}...", sourceZip);
-        File fileToUnzip = new File(workDir, sourceZip);
-        try (ZipFile zipFile = new ZipFile(fileToUnzip)) {
+  public static File unzipFile(String sourceZip, String workDir) throws IOException {
+    LOG.info("Unzipping {}...", sourceZip);
+    File fileToUnzip = new File(workDir, sourceZip);
+    try (ZipFile zipFile = new ZipFile(fileToUnzip)) {
 
-            List<FileHeader> zipEntries = zipFile.getFileHeaders();
-            if (zipEntries.isEmpty() || zipEntries.size() > 1) {
-                LOG.error("Zip contains more than 1 file!");
-                System.exit(-1);
-            }
+      List<FileHeader> zipEntries = zipFile.getFileHeaders();
+      if (zipEntries.isEmpty() || zipEntries.size() > 1) {
+        LOG.error("Zip contains more than 1 file!");
+        System.exit(-1);
+      }
 
-            FileHeader entry = zipEntries.get(0);
+      FileHeader entry = zipEntries.get(0);
 
-            zipFile.extractFile(entry, workDir);
-            return new File(workDir, entry.getFileName());
-        }
+      zipFile.extractFile(entry, workDir);
+      return new File(workDir, entry.getFileName());
     }
+  }
 /*
     public static byte[] compress(byte[] data) throws IOException {
         Deflater deflater = new Deflater(Deflater.BEST_COMPRESSION);
