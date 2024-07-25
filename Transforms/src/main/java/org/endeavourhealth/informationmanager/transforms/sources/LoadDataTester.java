@@ -4,9 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LoadDataTester {
-    private static final Logger LOG = LoggerFactory.getLogger(LoadDataTester.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LoadDataTester.class);
 
-    public static void testLoadData(String outpath, boolean secure) throws Exception {
+  public static void testLoadData(String outpath, boolean secure) throws Exception {
         /*
         LOG.info("Testing LOAD DATA configuration.");
 
@@ -53,7 +53,7 @@ public class LoadDataTester {
         }
 
          */
-    }
+  }
 
 
 }

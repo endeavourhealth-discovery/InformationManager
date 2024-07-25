@@ -12,32 +12,32 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 
 public class EncountersImporter implements TTImport {
-    private static final Logger LOG = LoggerFactory.getLogger(EncountersImporter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EncountersImporter.class);
 
-    private static final String[] encounters = {".*\\\\DiscoveryNoneCore\\\\Encounters.json"};
+  private static final String[] encounters = {".*\\\\DiscoveryNoneCore\\\\Encounters.json"};
 
 
-    public void importData(TTImportConfig config) throws Exception {
-        LOG.info("Importing Discovery encounters");
-        importNoneCoreFile(config);
+  public void importData(TTImportConfig config) throws Exception {
+    LOG.info("Importing Discovery encounters");
+    importNoneCoreFile(config);
+  }
+
+  private void importNoneCoreFile(TTImportConfig config) throws Exception {
+    Path file = ImportUtils.findFileForId(config.getFolder(), encounters[0]);
+    TTManager manager = new TTManager();
+    TTDocument document = manager.loadDocument(file.toFile());
+    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      filer.fileDocument(document);
     }
+  }
 
-    private void importNoneCoreFile(TTImportConfig config) throws Exception {
-        Path file = ImportUtils.findFileForId(config.getFolder(), encounters[0]);
-        TTManager manager = new TTManager();
-        TTDocument document = manager.loadDocument(file.toFile());
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
-        }
-    }
-
-    public void validateFiles(String inFolder) {
-        ImportUtils.validateFiles(inFolder, encounters);
-    }
+  public void validateFiles(String inFolder) {
+    ImportUtils.validateFiles(inFolder, encounters);
+  }
 
 
-    @Override
-    public void close() throws Exception {
+  @Override
+  public void close() throws Exception {
 
-    }
+  }
 }
