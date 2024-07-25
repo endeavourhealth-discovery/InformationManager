@@ -3,34 +3,34 @@
  */
 
 sonarqube {
-    properties {
-        property 'sonar.projectKey', 'endeavourhealth-discovery_InformationManager::common'
-    }
+  properties {
+    property 'sonar.projectKey', 'endeavourhealth-discovery_InformationManager::common'
+  }
 }
 
 dependencies {
-    implementation libs.imapi
+  implementation libs.imapi
 
-    implementation libs.collections4
-    implementation libs.zip4j
-    implementation libs.owlApiApiBinding
-    implementation libs.owlApiDistribution
-    implementation libs.commonsIO
-    implementation libs.guava
-    implementation libs.snomed
-    implementation libs.antlr
+  implementation libs.collections4
+  implementation libs.zip4j
+  implementation libs.owlApiApiBinding
+  implementation libs.owlApiDistribution
+  implementation libs.commonsIO
+  implementation libs.guava
+  implementation libs.snomed
+  implementation libs.antlr
 }
 
 publishing {
-    repositories {
-        maven {
-            url = uri('https://artifactory.endhealth.co.uk/repository/maven-snapshots')
-            credentials {
-                username = MAVEN_USERNAME
-                password = MAVEN_PASSWORD
-            }
-        }
+  repositories {
+    maven {
+      url = uri('https://artifactory.endhealth.co.uk/repository/maven-snapshots')
+      credentials {
+        username = MAVEN_USERNAME
+        password = MAVEN_PASSWORD
+      }
     }
+  }
 }
 
 description = 'common'

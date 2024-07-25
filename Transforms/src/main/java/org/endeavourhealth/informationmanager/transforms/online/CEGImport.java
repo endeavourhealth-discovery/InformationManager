@@ -7,19 +7,19 @@ import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 
 public class CEGImport {
-	public static void main(String[] args) throws Exception {
-		if (args.length < 1) {
-			System.err.println("Insufficient parameters supplied:");
-			System.err.println("<folder> ");
-			System.exit(-1);
-		}
+  public static void main(String[] args) throws Exception {
+    if (args.length < 1) {
+      System.err.println("Insufficient parameters supplied:");
+      System.err.println("<folder> ");
+      System.exit(-1);
+    }
 
-		TTImportConfig cfg = new TTImportConfig();
+    TTImportConfig cfg = new TTImportConfig();
 
-		// Mandatory/ordered args
-		cfg.setFolder(args[0]);
-		TTImportByType importer= new Importer();
-		importer.validateByType(GRAPH.CEG_QUERY, cfg.getFolder());
-		importer.importByType(GRAPH.CEG_QUERY,cfg);
-	}
+    // Mandatory/ordered args
+    cfg.setFolder(args[0]);
+    TTImportByType importer = new Importer();
+    importer.validateByType(GRAPH.CEG_QUERY, cfg.getFolder());
+    importer.importByType(GRAPH.CEG_QUERY, cfg);
+  }
 }

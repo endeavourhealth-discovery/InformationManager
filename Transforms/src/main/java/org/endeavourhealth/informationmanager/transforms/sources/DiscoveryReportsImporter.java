@@ -14,46 +14,46 @@ import java.nio.file.Path;
 
 
 public class DiscoveryReportsImporter implements TTImport {
-    private static final Logger LOG = LoggerFactory.getLogger(DiscoveryReportsImporter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DiscoveryReportsImporter.class);
 
-    private static final String[] ReportsConcepts = {".*\\\\StatsReports-inferred.json"};
+  private static final String[] ReportsConcepts = {".*\\\\StatsReports-inferred.json"};
 
-    public void validateFiles(String inFolder) {
-        ImportUtils.validateFiles(inFolder, ReportsConcepts);
+  public void validateFiles(String inFolder) {
+    ImportUtils.validateFiles(inFolder, ReportsConcepts);
+  }
+
+  /**
+   * Imports the reports document
+   *
+   * @param config import configuration
+   * @return TTImport object builder pattern
+   * @throws Exception invalid document
+   */
+  public void importData(TTImportConfig config) throws Exception {
+    LOG.info("Importing Reports concepts");
+    TTDocument document = loadFile(config.getFolder());
+    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      filer.fileDocument(document);
     }
+  }
 
-    /**
-     * Imports the reports document
-     *
-     * @param config import configuration
-     * @return TTImport object builder pattern
-     * @throws Exception invalid document
-     */
-    public void importData(TTImportConfig config) throws Exception {
-        LOG.info("Importing Reports concepts");
-        TTDocument document = loadFile(config.getFolder());
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
-        }
-    }
+  /**
+   * Loads the core ontology document, available as TTDocument for various purposes
+   *
+   * @param inFolder root folder containing the document
+   * @return TTDocument containing Discovery ontology
+   * @throws IOException in the event of an IO failure
+   */
+  public TTDocument loadFile(String inFolder) throws IOException {
+    Path file = ImportUtils.findFileForId(inFolder, ReportsConcepts[0]);
+    TTManager manager = new TTManager();
+    TTDocument document = manager.loadDocument(file.toFile());
+    return document;
 
-    /**
-     * Loads the core ontology document, available as TTDocument for various purposes
-     *
-     * @param inFolder root folder containing the document
-     * @return TTDocument containing Discovery ontology
-     * @throws IOException in the event of an IO failure
-     */
-    public TTDocument loadFile(String inFolder) throws IOException {
-        Path file = ImportUtils.findFileForId(inFolder, ReportsConcepts[0]);
-        TTManager manager = new TTManager();
-        TTDocument document = manager.loadDocument(file.toFile());
-        return document;
+  }
 
-    }
+  @Override
+  public void close() throws Exception {
 
-    @Override
-    public void close() throws Exception {
-
-    }
+  }
 }

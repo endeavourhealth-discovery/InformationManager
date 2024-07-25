@@ -1,6 +1,9 @@
 USE im6;
-DELETE FROM config WHERE name = 'definition';
-INSERT INTO config (name, config) VALUES ('definition', '[
+DELETE
+FROM config
+WHERE name = 'definition';
+INSERT INTO config (name, config)
+VALUES ('definition', '[
   {
     "size": "100%",
     "type": "TextSectionHeader",
@@ -100,8 +103,11 @@ INSERT INTO config (name, config) VALUES ('definition', '[
     "predicate": "termCodes"
   }
 ]');
-DELETE FROM config WHERE name = 'filterDefaults';
-INSERT INTO config (name, config) VALUES ('filterDefaults', '{
+DELETE
+FROM config
+WHERE name = 'filterDefaults';
+INSERT INTO config (name, config)
+VALUES ('filterDefaults', '{
 	"schemeOptions": [
 		"http://endhealth.info/im#",
         "http://snomed.info/sct#"
@@ -123,17 +129,25 @@ INSERT INTO config (name, config) VALUES ('filterDefaults', '{
     ]
 }');
 
-DELETE FROM config WHERE name = 'inferredPredicates';
-INSERT INTO config (name, config) VALUES ('inferredPredicates', '[
+DELETE
+FROM config
+WHERE name = 'inferredPredicates';
+INSERT INTO config (name, config)
+VALUES ('inferredPredicates', '[
     "http://www.w3.org/2000/01/rdf-schema#subClassOf",
     "http://endhealth.info/im#roleGroup",
     "http://endhealth.info/im#isContainedIn"
 ]');
 
-DELETE FROM config WHERE name = 'axiomPredicates';
+DELETE
+FROM config
+WHERE name = 'axiomPredicates';
 
-DELETE FROM config WHERE name = 'inferredExcludePredicates';
-INSERT INTO config (name, config) VALUES ('inferredExcludePredicates', '[
+DELETE
+FROM config
+WHERE name = 'inferredExcludePredicates';
+INSERT INTO config (name, config)
+VALUES ('inferredExcludePredicates', '[
     "http://www.w3.org/2000/01/rdf-schema#label",
     "http://endhealth.info/im#status",
     "http://endhealth.info/im#Status",
@@ -145,8 +159,11 @@ INSERT INTO config (name, config) VALUES ('inferredExcludePredicates', '[
     "http://endhealth.info/im#code"
   ]');
 
-DELETE FROM config WHERE name = 'conceptDashboard';
-INSERT INTO config (name, config) VALUES ('conceptDashboard', '[
+DELETE
+FROM config
+WHERE name = 'conceptDashboard';
+INSERT INTO config (name, config)
+VALUES ('conceptDashboard', '[
   {
     "type": "ReportTable",
     "order": 100,
@@ -169,8 +186,11 @@ INSERT INTO config (name, config) VALUES ('conceptDashboard', '[
   }
 ]');
 
-DELETE FROM config WHERE name = 'defaultPredicateNames';
-INSERT INTO config (name, config) VALUES ('defaultPredicateNames', '{
+DELETE
+FROM config
+WHERE name = 'defaultPredicateNames';
+INSERT INTO config (name, config)
+VALUES ('defaultPredicateNames', '{
     "http://www.w3.org/2000/01/rdf-schema#subClassOf": "Is subclass of",
     "http://endhealth.info/im#roleGroup": "Where",
     "http://www.w3.org/2002/07/owl#equivalentClass": "Is equivalent to",
@@ -183,8 +203,11 @@ INSERT INTO config (name, config) VALUES ('defaultPredicateNames', '{
   "http://www.w3.org/ns/shacl#datatype": "Type"
   }');
 
-DELETE FROM config WHERE name = 'xmlSchemaDataTypes';
-INSERT INTO config (name, config) VALUES ('xmlSchemaDataTypes', '[
+DELETE
+FROM config
+WHERE name = 'xmlSchemaDataTypes';
+INSERT INTO config (name, config)
+VALUES ('xmlSchemaDataTypes', '[
     "http://www.w3.org/2001/XMLSchema#string",
     "http://www.w3.org/2001/XMLSchema#boolean",
     "http://www.w3.org/2001/XMLSchema#float",

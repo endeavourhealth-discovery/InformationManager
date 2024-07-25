@@ -3,35 +3,35 @@
  */
 
 sonarqube {
-    properties {
-        property 'sonar.projectKey', 'endeavourhealth-discovery_InformationManager::Feeds'
-    }
+  properties {
+    property 'sonar.projectKey', 'endeavourhealth-discovery_InformationManager::Feeds'
+  }
 }
 
 dependencies {
-    api project(':common')
-    implementation libs.imapi
+  api project(':common')
+  implementation libs.imapi
 
-    implementation libs.commonsIO
-    implementation libs.jacksonAnnotations
-    implementation libs.jacksonCore
-    implementation libs.jacksonJax
-    implementation libs.jerseyClient
-    implementation libs.json
-    implementation libs.owlApiApiBinding
-    implementation libs.owlApiDistribution
-    implementation libs.rdf4jQuery
-    implementation libs.rdf4jRepoApi
-    implementation libs.rdf4jRepoHttp
-    implementation libs.rdf4jRepoSail
-    implementation libs.slf4j
-    implementation libs.wsrs
+  implementation libs.commonsIO
+  implementation libs.jacksonAnnotations
+  implementation libs.jacksonCore
+  implementation libs.jacksonJax
+  implementation libs.jerseyClient
+  implementation libs.json
+  implementation libs.owlApiApiBinding
+  implementation libs.owlApiDistribution
+  implementation libs.rdf4jQuery
+  implementation libs.rdf4jRepoApi
+  implementation libs.rdf4jRepoHttp
+  implementation libs.rdf4jRepoSail
+  implementation libs.slf4j
+  implementation libs.wsrs
 
-    testImplementation libs.junit
+  testImplementation libs.junit
 }
 
 test {
-    useJUnitPlatform()
+  useJUnitPlatform()
 }
 
 description = 'Scratch'

@@ -3,13 +3,13 @@
  */
 
 sonarqube {
-    properties {
-        property 'sonar.projectKey', 'endeavourhealth-discovery_InformationManager::V1-V2Migration'
-    }
+  properties {
+    property 'sonar.projectKey', 'endeavourhealth-discovery_InformationManager::V1-V2Migration'
+  }
 }
 
 dependencies {
-    // implementation 'mysql:mysql-connector-java:8.0.19'
+  // implementation 'mysql:mysql-connector-java:8.0.19'
 }
 
 description = 'V1-V2Migration'

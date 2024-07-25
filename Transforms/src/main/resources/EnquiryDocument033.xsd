@@ -1,1434 +1,1478 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns="http://www.e-mis.com/emisopen" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.e-mis.com/emisopen" elementFormDefault="qualified" attributeFormDefault="unqualified">
- <xs:include schemaLocation="datatypes.xsd"/>
- <xs:include schemaLocation="vocabulary.xsd"/>
- <xs:element name="enquiryDocument" type="EnquiryDocument"/>
- <xs:complexType name="EnquiryDocument">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="name" type="xs:string" minOccurs="0"/>
-   <xs:element name="creationTime" type="dt.DateTime">
-    <xs:annotation>
-     <xs:documentation>Date and time of message generation on originating system</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="enquirer" type="EQDOC.Enquirer" minOccurs="0"/>
-   <xs:element name="reportFolder" type="EQDOC.Folder" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="report" type="EQDOC.Report" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="libraryItem" type="EQDOC.LibraryItem" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="mailMergeItem" type="EQDOC.MailMerge" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="reportCollections" type="EQDOC.ReportCollections" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="reportSetGroup" type="EQDOC.ReportSetGroup" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="QMAS" type="EQDOC.QMAS" minOccurs="0"/>
-   <xs:element name="GPES" type="EQDOC.GPES" minOccurs="0"/>
-  </xs:sequence>
-  <xs:attribute name="schemaVersion" type="dt.Version" use="required" fixed="32.0.0"/>
-  <xs:attribute name="version" type="dt.Version" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.Parameters">
-  <xs:sequence>
-   <xs:element name="InputParam" type="EQDOC.InputParameter" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="PatientFilter" type="EQDOC.PatientFilter" minOccurs="0"/>
-   <xs:element name="SubstitutionValue" type="EQDOC.SubstitutionValue" minOccurs="0" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Enquirer">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="name" type="xs:string"/>
-   <xs:element name="nationalCode" type="dt.Code" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>National Code of enquirer.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="agreement" type="EQDOC.EnquirerAgreement" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.EnquirerAgreement">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="name" type="xs:string"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Folder">
-  <xs:complexContent>
-   <xs:extension base="dt.dbo">
+<xs:schema xmlns="http://www.e-mis.com/emisopen" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.e-mis.com/emisopen" elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+  <xs:include schemaLocation="datatypes.xsd"/>
+  <xs:include schemaLocation="vocabulary.xsd"/>
+  <xs:element name="enquiryDocument" type="EnquiryDocument"/>
+  <xs:complexType name="EnquiryDocument">
     <xs:sequence>
-     <xs:element name="id" type="dt.uid"/>
-     <xs:element name="name" type="xs:string"/>
-     <xs:element name="parentFolder" type="dt.uid" minOccurs="0"/>
-     <xs:element name="sequence" type="xs:short" minOccurs="0">
-      <xs:annotation>
-       <xs:documentation>Display order</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="enterpriseReportingLevel" type="voc.EnterpriseReportingLevel" minOccurs="0"/>
-     <xs:element name="association" type="EQDOC.FolderAssociation" minOccurs="0" maxOccurs="unbounded"/>
-     <xs:element name="author" type="EQDOC.Author" minOccurs="0"/>
-     <xs:element name="schedule" type="EQDOC.Schedule" minOccurs="0" maxOccurs="unbounded"/>
-     <xs:element name="PopulationTypeId" type="voc.PopulationType" minOccurs="0"/>
-     <xs:element name="IsEnterpriseSearchOverride" type="xs:boolean"/>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="name" type="xs:string" minOccurs="0"/>
+      <xs:element name="creationTime" type="dt.DateTime">
+        <xs:annotation>
+          <xs:documentation>Date and time of message generation on originating system</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="enquirer" type="EQDOC.Enquirer" minOccurs="0"/>
+      <xs:element name="reportFolder" type="EQDOC.Folder" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="report" type="EQDOC.Report" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="libraryItem" type="EQDOC.LibraryItem" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="mailMergeItem" type="EQDOC.MailMerge" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="reportCollections" type="EQDOC.ReportCollections" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="reportSetGroup" type="EQDOC.ReportSetGroup" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="QMAS" type="EQDOC.QMAS" minOccurs="0"/>
+      <xs:element name="GPES" type="EQDOC.GPES" minOccurs="0"/>
     </xs:sequence>
-   </xs:extension>
-  </xs:complexContent>
- </xs:complexType>
- <xs:complexType name="EQDOC.FolderAssociation">
-  <xs:choice>
-   <xs:element name="organisation" type="dt.uid"/>
-   <xs:element name="speciality" type="dt.uid"/>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.PopulationDefinition">
-  <xs:sequence>
-   <xs:element name="searchDate" type="voc.SearchDateType">
-    <xs:annotation>
-     <xs:documentation>The date to which relative dates are applied. Default is todays date.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="parent" type="EQDOC.PopulationParent">
-    <xs:annotation>
-     <xs:documentation>The parent population.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="criteriaGroup" type="EQDOC.CriteriaGroup" minOccurs="0" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Population">
-  <xs:sequence>
-   <xs:element name="criteriaGroup" type="EQDOC.CriteriaGroup" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="dynamicColumn" type="EQDOC.DynamicColumn" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="contractInformation" type="EQDOC.ContractInformation" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Author">
-  <xs:choice>
-   <xs:element name="userInRole" type="dt.uid"/>
-   <xs:element name="authorName" type="xs:string">
-    <xs:annotation>
-     <xs:documentation>String representation of author.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.ContractInformation">
-  <xs:sequence>
-   <xs:element name="scoreNeeded" type="dt.bool"/>
-   <xs:element name="minimum" type="xs:int" minOccurs="0"/>
-   <xs:element name="maximum" type="xs:int" minOccurs="0"/>
-   <xs:element name="target" type="xs:int" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.PopulationParent">
-  <xs:sequence>
-   <xs:element name="SearchIdentifier" type="EQDOC.SearchIdentifier" minOccurs="0"/>
-  </xs:sequence>
-  <xs:attribute name="parentType" type="voc.PopulationParentType" use="required">
-   <xs:annotation>
-    <xs:documentation>Default is ALL. Type of ACTIVE is valid only when populationType is PATIENT.</xs:documentation>
-   </xs:annotation>
-  </xs:attribute>
-  <!-- <xs:attribute name="population" type="dt.uid" use="optional">
-			<xs:annotation>
-				<xs:documentation>Entries only valid when parentType is POP.</xs:documentation>
-			</xs:annotation>
-		</xs:attribute> -->
- </xs:complexType>
- <xs:complexType name="EQDOC.SearchIdentifier">
-  <xs:annotation>
-   <xs:documentation>Defines the version independent GUID of a pop man search</xs:documentation>
-  </xs:annotation>
-  <xs:attribute name="reportGuid" type="dt.uid" use="optional"/>
-  <xs:attribute name="versionIndependentGuid" type="dt.uid" use="optional"/>
-  <xs:attribute name="populationType" type="voc.InstanceType" use="optional"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.CriteriaGroupDefinition">
-  <xs:sequence>
-   <xs:element name="memberOperator" type="voc.MemberOperator"/>
-   <xs:element name="criteria" type="EQDOC.Criteria" maxOccurs="unbounded"/>
-   <xs:element name="parentPopulationGuid" type="dt.uid" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Use a different population's results for the base criteria's patient list</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.CriteriaGroup">
-  <xs:complexContent>
-   <xs:extension base="EQDOC.BaseCriteriaGroup">
+    <xs:attribute name="schemaVersion" type="dt.Version" use="required" fixed="32.0.0"/>
+    <xs:attribute name="version" type="dt.Version" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Parameters">
     <xs:sequence>
-     <xs:element name="actionIfTrue" type="voc.RuleAction">
-      <xs:annotation>
-       <xs:documentation>If patient meets criteria (either in or out), what to do. Select into final results, Reject from final results or process passes to next rule.</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="gotoIdIfTrue" type="dt.uid" minOccurs="0"/>
-     <xs:element name="actionIfFalse" type="voc.RuleAction">
-      <xs:annotation>
-       <xs:documentation>Similar to actionIfTrue but if the item does not meet the criteria.</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="gotoIdIfFalse" type="dt.uid" minOccurs="0"/>
-     <xs:element name="id" type="dt.uid"/>
-     <!--
-					<xs:element name="exceptions" minOccurs="0" maxOccurs="unbounded">
-						<xs:complexType>
-							<xs:sequence>
-								<xs:element name="criterionGuid"/>
-								<xs:element name="code"/>
-							</xs:sequence>
-						</xs:complexType>
-					</xs:element>
-					-->
+      <xs:element name="InputParam" type="EQDOC.InputParameter" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="PatientFilter" type="EQDOC.PatientFilter" minOccurs="0"/>
+      <xs:element name="SubstitutionValue" type="EQDOC.SubstitutionValue" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
-   </xs:extension>
-  </xs:complexContent>
- </xs:complexType>
- <xs:complexType name="EQDOC.BaseCriteriaGroup">
-  <xs:annotation>
-   <xs:documentation>Produces a set of data items on which to base the owning criterion. A least one criterion within the group must ultimately share the same logical table name as the owning criterion.</xs:documentation>
-  </xs:annotation>
-  <xs:choice>
-   <xs:element name="definition" type="EQDOC.CriteriaGroupDefinition"/>
-   <xs:element name="libraryItem" type="dt.uid"/>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.Criteria">
-  <xs:choice>
-   <xs:element name="criterion" type="EQDOC.Criterion"/>
-   <xs:element name="procedure" type="EQDOC.MethodCall"/>
-   <xs:element name="libraryItem" type="EQDOC.LibraryItemCriterion"/>
-   <xs:element name="populationCriterion" type="EQDOC.SearchIdentifier"/>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.Criterion">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="table" type="xs:token">
-    <xs:annotation>
-     <xs:documentation>Name of logical table in data dictionary.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="displayName" type="xs:string">
-    <xs:annotation>
-     <xs:documentation>Display name derived from data dictionary.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="description" type="xs:string" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Free text description of crietria for reference.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="baseCriteriaGroup" type="EQDOC.BaseCriteriaGroup" minOccurs="0" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>List of criteria groups that produce a set of data items on which to base the owning criterion. A least one criterion within a group must ultimately share the same logical table name as the owning criterion.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="negation" type="dt.bool" default="false" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>If true, the population member (e.g. patient) is removed from the criteria group.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="filterAttribute" type="EQDOC.FilterAttribute">
-    <xs:annotation>
-     <xs:documentation>Attribute types.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="linkedCriterion" type="EQDOC.LinkedCriterion" minOccurs="0"/>
-   <xs:element name="exceptionCode" type="xs:string" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.MethodCall">
-  <xs:sequence>
-   <xs:element name="name" type="xs:token"/>
-   <xs:element name="version" type="dt.Version"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.FilterAttribute">
-  <xs:sequence>
-   <xs:element name="columnValue" type="EQDOC.ColumnValue" minOccurs="0" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>Tests a column for a value, code set or range of values.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="recordFrequency" type="EQDOC.RecordFrequency" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Test that the number of records meeting the criteria are between from and to.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="restriction" type="EQDOC.FilterRestriction" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.TestAttribute">
-  <xs:sequence>
-   <xs:element name="columnValue" type="EQDOC.ColumnValue" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>Tests a column for a value, code set or range of values.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="recordFrequency" type="EQDOC.RecordFrequency" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Test that the number of records meeting the criteria are between from and to.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ColumnValue">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="column" type="xs:token" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>Name of logical column form data dictionary.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="displayName" type="xs:string"/>
-   <xs:element name="inNotIn" type="voc.ColumnValueInNotIn">
-    <xs:annotation>
-     <xs:documentation>Tests the record for the column value not being in the set.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="valueDisplay" type="xs:string" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>English display of the field values.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:choice>
-    <xs:element name="valueSet" type="EQDOC.ValueSet" maxOccurs="unbounded">
-     <xs:annotation>
-      <xs:documentation>All items in this array must have consistent AllValues or Values elements.</xs:documentation>
-     </xs:annotation>
-    </xs:element>
-    <xs:element name="libraryItem" type="dt.uid" maxOccurs="unbounded"/>
-    <xs:element name="rangeValue" type="EQDOC.RangeValue">
-     <xs:annotation>
-      <xs:documentation>Hold individual range related values.</xs:documentation>
-     </xs:annotation>
-    </xs:element>
-    <xs:element name="singleValue" type="EQDOC.SingleValue">
-     <xs:annotation>
-      <xs:documentation>When searching for a single value only. </xs:documentation>
-     </xs:annotation>
-    </xs:element>
-    <xs:element name="function" type="EQDOC.MethodCall"/>
-    <xs:element name="parameter" type="EQDOC.Parameter"/>
-    <xs:element name="qualifier" type="EQDOC.KeyValuePair"/>
-    <xs:element name="substitutionIdentifier" type="EQDOC.SubstitutionIdentifier" maxOccurs="unbounded"/>
-   </xs:choice>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ValueSet">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="codeSystem" type="voc.CodeSystemEx"/>
-   <xs:element name="description" type="xs:string" minOccurs="0"/>
-   <xs:choice>
-    <xs:element name="allValues" type="EQDOC.Exception"/>
-    <xs:element name="values" type="EQDOC.ValueSetValue" maxOccurs="unbounded"/>
-   </xs:choice>
-   <xs:element name="clusterCode" type="xs:token" minOccurs="0" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ValueSetValue">
-  <xs:sequence>
-   <xs:element name="value" type="xs:token"/>
-   <xs:element name="displayName" type="xs:string" minOccurs="0"/>
-   <xs:element name="includeChildren" type="dt.bool"/>
-   <xs:element name="exception" type="EQDOC.Exception" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="legacyValue" type="xs:token" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Exception">
-  <xs:sequence>
-   <xs:element name="codeSystem" type="voc.CodeSystemEx"/>
-   <xs:element name="values" type="EQDOC.ExceptionValue" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ExceptionValue">
-  <xs:sequence>
-   <xs:element name="value" type="xs:token"/>
-   <xs:element name="displayName" type="xs:string" minOccurs="0"/>
-   <xs:element name="includeChildren" type="dt.bool"/>
-   <xs:element name="qualifier" type="dt.Qualifier" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="legacyValue" type="xs:token" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.RangeValue">
-  <xs:sequence>
-   <xs:element name="rangeFrom" type="EQDOC.RangeFrom" minOccurs="0"/>
-   <xs:element name="rangeTo" type="EQDOC.RangeTo" minOccurs="0"/>
-  </xs:sequence>
-  <xs:attribute name="relativeTo" type="xs:string"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.RangeFrom">
-  <xs:sequence>
-   <xs:choice>
-    <xs:element name="value" type="EQDOC.Value"/>
-    <xs:element name="function" type="EQDOC.MethodCall"/>
-    <xs:element name="substitutionIdentifier" type="EQDOC.SubstitutionIdentifier"/>
-   </xs:choice>
-   <xs:element name="operator" type="voc.RangeFromOperator" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Range Operator</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.RangeTo">
-  <xs:sequence>
-   <xs:element name="operator" type="voc.RangeToOperator" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Range Operator</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:choice minOccurs="0">
-    <xs:element name="value" type="EQDOC.Value"/>
-    <xs:element name="function" type="EQDOC.MethodCall"/>
-    <xs:element name="substitutionIdentifier" type="EQDOC.SubstitutionIdentifier"/>
-   </xs:choice>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.SingleValue">
-  <xs:choice>
-   <xs:element name="constant" type="voc.SingleValueConstant"/>
-   <xs:element name="variable" type="EQDOC.Value"/>
-   <xs:element name="function" type="EQDOC.MethodCall"/>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.Value">
-  <xs:sequence>
-   <xs:element name="value" type="xs:string"/>
-   <xs:element name="unit" type="voc.ValueUnit" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Value unit e.g. DAY WEEK or DATE</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="relation" type="voc.Relation" minOccurs="0"/>
-   <xs:element name="precision" type="voc.ValueUnit" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.RecordFrequency">
-  <xs:choice>
-   <xs:element name="frequencyValue" type="xs:int"/>
-   <xs:element name="frequencyRange" type="EQDOC.FrequencyRange"/>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.FrequencyRange">
-  <xs:sequence>
-   <xs:element name="rangeFrom" type="EQDOC.FrequencyRangeFrom" minOccurs="0"/>
-   <xs:element name="rangeTo" type="EQDOC.FrequencyRangeTo" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.FrequencyRangeFrom">
-  <xs:sequence>
-   <xs:element name="value" type="xs:int"/>
-   <xs:element name="operator" type="voc.RangeFromOperator" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Range Operator</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.FrequencyRangeTo">
-  <xs:sequence>
-   <xs:element name="value" type="xs:int"/>
-   <xs:element name="operator" type="voc.RangeToOperator" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Range Operator</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ColumnOrder">
-  <xs:sequence>
-   <xs:element name="recordCount" type="xs:int" default="1">
-    <xs:annotation>
-     <xs:documentation>Number of records to retrieve e.g. Top 3. Default value is 1</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="columns" maxOccurs="unbounded">
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="column" type="xs:token" maxOccurs="unbounded"/>
-      <xs:element name="displayName" type="xs:string" minOccurs="0"/>
-      <xs:element name="direction" type="voc.OrderDirection"/>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-   <xs:element name="groupBy" type="EQDOC.ColumnOrderGrouping" minOccurs="0" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>Used when you want the most recent record of each unique CodeId. GroupBy would have CodeId. Originally used for MailMerge referral letters.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.FilterRestriction">
-  <xs:sequence>
-   <xs:element name="columnOrder" type="EQDOC.ColumnOrder">
-    <xs:annotation>
-     <xs:documentation>If set returns the record with maximum value of the field.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="testAttribute" type="EQDOC.TestAttribute" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Attributes that the records selected by the filter attributes are tested for.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ColumnOrderGrouping">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid" minOccurs="0" maxOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Needed to make xsd.exe create a class</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="column" type="xs:token" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.LinkedCriterion">
-  <xs:sequence>
-   <xs:element name="relationship" type="EQDOC.Relationship"/>
-   <xs:choice minOccurs="0">
-    <xs:element name="criterion" type="EQDOC.Criterion"/>
-    <xs:element name="libraryItem" type="EQDOC.LibraryItemCriterion"/>
-   </xs:choice>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Relationship">
-  <xs:sequence>
-   <xs:element name="parentColumn" type="xs:token"/>
-   <xs:element name="parentColumnDisplayName" type="xs:string" minOccurs="0"/>
-   <xs:element name="childColumn" type="xs:token">
-    <xs:annotation>
-     <xs:documentation>The column name of the linked table bering tested.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="childColumnDisplayName" type="xs:string" minOccurs="0"/>
-   <xs:element name="rangeValue" type="EQDOC.RangeValue" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>No rangeValue indicates the related fields must be the same value.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Report">
-  <xs:complexContent>
-   <xs:extension base="dt.dbo">
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Enquirer">
     <xs:sequence>
-     <xs:element name="id" type="dt.uid"/>
-     <xs:element name="name" type="xs:string"/>
-     <xs:element name="description" type="xs:string" minOccurs="0"/>
-     <xs:element name="creationTime" type="dt.DateTime">
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="nationalCode" type="dt.Code" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>National Code of enquirer.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="agreement" type="EQDOC.EnquirerAgreement" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.EnquirerAgreement">
+    <xs:sequence>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="name" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Folder">
+    <xs:complexContent>
+      <xs:extension base="dt.dbo">
+        <xs:sequence>
+          <xs:element name="id" type="dt.uid"/>
+          <xs:element name="name" type="xs:string"/>
+          <xs:element name="parentFolder" type="dt.uid" minOccurs="0"/>
+          <xs:element name="sequence" type="xs:short" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Display order</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="enterpriseReportingLevel" type="voc.EnterpriseReportingLevel" minOccurs="0"/>
+          <xs:element name="association" type="EQDOC.FolderAssociation" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="author" type="EQDOC.Author" minOccurs="0"/>
+          <xs:element name="schedule" type="EQDOC.Schedule" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="PopulationTypeId" type="voc.PopulationType" minOccurs="0"/>
+          <xs:element name="IsEnterpriseSearchOverride" type="xs:boolean"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.FolderAssociation">
+    <xs:choice>
+      <xs:element name="organisation" type="dt.uid"/>
+      <xs:element name="speciality" type="dt.uid"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.PopulationDefinition">
+    <xs:sequence>
+      <xs:element name="searchDate" type="voc.SearchDateType">
+        <xs:annotation>
+          <xs:documentation>The date to which relative dates are applied. Default is todays date.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="parent" type="EQDOC.PopulationParent">
+        <xs:annotation>
+          <xs:documentation>The parent population.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="criteriaGroup" type="EQDOC.CriteriaGroup" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Population">
+    <xs:sequence>
+      <xs:element name="criteriaGroup" type="EQDOC.CriteriaGroup" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="dynamicColumn" type="EQDOC.DynamicColumn" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="contractInformation" type="EQDOC.ContractInformation" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Author">
+    <xs:choice>
+      <xs:element name="userInRole" type="dt.uid"/>
+      <xs:element name="authorName" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>String representation of author.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ContractInformation">
+    <xs:sequence>
+      <xs:element name="scoreNeeded" type="dt.bool"/>
+      <xs:element name="minimum" type="xs:int" minOccurs="0"/>
+      <xs:element name="maximum" type="xs:int" minOccurs="0"/>
+      <xs:element name="target" type="xs:int" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.PopulationParent">
+    <xs:sequence>
+      <xs:element name="SearchIdentifier" type="EQDOC.SearchIdentifier" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="parentType" type="voc.PopulationParentType" use="required">
       <xs:annotation>
-       <xs:documentation>Date and time of message generation on originating system</xs:documentation>
+        <xs:documentation>Default is ALL. Type of ACTIVE is valid only when populationType is PATIENT.
+        </xs:documentation>
       </xs:annotation>
-     </xs:element>
-     <xs:element name="author" type="EQDOC.Author" minOccurs="0"/>
-     <xs:element name="populationType" type="voc.PopulationType">
-      <xs:annotation>
-       <xs:documentation>Whether a search for patients or other types of data e.g. Appointments.</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="folder" type="dt.uid" minOccurs="0">
-      <xs:annotation>
-       <xs:documentation>Containing folder. Optional as enterprise reports have no foleder</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="sequence" type="xs:short" minOccurs="0">
-      <xs:annotation>
-       <xs:documentation>Display order</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="parent" type="EQDOC.PopulationParent">
-      <xs:annotation>
-       <xs:documentation>The parent population.</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="searchDate" type="voc.SearchDateType">
-      <xs:annotation>
-       <xs:documentation>The date to which relative dates are applied. Default is todays date.</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="VersionIndependentGUID" type="dt.uid" minOccurs="0">
-      <xs:annotation>
-       <xs:documentation>A GUID for GP Contract searches which are visible to the user which stays constant across contract versions</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:choice>
-      <xs:element name="population" type="EQDOC.Population"/>
-      <xs:element name="listReport" type="EQDOC.ListReport"/>
-      <xs:element name="aggregateReport" type="EQDOC.AggregateReport"/>
-      <xs:element name="listOfItems" type="EQDOC.ListOfItems"/>
-      <xs:element name="auditReport" type="EQDOC.AuditReport"/>
+    </xs:attribute>
+    <!-- <xs:attribute name="population" type="dt.uid" use="optional">
+              <xs:annotation>
+                  <xs:documentation>Entries only valid when parentType is POP.</xs:documentation>
+              </xs:annotation>
+          </xs:attribute> -->
+  </xs:complexType>
+  <xs:complexType name="EQDOC.SearchIdentifier">
+    <xs:annotation>
+      <xs:documentation>Defines the version independent GUID of a pop man search</xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="reportGuid" type="dt.uid" use="optional"/>
+    <xs:attribute name="versionIndependentGuid" type="dt.uid" use="optional"/>
+    <xs:attribute name="populationType" type="voc.InstanceType" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.CriteriaGroupDefinition">
+    <xs:sequence>
+      <xs:element name="memberOperator" type="voc.MemberOperator"/>
+      <xs:element name="criteria" type="EQDOC.Criteria" maxOccurs="unbounded"/>
+      <xs:element name="parentPopulationGuid" type="dt.uid" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Use a different population's results for the base criteria's patient list
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.CriteriaGroup">
+    <xs:complexContent>
+      <xs:extension base="EQDOC.BaseCriteriaGroup">
+        <xs:sequence>
+          <xs:element name="actionIfTrue" type="voc.RuleAction">
+            <xs:annotation>
+              <xs:documentation>If patient meets criteria (either in or out), what to do. Select into
+                final results, Reject from final results or process passes to next rule.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="gotoIdIfTrue" type="dt.uid" minOccurs="0"/>
+          <xs:element name="actionIfFalse" type="voc.RuleAction">
+            <xs:annotation>
+              <xs:documentation>Similar to actionIfTrue but if the item does not meet the criteria.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="gotoIdIfFalse" type="dt.uid" minOccurs="0"/>
+          <xs:element name="id" type="dt.uid"/>
+          <!--
+                         <xs:element name="exceptions" minOccurs="0" maxOccurs="unbounded">
+                             <xs:complexType>
+                                 <xs:sequence>
+                                     <xs:element name="criterionGuid"/>
+                                     <xs:element name="code"/>
+                                 </xs:sequence>
+                             </xs:complexType>
+                         </xs:element>
+                         -->
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.BaseCriteriaGroup">
+    <xs:annotation>
+      <xs:documentation>Produces a set of data items on which to base the owning criterion. A least one criterion
+        within the group must ultimately share the same logical table name as the owning criterion.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice>
+      <xs:element name="definition" type="EQDOC.CriteriaGroupDefinition"/>
       <xs:element name="libraryItem" type="dt.uid"/>
-     </xs:choice>
-     <xs:element name="formerReportGuid" type="dt.uid" minOccurs="0">
-      <xs:annotation>
-       <xs:documentation>When a report is upgraded to a new version, this records the former version for trending</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="schedule" type="EQDOC.Schedule" minOccurs="0"/>
-     <xs:element name="metaTags" type="xs:string" minOccurs="0" maxOccurs="unbounded">
-      <xs:annotation>
-       <xs:documentation>Extra Search Terms not defined within the name or description.</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="dynamicColumn" type="EQDOC.DynamicColumn" minOccurs="0" maxOccurs="unbounded"/>
-     <xs:element name="qmasIndicator" type="xs:string" minOccurs="0"/>
-     <xs:element name="qmasExceptionCode" type="xs:string" minOccurs="0"/>
-    </xs:sequence>
-   </xs:extension>
-  </xs:complexContent>
- </xs:complexType>
- <xs:complexType name="EQDOC.AggregateReport">
-  <xs:annotation>
-   <xs:documentation>Aggregate reports needs rows, columns or rows and columns.</xs:documentation>
-  </xs:annotation>
-  <xs:sequence>
-   <xs:element name="logicalTable" type="xs:string">
-    <xs:annotation>
-     <xs:documentation>Name of logical table in data dictionary.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="criteria" type="EQDOC.Criteria" minOccurs="0"/>
-   <xs:element name="group" type="EQDOC.AggregateGroup" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="rows" type="EQDOC.AggregateLayout" minOccurs="0"/>
-   <xs:element name="columns" type="EQDOC.AggregateLayout" minOccurs="0"/>
-   <xs:element name="result" type="EQDOC.AggregateResult"/>
-   <xs:element name="populationFilter" type="EQDOC.CriteriaGroup" minOccurs="0" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListReport">
-  <xs:sequence>
-   <xs:element name="columnGroups" maxOccurs="unbounded">
-    <xs:complexType>
-     <xs:choice>
-      <xs:element name="columnGroup" type="EQDOC.ListColumnGroup"/>
-      <xs:element name="libraryItem" type="dt.uid"/>
-     </xs:choice>
-    </xs:complexType>
-   </xs:element>
-   <xs:element name="grouping" type="EQDOC.ListGrouping" minOccurs="0"/>
-   <xs:element name="sort" type="EQDOC.ListReportLevelSort" minOccurs="0" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListOfItems">
-  <xs:sequence>
-   <xs:element name="itemId" type="xs:int" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.AuditReport">
-  <xs:sequence>
-   <xs:choice>
-    <xs:element name="standard" type="voc.StandardAuditReportType"/>
-    <xs:element name="existingAggregate">
-     <xs:complexType>
-      <xs:attribute name="id" type="dt.uid" use="required"/>
-     </xs:complexType>
-    </xs:element>
-    <xs:element name="customAggregate" type="EQDOC.AggregateReport"/>
-   </xs:choice>
-   <xs:element name="population" type="dt.uid" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.AggregateBandValue">
-  <xs:choice>
-   <xs:element name="range" type="EQDOC.BandRange"/>
-   <xs:element name="value" type="EQDOC.BandSingleValue"/>
-   <xs:element name="unknown">
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="unit" type="voc.ValueUnit" minOccurs="0"/>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.AggregateGroup">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="displayName" type="xs:string" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Gives a title to the column - eg Registered GP</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="groupingColumn" type="xs:string" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>The column that we want to group by - eg PatientId</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="displayColumn" type="EQDOC.AggregateDisplay" minOccurs="0" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>A list of optional columns that you want to display - eg Title, Firstname, Surname.  These are different to what grouped by.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="subTotals" type="dt.bool"/>
-   <xs:element name="repeatHeader" type="dt.bool" default="false" minOccurs="0"/>
-   <xs:choice minOccurs="0">
-    <xs:element name="banding" type="EQDOC.AggregateBanding"/>
-    <xs:element name="libraryItem" type="dt.uid"/>
-   </xs:choice>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.AggregateDisplay">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="column" type="xs:string" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>Name of logical column form data dictionary.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.AggregateLayout">
-  <xs:sequence>
-   <xs:element name="groupId" type="dt.uid" maxOccurs="unbounded"/>
-  </xs:sequence>
-  <xs:attribute name="id" type="dt.uid" use="optional">
-   <xs:annotation>
-    <xs:documentation>This exists to force xsd.exe to build a class</xs:documentation>
-   </xs:annotation>
-  </xs:attribute>
- </xs:complexType>
- <xs:complexType name="EQDOC.AggregateBanding">
-  <xs:choice>
-   <xs:element name="groupingUnit" type="voc.BandingUnit"/>
-   <xs:element name="subgroup" type="EQDOC.AggregateSubgroup" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>Also known as banding.  All items of this array must eqither use BandValue or Code - you can't mix the two</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="hierarchy" type="EQDOC.AggregateHierarchy"/>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.AggregateLibraryBanding">
-  <xs:sequence>
-   <xs:element name="inputAction" type="voc.InputAction"/>
-   <xs:element name="banding" type="EQDOC.AggregateBanding"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.AggregateHierarchy">
-  <xs:sequence>
-   <xs:element name="hierarchyType" type="voc.BandingHierarchyType"/>
-   <xs:element name="level" type="xs:int"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.AggregateSubgroup">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="display" type="xs:string"/>
-   <xs:element name="displayNameAutoGenerated" type="xs:boolean"/>
-   <xs:choice>
-    <xs:element name="bandValue" type="EQDOC.AggregateBandValue" maxOccurs="unbounded"/>
-    <xs:element name="code" type="EQDOC.ValueSet" maxOccurs="unbounded">
-     <xs:annotation>
-      <xs:documentation>All items in this array must have consistent AllValues or Values elements.</xs:documentation>
-     </xs:annotation>
-    </xs:element>
-   </xs:choice>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.AggregateResult">
-  <xs:sequence>
-   <xs:element name="source" type="voc.AggregateSource"/>
-   <xs:element name="column" type="xs:string" minOccurs="0"/>
-   <xs:element name="calculationType" type="voc.CalculationType"/>
-   <xs:element name="displayUnit" type="voc.DisplayStyle" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.LibraryItem">
-  <xs:complexContent>
-   <xs:extension base="dt.dbo">
-    <xs:sequence>
-     <xs:element name="id" type="dt.uid"/>
-     <xs:element name="name" type="xs:string"/>
-     <xs:element name="description" type="xs:string"/>
-     <xs:element name="version" type="dt.Version"/>
-     <xs:element name="creationTime" type="dt.DateTime">
-      <xs:annotation>
-       <xs:documentation>Date and time of message generation on originating system</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="author" type="EQDOC.Author" minOccurs="0"/>
-     <xs:element name="readOnly" type="dt.bool"/>
-     <xs:element name="populationType" type="voc.PopulationType">
-      <xs:annotation>
-       <xs:documentation>Whether a search for patients or other types of data e.g. Appointments.</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="obsolete" type="xs:boolean" default="false" minOccurs="0"/>
-     <xs:choice>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Criteria">
+    <xs:choice>
       <xs:element name="criterion" type="EQDOC.Criterion"/>
-      <xs:element name="criteriaGroup" type="EQDOC.CriteriaGroupDefinition"/>
-      <xs:element name="listReport" type="EQDOC.ListReport"/>
-      <xs:element name="aggregateReport" type="EQDOC.AggregateReport"/>
-      <xs:element name="listColumnGroup" type="EQDOC.ListColumnGroup" maxOccurs="unbounded"/>
-      <xs:element name="valueSet" type="EQDOC.ValueSet" maxOccurs="unbounded"/>
-      <xs:element name="population" type="EQDOC.PopulationDefinition"/>
-      <xs:element name="aggregateBanding" type="EQDOC.AggregateLibraryBanding"/>
-     </xs:choice>
-     <xs:element name="metaTags" type="xs:string" minOccurs="0" maxOccurs="unbounded">
-      <xs:annotation>
-       <xs:documentation>Extra Search Terms not defined within the name or description.</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-    </xs:sequence>
-   </xs:extension>
-  </xs:complexContent>
- </xs:complexType>
- <xs:complexType name="EQDOC.BandRange">
-  <xs:sequence>
-   <xs:element name="rangeFrom" type="EQDOC.BandRangeFrom" minOccurs="0"/>
-   <xs:element name="rangeTo" type="EQDOC.BandRangeTo" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.BandRangeFrom">
-  <xs:sequence>
-   <xs:choice>
-    <xs:element name="value" type="EQDOC.BandSingleValue"/>
-    <xs:element name="function" type="EQDOC.MethodCall"/>
-   </xs:choice>
-   <xs:element name="operator" type="voc.RangeFromOperator" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Range Operator</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.BandRangeTo">
-  <xs:sequence>
-   <xs:choice>
-    <xs:element name="value" type="EQDOC.BandSingleValue"/>
-    <xs:element name="function" type="EQDOC.MethodCall"/>
-   </xs:choice>
-   <xs:element name="operator" type="voc.RangeToOperator" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Range Operator</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.BandSingleValue">
-  <xs:sequence>
-   <xs:element name="value" type="xs:string"/>
-   <xs:choice minOccurs="0">
-    <xs:element name="datetimeUnit" type="voc.BandDateTimeUnit">
-     <xs:annotation>
-      <xs:documentation>E.g. YEAR or HOUR</xs:documentation>
-     </xs:annotation>
-    </xs:element>
-    <xs:element name="timespanUnit" type="voc.BandTimespanUnit">
-     <xs:annotation>
-      <xs:documentation>E.g. DAYS or YEARS</xs:documentation>
-     </xs:annotation>
-    </xs:element>
-   </xs:choice>
-   <xs:element name="relation" type="voc.Relation"/>
-   <xs:element name="displayText" type="xs:token" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Used in builder UI</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListColumnGroup">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="logicalTableName" type="xs:string"/>
-   <xs:element name="displayName" type="xs:string" minOccurs="0"/>
-   <xs:choice>
-    <xs:element name="columnar" type="EQDOC.ListColumns"/>
-    <xs:element name="summary" type="voc.ListGroupSummary"/>
-   </xs:choice>
-   <xs:element name="summarise" type="EQDOC.Summarise" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="criteria" type="EQDOC.Criteria" minOccurs="0"/>
-   <xs:element name="populationFilter" type="EQDOC.CriteriaGroup" minOccurs="0" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListColumns">
-  <xs:sequence>
-   <xs:element name="listColumn" type="EQDOC.ListColumn" maxOccurs="unbounded"/>
-   <xs:element name="sort" type="EQDOC.ListSortColumn" minOccurs="0" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>This sorting is internal to the group</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListColumn">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="column" type="xs:string" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>Name of logical column form data dictionary.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="displayName" type="xs:string" minOccurs="0"/>
-   <xs:element name="displayUnit" type="voc.DisplayStyle" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListSortColumn">
-  <xs:sequence>
-   <xs:element name="columnId" type="dt.uid"/>
-   <xs:element name="direction" type="voc.OrderDirection"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListGrouping">
-  <xs:sequence>
-   <xs:element name="columnGroupId" type="dt.uid"/>
-   <xs:element name="displayName" minOccurs="0"/>
-   <xs:choice>
-    <xs:element name="columnar" type="EQDOC.ListGroupingColumnar"/>
-    <xs:element name="summary" type="EQDOC.ListGroupingSummary"/>
-   </xs:choice>
-   <xs:element name="subGroup" type="EQDOC.ListGrouping" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListGroupingColumn">
-  <xs:sequence>
-   <xs:element name="id" type="dt.uid"/>
-   <xs:element name="column" type="xs:string" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>Name of logical column form data dictionary.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListGroupingColumnar">
-  <xs:sequence>
-   <xs:element name="column" type="EQDOC.ListGroupingColumn" maxOccurs="unbounded"/>
-   <xs:element name="sorting" type="EQDOC.ListSortColumn" minOccurs="0" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListGroupingSummary">
-  <xs:sequence>
-   <xs:element name="summary" type="voc.ListGroupSummary"/>
-   <xs:element name="direction" type="voc.OrderDirection"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ListReportLevelSort">
-  <xs:sequence>
-   <xs:element name="columnGroupId" type="dt.uid">
-    <xs:annotation>
-     <xs:documentation>These column groups must return a single record eg primary table, criteria of most recent 1 etc</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Schedule">
-  <xs:sequence>
-   <xs:element name="recurrencePattern" type="EQDOC.SchedulePattern"/>
-   <xs:element name="rangeOfRecurrence" type="EQDOC.ScheduleRange"/>
-   <xs:element name="baselineDate" type="EQDOC.ScheduleDate" minOccurs="0"/>
-   <xs:element name="referenceDate" type="EQDOC.ScheduleDate" minOccurs="0"/>
-   <xs:element name="author" type="EQDOC.Author" minOccurs="0"/>
-   <xs:element name="instanceType" type="voc.InstanceType" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.SchedulePattern">
-  <xs:sequence>
-   <xs:element name="pattern" type="voc.SchedulePattern"/>
-   <xs:choice minOccurs="0">
-    <xs:element name="daily" type="EQDOC.SchedulePatternDaily"/>
-    <xs:element name="weekly" type="EQDOC.SchedulePatternWeekly"/>
-    <xs:element name="monthly" type="EQDOC.SchedulePatternMonthly"/>
-    <xs:element name="yearly" type="EQDOC.SchedulePatternYearly"/>
-   </xs:choice>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.SchedulePatternDaily">
-  <xs:sequence>
-   <xs:element name="interval" type="xs:int">
-    <xs:annotation>
-     <xs:documentation>Every n days</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.SchedulePatternWeekly">
-  <xs:sequence>
-   <xs:element name="interval" type="xs:int">
-    <xs:annotation>
-     <xs:documentation>Every n weeks</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="dayOfWeek" type="voc.DayOfWeek" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.SchedulePatternMonthly">
-  <xs:choice>
-   <xs:element name="dayOfMonth">
-    <xs:annotation>
-     <xs:documentation>Day 15 of every 3 months</xs:documentation>
-    </xs:annotation>
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="dayOfMonth">
-       <xs:simpleType>
-        <xs:restriction base="xs:int">
-         <xs:minInclusive value="1"/>
-         <xs:maxInclusive value="31"/>
-        </xs:restriction>
-       </xs:simpleType>
-      </xs:element>
-      <xs:element name="interval" type="xs:int">
-       <xs:annotation>
-        <xs:documentation>Every n month(s)</xs:documentation>
-       </xs:annotation>
-      </xs:element>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-   <xs:element name="dayOfWeek">
-    <xs:annotation>
-     <xs:documentation>The last Friday of every 3 months</xs:documentation>
-    </xs:annotation>
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="occurrence" type="voc.SchedulePatternOccurrence"/>
-      <xs:element name="dayOfWeek" type="voc.DayOfWeek"/>
-      <xs:element name="interval" type="xs:int">
-       <xs:annotation>
-        <xs:documentation>Every n month(s)</xs:documentation>
-       </xs:annotation>
-      </xs:element>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.SchedulePatternYearly">
-  <xs:choice>
-   <xs:element name="dayOfMonth">
-    <xs:annotation>
-     <xs:documentation>Every November 19th</xs:documentation>
-    </xs:annotation>
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="monthOfYear" type="voc.MonthOfYear"/>
-      <xs:element name="dayOfMonth">
-       <xs:simpleType>
-        <xs:restriction base="xs:int">
-         <xs:minInclusive value="1"/>
-         <xs:maxInclusive value="31"/>
-        </xs:restriction>
-       </xs:simpleType>
-      </xs:element>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-   <xs:element name="dayOfWeek">
-    <xs:annotation>
-     <xs:documentation>The last Friday of November</xs:documentation>
-    </xs:annotation>
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="occurrence" type="voc.SchedulePatternOccurrence"/>
-      <xs:element name="dayOfWeek" type="voc.DayOfWeek"/>
-      <xs:element name="monthOfYear" type="voc.MonthOfYear"/>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.ScheduleRange">
-  <xs:sequence>
-   <xs:element name="startDate" type="dt.Date"/>
-   <xs:choice minOccurs="0">
-    <xs:element name="occurrence" type="xs:int">
-     <xs:annotation>
-      <xs:documentation>End after n occurrences </xs:documentation>
-     </xs:annotation>
-    </xs:element>
-    <xs:element name="endDate" type="dt.Date">
-     <xs:annotation>
-      <xs:documentation>End by date</xs:documentation>
-     </xs:annotation>
-    </xs:element>
-   </xs:choice>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ScheduleDate">
-  <xs:choice>
-   <xs:element name="fixedDate" type="dt.DateTime"/>
-   <xs:element name="relativeDate" type="EQDOC.ScheduleRelativeDate">
-    <xs:annotation>
-     <xs:documentation>Date relative to schedule execution date</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.ScheduleRelativeDate">
-  <xs:sequence>
-   <xs:element name="value" type="xs:int"/>
-   <xs:element name="unit" type="voc.ValueUnit" minOccurs="0">
-    <xs:annotation>
-     <xs:documentation>Value unit e.g. DAY WEEK or DATE</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.MailMerge">
-  <xs:complexContent>
-   <xs:extension base="dt.dbo">
+      <xs:element name="procedure" type="EQDOC.MethodCall"/>
+      <xs:element name="libraryItem" type="EQDOC.LibraryItemCriterion"/>
+      <xs:element name="populationCriterion" type="EQDOC.SearchIdentifier"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Criterion">
     <xs:sequence>
-     <xs:element name="id" type="dt.uid"/>
-     <xs:element name="populationType" type="voc.PopulationType">
-      <xs:annotation>
-       <xs:documentation>Whether a search for patients or other types of data e.g. Appointments.</xs:documentation>
-      </xs:annotation>
-     </xs:element>
-     <xs:element name="tables" type="EQDOC.MailMergeTable" maxOccurs="unbounded"/>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="table" type="xs:token">
+        <xs:annotation>
+          <xs:documentation>Name of logical table in data dictionary.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="displayName" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Display name derived from data dictionary.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="description" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Free text description of crietria for reference.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="baseCriteriaGroup" type="EQDOC.BaseCriteriaGroup" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>List of criteria groups that produce a set of data items on which to base the
+            owning criterion. A least one criterion within a group must ultimately share the same logical
+            table name as the owning criterion.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="negation" type="dt.bool" default="false" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>If true, the population member (e.g. patient) is removed from the criteria
+            group.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="filterAttribute" type="EQDOC.FilterAttribute">
+        <xs:annotation>
+          <xs:documentation>Attribute types.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="linkedCriterion" type="EQDOC.LinkedCriterion" minOccurs="0"/>
+      <xs:element name="exceptionCode" type="xs:string" minOccurs="0"/>
     </xs:sequence>
-   </xs:extension>
-  </xs:complexContent>
- </xs:complexType>
- <xs:complexType name="EQDOC.MailMergeTable">
-  <xs:sequence>
-   <xs:element name="logicalTableName" type="xs:string"/>
-   <xs:element name="columns" type="EQDOC.ListColumn" maxOccurs="unbounded"/>
-   <xs:element name="sort" type="EQDOC.ListSortColumn" minOccurs="0" maxOccurs="unbounded">
-    <xs:annotation>
-     <xs:documentation>This sorting is internal to the group</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-   <xs:element name="criteria" type="EQDOC.Criteria" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.LibraryItemCriterion">
-  <xs:sequence>
-   <xs:element name="negate" type="xs:boolean" minOccurs="0"/>
-   <xs:element name="libraryItem" type="dt.uid"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.DynamicColumn">
-  <xs:sequence>
-   <xs:element name="displayName" type="xs:string"/>
-   <xs:element name="dataType" type="EQDOC.DataType"/>
-   <xs:element name="dynamicStructure">
-    <xs:simpleType>
-     <xs:restriction base="xs:token">
-      <xs:enumeration value="function"/>
-      <xs:enumeration value="evaluate"/>
-     </xs:restriction>
-    </xs:simpleType>
-   </xs:element>
-   <xs:element name="parameter" minOccurs="0" maxOccurs="unbounded">
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="dataType" type="EQDOC.DataType"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.MethodCall">
+    <xs:sequence>
+      <xs:element name="name" type="xs:token"/>
+      <xs:element name="version" type="dt.Version"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.FilterAttribute">
+    <xs:sequence>
+      <xs:element name="columnValue" type="EQDOC.ColumnValue" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>Tests a column for a value, code set or range of values.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="recordFrequency" type="EQDOC.RecordFrequency" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Test that the number of records meeting the criteria are between from and to.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="restriction" type="EQDOC.FilterRestriction" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.TestAttribute">
+    <xs:sequence>
+      <xs:element name="columnValue" type="EQDOC.ColumnValue" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>Tests a column for a value, code set or range of values.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="recordFrequency" type="EQDOC.RecordFrequency" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Test that the number of records meeting the criteria are between from and to.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ColumnValue">
+    <xs:sequence>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="column" type="xs:token" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>Name of logical column form data dictionary.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="displayName" type="xs:string"/>
+      <xs:element name="inNotIn" type="voc.ColumnValueInNotIn">
+        <xs:annotation>
+          <xs:documentation>Tests the record for the column value not being in the set.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="valueDisplay" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>English display of the field values.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:choice>
-       <xs:element name="constant" type="xs:string"/>
-       <xs:element name="column" type="xs:string" maxOccurs="2"/>
-       <xs:element name="targetDate" type="voc.SearchDateType"/>
-       <xs:element name="isNull" type="xs:boolean"/>
+        <xs:element name="valueSet" type="EQDOC.ValueSet" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>All items in this array must have consistent AllValues or Values elements.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="libraryItem" type="dt.uid" maxOccurs="unbounded"/>
+        <xs:element name="rangeValue" type="EQDOC.RangeValue">
+          <xs:annotation>
+            <xs:documentation>Hold individual range related values.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="singleValue" type="EQDOC.SingleValue">
+          <xs:annotation>
+            <xs:documentation>When searching for a single value only.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="function" type="EQDOC.MethodCall"/>
+        <xs:element name="parameter" type="EQDOC.Parameter"/>
+        <xs:element name="qualifier" type="EQDOC.KeyValuePair"/>
+        <xs:element name="substitutionIdentifier" type="EQDOC.SubstitutionIdentifier" maxOccurs="unbounded"/>
       </xs:choice>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-   <xs:choice>
-    <xs:element name="evaluate">
-     <xs:complexType>
-      <xs:sequence>
-       <xs:choice>
-        <xs:element name="column" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
-        <xs:element name="function" type="EQDOC.DynamicFunction"/>
-       </xs:choice>
-       <xs:element name="comparator">
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ValueSet">
+    <xs:sequence>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="codeSystem" type="voc.CodeSystemEx"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:choice>
+        <xs:element name="allValues" type="EQDOC.Exception"/>
+        <xs:element name="values" type="EQDOC.ValueSetValue" maxOccurs="unbounded"/>
+      </xs:choice>
+      <xs:element name="clusterCode" type="xs:token" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ValueSetValue">
+    <xs:sequence>
+      <xs:element name="value" type="xs:token"/>
+      <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+      <xs:element name="includeChildren" type="dt.bool"/>
+      <xs:element name="exception" type="EQDOC.Exception" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="legacyValue" type="xs:token" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Exception">
+    <xs:sequence>
+      <xs:element name="codeSystem" type="voc.CodeSystemEx"/>
+      <xs:element name="values" type="EQDOC.ExceptionValue" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ExceptionValue">
+    <xs:sequence>
+      <xs:element name="value" type="xs:token"/>
+      <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+      <xs:element name="includeChildren" type="dt.bool"/>
+      <xs:element name="qualifier" type="dt.Qualifier" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="legacyValue" type="xs:token" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.RangeValue">
+    <xs:sequence>
+      <xs:element name="rangeFrom" type="EQDOC.RangeFrom" minOccurs="0"/>
+      <xs:element name="rangeTo" type="EQDOC.RangeTo" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="relativeTo" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.RangeFrom">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="value" type="EQDOC.Value"/>
+        <xs:element name="function" type="EQDOC.MethodCall"/>
+        <xs:element name="substitutionIdentifier" type="EQDOC.SubstitutionIdentifier"/>
+      </xs:choice>
+      <xs:element name="operator" type="voc.RangeFromOperator" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Range Operator</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.RangeTo">
+    <xs:sequence>
+      <xs:element name="operator" type="voc.RangeToOperator" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Range Operator</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:choice minOccurs="0">
+        <xs:element name="value" type="EQDOC.Value"/>
+        <xs:element name="function" type="EQDOC.MethodCall"/>
+        <xs:element name="substitutionIdentifier" type="EQDOC.SubstitutionIdentifier"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.SingleValue">
+    <xs:choice>
+      <xs:element name="constant" type="voc.SingleValueConstant"/>
+      <xs:element name="variable" type="EQDOC.Value"/>
+      <xs:element name="function" type="EQDOC.MethodCall"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Value">
+    <xs:sequence>
+      <xs:element name="value" type="xs:string"/>
+      <xs:element name="unit" type="voc.ValueUnit" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Value unit e.g. DAY WEEK or DATE</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="relation" type="voc.Relation" minOccurs="0"/>
+      <xs:element name="precision" type="voc.ValueUnit" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.RecordFrequency">
+    <xs:choice>
+      <xs:element name="frequencyValue" type="xs:int"/>
+      <xs:element name="frequencyRange" type="EQDOC.FrequencyRange"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.FrequencyRange">
+    <xs:sequence>
+      <xs:element name="rangeFrom" type="EQDOC.FrequencyRangeFrom" minOccurs="0"/>
+      <xs:element name="rangeTo" type="EQDOC.FrequencyRangeTo" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.FrequencyRangeFrom">
+    <xs:sequence>
+      <xs:element name="value" type="xs:int"/>
+      <xs:element name="operator" type="voc.RangeFromOperator" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Range Operator</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.FrequencyRangeTo">
+    <xs:sequence>
+      <xs:element name="value" type="xs:int"/>
+      <xs:element name="operator" type="voc.RangeToOperator" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Range Operator</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ColumnOrder">
+    <xs:sequence>
+      <xs:element name="recordCount" type="xs:int" default="1">
+        <xs:annotation>
+          <xs:documentation>Number of records to retrieve e.g. Top 3. Default value is 1</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="columns" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="column" type="xs:token" maxOccurs="unbounded"/>
+            <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+            <xs:element name="direction" type="voc.OrderDirection"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="groupBy" type="EQDOC.ColumnOrderGrouping" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>Used when you want the most recent record of each unique CodeId. GroupBy would
+            have CodeId. Originally used for MailMerge referral letters.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.FilterRestriction">
+    <xs:sequence>
+      <xs:element name="columnOrder" type="EQDOC.ColumnOrder">
+        <xs:annotation>
+          <xs:documentation>If set returns the record with maximum value of the field.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="testAttribute" type="EQDOC.TestAttribute" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Attributes that the records selected by the filter attributes are tested for.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ColumnOrderGrouping">
+    <xs:sequence>
+      <xs:element name="id" type="dt.uid" minOccurs="0" maxOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Needed to make xsd.exe create a class</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="column" type="xs:token" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.LinkedCriterion">
+    <xs:sequence>
+      <xs:element name="relationship" type="EQDOC.Relationship"/>
+      <xs:choice minOccurs="0">
+        <xs:element name="criterion" type="EQDOC.Criterion"/>
+        <xs:element name="libraryItem" type="EQDOC.LibraryItemCriterion"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Relationship">
+    <xs:sequence>
+      <xs:element name="parentColumn" type="xs:token"/>
+      <xs:element name="parentColumnDisplayName" type="xs:string" minOccurs="0"/>
+      <xs:element name="childColumn" type="xs:token">
+        <xs:annotation>
+          <xs:documentation>The column name of the linked table bering tested.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="childColumnDisplayName" type="xs:string" minOccurs="0"/>
+      <xs:element name="rangeValue" type="EQDOC.RangeValue" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>No rangeValue indicates the related fields must be the same value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Report">
+    <xs:complexContent>
+      <xs:extension base="dt.dbo">
+        <xs:sequence>
+          <xs:element name="id" type="dt.uid"/>
+          <xs:element name="name" type="xs:string"/>
+          <xs:element name="description" type="xs:string" minOccurs="0"/>
+          <xs:element name="creationTime" type="dt.DateTime">
+            <xs:annotation>
+              <xs:documentation>Date and time of message generation on originating system
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="author" type="EQDOC.Author" minOccurs="0"/>
+          <xs:element name="populationType" type="voc.PopulationType">
+            <xs:annotation>
+              <xs:documentation>Whether a search for patients or other types of data e.g. Appointments.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="folder" type="dt.uid" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Containing folder. Optional as enterprise reports have no foleder
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="sequence" type="xs:short" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Display order</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="parent" type="EQDOC.PopulationParent">
+            <xs:annotation>
+              <xs:documentation>The parent population.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="searchDate" type="voc.SearchDateType">
+            <xs:annotation>
+              <xs:documentation>The date to which relative dates are applied. Default is todays date.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="VersionIndependentGUID" type="dt.uid" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>A GUID for GP Contract searches which are visible to the user which stays
+                constant across contract versions
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:choice>
+            <xs:element name="population" type="EQDOC.Population"/>
+            <xs:element name="listReport" type="EQDOC.ListReport"/>
+            <xs:element name="aggregateReport" type="EQDOC.AggregateReport"/>
+            <xs:element name="listOfItems" type="EQDOC.ListOfItems"/>
+            <xs:element name="auditReport" type="EQDOC.AuditReport"/>
+            <xs:element name="libraryItem" type="dt.uid"/>
+          </xs:choice>
+          <xs:element name="formerReportGuid" type="dt.uid" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>When a report is upgraded to a new version, this records the former
+                version for trending
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="schedule" type="EQDOC.Schedule" minOccurs="0"/>
+          <xs:element name="metaTags" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+              <xs:documentation>Extra Search Terms not defined within the name or description.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="dynamicColumn" type="EQDOC.DynamicColumn" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="qmasIndicator" type="xs:string" minOccurs="0"/>
+          <xs:element name="qmasExceptionCode" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AggregateReport">
+    <xs:annotation>
+      <xs:documentation>Aggregate reports needs rows, columns or rows and columns.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="logicalTable" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Name of logical table in data dictionary.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="criteria" type="EQDOC.Criteria" minOccurs="0"/>
+      <xs:element name="group" type="EQDOC.AggregateGroup" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="rows" type="EQDOC.AggregateLayout" minOccurs="0"/>
+      <xs:element name="columns" type="EQDOC.AggregateLayout" minOccurs="0"/>
+      <xs:element name="result" type="EQDOC.AggregateResult"/>
+      <xs:element name="populationFilter" type="EQDOC.CriteriaGroup" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListReport">
+    <xs:sequence>
+      <xs:element name="columnGroups" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:choice>
+            <xs:element name="columnGroup" type="EQDOC.ListColumnGroup"/>
+            <xs:element name="libraryItem" type="dt.uid"/>
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="grouping" type="EQDOC.ListGrouping" minOccurs="0"/>
+      <xs:element name="sort" type="EQDOC.ListReportLevelSort" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListOfItems">
+    <xs:sequence>
+      <xs:element name="itemId" type="xs:int" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AuditReport">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="standard" type="voc.StandardAuditReportType"/>
+        <xs:element name="existingAggregate">
+          <xs:complexType>
+            <xs:attribute name="id" type="dt.uid" use="required"/>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="customAggregate" type="EQDOC.AggregateReport"/>
+      </xs:choice>
+      <xs:element name="population" type="dt.uid" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AggregateBandValue">
+    <xs:choice>
+      <xs:element name="range" type="EQDOC.BandRange"/>
+      <xs:element name="value" type="EQDOC.BandSingleValue"/>
+      <xs:element name="unknown">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="unit" type="voc.ValueUnit" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AggregateGroup">
+    <xs:sequence>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="displayName" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Gives a title to the column - eg Registered GP</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="groupingColumn" type="xs:string" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>The column that we want to group by - eg PatientId</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="displayColumn" type="EQDOC.AggregateDisplay" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>A list of optional columns that you want to display - eg Title, Firstname,
+            Surname. These are different to what grouped by.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="subTotals" type="dt.bool"/>
+      <xs:element name="repeatHeader" type="dt.bool" default="false" minOccurs="0"/>
+      <xs:choice minOccurs="0">
+        <xs:element name="banding" type="EQDOC.AggregateBanding"/>
+        <xs:element name="libraryItem" type="dt.uid"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AggregateDisplay">
+    <xs:sequence>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="column" type="xs:string" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>Name of logical column form data dictionary.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AggregateLayout">
+    <xs:sequence>
+      <xs:element name="groupId" type="dt.uid" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="dt.uid" use="optional">
+      <xs:annotation>
+        <xs:documentation>This exists to force xsd.exe to build a class</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AggregateBanding">
+    <xs:choice>
+      <xs:element name="groupingUnit" type="voc.BandingUnit"/>
+      <xs:element name="subgroup" type="EQDOC.AggregateSubgroup" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>Also known as banding. All items of this array must eqither use BandValue or Code
+            - you can't mix the two
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="hierarchy" type="EQDOC.AggregateHierarchy"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AggregateLibraryBanding">
+    <xs:sequence>
+      <xs:element name="inputAction" type="voc.InputAction"/>
+      <xs:element name="banding" type="EQDOC.AggregateBanding"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AggregateHierarchy">
+    <xs:sequence>
+      <xs:element name="hierarchyType" type="voc.BandingHierarchyType"/>
+      <xs:element name="level" type="xs:int"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AggregateSubgroup">
+    <xs:sequence>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="display" type="xs:string"/>
+      <xs:element name="displayNameAutoGenerated" type="xs:boolean"/>
+      <xs:choice>
+        <xs:element name="bandValue" type="EQDOC.AggregateBandValue" maxOccurs="unbounded"/>
+        <xs:element name="code" type="EQDOC.ValueSet" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>All items in this array must have consistent AllValues or Values elements.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.AggregateResult">
+    <xs:sequence>
+      <xs:element name="source" type="voc.AggregateSource"/>
+      <xs:element name="column" type="xs:string" minOccurs="0"/>
+      <xs:element name="calculationType" type="voc.CalculationType"/>
+      <xs:element name="displayUnit" type="voc.DisplayStyle" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.LibraryItem">
+    <xs:complexContent>
+      <xs:extension base="dt.dbo">
+        <xs:sequence>
+          <xs:element name="id" type="dt.uid"/>
+          <xs:element name="name" type="xs:string"/>
+          <xs:element name="description" type="xs:string"/>
+          <xs:element name="version" type="dt.Version"/>
+          <xs:element name="creationTime" type="dt.DateTime">
+            <xs:annotation>
+              <xs:documentation>Date and time of message generation on originating system
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="author" type="EQDOC.Author" minOccurs="0"/>
+          <xs:element name="readOnly" type="dt.bool"/>
+          <xs:element name="populationType" type="voc.PopulationType">
+            <xs:annotation>
+              <xs:documentation>Whether a search for patients or other types of data e.g. Appointments.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="obsolete" type="xs:boolean" default="false" minOccurs="0"/>
+          <xs:choice>
+            <xs:element name="criterion" type="EQDOC.Criterion"/>
+            <xs:element name="criteriaGroup" type="EQDOC.CriteriaGroupDefinition"/>
+            <xs:element name="listReport" type="EQDOC.ListReport"/>
+            <xs:element name="aggregateReport" type="EQDOC.AggregateReport"/>
+            <xs:element name="listColumnGroup" type="EQDOC.ListColumnGroup" maxOccurs="unbounded"/>
+            <xs:element name="valueSet" type="EQDOC.ValueSet" maxOccurs="unbounded"/>
+            <xs:element name="population" type="EQDOC.PopulationDefinition"/>
+            <xs:element name="aggregateBanding" type="EQDOC.AggregateLibraryBanding"/>
+          </xs:choice>
+          <xs:element name="metaTags" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+              <xs:documentation>Extra Search Terms not defined within the name or description.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.BandRange">
+    <xs:sequence>
+      <xs:element name="rangeFrom" type="EQDOC.BandRangeFrom" minOccurs="0"/>
+      <xs:element name="rangeTo" type="EQDOC.BandRangeTo" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.BandRangeFrom">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="value" type="EQDOC.BandSingleValue"/>
+        <xs:element name="function" type="EQDOC.MethodCall"/>
+      </xs:choice>
+      <xs:element name="operator" type="voc.RangeFromOperator" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Range Operator</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.BandRangeTo">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="value" type="EQDOC.BandSingleValue"/>
+        <xs:element name="function" type="EQDOC.MethodCall"/>
+      </xs:choice>
+      <xs:element name="operator" type="voc.RangeToOperator" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Range Operator</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.BandSingleValue">
+    <xs:sequence>
+      <xs:element name="value" type="xs:string"/>
+      <xs:choice minOccurs="0">
+        <xs:element name="datetimeUnit" type="voc.BandDateTimeUnit">
+          <xs:annotation>
+            <xs:documentation>E.g. YEAR or HOUR</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="timespanUnit" type="voc.BandTimespanUnit">
+          <xs:annotation>
+            <xs:documentation>E.g. DAYS or YEARS</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:choice>
+      <xs:element name="relation" type="voc.Relation"/>
+      <xs:element name="displayText" type="xs:token" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Used in builder UI</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListColumnGroup">
+    <xs:sequence>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="logicalTableName" type="xs:string"/>
+      <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+      <xs:choice>
+        <xs:element name="columnar" type="EQDOC.ListColumns"/>
+        <xs:element name="summary" type="voc.ListGroupSummary"/>
+      </xs:choice>
+      <xs:element name="summarise" type="EQDOC.Summarise" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="criteria" type="EQDOC.Criteria" minOccurs="0"/>
+      <xs:element name="populationFilter" type="EQDOC.CriteriaGroup" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListColumns">
+    <xs:sequence>
+      <xs:element name="listColumn" type="EQDOC.ListColumn" maxOccurs="unbounded"/>
+      <xs:element name="sort" type="EQDOC.ListSortColumn" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>This sorting is internal to the group</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListColumn">
+    <xs:sequence>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="column" type="xs:string" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>Name of logical column form data dictionary.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+      <xs:element name="displayUnit" type="voc.DisplayStyle" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListSortColumn">
+    <xs:sequence>
+      <xs:element name="columnId" type="dt.uid"/>
+      <xs:element name="direction" type="voc.OrderDirection"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListGrouping">
+    <xs:sequence>
+      <xs:element name="columnGroupId" type="dt.uid"/>
+      <xs:element name="displayName" minOccurs="0"/>
+      <xs:choice>
+        <xs:element name="columnar" type="EQDOC.ListGroupingColumnar"/>
+        <xs:element name="summary" type="EQDOC.ListGroupingSummary"/>
+      </xs:choice>
+      <xs:element name="subGroup" type="EQDOC.ListGrouping" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListGroupingColumn">
+    <xs:sequence>
+      <xs:element name="id" type="dt.uid"/>
+      <xs:element name="column" type="xs:string" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>Name of logical column form data dictionary.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListGroupingColumnar">
+    <xs:sequence>
+      <xs:element name="column" type="EQDOC.ListGroupingColumn" maxOccurs="unbounded"/>
+      <xs:element name="sorting" type="EQDOC.ListSortColumn" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListGroupingSummary">
+    <xs:sequence>
+      <xs:element name="summary" type="voc.ListGroupSummary"/>
+      <xs:element name="direction" type="voc.OrderDirection"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ListReportLevelSort">
+    <xs:sequence>
+      <xs:element name="columnGroupId" type="dt.uid">
+        <xs:annotation>
+          <xs:documentation>These column groups must return a single record eg primary table, criteria of most
+            recent 1 etc
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Schedule">
+    <xs:sequence>
+      <xs:element name="recurrencePattern" type="EQDOC.SchedulePattern"/>
+      <xs:element name="rangeOfRecurrence" type="EQDOC.ScheduleRange"/>
+      <xs:element name="baselineDate" type="EQDOC.ScheduleDate" minOccurs="0"/>
+      <xs:element name="referenceDate" type="EQDOC.ScheduleDate" minOccurs="0"/>
+      <xs:element name="author" type="EQDOC.Author" minOccurs="0"/>
+      <xs:element name="instanceType" type="voc.InstanceType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.SchedulePattern">
+    <xs:sequence>
+      <xs:element name="pattern" type="voc.SchedulePattern"/>
+      <xs:choice minOccurs="0">
+        <xs:element name="daily" type="EQDOC.SchedulePatternDaily"/>
+        <xs:element name="weekly" type="EQDOC.SchedulePatternWeekly"/>
+        <xs:element name="monthly" type="EQDOC.SchedulePatternMonthly"/>
+        <xs:element name="yearly" type="EQDOC.SchedulePatternYearly"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.SchedulePatternDaily">
+    <xs:sequence>
+      <xs:element name="interval" type="xs:int">
+        <xs:annotation>
+          <xs:documentation>Every n days</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.SchedulePatternWeekly">
+    <xs:sequence>
+      <xs:element name="interval" type="xs:int">
+        <xs:annotation>
+          <xs:documentation>Every n weeks</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="dayOfWeek" type="voc.DayOfWeek" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.SchedulePatternMonthly">
+    <xs:choice>
+      <xs:element name="dayOfMonth">
+        <xs:annotation>
+          <xs:documentation>Day 15 of every 3 months</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="dayOfMonth">
+              <xs:simpleType>
+                <xs:restriction base="xs:int">
+                  <xs:minInclusive value="1"/>
+                  <xs:maxInclusive value="31"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:element>
+            <xs:element name="interval" type="xs:int">
+              <xs:annotation>
+                <xs:documentation>Every n month(s)</xs:documentation>
+              </xs:annotation>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="dayOfWeek">
+        <xs:annotation>
+          <xs:documentation>The last Friday of every 3 months</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="occurrence" type="voc.SchedulePatternOccurrence"/>
+            <xs:element name="dayOfWeek" type="voc.DayOfWeek"/>
+            <xs:element name="interval" type="xs:int">
+              <xs:annotation>
+                <xs:documentation>Every n month(s)</xs:documentation>
+              </xs:annotation>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.SchedulePatternYearly">
+    <xs:choice>
+      <xs:element name="dayOfMonth">
+        <xs:annotation>
+          <xs:documentation>Every November 19th</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="monthOfYear" type="voc.MonthOfYear"/>
+            <xs:element name="dayOfMonth">
+              <xs:simpleType>
+                <xs:restriction base="xs:int">
+                  <xs:minInclusive value="1"/>
+                  <xs:maxInclusive value="31"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="dayOfWeek">
+        <xs:annotation>
+          <xs:documentation>The last Friday of November</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="occurrence" type="voc.SchedulePatternOccurrence"/>
+            <xs:element name="dayOfWeek" type="voc.DayOfWeek"/>
+            <xs:element name="monthOfYear" type="voc.MonthOfYear"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ScheduleRange">
+    <xs:sequence>
+      <xs:element name="startDate" type="dt.Date"/>
+      <xs:choice minOccurs="0">
+        <xs:element name="occurrence" type="xs:int">
+          <xs:annotation>
+            <xs:documentation>End after n occurrences</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="endDate" type="dt.Date">
+          <xs:annotation>
+            <xs:documentation>End by date</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ScheduleDate">
+    <xs:choice>
+      <xs:element name="fixedDate" type="dt.DateTime"/>
+      <xs:element name="relativeDate" type="EQDOC.ScheduleRelativeDate">
+        <xs:annotation>
+          <xs:documentation>Date relative to schedule execution date</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ScheduleRelativeDate">
+    <xs:sequence>
+      <xs:element name="value" type="xs:int"/>
+      <xs:element name="unit" type="voc.ValueUnit" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Value unit e.g. DAY WEEK or DATE</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.MailMerge">
+    <xs:complexContent>
+      <xs:extension base="dt.dbo">
+        <xs:sequence>
+          <xs:element name="id" type="dt.uid"/>
+          <xs:element name="populationType" type="voc.PopulationType">
+            <xs:annotation>
+              <xs:documentation>Whether a search for patients or other types of data e.g. Appointments.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="tables" type="EQDOC.MailMergeTable" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.MailMergeTable">
+    <xs:sequence>
+      <xs:element name="logicalTableName" type="xs:string"/>
+      <xs:element name="columns" type="EQDOC.ListColumn" maxOccurs="unbounded"/>
+      <xs:element name="sort" type="EQDOC.ListSortColumn" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>This sorting is internal to the group</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="criteria" type="EQDOC.Criteria" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.LibraryItemCriterion">
+    <xs:sequence>
+      <xs:element name="negate" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="libraryItem" type="dt.uid"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.DynamicColumn">
+    <xs:sequence>
+      <xs:element name="displayName" type="xs:string"/>
+      <xs:element name="dataType" type="EQDOC.DataType"/>
+      <xs:element name="dynamicStructure">
         <xs:simpleType>
-         <xs:restriction base="xs:token">
-          <xs:enumeration value="greater"/>
-          <xs:enumeration value="equal"/>
-          <xs:enumeration value="less"/>
-          <xs:enumeration value="lessOrEqual"/>
-          <xs:enumeration value="greaterOrEqual"/>
-         </xs:restriction>
+          <xs:restriction base="xs:token">
+            <xs:enumeration value="function"/>
+            <xs:enumeration value="evaluate"/>
+          </xs:restriction>
         </xs:simpleType>
-       </xs:element>
-       <xs:element name="testvalue" type="xs:string"/>
-       <xs:element name="assignTrue" type="EQDOC.DynamicFunction"/>
-       <xs:element name="assignFalse" type="EQDOC.DynamicFunction"/>
-      </xs:sequence>
-     </xs:complexType>
-    </xs:element>
-    <xs:element name="function" type="EQDOC.DynamicFunction"/>
-   </xs:choice>
-  </xs:sequence>
- </xs:complexType>
- <xs:simpleType name="EQDOC.DataType">
-  <xs:restriction base="xs:token">
-   <xs:enumeration value="integer"/>
-   <xs:enumeration value="text"/>
-   <xs:enumeration value="dateTime"/>
-   <xs:enumeration value="float"/>
-   <xs:enumeration value="char"/>
-  </xs:restriction>
- </xs:simpleType>
- <xs:complexType name="EQDOC.DynamicFunction">
-  <xs:sequence>
-   <xs:element name="assignType">
-    <xs:simpleType>
-     <xs:restriction base="xs:token">
-      <xs:enumeration value="value"/>
-      <xs:enumeration value="function"/>
-      <xs:enumeration value="column"/>
-     </xs:restriction>
-    </xs:simpleType>
-   </xs:element>
-   <xs:element name="value" type="xs:string" maxOccurs="unbounded"/>
-   <xs:element name="procedureSQL" type="xs:string" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Summarise">
-  <xs:sequence>
-   <xs:element name="function">
-    <xs:simpleType>
-     <xs:restriction base="xs:token">
-      <xs:enumeration value="average"/>
-      <xs:enumeration value="count"/>
-      <xs:enumeration value="minimum"/>
-      <xs:enumeration value="maximum"/>
-      <xs:enumeration value="sum"/>
-     </xs:restriction>
-    </xs:simpleType>
-   </xs:element>
-   <xs:element name="listColumnId" type="xs:string"/>
-   <xs:element name="displayName" type="xs:string" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ReportCollections">
-  <xs:sequence>
-   <xs:element name="guid" type="dt.uid"/>
-   <xs:element name="name" type="xs:string" minOccurs="0"/>
-   <xs:element name="reportGuid" type="dt.uid" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ReportSet">
-  <xs:sequence>
-   <xs:element name="guid" type="dt.uid"/>
-   <xs:element name="name" type="xs:string"/>
-   <xs:element name="description" type="xs:string" minOccurs="0"/>
-   <xs:element name="instanceType" type="voc.InstanceType" minOccurs="0"/>
-   <xs:element name="schedule" type="EQDOC.Schedule" minOccurs="0"/>
-   <xs:element name="reportCollectionGuid" type="dt.uid" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ReportSetGroup">
-  <xs:sequence>
-   <xs:element name="guid" type="dt.uid"/>
-   <xs:element name="name" type="xs:string"/>
-   <xs:element name="reportSet" type="EQDOC.ReportSet" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="mapping" type="EQDOC.Mapping" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.QMAS">
-  <xs:sequence>
-   <xs:element name="ReferenceDate" type="xs:date" maxOccurs="unbounded"/>
-   <xs:element name="InternalVersion" type="xs:decimal"/>
-   <xs:element name="GPSSRulesetVersion" type="xs:decimal"/>
-   <xs:element name="GPSSRevision" type="xs:decimal"/>
-   <xs:element name="GPSSMessageSchema" type="xs:decimal"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Mapping">
-  <xs:sequence>
-   <xs:element name="practicePopulationGUID" type="xs:string"/>
-   <xs:element name="mapItem" type="EQDOC.MapItem" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.MapItem">
-  <xs:sequence>
-   <xs:element name="name" type="xs:string"/>
-   <xs:element name="reportGuid" type="dt.uid" minOccurs="0"/>
-   <xs:element name="mapItem" type="EQDOC.MapItem" minOccurs="0" maxOccurs="unbounded"/>
-   <xs:element name="exception" type="EQDOC.MappingException" minOccurs="0" maxOccurs="unbounded"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.MappingException">
-  <xs:sequence>
-   <xs:element name="name" type="xs:string"/>
-   <xs:element name="reportGUID" type="dt.uid"/>
-   <xs:element name="codeId" type="xs:string" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.Parameter">
-  <xs:sequence>
-   <xs:element name="name" type="xs:string"/>
-   <xs:element name="allowGlobal" type="xs:boolean"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.InputParameter">
-  <xs:sequence>
-   <xs:element name="name" type="xs:string"/>
-   <xs:element name="ReportGuid" type="dt.uid" maxOccurs="unbounded"/>
-   <xs:choice>
-    <xs:element name="rangeValue" type="EQDOC.RangeValue">
-     <xs:annotation>
-      <xs:documentation>Hold individual range related values.</xs:documentation>
-     </xs:annotation>
-    </xs:element>
-    <xs:element name="singleValue" type="EQDOC.SingleValue">
-     <xs:annotation>
-      <xs:documentation>When searching for a single value only. </xs:documentation>
-     </xs:annotation>
-    </xs:element>
-   </xs:choice>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.KeyValuePair">
-  <xs:sequence>
-   <xs:element name="codeSystem" type="voc.CodeSystemEx"/>
-   <xs:element name="key">
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="code" type="xs:token"/>
+      </xs:element>
+      <xs:element name="parameter" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="dataType" type="EQDOC.DataType"/>
+            <xs:choice>
+              <xs:element name="constant" type="xs:string"/>
+              <xs:element name="column" type="xs:string" maxOccurs="2"/>
+              <xs:element name="targetDate" type="voc.SearchDateType"/>
+              <xs:element name="isNull" type="xs:boolean"/>
+            </xs:choice>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:choice>
+        <xs:element name="evaluate">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:choice>
+                <xs:element name="column" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="function" type="EQDOC.DynamicFunction"/>
+              </xs:choice>
+              <xs:element name="comparator">
+                <xs:simpleType>
+                  <xs:restriction base="xs:token">
+                    <xs:enumeration value="greater"/>
+                    <xs:enumeration value="equal"/>
+                    <xs:enumeration value="less"/>
+                    <xs:enumeration value="lessOrEqual"/>
+                    <xs:enumeration value="greaterOrEqual"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="testvalue" type="xs:string"/>
+              <xs:element name="assignTrue" type="EQDOC.DynamicFunction"/>
+              <xs:element name="assignFalse" type="EQDOC.DynamicFunction"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="function" type="EQDOC.DynamicFunction"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="EQDOC.DataType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="integer"/>
+      <xs:enumeration value="text"/>
+      <xs:enumeration value="dateTime"/>
+      <xs:enumeration value="float"/>
+      <xs:enumeration value="char"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="EQDOC.DynamicFunction">
+    <xs:sequence>
+      <xs:element name="assignType">
+        <xs:simpleType>
+          <xs:restriction base="xs:token">
+            <xs:enumeration value="value"/>
+            <xs:enumeration value="function"/>
+            <xs:enumeration value="column"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="value" type="xs:string" maxOccurs="unbounded"/>
+      <xs:element name="procedureSQL" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Summarise">
+    <xs:sequence>
+      <xs:element name="function">
+        <xs:simpleType>
+          <xs:restriction base="xs:token">
+            <xs:enumeration value="average"/>
+            <xs:enumeration value="count"/>
+            <xs:enumeration value="minimum"/>
+            <xs:enumeration value="maximum"/>
+            <xs:enumeration value="sum"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="listColumnId" type="xs:string"/>
       <xs:element name="displayName" type="xs:string" minOccurs="0"/>
-      <xs:element name="legacyCode" type="xs:token" minOccurs="0"/>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-   <xs:element name="value" maxOccurs="unbounded">
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="code" type="xs:token"/>
-      <xs:element name="displayName" type="xs:string" minOccurs="0"/>
-      <xs:element name="legacyCode" type="xs:token" minOccurs="0"/>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.ExcludePDSSensitivePatientsFlagType">
-  <xs:annotation>
-   <xs:documentation>Empty type to be used as flag</xs:documentation>
-  </xs:annotation>
- </xs:complexType>
- <xs:complexType name="EQDOC.PatientFilter">
-  <xs:sequence>
-   <xs:element name="excludePDSSensitivePatients" type="EQDOC.ExcludePDSSensitivePatientsFlagType" minOccurs="0"/>
-   <xs:element name="excludeDCRPatients" minOccurs="0">
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ReportCollections">
+    <xs:sequence>
+      <xs:element name="guid" type="dt.uid"/>
+      <xs:element name="name" type="xs:string" minOccurs="0"/>
+      <xs:element name="reportGuid" type="dt.uid" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ReportSet">
+    <xs:sequence>
+      <xs:element name="guid" type="dt.uid"/>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="instanceType" type="voc.InstanceType" minOccurs="0"/>
+      <xs:element name="schedule" type="EQDOC.Schedule" minOccurs="0"/>
+      <xs:element name="reportCollectionGuid" type="dt.uid" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ReportSetGroup">
+    <xs:sequence>
+      <xs:element name="guid" type="dt.uid"/>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="reportSet" type="EQDOC.ReportSet" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="mapping" type="EQDOC.Mapping" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.QMAS">
+    <xs:sequence>
+      <xs:element name="ReferenceDate" type="xs:date" maxOccurs="unbounded"/>
+      <xs:element name="InternalVersion" type="xs:decimal"/>
+      <xs:element name="GPSSRulesetVersion" type="xs:decimal"/>
+      <xs:element name="GPSSRevision" type="xs:decimal"/>
+      <xs:element name="GPSSMessageSchema" type="xs:decimal"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Mapping">
+    <xs:sequence>
+      <xs:element name="practicePopulationGUID" type="xs:string"/>
+      <xs:element name="mapItem" type="EQDOC.MapItem" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.MapItem">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="reportGuid" type="dt.uid" minOccurs="0"/>
+      <xs:element name="mapItem" type="EQDOC.MapItem" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="exception" type="EQDOC.MappingException" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.MappingException">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="reportGUID" type="dt.uid"/>
+      <xs:element name="codeId" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.Parameter">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="allowGlobal" type="xs:boolean"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.InputParameter">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="ReportGuid" type="dt.uid" maxOccurs="unbounded"/>
+      <xs:choice>
+        <xs:element name="rangeValue" type="EQDOC.RangeValue">
+          <xs:annotation>
+            <xs:documentation>Hold individual range related values.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="singleValue" type="EQDOC.SingleValue">
+          <xs:annotation>
+            <xs:documentation>When searching for a single value only.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.KeyValuePair">
+    <xs:sequence>
+      <xs:element name="codeSystem" type="voc.CodeSystemEx"/>
+      <xs:element name="key">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="code" type="xs:token"/>
+            <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+            <xs:element name="legacyCode" type="xs:token" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="value" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="code" type="xs:token"/>
+            <xs:element name="displayName" type="xs:string" minOccurs="0"/>
+            <xs:element name="legacyCode" type="xs:token" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.ExcludePDSSensitivePatientsFlagType">
     <xs:annotation>
-     <xs:documentation>
-Exclude patient detailed care record</xs:documentation>
+      <xs:documentation>Empty type to be used as flag</xs:documentation>
     </xs:annotation>
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="patientGuid" type="dt.uid" maxOccurs="unbounded"/>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.SubstitutionIdentifier">
-  <xs:sequence>
-   <xs:element name="Description" type="xs:string"/>
-  </xs:sequence>
-  <xs:attribute name="guid" type="dt.uid" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.SubstitutionValue">
-  <xs:choice>
-   <xs:element name="valueSet" type="EQDOC.ValueSet" maxOccurs="unbounded"/>
-   <xs:element name="singleValue" type="EQDOC.SingleValue"/>
-   <xs:element name="value" type="EQDOC.Value"/>
-  </xs:choice>
-  <xs:attribute name="guid" type="dt.uid" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.GPES">
-  <xs:sequence>
-   <xs:element name="extractionRequirementGuid" type="dt.uid"/>
-   <xs:element name="extractionRequirementVersion" type="xs:decimal"/>
-   <xs:element name="queryIdentifier" type="xs:string"/>
-   <xs:element name="minimumCareRecordVersion" type="xs:int"/>
-   <xs:element name="name" type="xs:string"/>
-   <xs:element name="extractionRequirementSource" type="voc.ExtractionRequirementSource"/>
-   <xs:element name="reportSetGroupGuid" type="dt.uid"/>
-   <xs:element name="substitutionValues">
-    <xs:complexType>
-     <xs:sequence>
-      <xs:element name="substitutionValue" type="EQDOC.GpesSubstitutionValue" maxOccurs="unbounded"/>
-     </xs:sequence>
-    </xs:complexType>
-   </xs:element>
-   <xs:element name="output" type="EQDOC.GpesOutput">
-    <xs:annotation>
-     <xs:documentation>returns the extraction results.</xs:documentation>
-    </xs:annotation>
-   </xs:element>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesOutput">
-  <xs:sequence>
-   <xs:element name="GpesExtractionRequestConfiguration" type="EQDOC.GpesExtractionRequestConfiguration"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesSubstitutionValue">
-  <xs:sequence>
-   <xs:element name="AID" type="dt.uid"/>
-   <xs:element name="description" type="xs:string"/>
-   <xs:element name="customData" type="xs:string" minOccurs="0"/>
-   <xs:element name="substitutionValueType" type="voc.SubstitutionValueType"/>
-   <xs:element name="analogousAID" type="dt.uid" minOccurs="0"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesAggregateFromReport">
-  <xs:attribute name="AID" type="dt.uid" use="required"/>
-  <xs:attribute name="reportGuid" type="dt.uid" use="required"/>
-  <xs:attribute name="description" type="xs:string" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesAggregateFromSubstitution">
-  <xs:attribute name="AID" type="dt.uid" use="required"/>
-  <xs:attribute name="substitutionValueAid" type="dt.uid" use="required"/>
-  <xs:attribute name="description" type="xs:string" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesExtractionRequirementSource">
-  <xs:sequence>
-   <xs:element name="ExtractionRequirementSourceId" type="xs:int"/>
-   <xs:element name="ExtractionRequirementSourceDescription" type="xs:string"/>
-  </xs:sequence>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesExtractionRequestConfiguration">
-  <xs:choice maxOccurs="unbounded">
-   <xs:element name="aggregateFromReport" type="EQDOC.GpesAggregateFromReport"/>
-   <xs:element name="aggregateFromSubstitution" type="EQDOC.GpesAggregateFromSubstitution"/>
-   <xs:element name="patientLevelFromListReport" type="EQDOC.GpesPatientLevelFromListReport"/>
-   <xs:element name="freeForm" type="EQDOC.GpesFreeForm"/>
-  </xs:choice>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesPatientLevelFromListReport">
-  <xs:sequence>
-   <xs:element name="table" type="EQDOC.GpesPatientLevelTableType" maxOccurs="unbounded"/>
-  </xs:sequence>
-  <xs:attribute name="reportGuid" type="dt.uid" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesPatientLevelTableType">
-  <xs:choice maxOccurs="unbounded">
-   <xs:element name="fieldFromColumn" type="EQDOC.GpesFieldFromColumnType"/>
-   <xs:element name="fixedValue" type="EQDOC.GpesFieldFixedValueType"/>
-   <xs:element name="primaryKey" type="EQDOC.GpesFieldPrimaryKeyType"/>
-   <xs:element name="link" type="EQDOC.GpesFieldLinkType"/>
-   <xs:element name="fieldFromPatientLookup" type="EQDOC.GpesFieldFromPatientLookup"/>
-  </xs:choice>
-  <xs:attribute name="columnGroupGuid" type="dt.uid" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesFieldFromColumnType">
-  <xs:attribute name="columnGuid" type="dt.uid" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesFieldFixedValueType">
-  <xs:attribute name="columnName" type="xs:string" use="required"/>
-  <xs:attribute name="value" type="xs:string" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesFieldPrimaryKeyType">
-  <xs:attribute name="columnGuid" type="dt.uid" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesFieldLinkType">
-  <xs:attribute name="columnGuid" type="dt.uid" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesFieldFromPatientLookup">
-  <xs:attribute name="name" type="xs:string" use="required"/>
- </xs:complexType>
- <xs:complexType name="EQDOC.GpesFreeForm">
-  <xs:sequence>
-   <xs:element name="table" type="EQDOC.GpesPatientLevelTableType" maxOccurs="unbounded"/>
-  </xs:sequence>
-  <xs:attribute name="reportGuid" type="dt.uid"/>
- </xs:complexType>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.PatientFilter">
+    <xs:sequence>
+      <xs:element name="excludePDSSensitivePatients" type="EQDOC.ExcludePDSSensitivePatientsFlagType"
+                  minOccurs="0"/>
+      <xs:element name="excludeDCRPatients" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Exclude patient detailed care record
+          </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="patientGuid" type="dt.uid" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.SubstitutionIdentifier">
+    <xs:sequence>
+      <xs:element name="Description" type="xs:string"/>
+    </xs:sequence>
+    <xs:attribute name="guid" type="dt.uid" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.SubstitutionValue">
+    <xs:choice>
+      <xs:element name="valueSet" type="EQDOC.ValueSet" maxOccurs="unbounded"/>
+      <xs:element name="singleValue" type="EQDOC.SingleValue"/>
+      <xs:element name="value" type="EQDOC.Value"/>
+    </xs:choice>
+    <xs:attribute name="guid" type="dt.uid" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GPES">
+    <xs:sequence>
+      <xs:element name="extractionRequirementGuid" type="dt.uid"/>
+      <xs:element name="extractionRequirementVersion" type="xs:decimal"/>
+      <xs:element name="queryIdentifier" type="xs:string"/>
+      <xs:element name="minimumCareRecordVersion" type="xs:int"/>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="extractionRequirementSource" type="voc.ExtractionRequirementSource"/>
+      <xs:element name="reportSetGroupGuid" type="dt.uid"/>
+      <xs:element name="substitutionValues">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="substitutionValue" type="EQDOC.GpesSubstitutionValue" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="output" type="EQDOC.GpesOutput">
+        <xs:annotation>
+          <xs:documentation>returns the extraction results.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesOutput">
+    <xs:sequence>
+      <xs:element name="GpesExtractionRequestConfiguration" type="EQDOC.GpesExtractionRequestConfiguration"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesSubstitutionValue">
+    <xs:sequence>
+      <xs:element name="AID" type="dt.uid"/>
+      <xs:element name="description" type="xs:string"/>
+      <xs:element name="customData" type="xs:string" minOccurs="0"/>
+      <xs:element name="substitutionValueType" type="voc.SubstitutionValueType"/>
+      <xs:element name="analogousAID" type="dt.uid" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesAggregateFromReport">
+    <xs:attribute name="AID" type="dt.uid" use="required"/>
+    <xs:attribute name="reportGuid" type="dt.uid" use="required"/>
+    <xs:attribute name="description" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesAggregateFromSubstitution">
+    <xs:attribute name="AID" type="dt.uid" use="required"/>
+    <xs:attribute name="substitutionValueAid" type="dt.uid" use="required"/>
+    <xs:attribute name="description" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesExtractionRequirementSource">
+    <xs:sequence>
+      <xs:element name="ExtractionRequirementSourceId" type="xs:int"/>
+      <xs:element name="ExtractionRequirementSourceDescription" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesExtractionRequestConfiguration">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="aggregateFromReport" type="EQDOC.GpesAggregateFromReport"/>
+      <xs:element name="aggregateFromSubstitution" type="EQDOC.GpesAggregateFromSubstitution"/>
+      <xs:element name="patientLevelFromListReport" type="EQDOC.GpesPatientLevelFromListReport"/>
+      <xs:element name="freeForm" type="EQDOC.GpesFreeForm"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesPatientLevelFromListReport">
+    <xs:sequence>
+      <xs:element name="table" type="EQDOC.GpesPatientLevelTableType" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="reportGuid" type="dt.uid" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesPatientLevelTableType">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="fieldFromColumn" type="EQDOC.GpesFieldFromColumnType"/>
+      <xs:element name="fixedValue" type="EQDOC.GpesFieldFixedValueType"/>
+      <xs:element name="primaryKey" type="EQDOC.GpesFieldPrimaryKeyType"/>
+      <xs:element name="link" type="EQDOC.GpesFieldLinkType"/>
+      <xs:element name="fieldFromPatientLookup" type="EQDOC.GpesFieldFromPatientLookup"/>
+    </xs:choice>
+    <xs:attribute name="columnGroupGuid" type="dt.uid" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesFieldFromColumnType">
+    <xs:attribute name="columnGuid" type="dt.uid" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesFieldFixedValueType">
+    <xs:attribute name="columnName" type="xs:string" use="required"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesFieldPrimaryKeyType">
+    <xs:attribute name="columnGuid" type="dt.uid" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesFieldLinkType">
+    <xs:attribute name="columnGuid" type="dt.uid" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesFieldFromPatientLookup">
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="EQDOC.GpesFreeForm">
+    <xs:sequence>
+      <xs:element name="table" type="EQDOC.GpesPatientLevelTableType" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="reportGuid" type="dt.uid"/>
+  </xs:complexType>
 </xs:schema>

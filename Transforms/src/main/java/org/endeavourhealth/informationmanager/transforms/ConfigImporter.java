@@ -12,36 +12,36 @@ import java.nio.file.Path;
 
 public class ConfigImporter implements TTImport {
 
-    private static final String[] config = {".*\\\\Config.json"};
-    private final TTManager manager= new TTManager();
+  private static final String[] config = {".*\\\\Config.json"};
+  private final TTManager manager = new TTManager();
 
-    private TTDocument document;
+  private TTDocument document;
 
-    @Override
-    public void importData(TTImportConfig ttImportConfig) throws Exception {
+  @Override
+  public void importData(TTImportConfig ttImportConfig) throws Exception {
 
-        document = manager.createDocument(GRAPH.CONFIG);
-        document.addEntity(manager.createGraph(GRAPH.CONFIG, "Config", "Config"));
+    document = manager.createDocument(GRAPH.CONFIG);
+    document.addEntity(manager.createGraph(GRAPH.CONFIG, "Config", "Config"));
 
-        importConfig(ttImportConfig.getFolder());
+    importConfig(ttImportConfig.getFolder());
 
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-            filer.fileDocument(document);
-        }
+    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      filer.fileDocument(document);
     }
+  }
 
-    private void importConfig(String folder) throws IOException {
-        Path file = ImportUtils.findFileForId(folder, config[0]);
-        document= manager.loadDocument(file.toFile());
-    }
+  private void importConfig(String folder) throws IOException {
+    Path file = ImportUtils.findFileForId(folder, config[0]);
+    document = manager.loadDocument(file.toFile());
+  }
 
-    @Override
-    public void validateFiles(String inFolder) throws TTFilerException {
-        ImportUtils.validateFiles(inFolder,config);
-    }
+  @Override
+  public void validateFiles(String inFolder) throws TTFilerException {
+    ImportUtils.validateFiles(inFolder, config);
+  }
 
-    @Override
-    public void close() throws Exception {
-        manager.close();
-    }
+  @Override
+  public void close() throws Exception {
+    manager.close();
+  }
 }

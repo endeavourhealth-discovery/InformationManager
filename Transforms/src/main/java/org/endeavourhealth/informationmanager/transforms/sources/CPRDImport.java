@@ -20,120 +20,116 @@ import java.nio.file.Path;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class CPRDImport implements TTImport {
-	private static final Logger LOG = LoggerFactory.getLogger(CPRDImport.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CPRDImport.class);
 
-	private static final String[] obsCodes = {".*\\\\CPRD\\\\CPRDAurumMedical.txt"};
-	private static final String[] drugCodes = {".*\\\\CPRD\\\\CPRDAurumProduct.txt"};
+  private static final String[] obsCodes = {".*\\\\CPRD\\\\CPRDAurumMedical.txt"};
+  private static final String[] drugCodes = {".*\\\\CPRD\\\\CPRDAurumProduct.txt"};
 
-	private final TTManager manager = new TTManager();
-	private TTDocument document;
-
-
-	public CPRDImport() {
-	}
+  private final TTManager manager = new TTManager();
+  private TTDocument document;
 
 
-	/**
-	 * Imports CPRD  identifiers codes and creates term code map to Snomed or local legacy entities
-	 * @param config import configuration data
-	 * @throws Exception From document filer
-	 */
+  public CPRDImport() {
+  }
 
 
-	public void importData(TTImportConfig config) throws Exception {
-		document = manager.createDocument(GRAPH.CPRD_MED);
-		document.addEntity(manager.createGraph(GRAPH.CPRD_MED, "CPRD medIds ",
-			"CPRD clinical non product identifiers (including emis code ids)."));
-
-		importObsCodes(config.getFolder());
-
-		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-			filer.fileDocument(document);
-		}
-		document = manager.createDocument(GRAPH.CPRD_PROD);
-		document.addEntity(manager.createGraph(GRAPH.CPRD_PROD, "CPRD product ids",
-			"internal identifiers to DMD VMPs and AMPs."));
-
-		importDrugs(config.getFolder());
-		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-			filer.fileDocument(document);
-		}
-	}
+  /**
+   * Imports CPRD  identifiers codes and creates term code map to Snomed or local legacy entities
+   *
+   * @param config import configuration data
+   * @throws Exception From document filer
+   */
 
 
+  public void importData(TTImportConfig config) throws Exception {
+    document = manager.createDocument(GRAPH.CPRD_MED);
+    document.addEntity(manager.createGraph(GRAPH.CPRD_MED, "CPRD medIds ",
+      "CPRD clinical non product identifiers (including emis code ids)."));
 
-	private void importDrugs(String folder) throws IOException {
-		Path file =  ImportUtils.findFileForId(folder, drugCodes[0]);
-		int count = 0;
-		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-			reader.readLine();
-			String line = reader.readLine();
-			while (line != null && !line.isEmpty()) {
-				String[] fields = line.split("\t");
-				count++;
-				if (count % 10000 == 0)
-					LOG.info("Written {} drug concepts for " + document.getGraph().getIri(), count);
-				TTEntity concept = new TTEntity();
-				String drugId = (fields[0]);
-				concept.setIri(GRAPH.CPRD_PROD + "Product_" + drugId);
-				concept.setName(fields[2]);
-				concept.setCode(drugId);
-				concept.setScheme(iri(GRAPH.CPRD_PROD));
-				concept.setStatus(iri(IM.ACTIVE));
-				if (!fields[1].equals("")) {
-					concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + fields[1]));
-				}
-				document.addEntity(concept);
-				line= reader.readLine();
-			}
-			LOG.info("Written {} entities for " + document.getGraph().getIri(), count);
-		}
+    importObsCodes(config.getFolder());
 
-	}
+    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      filer.fileDocument(document);
+    }
+    document = manager.createDocument(GRAPH.CPRD_PROD);
+    document.addEntity(manager.createGraph(GRAPH.CPRD_PROD, "CPRD product ids",
+      "internal identifiers to DMD VMPs and AMPs."));
+
+    importDrugs(config.getFolder());
+    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      filer.fileDocument(document);
+    }
+  }
 
 
+  private void importDrugs(String folder) throws IOException {
+    Path file = ImportUtils.findFileForId(folder, drugCodes[0]);
+    int count = 0;
+    try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+      reader.readLine();
+      String line = reader.readLine();
+      while (line != null && !line.isEmpty()) {
+        String[] fields = line.split("\t");
+        count++;
+        if (count % 10000 == 0)
+          LOG.info("Written {} drug concepts for " + document.getGraph().getIri(), count);
+        TTEntity concept = new TTEntity();
+        String drugId = (fields[0]);
+        concept.setIri(GRAPH.CPRD_PROD + "Product_" + drugId);
+        concept.setName(fields[2]);
+        concept.setCode(drugId);
+        concept.setScheme(iri(GRAPH.CPRD_PROD));
+        concept.setStatus(iri(IM.ACTIVE));
+        if (!fields[1].equals("")) {
+          concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + fields[1]));
+        }
+        document.addEntity(concept);
+        line = reader.readLine();
+      }
+      LOG.info("Written {} entities for " + document.getGraph().getIri(), count);
+    }
+
+  }
 
 
-	private void importObsCodes(String folder) throws IOException {
-		Path file =  ImportUtils.findFileForId(folder, obsCodes[0]);
-		try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-			reader.readLine();
-			int count = 0;
-			String line = reader.readLine();
-			while (line != null && !line.isEmpty()) {
-				String[] fields = line.split("\t");
-				count++;
-				if (count % 10000 == 0)
-					LOG.info("Written {} medical concepts for " + document.getGraph().getIri(), count);
-				TTEntity concept = new TTEntity();
-				String medId = (fields[0]);
-				concept.setIri(GRAPH.CPRD_PROD + "Medical_" + medId);
-				concept.setName(fields[4]);
-				concept.setCode(medId);
-				concept.setScheme(iri(GRAPH.CPRD_PROD));
-				concept.setStatus(iri(IM.ACTIVE));
-				concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
-				TTNode termCode = new TTNode();
-				termCode.set(iri(IM.CODE), TTLiteral.literal(fields[6]));
-				concept.addObject(iri(IM.HAS_TERM_CODE), termCode);
-				document.addEntity(concept);
-				line= reader.readLine();
-			}
-			LOG.info("Written {} entities for " + document.getGraph().getIri(), count);
-		}
+  private void importObsCodes(String folder) throws IOException {
+    Path file = ImportUtils.findFileForId(folder, obsCodes[0]);
+    try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+      reader.readLine();
+      int count = 0;
+      String line = reader.readLine();
+      while (line != null && !line.isEmpty()) {
+        String[] fields = line.split("\t");
+        count++;
+        if (count % 10000 == 0)
+          LOG.info("Written {} medical concepts for " + document.getGraph().getIri(), count);
+        TTEntity concept = new TTEntity();
+        String medId = (fields[0]);
+        concept.setIri(GRAPH.CPRD_PROD + "Medical_" + medId);
+        concept.setName(fields[4]);
+        concept.setCode(medId);
+        concept.setScheme(iri(GRAPH.CPRD_PROD));
+        concept.setStatus(iri(IM.ACTIVE));
+        concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
+        TTNode termCode = new TTNode();
+        termCode.set(iri(IM.CODE), TTLiteral.literal(fields[6]));
+        concept.addObject(iri(IM.HAS_TERM_CODE), termCode);
+        document.addEntity(concept);
+        line = reader.readLine();
+      }
+      LOG.info("Written {} entities for " + document.getGraph().getIri(), count);
+    }
 
-	}
-
-
+  }
 
 
-	public void validateFiles(String inFolder){
-		ImportUtils.validateFiles(inFolder,obsCodes, drugCodes);
-	}
+  public void validateFiles(String inFolder) {
+    ImportUtils.validateFiles(inFolder, obsCodes, drugCodes);
+  }
 
-	@Override
-	public void close() throws Exception {
-		manager.close();
-	}
+  @Override
+  public void close() throws Exception {
+    manager.close();
+  }
 }
 
