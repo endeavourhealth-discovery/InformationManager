@@ -19,7 +19,7 @@ public class CoreQueryImporter implements TTImport {
   public TTDocument document;
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws JsonProcessingException, IOException, QueryException, TTFilerException {
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument(GRAPH.DISCOVERY);
       getDescendants();

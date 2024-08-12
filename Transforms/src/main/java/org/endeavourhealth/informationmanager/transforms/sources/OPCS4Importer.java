@@ -1,18 +1,16 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.TTArray;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +41,7 @@ public class OPCS4Importer implements TTImport {
   private TTDocument mapDocument;
   private Set<String> snomedCodes;
 
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws IOException, QueryException, TTFilerException {
     LOG.info("Importing OPCS4.....");
     LOG.info("Checking Snomed codes first");
     snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
@@ -65,7 +63,7 @@ public class OPCS4Importer implements TTImport {
     }
   }
 
-  public TTDocument importMaps(String folder) throws IOException, DataFormatException {
+  public TTDocument importMaps(String folder) throws IOException {
     Path file = ImportUtils.findFileForId(folder, maps[0]);
     ComplexMapImporter mapImport = new ComplexMapImporter();
     mapImport.importMap(file.toFile(), mapDocument, altCodeToEntity, "1126441000000105", snomedCodes);

@@ -1,9 +1,8 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -46,7 +45,7 @@ public class OdsImporter implements TTImport {
    * @throws Exception invalid document
    */
   @Override
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws IOException,QueryException, TTFilerException, JsonProcessingException {
     try (TTManager manager = new TTManager();
          TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
       TTDocument doc = manager.createDocument(GRAPH.ODS);
@@ -67,7 +66,7 @@ public class OdsImporter implements TTImport {
     }
   }
 
-  private void importCodingSystem(TTImportConfig config, TTDocument doc) throws Exception {
+  private void importCodingSystem(TTImportConfig config, TTDocument doc) throws IOException {
     TTArray recordClassSet;
     TTArray relationshipSet;
     LOG.info("Importing coding systems");
@@ -184,7 +183,7 @@ public class OdsImporter implements TTImport {
     }
   }
 
-  private void importOrganisationData(TTImportConfig config, TTDocument doc) throws Exception {
+  private void importOrganisationData(TTImportConfig config, TTDocument doc) throws IOException {
     LOG.info("Importing Organisation data");
 
     Path file = ImportUtils.findFileForId(config.getFolder(), ORGANISATION_DETAILS);
