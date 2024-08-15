@@ -1,14 +1,17 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,23 +44,27 @@ public class CPRDImport implements TTImport {
    */
 
 
-  public void importData(TTImportConfig config) throws Exception {
-    document = manager.createDocument(GRAPH.CPRD_MED);
-    document.addEntity(manager.createGraph(GRAPH.CPRD_MED, "CPRD medIds ",
-      "CPRD clinical non product identifiers (including emis code ids)."));
+  public void importData(TTImportConfig config) throws ImportException {
+    try {
+      document = manager.createDocument(GRAPH.CPRD_MED);
+      document.addEntity(manager.createGraph(GRAPH.CPRD_MED, "CPRD medIds ",
+        "CPRD clinical non product identifiers (including emis code ids)."));
 
-    importObsCodes(config.getFolder());
+      importObsCodes(config.getFolder());
 
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
-    }
-    document = manager.createDocument(GRAPH.CPRD_PROD);
-    document.addEntity(manager.createGraph(GRAPH.CPRD_PROD, "CPRD product ids",
-      "internal identifiers to DMD VMPs and AMPs."));
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
+      document = manager.createDocument(GRAPH.CPRD_PROD);
+      document.addEntity(manager.createGraph(GRAPH.CPRD_PROD, "CPRD product ids",
+        "internal identifiers to DMD VMPs and AMPs."));
 
-    importDrugs(config.getFolder());
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
+      importDrugs(config.getFolder());
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(),e);
     }
   }
 

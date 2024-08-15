@@ -6,9 +6,12 @@ import com.opencsv.exceptions.CsvValidationException;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,15 +43,19 @@ public class BNFImporter implements TTImport {
   };
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
-    manager = new TTManager();
-    document = manager.createDocument(BNF.NAMESPACE);
-    topFolder();
-    importMaps(config.getFolder());
-    importCodes(config.getFolder());
-    flattenSets();
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
+  public void importData(TTImportConfig config) throws ImportException {
+    try {
+      manager = new TTManager();
+      document = manager.createDocument(BNF.NAMESPACE);
+      topFolder();
+      importMaps(config.getFolder());
+      importCodes(config.getFolder());
+      flattenSets();
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
+    } catch (Exception ex) {
+      throw new ImportException(ex.getMessage(),ex);
     }
   }
 

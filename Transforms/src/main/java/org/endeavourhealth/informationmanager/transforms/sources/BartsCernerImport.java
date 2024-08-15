@@ -1,16 +1,18 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +20,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.zip.DataFormatException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -39,31 +43,31 @@ public class BartsCernerImport implements TTImport {
   private final Map<String, TTEntity> codeToSet = new HashMap<>();
   private final Map<String, TTEntity> termToSet = new HashMap<>();
   private final Set<TTEntity> usedSets = new HashSet<>();
+  private final TTManager manager = new TTManager();
+  private final Map<String, TTEntity> entityMap = new HashMap<>();
   Map<String, Set<String>> childToParent = new HashMap<>();
   private TTDocument document;
 
-
-  private final TTManager manager = new TTManager();
-
-  private final Map<String, TTEntity> entityMap = new HashMap<>();
-
-
   @Override
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws ImportException {
     LOG.info("retrieving snomed codes from IM");
-    document = manager.createDocument(GRAPH.BARTS_CERNER);
-    document.addEntity(manager.createGraph(GRAPH.BARTS_CERNER, "Barts Cerner code scheme and graph"
-      , "The Barts Cerner local code scheme and graph i.e. local codes with links to cor"));
-    importSets(config.getFolder());
-    importHierarchy(config.getFolder());
-    importCodes(config.getFolder());
-    importUsed(config.getFolder());
-    setUsedEventSets();
-    setTopLevel();
-    importMaps(config.getFolder());
+    try {
+      document = manager.createDocument(GRAPH.BARTS_CERNER);
+      document.addEntity(manager.createGraph(GRAPH.BARTS_CERNER, "Barts Cerner code scheme and graph"
+        , "The Barts Cerner local code scheme and graph i.e. local codes with links to cor"));
+      importSets(config.getFolder());
+      importHierarchy(config.getFolder());
+      importCodes(config.getFolder());
+      importUsed(config.getFolder());
+      setUsedEventSets();
+      setTopLevel();
+      importMaps(config.getFolder());
 
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(), e);
     }
   }
 
@@ -90,7 +94,7 @@ public class BartsCernerImport implements TTImport {
     }
   }
 
-  private void importMaps(String inFolder) throws IOException, DataFormatException {
+  private void importMaps(String inFolder) throws IOException {
     int count = 0;
     for (String conceptFile : maps) {
       Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
@@ -184,7 +188,7 @@ public class BartsCernerImport implements TTImport {
     childToParent.get(child).add(parent);
   }
 
-  private void importUsed(String inFolder) throws Exception {
+  private void importUsed(String inFolder) throws IOException {
     int count = 0;
     for (String conceptFile : used) {
       Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
@@ -203,11 +207,11 @@ public class BartsCernerImport implements TTImport {
 
   }
 
-  private void importUsedLine(String line) throws Exception {
+  private void importUsedLine(String line) {
     String[] fields = line.split("\t");
     String code = fields[7];
     if (codeToSet.get(code) != null)
-      throw new Exception("duplicate event code and set code");
+      throw new IllegalArgumentException("duplicate event code and set code");
     String iri = GRAPH.BARTS_CERNER + fields[7];
     String term = fields[4].replace("\"", "");
     TTEntity usedConcept = codeToConcept.get(code);
@@ -261,7 +265,7 @@ public class BartsCernerImport implements TTImport {
     termToSet.put(xterm, eventSet);
   }
 
-  private void importCodes(String inFolder) throws Exception {
+  private void importCodes(String inFolder) throws IOException {
     int count = 0;
     for (String conceptFile : codes) {
       Path file = ImportUtils.findFilesForId(inFolder, conceptFile).get(0);
@@ -281,11 +285,11 @@ public class BartsCernerImport implements TTImport {
 
   }
 
-  private void importCodeLine(String line) throws Exception {
+  private void importCodeLine(String line) {
     String[] fields = line.split("\t");
     String code = fields[0];
     if (codeToSet.get(code) != null)
-      throw new Exception("duplicate code used for code and set");
+      throw new IllegalArgumentException("duplicate code used for code and set");
     String term = fields[3].replace("\"", "");
     String setTerm = fields[15].toLowerCase().replace("\"", "");
     TTEntity eventSet = termToSet.get(setTerm);

@@ -3,11 +3,16 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerException;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,7 +24,7 @@ public class CoreQueryImporter implements TTImport {
   public TTDocument document;
 
   @Override
-  public void importData(TTImportConfig config) throws JsonProcessingException, IOException, QueryException, TTFilerException {
+  public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument(GRAPH.DISCOVERY);
       getDescendants();
@@ -58,6 +63,8 @@ public class CoreQueryImporter implements TTImport {
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
       }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(), e);
     }
   }
 

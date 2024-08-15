@@ -1,13 +1,14 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportByType;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,7 @@ public class Importer implements TTImportByType {
   }
 
 
-  private TTImport getImporter(String importType) throws Exception {
+  private TTImport getImporter(String importType) throws ImportException {
     if (importType.equals(IM.NAMESPACE + "SingleFileImporter"))
       return new SingleFileImporter();
     else if (GRAPH.QUERY.equals(importType))
@@ -100,7 +101,7 @@ public class Importer implements TTImportByType {
     else if (GRAPH.CPRD_MED.equals(importType))
       return new CPRDImport();
     else
-      throw new Exception("Unrecognised import type [" + importType + "]");
+      throw new ImportException("Unrecognised import type [" + importType + "]");
   }
 
 

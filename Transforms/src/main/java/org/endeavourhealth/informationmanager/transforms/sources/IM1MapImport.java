@@ -3,7 +3,6 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.apache.commons.text.CaseUtils;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.imq.Node;
@@ -13,6 +12,8 @@ import org.endeavourhealth.imapi.transforms.SnomedConcept;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.common.ZipUtils;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,38 +63,42 @@ public class IM1MapImport implements TTImport {
 
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
-    String inFolder = config.getFolder();
-    createFHIRMaps(inFolder);
-    EMISImport.populateRemaps(remaps);
-    codeToIri = importMaps.getCodeToIri();
+  public void importData(TTImportConfig config) throws ImportException {
+    try {
+      String inFolder = config.getFolder();
+      createFHIRMaps(inFolder);
+      EMISImport.populateRemaps(remaps);
+      codeToIri = importMaps.getCodeToIri();
 
-    importOld(inFolder);
+      importOld(inFolder);
 
 
-    LOG.info("Retrieving all entities and matches...");
-    entities = importMaps.getAllPlusMatches();
+      LOG.info("Retrieving all entities and matches...");
+      entities = importMaps.getAllPlusMatches();
 
-    try (TTManager manager = new TTManager()) {
-      document = manager.createDocument(GRAPH.IM1);
-      document.addEntity(manager.createGraph(GRAPH.IM1, "IM1 code scheme and graph",
-        "The IM1 code scheme and graph"));
-      document.addEntity(manager.createGraph(FHIR.GRAPH_FHIR, "FHIR code scheme and graph",
-        "The FHIR code scheme and graph, i.e. codes defined in the FHIR specification"));
-      document.addEntity(manager.createGraph(IM.SYSTEM_NAMESPACE, "Computer system scheme and graph",
-        "Computer system scheme and graph"));
-      newSchemes();
-      statsDocument = manager.createDocument(GRAPH.STATS);
+      try (TTManager manager = new TTManager()) {
+        document = manager.createDocument(GRAPH.IM1);
+        document.addEntity(manager.createGraph(GRAPH.IM1, "IM1 code scheme and graph",
+          "The IM1 code scheme and graph"));
+        document.addEntity(manager.createGraph(FHIR.GRAPH_FHIR, "FHIR code scheme and graph",
+          "The FHIR code scheme and graph, i.e. codes defined in the FHIR specification"));
+        document.addEntity(manager.createGraph(IM.SYSTEM_NAMESPACE, "Computer system scheme and graph",
+          "Computer system scheme and graph"));
+        newSchemes();
+        statsDocument = manager.createDocument(GRAPH.STATS);
 
-      importv1Codes(inFolder);
-      importContext(inFolder);
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-        filer.fileDocument(document);
+        importv1Codes(inFolder);
+        importContext(inFolder);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+          filer.fileDocument(document);
+        }
+
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+          filer.fileDocument(statsDocument);
+        }
       }
-
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-        filer.fileDocument(statsDocument);
-      }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(), e);
     }
   }
 

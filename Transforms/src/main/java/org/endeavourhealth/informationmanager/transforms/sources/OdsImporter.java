@@ -11,6 +11,8 @@ import org.endeavourhealth.imapi.vocabulary.ORG;
 
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,7 @@ public class OdsImporter implements TTImport {
    * @throws Exception invalid document
    */
   @Override
-  public void importData(TTImportConfig config) throws IOException,QueryException, TTFilerException, JsonProcessingException {
+  public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager();
          TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
       TTDocument doc = manager.createDocument(GRAPH.ODS);
@@ -63,6 +65,8 @@ public class OdsImporter implements TTImport {
       importOrganisationRelationships(config);
       importOrganisationRoles(config);
       filer.fileDocument(doc);
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(),e);
     }
   }
 

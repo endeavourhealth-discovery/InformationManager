@@ -3,7 +3,6 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.apache.commons.lang3.StringUtils;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.customexceptions.EclFormatException;
 import org.endeavourhealth.imapi.model.imq.Bool;
@@ -11,10 +10,11 @@ import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.ECLToIMQ;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,17 +28,6 @@ import java.util.zip.DataFormatException;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class SnomedImporter implements TTImport {
-  private static final Logger LOG = LoggerFactory.getLogger(SnomedImporter.class);
-
-  private Map<String, TTEntity> conceptMap;
-  private Map<String, TTEntity> refsetMap;
-  private final ECLToIMQ eclConverter = new ECLToIMQ();
-  private TTDocument document;
-  private Integer counter;
-  private Map<String, Set<String>> vmp_ingredient = new HashMap<>();
-  private Map<String, String> vmp_route = new HashMap<>();
-  private Map<String, String> vmp_form = new HashMap<>();
-
   public static final String[] concepts = {
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_InternationalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_Snapshot_INT_.*\\.txt",
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKCLSnapshot_.*\\.txt",
@@ -48,38 +37,27 @@ public class SnomedImporter implements TTImport {
     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKDGSnapshot_.*\\.txt",
     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKEditionRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Concept_UKEDSnapshot_.*\\.txt"
   };
-
   public static final String[] refsets = {
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRefsetsRF2_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleUKCRSnapshot_.*\\.txt",
     ".*\\\\PRIMARY\\\\.*\\\\SnomedCT_UKPrimaryCareRF2_.*\\\\Snapshot\\\\Refset\\\\Content\\\\der2_Refset_SimpleUKPCSnapshot_.*\\.txt"
   };
-
   public static final String[] dmd_vmp = {
     ".*\\\\DMD\\\\.*\\\\f_vmp_VmpType.csv"
   };
-
   public static final String[] dmd_amp = {
     ".*\\\\DMD\\\\.*\\\\f_amp_AmpType.csv"
   };
-
-
   public static final String[] dmd_vpi = {
     ".*\\\\DMD\\\\.*\\\\f_vmp_VpiType.csv"
   };
-
   public static final String[] dmd_route = {
     ".*\\\\DMD\\\\.*\\\\f_vmp_DrugRouteType.csv"
   };
-
-
   public static final String[] dmd_form = {
     ".*\\\\DMD\\\\.*\\\\f_vmp_DrugFormType.csv"
   };
-
-
   public static final String[] qofClusters = {
     ".*_PCD_Refset_Content.txt"};
-
   public static final String[] descriptions = {
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_InternationalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_Snapshot-en_INT_.*\\.txt",
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKCLSnapshot-en_.*\\.txt",
@@ -89,8 +67,6 @@ public class SnomedImporter implements TTImport {
     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKDGSnapshot-en_.*\\.txt",
     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKEditionRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKEDSnapshot-en_.*\\.txt"
   };
-
-
   public static final String[] relationships = {
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_InternationalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_Snapshot_INT_.*\\.txt",
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKCLSnapshot_.*\\.txt",
@@ -100,15 +76,12 @@ public class SnomedImporter implements TTImport {
     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKDrugRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKDGSnapshot_.*\\.txt",
     ".*\\\\DRUG\\\\.*\\\\SnomedCT_UKEditionRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Relationship_UKEDSnapshot_.*\\.txt"
   };
-
   public static final String[] substitutions = {
     ".*\\\\HISTORY\\\\.*\\\\SnomedCT_UKClinicalRF2_.*\\\\Resources\\\\QueryTable\\\\xres2_SNOMEDQueryTable_.*\\.txt",
   };
-
   public static final String[] attributeRanges = {
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_InternationalRF2_.*\\\\Snapshot\\\\Refset\\\\Metadata\\\\der2_ssccRefset_MRCMAttributeRangeSnapshot_INT_.*\\.txt",
   };
-
   public static final String[] attributeDomains = {
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_InternationalRF2_.*\\\\Snapshot\\\\Refset\\\\Metadata\\\\der2_cissccRefset_MRCMAttributeDomainSnapshot_INT_.*\\.txt",
   };
@@ -121,10 +94,7 @@ public class SnomedImporter implements TTImport {
   public static final String[] usage_drug = {
     ".*\\\\DiscoveryNoneCore\\\\SNOMED_drug_usage_[0-9\\\\-]*.txt"
   };
-
   public static final String[] importList = {"991181000000109"};
-
-
   public static final String FULLY_SPECIFIED = "900000000000003001";
   public static final String DEFINED = "900000000000073002";
   public static final String IS_A = "116680003";
@@ -133,6 +103,15 @@ public class SnomedImporter implements TTImport {
   public static final String ACTIVE = "1";
   public static final String REPLACED_BY = "370124000";
   public static final String SNOMED_ATTRIBUTE = "sn:106237007";
+  private static final Logger LOG = LoggerFactory.getLogger(SnomedImporter.class);
+  private final ECLToIMQ eclConverter = new ECLToIMQ();
+  private Map<String, TTEntity> conceptMap;
+  private Map<String, TTEntity> refsetMap;
+  private TTDocument document;
+  private Integer counter;
+  private Map<String, Set<String>> vmp_ingredient = new HashMap<>();
+  private Map<String, String> vmp_route = new HashMap<>();
+  private Map<String, String> vmp_form = new HashMap<>();
 
   //======================PUBLIC METHODS============================
 
@@ -145,7 +124,7 @@ public class SnomedImporter implements TTImport {
    */
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws ImportException {
     validateFiles(config.getFolder());
     conceptMap = new HashMap<>();
     try (TTManager dmanager = new TTManager()) {
@@ -181,6 +160,8 @@ public class SnomedImporter implements TTImport {
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
       }
+    } catch (Exception ex) {
+      throw new ImportException(ex.getMessage());
     }
   }
 
@@ -779,7 +760,7 @@ public class SnomedImporter implements TTImport {
               op.addObject(iri(RDFS.RANGE), iri(or.getInstanceOf().get(0).getIri()));
             }
           } else
-            throw new DataFormatException("ecl of this kind is not supported for ranges");
+            throw new EclFormatException("ecl of this kind is not supported for ranges");
         }
       }
     }

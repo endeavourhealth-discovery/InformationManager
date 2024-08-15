@@ -1,13 +1,17 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 
 import java.util.Map;
 
@@ -15,15 +19,17 @@ public class CoreVerbImporter implements TTImport {
   private TTDocument document;
 
   @Override
-  public void importData(TTImportConfig ttImportConfig) throws Exception {
-    TTManager manager = new TTManager();
-    document = manager.createDocument();
-    verbs();
-    ownerships();
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
+  public void importData(TTImportConfig ttImportConfig) throws ImportException {
+    try (TTManager manager = new TTManager()) {
+      document = manager.createDocument();
+      verbs();
+      ownerships();
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(),e);
     }
-
   }
 
   private void verbs() {

@@ -10,6 +10,8 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,26 +42,30 @@ public class ICD10Importer implements TTImport {
   private TTDocument mapDocument;
 
   @Override
-  public void importData(TTImportConfig config) throws IOException, IllegalArgumentException, QueryException, TTFilerException {
-    validateFiles(config.getFolder());
-    LOG.info("Importing ICD10....");
-    LOG.info("Getting snomed codes");
-    snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
-    document = manager.createDocument(GRAPH.ICD10);
-    document.addEntity(manager.createGraph(GRAPH.ICD10, "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
-    createTaxonomy();
-    importChapters(config.getFolder(), document);
-    importEntities(config.getFolder(), document);
-    createHierarchy();
+  public void importData(TTImportConfig config) throws ImportException {
+    try {
+      validateFiles(config.getFolder());
+      LOG.info("Importing ICD10....");
+      LOG.info("Getting snomed codes");
+      snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
+      document = manager.createDocument(GRAPH.ICD10);
+      document.addEntity(manager.createGraph(GRAPH.ICD10, "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
+      createTaxonomy();
+      importChapters(config.getFolder(), document);
+      importEntities(config.getFolder(), document);
+      createHierarchy();
 
 
-    mapDocument = manager.createDocument(GRAPH.ICD10);
-    importMaps(config.getFolder());
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
-    }
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(mapDocument);
+      mapDocument = manager.createDocument(GRAPH.ICD10);
+      importMaps(config.getFolder());
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(mapDocument);
+      }
+    } catch (Exception ex) {
+      throw new ImportException(ex.getMessage(),ex);
     }
   }
 

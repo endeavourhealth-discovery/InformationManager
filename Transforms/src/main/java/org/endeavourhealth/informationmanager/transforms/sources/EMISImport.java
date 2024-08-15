@@ -1,7 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -11,6 +10,8 @@ import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.common.ZipUtils;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,29 +62,33 @@ public class EMISImport implements TTImport {
    */
 
 
-  public void importData(TTImportConfig config) throws Exception {
-    LOG.info("Retrieving filed snomed codes");
-    document = manager.createDocument(GRAPH.EMIS);
-    document.addEntity(manager.createGraph(GRAPH.EMIS, "EMIS codes",
-      "The EMIS code scheme including codes directly matched to UK Snomed-CT, and EMIS unmatched local codes."));
+  public void importData(TTImportConfig config) throws ImportException {
+    try {
+      LOG.info("Retrieving filed snomed codes");
+      document = manager.createDocument(GRAPH.EMIS);
+      document.addEntity(manager.createGraph(GRAPH.EMIS, "EMIS codes",
+        "The EMIS code scheme including codes directly matched to UK Snomed-CT, and EMIS unmatched local codes."));
 
-    checkAndUnzip(config.getFolder());
+      checkAndUnzip(config.getFolder());
 
-    LOG.info("importing emis code file");
-    populateRemaps(remaps);
-    populateAlternateParents();
-    addEMISTopLevel();
-    importEMISCodes(config.getFolder());
-    importDrugs(config.getFolder());
-    importLocalCodeMaps(config.getFolder());
-    manager.createIndex();
+      LOG.info("importing emis code file");
+      populateRemaps(remaps);
+      populateAlternateParents();
+      addEMISTopLevel();
+      importEMISCodes(config.getFolder());
+      importDrugs(config.getFolder());
+      importLocalCodeMaps(config.getFolder());
+      manager.createIndex();
 
-    allergyMaps(config.getFolder());
-    setEmisHierarchy();
-    //addExtraMatches();
-    supplementary();
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
+      allergyMaps(config.getFolder());
+      setEmisHierarchy();
+      //addExtraMatches();
+      supplementary();
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(),e);
     }
   }
 

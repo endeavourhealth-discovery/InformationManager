@@ -6,12 +6,15 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.common.ZipUtils;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +56,7 @@ public class TPPImporter implements TTImport {
   private ImportMaps importMaps = new ImportMaps();
 
 
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws ImportException {
 
 
     LOG.info("Looking for Snomed codes");
@@ -88,8 +91,8 @@ public class TPPImporter implements TTImport {
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
       }
-
-
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(), e);
     }
   }
 
@@ -160,7 +163,7 @@ public class TPPImporter implements TTImport {
   }
 
 
-  private void importEMISMaps() throws SQLException, TTFilerException, IOException {
+  private void importEMISMaps() throws TTFilerException, IOException {
     LOG.info("Getting EMIS maps");
     emisToSnomed = importMaps.importEmisToSnomed();
   }

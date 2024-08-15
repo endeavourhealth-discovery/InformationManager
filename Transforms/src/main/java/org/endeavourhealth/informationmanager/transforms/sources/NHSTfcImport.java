@@ -8,6 +8,8 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -23,15 +25,19 @@ public class NHSTfcImport implements TTImport {
   private TTIriRef nhsTfc;
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
-    document = manager.createDocument(GRAPH.NHS_TFC);
-    document.addEntity(manager.createGraph(GRAPH.NHS_TFC,
-      "NHS Data Dictionary Speciality and Treatment function codes"
-      , "NHS Data dictionary concepts that are not snomed"));
-    setNHSDD();
-    importFunctionCodes(config.getFolder());
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
+  public void importData(TTImportConfig config) throws ImportException {
+    try {
+      document = manager.createDocument(GRAPH.NHS_TFC);
+      document.addEntity(manager.createGraph(GRAPH.NHS_TFC,
+        "NHS Data Dictionary Speciality and Treatment function codes"
+        , "NHS Data dictionary concepts that are not snomed"));
+      setNHSDD();
+      importFunctionCodes(config.getFolder());
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
+    } catch (Exception ex) {
+      throw new ImportException(ex.getMessage(),ex);
     }
   }
 

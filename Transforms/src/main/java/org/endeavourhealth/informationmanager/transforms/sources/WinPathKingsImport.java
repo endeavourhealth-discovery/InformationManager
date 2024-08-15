@@ -10,6 +10,8 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +35,7 @@ public class WinPathKingsImport implements TTImport {
   private final ImportMaps importMaps = new ImportMaps();
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument(GRAPH.KINGS_WINPATH);
       document.addEntity(manager.createGraph(GRAPH.KINGS_WINPATH,
@@ -45,6 +47,8 @@ public class WinPathKingsImport implements TTImport {
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
       }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(),e);
     }
   }
 

@@ -2,10 +2,11 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +18,13 @@ public class EncountersImporter implements TTImport {
   private static final String[] encounters = {".*\\\\DiscoveryNoneCore\\\\Encounters.json"};
 
 
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws ImportException {
     LOG.info("Importing Discovery encounters");
-    importNoneCoreFile(config);
+    try {
+      importNoneCoreFile(config);
+    } catch (Exception ex) {
+      throw new ImportException(ex.getMessage(),ex);
+    }
   }
 
   private void importNoneCoreFile(TTImportConfig config) throws Exception {
