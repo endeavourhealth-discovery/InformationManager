@@ -5,10 +5,7 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
-import org.endeavourhealth.imapi.model.imq.Node;
-import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.SnomedConcept;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.common.ZipUtils;
@@ -42,25 +39,47 @@ public class IM1MapImport implements TTImport {
     "CM_Org_CQC", "8HN02"
   );
   private static final Map<String, TTEntity> oldIriEntity = new HashMap<>();
-
-  private TTDocument document;
-  private TTDocument statsDocument;
-  private Map<String, Set<String>> entities;
   private final ImportMaps importMaps = new ImportMaps();
   private final Map<String, Integer> used = new HashMap<>();
   private final Map<Integer, Integer> usedDbid = new HashMap<>();
   private final Set<Integer> numericConcepts = new HashSet<>();
-  private FileWriter writer;
   private final Map<String, String> oldIriTerm = new HashMap<>();
   private final Map<String, String> oldIriSnomed = new HashMap<>();
   private final Map<String, Integer> idToDbid = new HashMap<>();
   private final Map<String, TTEntity> iriToConcept = new HashMap<>();
-  private Map<String, String> codeToIri = new HashMap<>();
   private final Map<String, String> remaps = new HashMap<>();
-
   private final Map<String, String> fhirToCore = new HashMap<>();
   private final Map<String, String> im1SchemeToIriTerm = new HashMap<>();
+  private TTDocument document;
+  private TTDocument statsDocument;
+  private Map<String, Set<String>> entities;
+  private FileWriter writer;
+  private Map<String, String> codeToIri = new HashMap<>();
 
+  private static String getFhirIriTerm(String term) {
+    String[] words = term.split(" ");
+    StringBuilder iriTerm = new StringBuilder();
+    for (int i = 1; i < words.length; i++) {
+      iriTerm.append(words[i].toLowerCase());
+      if (i < words.length - 1) {
+        iriTerm.append("-");
+      }
+    }
+    return iriTerm.toString();
+  }
+
+  private static String getPhrase(String iri) {
+    iri = iri.substring(0, 1).toUpperCase() + iri.substring(1);
+    StringBuilder term = new StringBuilder();
+    term.append(iri.charAt(0));
+    for (int i = 1; i < iri.length(); i++) {
+      if (Character.isUpperCase(iri.charAt(i))) {
+        term.append(" ");
+      }
+      term.append(iri.charAt(i));
+    }
+    return term.toString();
+  }
 
   @Override
   public void importData(TTImportConfig config) throws ImportException {
@@ -487,7 +506,7 @@ public class IM1MapImport implements TTImport {
       }
     }
     if (concept.getIri() != null) {
-      concept.setName(term).setScheme(iri(FHIR.GRAPH_FHIR)).set(iri(IM.IM1ID), TTLiteral.literal(oldIri));
+      concept.setName(term).setScheme(iri(FHIR.GRAPH_FHIR)).set(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
       document.addEntity(concept);
             /*
             entity.set(iri(IM.DEFINITION), TTLiteral.literal(
@@ -501,10 +520,10 @@ public class IM1MapImport implements TTImport {
     }
     entity.setName(term)
       .setScheme(iri(FHIR.GRAPH_FHIR))
-      .set(iri(IM.IM1ID), TTLiteral.literal(oldIri));
+      .set(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
 
     if (!"NULL".equals(im1Scheme)) {
-      entity.set(iri(IM.IM1SCHEME), TTLiteral.literal(im1Scheme));
+      entity.set(iri(IM.IM_1_SCHEME), TTLiteral.literal(im1Scheme));
     }
     document.addEntity(entity);
   }
@@ -517,18 +536,6 @@ public class IM1MapImport implements TTImport {
     concept.setIri(FHIR.GRAPH_FHIR + im1SchemeToIriTerm.get(oldIri)).addType(iri(IM.CONCEPT));
     iriToConcept.put(concept.getIri(), concept);
 
-  }
-
-  private static String getFhirIriTerm(String term) {
-    String[] words = term.split(" ");
-    StringBuilder iriTerm = new StringBuilder();
-    for (int i = 1; i < words.length; i++) {
-      iriTerm.append(words[i].toLowerCase());
-      if (i < words.length - 1) {
-        iriTerm.append("-");
-      }
-    }
-    return iriTerm.toString();
   }
 
   private boolean checkOld(String scheme, String lname, String term, String code, String oldIri, String description, String im1Scheme) throws Exception {
@@ -594,7 +601,7 @@ public class IM1MapImport implements TTImport {
     unassigned.setIri(scheme + lname);
     unassigned.addType(iri(IM.CONCEPT));
     unassigned.setStatus(iri(IM.UNASSIGNED));
-    unassigned.set(iri(IM.IM1ID), TTLiteral.literal(oldIri));
+    unassigned.set(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
     unassigned.setName(term);
     if (description != null)
       unassigned.setDescription(description);
@@ -602,7 +609,7 @@ public class IM1MapImport implements TTImport {
       unassigned.set(iri(IM.CODE), TTLiteral.literal(code));
       unassigned.setScheme(TTIriRef.iri(scheme));
     }
-    unassigned.set(iri(IM.IM1SCHEME), TTLiteral.literal(im1Scheme));
+    unassigned.set(iri(IM.IM_1_SCHEME), TTLiteral.literal(im1Scheme));
     if (scheme.equals(GRAPH.ENCOUNTERS))
       unassigned.set(iri(IM.PRIVACY_LEVEL), TTLiteral.literal(1));
     if (used.get(oldIri) != null && used.get(oldIri) > 0)
@@ -648,9 +655,9 @@ public class IM1MapImport implements TTImport {
       entity.setDescription(description);
     }
     if (oldIri != null)
-      entity.set(iri(IM.IM1ID), TTLiteral.literal(oldIri));
+      entity.set(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
     if (scheme != null)
-      entity.set(iri(IM.IM1SCHEME), TTLiteral.literal(scheme));
+      entity.set(iri(IM.IM_1_SCHEME), TTLiteral.literal(scheme));
     if (matchedIri != null) {
       entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(matchedIri));
       entity.setStatus(iri(IM.DRAFT));
@@ -678,7 +685,7 @@ public class IM1MapImport implements TTImport {
     TTEntity im1 = new TTEntity().setIri(iri).addType(iri(IM.CONCEPT));
     TTIriRef graph = TTIriRef.iri(iri.substring(0, iri.lastIndexOf("#") + 1));
     im1.setGraph(graph);
-    im1.addObject(iri(IM.IM1ID), TTLiteral.literal(oldIri));
+    im1.addObject(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
 
     Integer usedCount = 0;
     if (used.containsKey(oldIri) && im1.get(iri(IM.USAGE_TOTAL)) != null)
@@ -831,19 +838,6 @@ public class IM1MapImport implements TTImport {
     context.set(iri(IM.CONTEXT_NODE), new TTIriRef(nodeIri));
   }
 
-  private static String getPhrase(String iri) {
-    iri = iri.substring(0, 1).toUpperCase() + iri.substring(1);
-    StringBuilder term = new StringBuilder();
-    term.append(iri.charAt(0));
-    for (int i = 1; i < iri.length(); i++) {
-      if (Character.isUpperCase(iri.charAt(i))) {
-        term.append(" ");
-      }
-      term.append(iri.charAt(i));
-    }
-    return term.toString();
-  }
-
   private String getTerm(String lname) {
     StringBuilder term = new StringBuilder(lname.substring(0, 1));
     for (int i = 1; i < lname.length(); i++) {
@@ -884,7 +878,7 @@ public class IM1MapImport implements TTImport {
       .setName(term)
       .setScheme(newScheme)
       .setCode(value)
-      .set(iri(IM.IM1ID), TTLiteral.literal(oldIri))
+      .set(iri(IM.IM_1_ID), TTLiteral.literal(oldIri))
       .setStatus(iri(IM.UNASSIGNED));
     document.addEntity(entity);
     oldIriEntity.put(oldIri, entity);
