@@ -1,12 +1,12 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.zip.DataFormatException;
 
 public class CoreImporter implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(CoreImporter.class);
@@ -34,45 +33,7 @@ public class CoreImporter implements TTImport {
 
   private static final String INFERRED_SUFFIX = "-inferred.json";
 
-
-  public void validateFiles(String inFolder) {
-    ImportUtils.validateFiles(inFolder, coreEntities);
-  }
-
-
-  /**
-   * Imports the core ontology document
-   *
-   * @param config import config
-   * @return TTImport object builder pattern
-   * @throws Exception invalid document
-   */
-  @Override
-  public void importData(TTImportConfig config) throws Exception {
-    LOG.info("Generating inferred ontologies...");
-    generateInferred(config);
-    LOG.info("Importing Core entities");
-    for (String coreFile : coreEntities) {
-      if (!coreFile.contains(INFERRED_SUFFIX))
-        coreFile = coreFile.substring(0, coreFile.indexOf(".json")) + INFERRED_SUFFIX;
-      TTManager manager = new TTManager();
-      Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
-      manager.loadDocument(path.toFile());
-      TTDocument document = manager.getDocument();
-      LOG.info("Filing {} from {}", document.getGraph().getIri(), coreFile);
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-        try {
-          filer.fileDocument(document);
-        } catch (TTFilerException e) {
-          throw new Exception(e.getMessage());
-        }
-      }
-    }
-
-  }
-
-
-  private static void generateInferred(TTImportConfig config) throws IOException, DataFormatException, OWLOntologyCreationException {
+  private static void generateInferred(TTImportConfig config) throws IOException, OWLOntologyCreationException {
 
     for (String coreFile : coreEntities) {
       if (!coreFile.contains(INFERRED_SUFFIX)) {
@@ -105,6 +66,45 @@ public class CoreImporter implements TTImport {
     });
   }
 
+  public void validateFiles(String inFolder) {
+    ImportUtils.validateFiles(inFolder, coreEntities);
+  }
+
+  /**
+   * Imports the core ontology document
+   *
+   * @param config import config
+   * @return TTImport object builder pattern
+   * @throws Exception invalid document
+   */
+  @Override
+  public void importData(TTImportConfig config) throws ImportException {
+    try {
+      LOG.info("Generating inferred ontologies...");
+      generateInferred(config);
+      LOG.info("Importing Core entities");
+      for (String coreFile : coreEntities) {
+        if (!coreFile.contains(INFERRED_SUFFIX))
+          coreFile = coreFile.substring(0, coreFile.indexOf(".json")) + INFERRED_SUFFIX;
+        try (TTManager manager = new TTManager()) {
+          Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
+          manager.loadDocument(path.toFile());
+          TTDocument document = manager.getDocument();
+          LOG.info("Filing {} from {}", document.getGraph().getIri(), coreFile);
+          try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+            try {
+              filer.fileDocument(document);
+            } catch (TTFilerException | QueryException e) {
+              throw new IOException(e.getMessage());
+            }
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(), e);
+    }
+
+  }
 
   /**
    * Loads the core ontology document, available as TTDocument for various purposes

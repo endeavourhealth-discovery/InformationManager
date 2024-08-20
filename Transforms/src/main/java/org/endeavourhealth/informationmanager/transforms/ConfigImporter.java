@@ -1,10 +1,13 @@
 package org.endeavourhealth.informationmanager.transforms;
 
 import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;
 
 import java.io.IOException;
@@ -18,15 +21,19 @@ public class ConfigImporter implements TTImport {
   private TTDocument document;
 
   @Override
-  public void importData(TTImportConfig ttImportConfig) throws Exception {
+  public void importData(TTImportConfig ttImportConfig) throws ImportException {
 
-    document = manager.createDocument(GRAPH.CONFIG);
-    document.addEntity(manager.createGraph(GRAPH.CONFIG, "Config", "Config"));
+    try {
+      document = manager.createDocument(GRAPH.CONFIG);
+      document.addEntity(manager.createGraph(GRAPH.CONFIG, "Config", "Config"));
 
-    importConfig(ttImportConfig.getFolder());
+      importConfig(ttImportConfig.getFolder());
 
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(), e);
     }
   }
 

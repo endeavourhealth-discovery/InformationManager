@@ -1,18 +1,18 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.TTArray;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,29 +43,33 @@ public class OPCS4Importer implements TTImport {
   private TTDocument mapDocument;
   private Set<String> snomedCodes;
 
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws ImportException {
     LOG.info("Importing OPCS4.....");
     LOG.info("Checking Snomed codes first");
-    snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
-    try (TTManager manager = new TTManager()) {
-      document = manager.createDocument(GRAPH.OPCS4);
-      document.addEntity(manager.createGraph(GRAPH.OPCS4, "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
-      importChapters(config.getFolder(), document);
-      importEntities(config.getFolder(), document);
+    try {
+      snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
+      try (TTManager manager = new TTManager()) {
+        document = manager.createDocument(GRAPH.OPCS4);
+        document.addEntity(manager.createGraph(GRAPH.OPCS4, "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
+        importChapters(config.getFolder(), document);
+        importEntities(config.getFolder(), document);
 
-      mapDocument = manager.createDocument(GRAPH.OPCS4);
-      importMaps(config.getFolder());
-      //Important to file after maps set
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-        filer.fileDocument(document);
+        mapDocument = manager.createDocument(GRAPH.OPCS4);
+        importMaps(config.getFolder());
+        //Important to file after maps set
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+          filer.fileDocument(document);
+        }
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+          filer.fileDocument(mapDocument);
+        }
       }
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-        filer.fileDocument(mapDocument);
-      }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(), e);
     }
   }
 
-  public TTDocument importMaps(String folder) throws IOException, DataFormatException {
+  public TTDocument importMaps(String folder) throws IOException {
     Path file = ImportUtils.findFileForId(folder, maps[0]);
     ComplexMapImporter mapImport = new ComplexMapImporter();
     mapImport.importMap(file.toFile(), mapDocument, altCodeToEntity, "1126441000000105", snomedCodes);

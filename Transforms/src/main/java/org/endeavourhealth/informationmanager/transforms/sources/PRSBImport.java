@@ -1,11 +1,12 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -32,7 +33,7 @@ public class PRSBImport implements TTImport {
   private Map<String, TTArray> axiomMap;
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws ImportException {
     validateFiles(config.getFolder());
     try (TTManager dmanager = new TTManager()) {
       document = dmanager.createDocument(GRAPH.PRSB);
@@ -42,6 +43,8 @@ public class PRSBImport implements TTImport {
       //TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());
       dmanager.saveDocument(new File(config.getFolder() + "prsb.json"));
       //filer.fileDocument(document);
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(), e);
     }
   }
 

@@ -12,6 +12,7 @@ import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;

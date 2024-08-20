@@ -10,6 +10,8 @@ import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.common.Logger;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
@@ -42,7 +44,7 @@ public class VisionImport implements TTImport {
 
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws ImportException {
 
     LOG.info("importing vision codes");
     LOG.info("retrieving snomed codes from IM");
@@ -64,6 +66,8 @@ public class VisionImport implements TTImport {
         filer.fileDocument(document);
       }
 
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(), e);
     }
   }
 

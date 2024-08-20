@@ -7,6 +7,8 @@ import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +36,7 @@ public class ApexKingsImport implements TTImport {
 
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws ImportException {
 
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument(GRAPH.KINGS_APEX);
@@ -47,6 +49,8 @@ public class ApexKingsImport implements TTImport {
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
       }
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(),e);
     }
   }
 

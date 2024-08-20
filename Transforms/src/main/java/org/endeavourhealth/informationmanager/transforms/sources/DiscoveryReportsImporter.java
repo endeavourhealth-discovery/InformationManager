@@ -1,11 +1,14 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,11 +32,13 @@ public class DiscoveryReportsImporter implements TTImport {
    * @return TTImport object builder pattern
    * @throws Exception invalid document
    */
-  public void importData(TTImportConfig config) throws Exception {
+  public void importData(TTImportConfig config) throws ImportException {
     LOG.info("Importing Reports concepts");
-    TTDocument document = loadFile(config.getFolder());
     try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      TTDocument document = loadFile(config.getFolder());
       filer.fileDocument(document);
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(),e);
     }
   }
 

@@ -45,7 +45,7 @@ public class ComplexMapImporter {
    * @throws IOException         in the event of a file import problem
    * @throws DataFormatException if the file content is invalid
    */
-  public TTDocument importMap(File file, TTDocument document, Map<String, TTEntity> legacyCodeToEntity, String refset, Set<String> sourceCodes) throws IOException, DataFormatException {
+  public TTDocument importMap(File file, TTDocument document, Map<String, TTEntity> legacyCodeToEntity, String refset, Set<String> sourceCodes) throws IOException, IllegalArgumentException {
     this.document = document;
     this.refset = refset;
     this.sourceCodes = sourceCodes;
@@ -56,7 +56,7 @@ public class ComplexMapImporter {
     else if (refset.equals(ICD10_REFERENCE_SET))
       namespace = GRAPH.ICD10;
     else
-      throw new DataFormatException(refset + " reference set is not supported yet");
+      throw new IllegalArgumentException(refset + " reference set is not supported yet");
 
     //imports file and creates snomed to target collection
     importFile(file);

@@ -1,17 +1,17 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImport;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
+import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +20,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.zip.DataFormatException;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -33,36 +32,40 @@ public class ICD10Importer implements TTImport {
 
   private final TTIriRef icd10Codes = TTIriRef.iri(GRAPH.ICD10 + "ICD10Codes");
   private final TTManager manager = new TTManager();
-  private Set<String> snomedCodes;
   private final Map<String, TTEntity> startChapterMap = new HashMap<>();
   private final List<String> startChapterList = new ArrayList<>();
-  private TTDocument document;
-  private TTDocument mapDocument;
   private final Map<String, TTEntity> codeToEntity = new HashMap<>();
   private final Map<String, TTEntity> altCodeToEntity = new HashMap<>();
   private final ImportMaps importMaps = new ImportMaps();
+  private Set<String> snomedCodes;
+  private TTDocument document;
+  private TTDocument mapDocument;
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
-    validateFiles(config.getFolder());
-    LOG.info("Importing ICD10....");
-    LOG.info("Getting snomed codes");
-    snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
-    document = manager.createDocument(GRAPH.ICD10);
-    document.addEntity(manager.createGraph(GRAPH.ICD10, "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
-    createTaxonomy();
-    importChapters(config.getFolder(), document);
-    importEntities(config.getFolder(), document);
-    createHierarchy();
+  public void importData(TTImportConfig config) throws ImportException {
+    try {
+      validateFiles(config.getFolder());
+      LOG.info("Importing ICD10....");
+      LOG.info("Getting snomed codes");
+      snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
+      document = manager.createDocument(GRAPH.ICD10);
+      document.addEntity(manager.createGraph(GRAPH.ICD10, "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
+      createTaxonomy();
+      importChapters(config.getFolder(), document);
+      importEntities(config.getFolder(), document);
+      createHierarchy();
 
 
-    mapDocument = manager.createDocument(GRAPH.ICD10);
-    importMaps(config.getFolder());
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
-    }
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(mapDocument);
+      mapDocument = manager.createDocument(GRAPH.ICD10);
+      importMaps(config.getFolder());
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(mapDocument);
+      }
+    } catch (Exception ex) {
+      throw new ImportException(ex.getMessage(),ex);
     }
   }
 
@@ -105,7 +108,7 @@ public class ICD10Importer implements TTImport {
 
   }
 
-  public void importMaps(String folder) throws IOException, DataFormatException {
+  public void importMaps(String folder) throws IOException {
 
     validateFiles(folder);
     Path file = ImportUtils.findFileForId(folder, maps[0]);

@@ -2,11 +2,12 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.xml.bind.JAXBElement;
-import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.bind.JAXBContext;
 import org.apache.commons.io.FilenameUtils;
-import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerException;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.iml.ConceptSet;
 import org.endeavourhealth.imapi.model.iml.Entity;
 import org.endeavourhealth.imapi.model.iml.ModelDocument;
@@ -15,23 +16,25 @@ import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.xml.bind.JAXBContext;
-
-import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -43,56 +46,59 @@ public class CEGImporter implements TTImport {
   private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
   private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
   private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
-
+  private final Set<TTEntity> allEntities = new HashSet<>();
   public Set<ConceptSet> conceptSets = new HashSet<>();
   public Set<String> querySet = new HashSet<>();
   public TTIriRef valueSetFolder;
-
   private TTEntity owner;
-  private final Set<TTEntity> allEntities = new HashSet<>();
 
   @Override
-  public void importData(TTImportConfig config) throws Exception {
-    TTManager manager = new TTManager();
-    TTDocument document = manager.createDocument(GRAPH.CEG_QUERY);
-    TTEntity graph = new TTEntity()
-      .setIri(GRAPH.CEG_QUERY)
-      .setName("CEG (QMUL) graph")
-      .setDescription("CEG library of value sets, queries and profiles")
-      .addType(iri(IM.GRAPH));
-    graph.addObject(iri(RDFS.SUBCLASS_OF), iri(IM.GRAPH));
-    document.addEntity(graph);
-    createOrg(document);
-    CEGEthnicityImport ethnicImport = new CEGEthnicityImport();
-    ethnicImport.importData(config);
-    createFolders(document);
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
-
-    }
-
-    //Import queries
-    loadAndConvert(config.getFolder());
-
-    if (!conceptSets.isEmpty()) {
-      document = new TTDocument(iri(GRAPH.CEG_QUERY));
-      for (ConceptSet set : conceptSets) {
-        if (!querySet.contains(set.getIri())) {
-          TTEntity ttSet = new TTEntity()
-            .setIri(set.getIri())
-            .setName(set.getName())
-            .addType(iri(IM.VALUESET));
-          if (set.getUsedIn() != null) {
-            for (TTIriRef used : set.getUsedIn())
-              ttSet.addObject(iri(IM.USED_IN), used);
-          }
-          ttSet.addObject(iri(IM.IS_CONTAINED_IN), valueSetFolder);
-          document.addEntity(ttSet);
-        }
-      }
+  public void importData(TTImportConfig config) throws ImportException {
+    try (
+      TTManager manager = new TTManager();
+      CEGEthnicityImport ethnicImport = new CEGEthnicityImport()
+    ) {
+      TTDocument document = manager.createDocument(GRAPH.CEG_QUERY);
+      TTEntity graph = new TTEntity()
+        .setIri(GRAPH.CEG_QUERY)
+        .setName("CEG (QMUL) graph")
+        .setDescription("CEG library of value sets, queries and profiles")
+        .addType(iri(IM.GRAPH));
+      graph.addObject(iri(RDFS.SUBCLASS_OF), iri(IM.GRAPH));
+      document.addEntity(graph);
+      createOrg(document);
+      ethnicImport.importData(config);
+      createFolders(document);
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
+
       }
+
+      //Import queries
+      loadAndConvert(config.getFolder());
+
+      if (!conceptSets.isEmpty()) {
+        document = new TTDocument(iri(GRAPH.CEG_QUERY));
+        for (ConceptSet set : conceptSets) {
+          if (!querySet.contains(set.getIri())) {
+            TTEntity ttSet = new TTEntity()
+              .setIri(set.getIri())
+              .setName(set.getName())
+              .addType(iri(IM.VALUESET));
+            if (set.getUsedIn() != null) {
+              for (TTIriRef used : set.getUsedIn())
+                ttSet.addObject(iri(IM.USED_IN), used);
+            }
+            ttSet.addObject(iri(IM.IS_CONTAINED_IN), valueSetFolder);
+            document.addEntity(ttSet);
+          }
+        }
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+          filer.fileDocument(document);
+        }
+      }
+    } catch (Exception ex) {
+      throw new ImportException(ex.getMessage(), ex);
     }
   }
 
