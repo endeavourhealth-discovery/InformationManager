@@ -19,7 +19,7 @@ public class CEGImport {
     // Mandatory/ordered args
     cfg.setFolder(args[0]);
     TTImportByType importer = new Importer();
-    importer.validateByType(GRAPH.CEG_QUERY, cfg.getFolder());
-    importer.importByType(GRAPH.CEG_QUERY, cfg);
+    importer.validateByType(GRAPH.CEG, cfg.getFolder());
+    importer.importByType(GRAPH.CEG, cfg);
   }
 }

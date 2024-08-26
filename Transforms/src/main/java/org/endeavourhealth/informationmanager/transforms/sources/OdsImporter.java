@@ -54,6 +54,7 @@ public class OdsImporter implements TTImport {
       doc.setCrud(iri(IM.UPDATE_ALL));
       doc.addEntity(manager.createGraph(GRAPH.ODS, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
 
+
       importCodingSystem(config, doc);
       filer.fileDocument(doc);
 
@@ -79,29 +80,39 @@ public class OdsImporter implements TTImport {
 
     relationshipSet = new TTArray();
     recordClassSet = new TTArray();
-    TTIriRef londonExtension = iri(IM.NAMESPACE + "903031000252104");
+    TTEntity odsCodeFolder= new TTEntity()
+      .setIri(IM.NAMESPACE+"OdsCodeSystems")
+        .addType(iri(IM.FOLDER))
+          .setName("ODS code systems")
+            .setDescription("Foldr containing ODS code schemes")
+              .set(iri(IM.IS_CONTAINED_IN),iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+    doc.addEntity(odsCodeFolder);
+    TTIriRef odsCodes= iri(odsCodeFolder.getIri());
 
     // Add/create base types
     doc
       .addEntity(new TTEntity(ODS.ORGANISATION_ROLE_TYPE)
         .setName("Organisation role")
         .addType(iri(IM.CONCEPT))
+        .setScheme(iri(GRAPH.ODS))
         .setDescription("The business role the organisation performs")
         .setStatus(iri(IM.ACTIVE))
-        .set(iri(RDFS.SUBCLASS_OF), londonExtension)
+        .set(iri(IM.IS_CONTAINED_IN), odsCodes)
       )
       .addEntity(new TTEntity(ODS.ORGANISATION_RELATIONSHIP)
         .setName("Organisation relationship")
         .addType(iri(IM.CONCEPT))
+        .setScheme(iri(GRAPH.ODS))
         .setDescription("The type of the relationship with another organisation")
         .setStatus(iri(IM.ACTIVE))
-        .set(iri(RDFS.SUBCLASS_OF), londonExtension)
+        .set(iri(IM.IS_CONTAINED_IN), odsCodes)
       ).addEntity(new TTEntity(ODS.ORGANISATION_RECORD_CLASS)
         .setName("Organisation record class")
         .addType(iri(IM.CONCEPT))
+        .setScheme(iri(GRAPH.ODS))
         .setDescription("The business role the organisation performs")
         .setStatus(iri(IM.ACTIVE))
-        .set(iri(RDFS.SUBCLASS_OF), londonExtension)
+        .set(iri(IM.IS_CONTAINED_IN), odsCodes)
       )
 
       // Add/create value sets
