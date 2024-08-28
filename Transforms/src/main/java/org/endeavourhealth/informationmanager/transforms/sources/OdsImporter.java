@@ -85,7 +85,7 @@ public class OdsImporter implements TTImport {
         .addType(iri(IM.FOLDER))
           .setName("ODS code systems")
             .setDescription("Foldr containing ODS code schemes")
-              .set(iri(IM.IS_CONTAINED_IN),iri(IM.NAMESPACE+"CodeBasedTaxonomies"));
+              .set(iri(IM.IS_CONTAINED_IN),iri(IM.NAMESPACE+"HealthModelOntology"));
     doc.addEntity(odsCodeFolder);
     TTIriRef odsCodes= iri(odsCodeFolder.getIri());
 
@@ -116,7 +116,7 @@ public class OdsImporter implements TTImport {
       )
 
       // Add/create value sets
-      .addEntity(new TTEntity(IM.NAMESPACE + "SET_OrganisationRole")
+      .addEntity(new TTEntity(IM.NAMESPACE + "VSET_OrganisationRole")
         .setName("Value set - Organisation role")
         .addType(iri(IM.VALUESET))
         .setDescription("Value set for Organisation (data model) / role")
@@ -124,15 +124,15 @@ public class OdsImporter implements TTImport {
         .set(iri(IM.DEFINITION), literal("{\"match\":[{\"name\":\"Organisation role\",\"instanceOf\":[{\"@id\":\"" + ODS.ORGANISATION_ROLE_TYPE + "\",\"descendantsOf\":true}]}]}"))
         .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "VSET_DataModel"))
         .set(iri(IM.HAS_MEMBER), relationshipSet)
-      ).addEntity(new TTEntity(IM.NAMESPACE + "SET_OrganisationRelationshipType")
+      ).addEntity(new TTEntity(IM.NAMESPACE + "VSET_OrganisationRelationshipType")
         .setName("Value set - Organisation relationship")
         .addType(iri(IM.VALUESET))
         .setDescription("Value set for Organisation (data model) / relationship")
         .setStatus(iri(IM.ACTIVE))
-        .set(iri(IM.DEFINITION), literal("{\"match\":[{\"name\":\"Organisation role\",\"instanceOf\":[{\"@id\":\"" + ODS.ORGANISATION_RELATIONSHIP + "\",\"descendantsOf\":true}]}]}"))
+        .set(iri(IM.DEFINITION), literal("{\"match\":[{\"name\":\"Organisation relationshipType\",\"instanceOf\":[{\"@id\":\"" + ODS.ORGANISATION_RELATIONSHIP + "\",\"descendantsOf\":true}]}]}"))
         .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "VSET_DataModel"))
         .set(iri(IM.HAS_MEMBER), relationshipSet)
-      ).addEntity(new TTEntity(IM.NAMESPACE + "SET_OrganisationRecordClass")
+      ).addEntity(new TTEntity(IM.NAMESPACE + "VSET_OrganisationRecordClass")
         .setName("Value set - Organisation record class")
         .addType(iri(IM.VALUESET))
         .setDescription("Value set for Organisation (data model) / record class")
@@ -285,7 +285,7 @@ public class OdsImporter implements TTImport {
       }
 
       TTNode rel = new TTNode()
-        .set(iri(IM.CONCEPT), iri(ODS.ORGANISATION_RELATIONSHIP + "_" + fieldByName("RelationshipId").substring(2)))
+        .set(iri(IM.RELATIONSHIP_TYPE), iri(ODS.ORGANISATION_RELATIONSHIP + "_" + fieldByName("RelationshipId").substring(2)))
         .set(iri(IM.EFFECTIVE_DATE), literal(fieldByName("OperationalStartDate")))
         .set(iri(IM.END_DATE), literal(fieldByName("OperationalEndDate")))
         .set(iri(IM.HAS_STATUS), "Active".equals(fieldByName("Status")) ? iri(IM.ACTIVE) : iri(IM.INACTIVE))
