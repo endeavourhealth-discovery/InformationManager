@@ -6,10 +6,7 @@ import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
 import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.QR;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 import org.slf4j.Logger;
@@ -94,7 +91,7 @@ public class ImportApp {
           .validateByType(GRAPH.BARTS_CERNER, cfg.getFolder())
           .validateByType(GRAPH.ODS, cfg.getFolder())
           .validateByType(GRAPH.NHS_TFC, cfg.getFolder())
-          .validateByType(GRAPH.CEG_QUERY, cfg.getFolder())
+          .validateByType(GRAPH.CEG, cfg.getFolder())
           .validateByType(GRAPH.BNF, cfg.getFolder())
           .validateByType(GRAPH.IM1, cfg.getFolder())
 //                    .validateByType(GRAPH.CONFIG, cfg.getFolder())
@@ -114,7 +111,7 @@ public class ImportApp {
         importer.importByType(GRAPH.ODS, cfg);
         importer.importByType(GRAPH.NHS_TFC, cfg);
         importer.importByType(GRAPH.BNF, cfg);
-        importer.importByType(GRAPH.CEG_QUERY, cfg);
+        importer.importByType(GRAPH.CEG, cfg);
 //                importer.importByType(GRAPH.CONFIG,cfg);
         importer.importByType(GRAPH.IM1, cfg);
         importer.importByType(GRAPH.DELTAS, cfg);
@@ -185,8 +182,8 @@ public class ImportApp {
         break;
 
       case "ceg":
-        importer = new Importer().validateByType(GRAPH.CEG_QUERY, cfg.getFolder());
-        importer.importByType(GRAPH.CEG_QUERY, cfg);
+        importer = new Importer().validateByType(GRAPH.CEG, cfg.getFolder());
+        importer.importByType(GRAPH.CEG, cfg);
         break;
       case "barts":
         importer = new Importer().validateByType(GRAPH.BARTS_CERNER, cfg.getFolder());
@@ -221,13 +218,14 @@ public class ImportApp {
         importer = new Importer().validateByType(QR.NAMESPACE, cfg.getFolder());
         importer.importByType(QR.NAMESPACE, cfg);
         break;
+      case "fhir":
+        importer = new Importer().validateByType(FHIR.GRAPH_FHIR, cfg.getFolder());
+        importer.importByType(FHIR.GRAPH_FHIR, cfg);
+        break;
       default:
         throw new Exception("Unknown import type");
 
     }
-
-    if (!cfg.isSkiplucene())
-      new LuceneIndexer().buildIndexes();
 
     LOG.info("Finished - ", new Date());
   }

@@ -9,6 +9,7 @@ import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +91,7 @@ public class Importer implements TTImportByType {
       return new OdsImporter();
     else if (GRAPH.IM1.equals(importType))
       return new IM1MapImport();
-    else if (GRAPH.CEG_QUERY.equals(importType))
+    else if (GRAPH.CEG.equals(importType))
       return new CEGImporter();
     else if (GRAPH.NHS_TFC.equals(importType))
       return new NHSTfcImport();
@@ -100,6 +101,8 @@ public class Importer implements TTImportByType {
       return new QImporter();
     else if (GRAPH.CPRD_MED.equals(importType))
       return new CPRDImport();
+    else if (FHIR.GRAPH_FHIR.equals(importType))
+      return new FHIRImporter();
     else
       throw new ImportException("Unrecognised import type [" + importType + "]");
   }

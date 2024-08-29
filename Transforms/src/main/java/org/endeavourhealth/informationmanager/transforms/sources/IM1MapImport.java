@@ -456,7 +456,8 @@ public class IM1MapImport implements TTImport {
     if ("NULL".equals(code)) {
       // Is parent pseudo-scheme
       setParentConceptAndValueSet(oldIri, term, scheme, entity, concept);
-    } else {
+    }
+    else {
       if ("CM_DiscoveryCode".equals(im1Scheme)) {
         setParentConceptAndValueSet(oldIri, term, scheme, entity, concept);
       } else {
@@ -484,6 +485,8 @@ public class IM1MapImport implements TTImport {
         } else {
           LOG.error("Parent undefined");
         }
+        TTEntity valueSet= iriToConcept.get(FHIR.GRAPH_FHIR+"ValueSet/"+ iriTerm);
+        valueSet.addObject(iri(IM.HAS_MEMBER),iri(entity.getIri()));
       }
     }
     if (concept.getIri() != null) {
@@ -516,7 +519,7 @@ public class IM1MapImport implements TTImport {
     entity.set(iri(IM.IS_CONTAINED_IN), iri(FHIR.VALUESET_FOLDER));
     concept.setIri(FHIR.GRAPH_FHIR + im1SchemeToIriTerm.get(oldIri)).addType(iri(IM.CONCEPT));
     iriToConcept.put(concept.getIri(), concept);
-
+    iriToConcept.put(entity.getIri(),entity);
   }
 
   private static String getFhirIriTerm(String term) {

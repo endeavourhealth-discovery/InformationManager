@@ -1,17 +1,24 @@
 package org.endeavourhealth.informationmanager.transforms.preload;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
-import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
+import org.endeavourhealth.imapi.filer.TCGenerator;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImportByType;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
 import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.FHIR;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
@@ -19,13 +26,6 @@ import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 
 import java.io.IOException;
 import java.util.Date;
@@ -94,9 +94,10 @@ public class Preload {
       .validateByType(GRAPH.BARTS_CERNER, cfg.getFolder())
       .validateByType(GRAPH.ODS, cfg.getFolder())
       .validateByType(GRAPH.NHS_TFC, cfg.getFolder())
-      .validateByType(GRAPH.CEG_QUERY, cfg.getFolder())
+      .validateByType(GRAPH.CEG, cfg.getFolder())
       .validateByType(GRAPH.BNF, cfg.getFolder())
       .validateByType(GRAPH.IM1, cfg.getFolder())
+      .validateByType(FHIR.GRAPH_FHIR, cfg.getFolder())
       //.validateByType(GRAPH.CPRD_MED, cfg.getFolder())
       .validateByType(QR.NAMESPACE, cfg.getFolder());
     if (!cfg.isSkipBulk()) {
@@ -116,6 +117,7 @@ public class Preload {
       importer.importByType(GRAPH.ODS, cfg);
       importer.importByType(GRAPH.NHS_TFC, cfg);
       importer.importByType(GRAPH.IM1, cfg);
+      importer.importByType(FHIR.GRAPH_FHIR,cfg);
       //importer.importByType(GRAPH.CPRD_MED, cfg);
 
 
@@ -134,7 +136,7 @@ public class Preload {
     TTFilerFactory.setTransactional(true);
     importer.importByType(GRAPH.KINGS_APEX, cfg);
     importer.importByType(GRAPH.KINGS_WINPATH, cfg);
-    importer.importByType(GRAPH.CEG_QUERY, cfg);
+    importer.importByType(GRAPH.CEG, cfg);
     try (TTImport deltaImporter = new DeltaImporter()) {
       deltaImporter.importData(cfg);
     }
