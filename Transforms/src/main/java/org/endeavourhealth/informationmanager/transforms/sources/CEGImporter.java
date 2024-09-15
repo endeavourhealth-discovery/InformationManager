@@ -204,7 +204,7 @@ public class CEGImporter implements TTImport {
               for (TTIriRef used : set.getUsedIn()) {
                 setEntity.addObject(TTIriRef.iri(IM.USED_IN), used);
               }
-              setEntity.addObject(TTIriRef.iri(IM.IS_CONTAINED_IN), TTIriRef.iri("http://endhealth.info/ceg/qry#CSET_CEGConceptSets)"));
+              setEntity.addObject(TTIriRef.iri(IM.IS_CONTAINED_IN), TTIriRef.iri("http://endhealth.info/ceg/qry#CSET_CEGConceptSets"));
               document.addEntity(setEntity);
             }
           }
