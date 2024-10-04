@@ -335,7 +335,7 @@ public class WikiGenerator {
         return entity;
     }
     EntityService es = new EntityService();
-    TTBundle bundle = es.getFullEntity(iri);
+    TTBundle bundle = es.getBundle(iri, null);
     TTEntity entity = bundle.getEntity();
     if (entity != null)
       return entity;
