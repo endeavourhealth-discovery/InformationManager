@@ -121,73 +121,11 @@ public class QImporter implements TTImport {
       .setName("QRisk3 health record query")
       .setTypeOf(IM.NAMESPACE + "Patient");
     query.addReturn(new Return());
-    qMatch(query, null, "age", "age", false, null, false);
-    qMatch(query, null, "statedGender", "sex", false, null, false);
-    qMatch(query, "observation", "concept=_411", "cvd", true, null, true);
-    qMatch(query, "observation", "concept=_24", "af", true, null, true);
-  }
-
-
-  private void ageSex(Query query) {
-    query.getReturn().get(0)
-      .property(p -> p
-        .as("age")
-        .setIri("age")
-        .setUnit("years"))
-      .property(p -> p
-        .as("sex")
-        .case_(c -> c
-          .when(w -> w
-            .property(p1 -> p1
-              .setIri("statedGender")
-              .is(in -> in.setIri("http://endhealth.info/im#905031000252103")))
-            .then(t -> t.setValue("Male")))
-          .when(w -> w
-            .property(p1 -> p1
-              .setIri("statedGender")
-              .is(in -> in.setIri("http://endhealth.info/im#905041000252107")))
-            .then(t -> t.setValue("Female")))
-          .else_x(e -> e
-            .setValue("Male"))));
-  }
-
-  private void qMatch(Query query, String path, String propertyValues, String as, Boolean optional,
-                      Map<String, String> mapValues,
-                      boolean isTruFalse) {
-    Match match = new Match();
-    query.addMatch(match);
-    if (optional == true)
-      match.setOptional(true);
-    if (path != null) {
-      for (int i = 0; i < path.split("/").length - 1; i++) {
-        Where property = new Where();
-        match.addWhere(property);
-        property.setIri(path.split("/")[i]);
-        match = match.setMatch(new Match().getMatch());
-      }
-    }
-    for (int i = 0; i < propertyValues.split(",").length - 1; i++) {
-      String pv = propertyValues.split(",")[i];
-      String field = pv.split("=")[0];
-      Where property = new Where();
-      property.setIri(field);
-      match.addWhere(property);
-      String values = pv.split("=")[1];
-      for (int q = 0; q < values.split(";").length - 1; q++) {
-        String value = values.split(";")[q];
-        if (value.startsWith("http")) {
-          property.addIs(new Node().setIri(value));
-        }
-        property.setValueVariable(as);
-      }
-    }
-    query.getReturn().get(0)
-      .property(p -> p
-        .setAs(as)
-        .setValueRef(as));
-
 
   }
+
+
+
 
   private void importCodeGroups() throws JsonProcessingException {
     for (Map.Entry<String, TTEntity> project : idProjectMap.entrySet()) {

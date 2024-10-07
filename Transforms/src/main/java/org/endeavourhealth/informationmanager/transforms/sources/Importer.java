@@ -93,6 +93,8 @@ public class Importer implements TTImportByType {
       return new IM1MapImport();
     else if (GRAPH.CEG.equals(importType))
       return new CEGImporter();
+    else if (GRAPH.SMARTLIFE.equals(importType))
+      return new SmartLifeImporter();
     else if (GRAPH.NHS_TFC.equals(importType))
       return new NHSTfcImport();
     else if (GRAPH.DELTAS.equals(importType))

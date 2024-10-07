@@ -59,6 +59,7 @@ public class ImportApp {
           case "privacy":
             TTFilerFactory.setPrivacyLevel(Integer.parseInt(args[i].split("=")[1]));
             break;
+
           default:
             if (args[i].contains("test="))
               testDirectory = args[i].substring(args[i].lastIndexOf("=") + 1);
@@ -179,6 +180,11 @@ public class ImportApp {
       case "kingswinpath":
         importer = new Importer().validateByType(GRAPH.KINGS_WINPATH, cfg.getFolder());
         importer.importByType(GRAPH.KINGS_WINPATH, cfg);
+        break;
+
+      case "smartlifequery":
+        importer = new Importer().validateByType(GRAPH.SMARTLIFE, cfg.getFolder());
+        importer.importByType(GRAPH.SMARTLIFE, cfg);
         break;
 
       case "ceg":
