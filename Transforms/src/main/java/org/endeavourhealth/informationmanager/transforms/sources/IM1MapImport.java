@@ -99,8 +99,6 @@ public class IM1MapImport implements TTImport {
         document = manager.createDocument(GRAPH.IM1);
         document.addEntity(manager.createGraph(GRAPH.IM1, "IM1 code scheme and graph",
           "The IM1 code scheme and graph"));
-        document.addEntity(manager.createGraph(FHIR.GRAPH_FHIR, "FHIR code scheme and graph",
-          "The FHIR code scheme and graph, i.e. codes defined in the FHIR specification"));
         document.addEntity(manager.createGraph(IM.SYSTEM_NAMESPACE, "Computer system scheme and graph",
           "Computer system scheme and graph"));
         newSchemes();

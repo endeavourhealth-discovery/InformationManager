@@ -110,7 +110,8 @@ INSERT INTO config (name, config)
 VALUES ('filterDefaults', '{
 	"schemeOptions": [
 		"http://endhealth.info/im#",
-        "http://snomed.info/sct#"
+        "http://snomed.info/sct#",
+         "http://hl7.org/fhir/"
 	],
     "statusOptions": [
       "http://endhealth.info/im#Active",

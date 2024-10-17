@@ -42,7 +42,7 @@ public class SmartLifeImporter implements TTImport {
 	private static final Logger LOG = LoggerFactory.getLogger(CEGImporter.class);
 
 	private static final String[] queries = {".*\\\\Smartlife"};
-	private static final String[] dataMapFile = {".*\\\\Smartlife\\\\EqdDataMap.properties"};
+	private static String dataMapFile = ".*\\\\Smartlife\\\\EqdDataMap.properties";
 	private final Set<TTEntity> allEntities = new HashSet<>();
 	public Set<ConceptSet> conceptSets = new HashSet<>();
 	public Set<String> querySet = new HashSet<>();
@@ -70,7 +70,7 @@ public class SmartLifeImporter implements TTImport {
 			}
 
 			//Import queries
-			loadAndConvert(config.getFolder());
+			loadAndConvert(config);
 
 			if (!conceptSets.isEmpty()) {
 				document = new TTDocument(iri(GRAPH.SMARTLIFE));
@@ -118,16 +118,20 @@ public class SmartLifeImporter implements TTImport {
 	}
 
 
-	public void loadAndConvert(String folder) throws Exception {
+	public void loadAndConvert(TTImportConfig config) throws Exception {
 		Properties dataMap = new Properties();
-		try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile()))) {
+		if (config.getResourceFolder()!=null){
+			dataMapFile= config.getResourceFolder() + "\\EqdDataMap.properties";
+		}
+		else
+			dataMapFile= ImportUtils.findFileForId(config.getFolder(),dataMapFile).toString();
+		try (FileReader reader = new FileReader(dataMapFile)) {
 			dataMap.load(reader);
 		}
-
 		Properties labels = new Properties();
 
 
-		Path directory = ImportUtils.findFileForId(folder, queries[0]);
+		Path directory = ImportUtils.findFileForId(config.getFolder(), queries[0]);
 		TTIriRef mainFolder = TTIriRef.iri(GRAPH.SMARTLIFE + "Q_SmartLifeQueries");
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
 			if (!fileEntry.isDirectory()) {

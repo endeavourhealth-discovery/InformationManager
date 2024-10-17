@@ -40,7 +40,10 @@ public class ImportApp {
     // Optional switch args
     if (args.length >= 3) {
       for (int i = 2; i < args.length; i++) {
+        if (args[i].toLowerCase().contains("resources="))
+          cfg.setResourceFolder(args[i].substring(args[i].lastIndexOf("=") + 1));
         switch (args[i].toLowerCase().split("=")[0]) {
+
           case "secure":
             cfg.setSecure(true);
             break;
