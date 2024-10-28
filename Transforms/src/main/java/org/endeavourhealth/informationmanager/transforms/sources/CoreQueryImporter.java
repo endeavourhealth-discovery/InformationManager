@@ -27,7 +27,10 @@ public class CoreQueryImporter implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument(GRAPH.DISCOVERY);
+      age();
       ethnicity();
+      gpRegistration();
+      gmsRegistration();
       gmsRegistrationStatus();
       getDescendants();
       getConcepts();
@@ -37,7 +40,6 @@ public class CoreQueryImporter implements TTImport {
       getSearchAll();
       allowableSubTypes();
       currentGMS();
-      currentGMSAsMatch();
       aged18OrOverAsMatch();
       deleteSets();
       getAncestors();
@@ -70,19 +72,92 @@ public class CoreQueryImporter implements TTImport {
     }
   }
 
+  private void gpRegistration() throws JsonProcessingException {
+    TTEntity gpRegistration = new TTEntity()
+      .setIri(IM.NAMESPACE + "gpRegistrationAtEvent")
+      .setCrud(iri(IM.UPDATE_PREDICATES))
+      .addObject(iri(SHACL.PARAMETER), new TTNode()
+        .set(iri(RDFS.LABEL),TTLiteral.literal("referenceDate"))
+        .set(iri(SHACL.DATATYPE),iri(IM.NAMESPACE+"DateTime")))
+      .set(iri(IM.DEFINITION),
+        TTLiteral.literal(new Query()
+          .setName("gp registration as a point in time")
+          .setDescription("GP registration episode at a point in time passed in as the referenceDate parameter. The default is the query reference date but can bt overridden by another date")
+          .match(m->m
+            .setBoolWhere(Bool.and)
+            .path(p -> p
+              .setIri(IM.NAMESPACE + "episodeOfCare"))
+            .setTypeOf(IM.NAMESPACE + "EpisodeOfCare")
+            .where(p1 -> p1
+              .setIri(IM.NAMESPACE + "patientType")
+              .setIsNotNull(true))
+            .where(pv -> pv
+              .setIri(IM.NAMESPACE + "effectiveDate")
+              .setOperator(Operator.lte)
+              .setRelativeTo(new PropertyRef().setParameter("$referenceDate")))
+            .where(pv -> pv
+              .setBoolWhere(Bool.or)
+              .where(pv1 -> pv1
+                .setIri(IM.NAMESPACE + "endDate")
+                .setIsNull(true))
+              .where(pv1 -> pv1
+                .setIri(IM.NAMESPACE + "endDate")
+                .setOperator(Operator.gt)
+                .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
+            .orderBy(o->o
+              .setProperty(new OrderDirection().setIri(IM.NAMESPACE+"effectiveDate").setDirection(Order.descending))
+              .setLimit(1)))));
+    document.addEntity(gpRegistration);
+  }
+
+  private void gmsRegistration() throws JsonProcessingException {
+    TTEntity gms = new TTEntity()
+      .setIri(IM.NAMESPACE + "gmsRegistrationAtEvent")
+      .setCrud(iri(IM.UPDATE_PREDICATES))
+      .addObject(iri(SHACL.PARAMETER), new TTNode()
+        .set(iri(RDFS.LABEL),TTLiteral.literal("referenceDate"))
+        .set(iri(SHACL.DATATYPE),iri(IM.NAMESPACE+"DateTime")))
+      .set(iri(IM.DEFINITION),
+        TTLiteral.literal(getGmsQuery()));
+
+    document.addEntity(gms);
+  }
+
+  private Query getGmsQuery() {
+    return new Query()
+      .setName("GP GMS registration episode at a reference date")
+      .setDescription("Retrieves the entry for an active GMS registration episode on the reference date or null")
+      .match(m->m
+        .setBoolWhere(Bool.and)
+        .path(p -> p
+          .setIri(IM.NAMESPACE + "episodeOfCare"))
+        .setTypeOf(IM.NAMESPACE + "EpisodeOfCare")
+        .where(p1 -> p1
+          .setIri(IM.NAMESPACE + "patientType")
+          .addIs(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
+        .where(pv -> pv
+          .setIri(IM.NAMESPACE + "effectiveDate")
+          .setOperator(Operator.lte)
+          .setRelativeTo(new PropertyRef().setParameter("$referenceDate")))
+        .where(pv -> pv
+          .setBoolWhere(Bool.or)
+          .where(pv1 -> pv1
+            .setIri(IM.NAMESPACE + "endDate")
+            .setIsNull(true))
+          .where(pv1 -> pv1
+            .setIri(IM.NAMESPACE + "endDate")
+            .setOperator(Operator.gt)
+            .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
+        .orderBy(o->o
+          .setProperty(new OrderDirection().setIri(IM.NAMESPACE+"effectiveDate").setDirection(Order.descending))
+          .setLimit(1)));
+
+  }
+
   private void gmsRegistrationStatus() throws JsonProcessingException {
-    Query query= new Query();
-    query.setName("Returns the registration status of a patient if they are currently registered as a regular GMS patient, or if died");
-    Match match= new Match();
-    match.setVariable("currentEpisode");
-    query.addMatch(match);
-     match.path(p -> p
-      .setIri(IM.NAMESPACE + "registration"))
-      .setTypeOf(IM.NAMESPACE + "EpisodeofCare")
-      .where(pv -> pv
-        .setIri(IM.NAMESPACE + "effectiveDate")
-        .setOperator(Operator.lte)
-        .setRelativeTo(new PropertyRef().setParameter("$referenceDate")));
+    Query query= getGmsQuery();
+    query.setName("Returns the gpRegistration status of a patient if they are currently registered as a regular GMS patient, or if died");
+    query.setVariable("currentEpisode");
     Return ret=new Return();
     query.addReturn(ret);
     ReturnProperty returnProperty= new ReturnProperty();
@@ -121,16 +196,17 @@ public class CoreQueryImporter implements TTImport {
 
     TTEntity gms = new TTEntity()
       .setIri(IM.NAMESPACE + "gmsRegistrationStatus")
-      .setCrud(iri(IM.ADD_QUADS))
+      .setCrud(iri(IM.UPDATE_PREDICATES))
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(query));
+    document.addEntity(gms);
 
   }
 
   private void ethnicity() throws JsonProcessingException {
     TTEntity ethnicity = new TTEntity()
       .setIri(IM.NAMESPACE + "ethnicity")
-      .setCrud(iri(IM.ADD_QUADS))
+      .setCrud(iri(IM.UPDATE_PREDICATES))
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(new Query()
             .setName("Returns the most recent ethnicity for a patient")
@@ -145,6 +221,31 @@ public class CoreQueryImporter implements TTImport {
             .setLimit(1))));
     document.addEntity(ethnicity);
   }
+  private void age() throws JsonProcessingException {
+    TTEntity age = new TTEntity()
+      .setIri(IM.NAMESPACE + "age")
+      .setCrud(iri(IM.UPDATE_PREDICATES))
+      .set(iri(IM.DEFINITION),
+        TTLiteral.literal(new Query()
+          .setName("Age function")
+          .where(w->w
+            .setIri(IM.NAMESPACE+"dateOfBirth")
+            .setIsNotNull(true)
+            .setValueVariable("dateOfBirth"))
+          .function(f->f
+            .setName(Function.timeDifference)
+            .argument(a->a
+              .setParameter("firstDateTime")
+              .setValueVariable("dateOfBirth"))
+            .argument(a->a
+              .setParameter("secondDateTime")
+              .setValueVariable("$referenceDate"))
+            .argument(a->a
+              .setParameter("units")
+              .setValueVariable("$timeUnits")))));
+    document.addEntity(age);
+  }
+
 
   private void aged18OrOverAsMatch() throws JsonProcessingException {
 
@@ -574,7 +675,7 @@ public class CoreQueryImporter implements TTImport {
       .setTypeOf(IM.NAMESPACE + "Patient")
       .match(m -> m
         .setName("Patients registered for GMS services on the reference date")
-        .setDescription("For any registration period, a registration start date before the reference date and no end date, or an end date after the reference date.")
+        .setDescription("For any gpRegistration period, a gpRegistration start date before the reference date and no end date, or an end date after the reference date.")
         .addInstanceOf(new Node().setIri(IM.NAMESPACE + "Q_RegisteredGMS").setMemberOf(true)
           .setName("Registered for GMS services on reference date")))
       .match(m -> m
@@ -721,65 +822,13 @@ public class CoreQueryImporter implements TTImport {
       .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "Q_StandardCohorts"))
       .setIri(IM.NAMESPACE + "Q_RegisteredGMS")
       .setName("Patients registered for GMS services on the reference date")
-      .setDescription("For any registration period,a registration start date before the reference date and no end date, or an end date after the reference date.");
+      .setDescription("For any gpRegistration period,a gpRegistration start date before the reference date and no end date, or an end date after the reference date.");
 
-    qry.set(iri(IM.DEFINITION), TTLiteral.literal(getGmsPatient(qry.getIri(), qry.getName(), qry.getDescription())));
-
+    qry.set(iri(IM.DEFINITION), TTLiteral.literal(getGmsQuery()));
     document.addEntity(qry);
   }
 
-  private void currentGMSAsMatch() throws JsonProcessingException {
 
-    TTEntity qry = new TTEntity()
-      .addType(iri(IM.MATCH_CLAUSE))
-      .set(iri(IM.RETURN_TYPE), TTIriRef.iri(IM.NAMESPACE + "Patient"))
-      .set(iri(IM.USAGE_TOTAL), TTLiteral.literal(10000))
-      .set(iri(SHACL.ORDER), 1)
-      .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"))
-      .setIri(IM.NAMESPACE + "M_RegisteredGMS")
-      .setName("Registered for GMS services on the reference date")
-      .setDescription("For any registration period,a registration start date before the reference date and no end date, or an end date after the reference date.");
-
-    qry.set(iri(IM.DEFINITION), TTLiteral.literal(getGMSMatch()));
-
-    document.addEntity(qry);
-  }
-
-  private Query getGmsPatient(String iri, String name, String description) {
-    return new Query()
-      .setIri(iri)
-      .setName(name)
-      .setDescription(description)
-      .setTypeOf(IM.NAMESPACE + "Patient")
-      .setName("Patient")
-      .addMatch(getGMSMatch());
-  }
-
-  private Match getGMSMatch() {
-     return new Match()
-      .setBoolWhere(Bool.and)
-      .setName("Registered GMS services on the reference date")
-      .setDescription("With a 'Regular GMS patient' registration type, effective before the $referenceDate and either has no end date, or ends after the $referenceDate")
-      .path(p -> p
-        .setIri(IM.NAMESPACE + "registration"))
-      .setTypeOf(IM.NAMESPACE + "EpisodeofCare")
-      .where(p1 -> p1
-        .setIri(IM.NAMESPACE + "patientType")
-        .addIs(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
-      .where(pv -> pv
-        .setIri(IM.NAMESPACE + "effectiveDate")
-        .setOperator(Operator.lte)
-        .setRelativeTo(new PropertyRef().setParameter("$referenceDate")))
-      .where(pv -> pv
-        .setBoolWhere(Bool.or)
-        .where(pv1 -> pv1
-          .setIri(IM.NAMESPACE + "endDate")
-          .setIsNull(true))
-        .where(pv1 -> pv1
-          .setIri(IM.NAMESPACE + "endDate")
-          .setOperator(Operator.gt)
-          .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))));
-  }
 
   private void getSearchAll() throws JsonProcessingException {
     getQuery("SearchmainTypes", "Search for entities of the main types", "used to filter free text searches excluding queries and concept sets")
