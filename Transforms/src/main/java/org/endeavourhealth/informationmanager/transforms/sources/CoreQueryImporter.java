@@ -799,7 +799,7 @@ public class CoreQueryImporter implements TTImport {
           .setOperator(Operator.gte)
           .relativeTo(r -> r.setNodeRef("highBPReading").setIri(IM.NAMESPACE + "effectiveDate"))))
       .match(m -> m
-        .setName("on hypertension register")
+        .setName("not on hypertension register")
         .setDescription("is registered on the hypertensives register")
         .setExclude(true)
         .addInstanceOf(new Node().setIri(IM.NAMESPACE + "Q_Hypertensives").setMemberOf(true)
