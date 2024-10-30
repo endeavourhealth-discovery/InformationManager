@@ -15,8 +15,10 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class SingleFileImporter implements TTImport {
+  private static final String INFERRED_SUFFIX = "-inferred.json";
 
 
   private static TTDocument generateInferred(TTDocument document) throws OWLOntologyCreationException {
@@ -31,10 +33,13 @@ public class SingleFileImporter implements TTImport {
   @Override
   public void importData(TTImportConfig ttImportConfig) throws ImportException {
     try (TTManager manager = new TTManager()) {
-      manager.loadDocument(new File(ttImportConfig.getFolder().replaceAll("%", " ")));
+      File singleFile= new File(ttImportConfig.getFolder().replaceAll("%", " "));
+      manager.loadDocument(singleFile);
       manager.setDocument(generateInferred(manager.getDocument()));
       TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
       filer.fileDocument(manager.getDocument());
+      String inferredFile = singleFile.toString().substring(0, singleFile.toString().indexOf(".json")) + INFERRED_SUFFIX;
+      manager.saveDocument(new File(inferredFile));
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);
     }

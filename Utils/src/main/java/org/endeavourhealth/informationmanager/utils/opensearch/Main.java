@@ -16,6 +16,6 @@ public class Main {
           cache = arg.split("=")[1];
         }
     }
-    new OpenSearchSender().setCache(cache).execute(update);
+    new OpenSearchSender().execute(update);
   }
 }

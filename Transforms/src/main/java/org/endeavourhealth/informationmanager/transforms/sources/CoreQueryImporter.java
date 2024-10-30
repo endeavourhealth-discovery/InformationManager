@@ -27,6 +27,9 @@ public class CoreQueryImporter implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument(GRAPH.DISCOVERY);
+      addressProperty("homeAddress","home");
+      addressProperty("workAddress","work");
+      addressProperty("temporaryAddress","temp");
       age();
       ethnicity();
       gpRegistration();
@@ -220,6 +223,20 @@ public class CoreQueryImporter implements TTImport {
             .setDirection(Order.descending))
             .setLimit(1))));
     document.addEntity(ethnicity);
+  }
+  private void addressProperty(String propertyName, String value) throws JsonProcessingException {
+    TTEntity address = new TTEntity()
+      .setIri(IM.NAMESPACE + propertyName)
+      .setCrud(iri(IM.UPDATE_PREDICATES))
+      .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
+        .setName(value+" address property definition")
+        .match(m->m
+          .path(p->p.setIri(IM.NAMESPACE+"address"))
+          .where(w->w
+            .setIri(IM.NAMESPACE+"addressUse")
+            .is(is->is.setIri("http://hl7.org/fhir/fhir-address-use/"+value))))));
+    document.addEntity(address);
+
   }
   private void age() throws JsonProcessingException {
     TTEntity age = new TTEntity()

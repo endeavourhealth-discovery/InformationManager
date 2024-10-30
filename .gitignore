@@ -6,3 +6,4 @@ DiscoveryConverter.cfg
 *.cfg
 .gradle
 build
+*.xml
