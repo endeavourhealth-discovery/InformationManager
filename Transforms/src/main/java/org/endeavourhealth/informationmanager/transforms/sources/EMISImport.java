@@ -299,6 +299,7 @@ public class EMISImport implements TTImport {
     TTEntity c = new TTEntity().setIri(EMIS + "EMISOrphanCodes")
       .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(EMIS + "1669671000006112")))
       .setName("EMIS unmatched orphan codes")
+      .addType(iri(IM.CONCEPT))
       .setDescription("EMIS orphan codes that have no parent and are not matched to UK Snomed-CT." +
         " Each has a code id and an original text code and an EMIS Snomed concept id but no parent code")
       .setScheme(iri(GRAPH.EMIS));
@@ -385,6 +386,8 @@ public class EMISImport implements TTImport {
     termToEmis.put(term, emisConcept);
     if (isSnomed(conceptId)) {
       if (!isBlackList(conceptId)) {
+        emisConcept.setStatus(iri(IM.INACTIVE));
+        emisConcept.setName(name+" (emis code id)");
         snomedToEmis.put(conceptId, emisConcept);
         if (notFound(emisConcept, iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + conceptId)))
           emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + conceptId));

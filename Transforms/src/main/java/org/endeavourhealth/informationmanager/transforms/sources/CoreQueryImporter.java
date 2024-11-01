@@ -793,7 +793,7 @@ public class CoreQueryImporter implements TTImport {
         .setTypeOf(IM.NAMESPACE + "Observation")
         .where(inv -> inv
           .setIri(IM.NAMESPACE + "concept")
-          .addIs(new Node().setIri(IM.NAMESPACE + "InvitedForScreening").setName("invited for screening").setMemberOf(true)))
+          .addIs(new Node().setIri("http://snomed.info/sct#310422005").setName("invited for screening").setMemberOf(true)))
         .where(after -> after
           .setIri(IM.NAMESPACE + "effectiveDate")
           .setOperator(Operator.gte)
