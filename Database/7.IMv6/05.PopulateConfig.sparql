@@ -37,6 +37,11 @@ INSERT DATA {
         <http://www.w3.org/2000/01/rdf-schema#comment>  'Configuration details for publishing data to IMv1 via S3' ;
         <http://endhealth.info/im#hasConfig>            '{"bucket":"imv1sender", "region":"eu-west-2"}' .
 
+    <http://endhealth.info/config#coreSchemes>
+        <http://www.w3.org/2000/01/rdf-schema#label>    'Core schemes' ;
+        <http://www.w3.org/2000/01/rdf-schema#comment>  'Core schemes use for filtering and searching' ;
+        <http://endhealth.info/im#hasConfig>            '["http://endhealth.info/im#","http://snomed.info/sct#","http://hl7.org/fhir/","http://bnf.info/bnf#"]' .
+
     # Opensearch config
 
     # IM DB config
