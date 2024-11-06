@@ -55,7 +55,7 @@ public class BNFImporter implements TTImport {
         filer.fileDocument(document);
       }
     } catch (Exception ex) {
-      throw new ImportException(ex.getMessage(),ex);
+      throw new ImportException(ex.getMessage(), ex);
     }
   }
 
@@ -242,6 +242,9 @@ public class BNFImporter implements TTImport {
     if (type.equals(IM.CONCEPT_SET)) {
       entity.set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
         .match(m -> m
+          .addInstanceOf(new Node()
+            .setIri(BNF.NAMESPACE + "BNF_" + code)
+            .setDescendantsOrSelfOf(true))
           .where(w -> w
             .setInverse(true)
             .setAnyRoleGroup(true)
