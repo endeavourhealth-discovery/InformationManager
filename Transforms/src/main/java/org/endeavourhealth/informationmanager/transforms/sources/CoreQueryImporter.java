@@ -27,9 +27,14 @@ public class CoreQueryImporter implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument(GRAPH.DISCOVERY);
-      addressProperty("homeAddress", "home");
-      addressProperty("workAddress", "work");
-      addressProperty("temporaryAddress", "temp");
+      addressProperty("homeAddress","home");
+      addressProperty("workAddress","work");
+      addressProperty("temporaryAddress","temp");
+      addressEventProperty("placeOfResidenceAtEvent","home");
+      telephoneProperty("homeTelephoneNumber","home");
+      telephoneProperty("mobileTelephoneNumber","mobile");
+      telephoneProperty("workTelephoneNumber","mobile");
+
       age();
       ethnicity();
       gpRegistration();
@@ -80,19 +85,19 @@ public class CoreQueryImporter implements TTImport {
       .setIri(IM.NAMESPACE + "gpRegistrationAtEvent")
       .setCrud(iri(IM.UPDATE_PREDICATES))
       .addObject(iri(SHACL.PARAMETER), new TTNode()
-        .set(iri(RDFS.LABEL), TTLiteral.literal("referenceDate"))
-        .set(iri(SHACL.DATATYPE), iri(IM.NAMESPACE + "DateTime")))
+        .set(iri(RDFS.LABEL),TTLiteral.literal("referenceDate"))
+        .set(iri(SHACL.DATATYPE),iri(IM.NAMESPACE+"DateTime")))
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(new Query()
           .setName("gp registration as a point in time")
           .setDescription("GP registration episode at a point in time passed in as the referenceDate parameter. The default is the query reference date but can bt overridden by another date")
-          .match(m -> m
+          .match(m->m
             .setBoolWhere(Bool.and)
             .path(p -> p
               .setIri(IM.NAMESPACE + "episodeOfCare"))
             .setTypeOf(IM.NAMESPACE + "EpisodeOfCare")
             .where(p1 -> p1
-              .setIri(IM.NAMESPACE + "gpPatientType")
+              .setIri(IM.NAMESPACE + "patientType")
               .setIsNotNull(true))
             .where(pv -> pv
               .setIri(IM.NAMESPACE + "effectiveDate")
@@ -107,8 +112,8 @@ public class CoreQueryImporter implements TTImport {
                 .setIri(IM.NAMESPACE + "endDate")
                 .setOperator(Operator.gt)
                 .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
-            .orderBy(o -> o
-              .setProperty(new OrderDirection().setIri(IM.NAMESPACE + "effectiveDate").setDirection(Order.descending))
+            .orderBy(o->o
+              .setProperty(new OrderDirection().setIri(IM.NAMESPACE+"effectiveDate").setDirection(Order.descending))
               .setLimit(1)))));
     document.addEntity(gpRegistration);
   }
@@ -118,13 +123,10 @@ public class CoreQueryImporter implements TTImport {
       .setIri(IM.NAMESPACE + "gmsRegistrationAtEvent")
       .setCrud(iri(IM.UPDATE_PREDICATES))
       .addObject(iri(SHACL.PARAMETER), new TTNode()
-        .set(iri(RDFS.LABEL), TTLiteral.literal("referenceDate"))
-        .set(iri(SHACL.DATATYPE), iri(IM.NAMESPACE + "DateTime")))
+        .set(iri(RDFS.LABEL),TTLiteral.literal("referenceDate"))
+        .set(iri(SHACL.DATATYPE),iri(IM.NAMESPACE+"DateTime")))
       .set(iri(IM.DEFINITION),
-        TTLiteral.literal(
-          getGmsQuery()
-          // TODO : Add path
-        ));
+        TTLiteral.literal(getGmsQuery()));
 
     document.addEntity(gms);
   }
@@ -133,12 +135,13 @@ public class CoreQueryImporter implements TTImport {
     return new Query()
       .setName("GP GMS registration episode at a reference date")
       .setDescription("Retrieves the entry for an active GMS registration episode on the reference date or null")
-      .match(m -> m
-        .path(p -> p.setIri(IM.NAMESPACE + "episodeOfCare"))
-        .setTypeOf(IM.NAMESPACE + "EpisodeOfCare")
+      .match(m->m
         .setBoolWhere(Bool.and)
+        .path(p -> p
+          .setIri(IM.NAMESPACE + "episodeOfCare"))
+        .setTypeOf(IM.NAMESPACE + "EpisodeOfCare")
         .where(p1 -> p1
-          .setIri(IM.NAMESPACE + "gpPatientType")
+          .setIri(IM.NAMESPACE + "patientType")
           .addIs(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
         .where(pv -> pv
           .setIri(IM.NAMESPACE + "effectiveDate")
@@ -153,51 +156,51 @@ public class CoreQueryImporter implements TTImport {
             .setIri(IM.NAMESPACE + "endDate")
             .setOperator(Operator.gt)
             .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
-        .orderBy(o -> o
-          .setProperty(new OrderDirection().setIri(IM.NAMESPACE + "effectiveDate").setDirection(Order.descending))
+        .orderBy(o->o
+          .setProperty(new OrderDirection().setIri(IM.NAMESPACE+"effectiveDate").setDirection(Order.descending))
           .setLimit(1)));
 
   }
 
   private void gmsRegistrationStatus() throws JsonProcessingException {
-    Query query = getGmsQuery();
+    Query query= getGmsQuery();
     query.setName("Returns the gpRegistration status of a patient if they are currently registered as a regular GMS patient, or if died");
     query.setVariable("currentEpisode");
-    Return ret = new Return();
+    Return ret=new Return();
     query.addReturn(ret);
-    ReturnProperty returnProperty = new ReturnProperty();
+    ReturnProperty returnProperty= new ReturnProperty();
     ret.addProperty(returnProperty);
-    returnProperty.case_(c -> c
-      .when(when -> when
-        .where(w -> w
+    returnProperty.case_(c->c
+      .when(when->when
+        .where(w->w
           .setBoolWhere(Bool.or)
-          .where(w1 -> w1
-            .setIri(IM.NAMESPACE + "dateOfDeath")
+          .where(w1->w1
+            .setIri(IM.NAMESPACE+"dateOfDeath")
             .setIsNull(true))
-          .where(w1 -> w1
-            .setIri(IM.NAMESPACE + "dateOfDeath")
+          .where(w1->w1
+            .setIri(IM.NAMESPACE+"dateOfDeath")
             .setOperator(Operator.lt)
-            .relativeTo(r -> r.setParameter("referenceDate"))))
-        .setThen(IM.NAMESPACE + "RegistrationStatusDead"))
-      .when(when -> when
-        .where(w -> w
-          .setIri(IM.NAMESPACE + "gpPatientType")
+            .relativeTo(r->r.setParameter("referenceDate"))))
+        .setThen(IM.NAMESPACE+"RegistrationStatusDead"))
+      .when(when->when
+        .where(w->w
+          .setIri(IM.NAMESPACE+"patientType")
           .addIs(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
-        .case_(c1 -> c1
-          .when(when1 -> when1
-            .where(pv -> pv
-              .setBoolWhere(Bool.or)
-              .where(pv1 -> pv1
-                .setNodeRef("currentEpisode")
-                .setIri(IM.NAMESPACE + "endDate")
-                .setIsNull(true))
-              .where(pv1 -> pv1
-                .setNodeRef("currentEpisode")
-                .setIri(IM.NAMESPACE + "endDate")
-                .setOperator(Operator.gt)
-                .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
-            .setThen(IM.NAMESPACE + "RegistrationStatusActive"))
-          .setElse(IM.NAMESPACE + "RegistrationStatusLeft"))));
+        .case_(c1->c1
+          .when(when1->when1
+        .where(pv -> pv
+          .setBoolWhere(Bool.or)
+          .where(pv1 -> pv1
+            .setNodeRef("currentEpisode")
+            .setIri(IM.NAMESPACE + "endDate")
+            .setIsNull(true))
+          .where(pv1 -> pv1
+            .setNodeRef("currentEpisode")
+            .setIri(IM.NAMESPACE + "endDate")
+            .setOperator(Operator.gt)
+            .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
+        .setThen(IM.NAMESPACE+"RegistrationStatusActive"))
+      .setElse(IM.NAMESPACE+"RegistrationStatusLeft"))));
 
     TTEntity gms = new TTEntity()
       .setIri(IM.NAMESPACE + "gmsRegistrationStatus")
@@ -214,34 +217,90 @@ public class CoreQueryImporter implements TTImport {
       .setCrud(iri(IM.UPDATE_PREDICATES))
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(new Query()
-          .setName("Returns the most recent ethnicity for a patient")
-          .path(p -> p.setIri("observation"))
-          .setTypeOf(IM.NAMESPACE + "Observation")
-          .where(w -> w
-            .setIri(IM.NAMESPACE + "concept")
-            .is(i -> i.setIri("VSET_Ethnicity")))
-          .orderBy(o -> o.setProperty(new OrderDirection()
-              .setIri(IM.NAMESPACE + "effectiveDate")
-              .setDirection(Order.descending))
+            .setName("Returns the most recent ethnicity for a patient")
+          .path(p->p.setIri("observation"))
+          .setTypeOf(IM.NAMESPACE+"Observation")
+          .where(w->w
+            .setIri(IM.NAMESPACE+"concept")
+            .is(i->i.setIri("VSET_Ethnicity")))
+          .orderBy(o->o.setProperty(new OrderDirection()
+            .setIri(IM.NAMESPACE+"effectiveDate")
+            .setDirection(Order.descending))
             .setLimit(1))));
     document.addEntity(ethnicity);
   }
-
   private void addressProperty(String propertyName, String value) throws JsonProcessingException {
     TTEntity address = new TTEntity()
       .setIri(IM.NAMESPACE + propertyName)
       .setCrud(iri(IM.UPDATE_PREDICATES))
       .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
-        .setName(value + " address property definition")
-        .match(m -> m
-          .path(p -> p.setIri(IM.NAMESPACE + "address"))
-          .where(w -> w
-            .setIri(IM.NAMESPACE + "addressUse")
-            .is(is -> is.setIri("http://hl7.org/fhir/fhir-address-use/" + value))))));
+        .setName(value+" address property definition")
+        .match(m->m
+          .path(p->p.setIri(IM.NAMESPACE+"address"))
+          .setBoolWhere(Bool.and)
+          .where (w->w
+          .setIri(IM.NAMESPACE+"effectiveDate")
+            .setOperator(Operator.lte)
+            .relativeTo(r->r.setParameter("$now")))
+          .where(w->w
+            .setIri(IM.NAMESPACE+"endDate")
+            .setIsNull(true))
+          .where(w->w
+            .setIri(IM.NAMESPACE+"addressUse")
+            .is(is->is.setIri("http://hl7.org/fhir/fhir-address-use/"+value)))
+          .orderBy(ob->ob.setProperty(new OrderDirection().setIri(IM.NAMESPACE+"effectiveDate").setDirection(Order.descending)).setLimit(1)))));
     document.addEntity(address);
 
   }
 
+  private void addressEventProperty(String propertyName, String value) throws JsonProcessingException {
+    TTEntity address = new TTEntity()
+      .setIri(IM.NAMESPACE + propertyName)
+      .setCrud(iri(IM.UPDATE_PREDICATES))
+      .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
+        .setName(value+" address property definition")
+        .match(m->m
+          .path(p->p.setIri(IM.NAMESPACE+"address"))
+          .setBoolWhere(Bool.and)
+          .where (w->w
+            .setIri(IM.NAMESPACE+"effectiveDate")
+            .setOperator(Operator.lte)
+            .relativeTo(r->r.setParameter("$now")))
+          .where (or->or
+            .setBoolWhere(Bool.or)
+              .where(w->w
+              .setIri(IM.NAMESPACE+"endDate")
+                .setIsNull(true))
+            .where (w->w
+              .setIri(IM.NAMESPACE+"endDate")
+              .setOperator(Operator.gt)
+              .relativeTo(r->r.setParameter("$referenceDate"))))
+          .where(w->w
+            .setIri(IM.NAMESPACE+"addressUse")
+            .is(is->is.setIri("http://hl7.org/fhir/fhir-address-use/"+value)))
+          .orderBy(ob->ob.setProperty(new OrderDirection().setIri(IM.NAMESPACE+"effectiveDate").setDirection(Order.descending)).setLimit(1)))));
+    document.addEntity(address);
+
+  }
+
+  private void telephoneProperty(String propertyName, String value) throws JsonProcessingException {
+    TTEntity address = new TTEntity()
+      .setIri(IM.NAMESPACE + propertyName)
+      .setCrud(iri(IM.UPDATE_PREDICATES))
+      .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
+        .setName(value+" telephone property definition")
+        .match(m->m
+          .path(p->p.setIri(IM.NAMESPACE+"telephone"))
+          .setBoolWhere(Bool.and)
+          .where (w->w
+            .setIri(IM.STATUS)
+            .is(is->is.setIri(IM.ACTIVE)))
+          .where(w->w
+            .setIri(IM.NAMESPACE+"use")
+            .is(is->is.setIri("http://hl7.org/fhir/contact-point-use/"+value))))));
+    document.addEntity(address);
+
+  }
   private void age() throws JsonProcessingException {
     TTEntity age = new TTEntity()
       .setIri(IM.NAMESPACE + "age")
@@ -249,19 +308,19 @@ public class CoreQueryImporter implements TTImport {
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(new Query()
           .setName("Age function")
-          .where(w -> w
-            .setIri(IM.NAMESPACE + "dateOfBirth")
+          .where(w->w
+            .setIri(IM.NAMESPACE+"dateOfBirth")
             .setIsNotNull(true)
             .setValueVariable("dateOfBirth"))
-          .function(f -> f
+          .function(f->f
             .setName(Function.timeDifference)
-            .argument(a -> a
+            .argument(a->a
               .setParameter("firstDateTime")
               .setValueVariable("dateOfBirth"))
-            .argument(a -> a
+            .argument(a->a
               .setParameter("secondDateTime")
               .setValueVariable("$referenceDate"))
-            .argument(a -> a
+            .argument(a->a
               .setParameter("units")
               .setValueVariable("$timeUnits")))));
     document.addEntity(age);
@@ -728,7 +787,6 @@ public class CoreQueryImporter implements TTImport {
             .addIs(new Node().setIri(SNOMED.NAMESPACE + "714628002").setDescendantsOf(true))
             .setValueLabel("Prediabetes"))))
       .match(m -> m
-        .setVariable("highBPReading")
         .setName("Have high blood pressure in the last year")
         .setDescription("Latest systolic within 12 months of the reference date, is either an office systolic >140 or a home systolic >130")
         .path(p -> p
@@ -758,7 +816,7 @@ public class CoreQueryImporter implements TTImport {
             .setIri(IM.NAMESPACE + "effectiveDate")
             .setDirection(Order.descending))
           .setLimit(1))
-        .then(t -> t
+        .then(t -> t.setVariable("highBPReading")
           .setBoolMatch(Bool.or)
           .match(m4 -> m4
             .setName("Office systolic > 140")
@@ -846,13 +904,11 @@ public class CoreQueryImporter implements TTImport {
       .setName("Patients registered for GMS services on the reference date")
       .setDescription("For any gpRegistration period,a gpRegistration start date before the reference date and no end date, or an end date after the reference date.");
 
-    qry.set(iri(IM.DEFINITION), TTLiteral.literal(
-      getGmsQuery()
-        .setTypeOf(IM.NAMESPACE + "Patient")
-
-    ));
+    qry.set(iri(IM.DEFINITION), TTLiteral.literal(getGmsQuery()));
     document.addEntity(qry);
   }
+
+
 
   private void getSearchAll() throws JsonProcessingException {
     getQuery("SearchmainTypes", "Search for entities of the main types", "used to filter free text searches excluding queries and concept sets")

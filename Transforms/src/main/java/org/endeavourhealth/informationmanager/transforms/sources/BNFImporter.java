@@ -3,13 +3,17 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
-import org.endeavourhealth.imapi.filer.*;
-import org.endeavourhealth.imapi.model.imq.Node;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerException;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.imq.Query;
-import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.imapi.vocabulary.BNF;
+import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.SHACL;
+import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
@@ -31,8 +35,10 @@ public class BNFImporter implements TTImport {
   private TTManager manager;
   private final Map<String, Set<String>> bnfCodeToSnomed = new HashMap<>();
   private final Map<String, TTEntity> codeToEntity = new HashMap<>();
+  private final Map<String, Set<String>> setToSnomed = new HashMap<>();
+
   private final String topFolder = BNF.NAMESPACE + "BNFValueSets";
-  private Map<String, Set<String>> children = new HashMap<>();
+  private final Map<String, Set<String>> children = new HashMap<>();
 
   public static final String[] bnf_maps = {
     ".*\\\\BNFMaps\\\\BNF Snomed Mapping data.*\\.txt"
@@ -50,13 +56,52 @@ public class BNFImporter implements TTImport {
       topFolder();
       importMaps(config.getFolder());
       importCodes(config.getFolder());
+      setMembers();
       flattenSets();
+      defineSets();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
       }
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(),ex);
     }
+  }
+
+  private void defineSets() throws JsonProcessingException {
+    for (TTEntity set: document.getEntities()){
+      if (set.get(iri(IM.HAS_MEMBER_PARENT))!=null){
+        Query query= new Query()
+          .match(m->m
+            .setTypeOf(IM.CONCEPT)
+            .where(w->w
+              .setIri(IM.IS_A)
+              .match(m1->m1
+                .where(w1->w1
+                  .setInverse(true)
+                  .setIri(IM.HAS_MEMBER_PARENT)
+                  .setName("that have member parents in")
+                  .is(i -> i.setIri(set.getIri()))))));
+        set.set(iri(IM.DEFINITION),TTLiteral.literal(query));
+
+      }
+
+    }
+  }
+
+  private void setMembers() {
+    LOG.info("Assigning instances to set definition match clause");
+    int i=0;
+    for (TTEntity entity: document.getEntities()){
+      String setIri= entity.getIri();
+      if (setToSnomed.get(setIri)!=null){
+        i++;
+        for (String snomed:setToSnomed.get(setIri)){
+          entity.addObject(iri(IM.HAS_MEMBER_PARENT),iri(SNOMED.NAMESPACE+snomed));
+        }
+      }
+    }
+    LOG.info("{} sets defined",i);
+
   }
 
   private void flattenSets() {
@@ -77,15 +122,14 @@ public class BNFImporter implements TTImport {
     TTEntity parent = getParent(set);
     if (!set.getIri().equals(parent.getIri())) {
       toRemove.add(set);
-      if (set.get(iri(IM.ROLE_GROUP)) != null) {
-        parent.set(iri(IM.ROLE_GROUP), set.get(iri(IM.ROLE_GROUP)));
-        String query = set.get(iri(IM.DEFINITION)).asLiteral().getValue();
-        query = query.replace(set.getIri(), parent.getIri());
-        parent.set(iri(IM.DEFINITION), TTLiteral.literal(query));
+      if (set.get(iri(IM.HAS_MEMBER_PARENT)) != null) {
         parent.setType(new TTArray().add(iri(IM.CONCEPT_SET)));
+        parent.set(iri(IM.HAS_MEMBER_PARENT),set.get(iri(IM.HAS_MEMBER_PARENT)));
+        set.getPredicateMap().remove(iri(IM.HAS_MEMBER_PARENT));
       }
     }
   }
+
 
   private TTEntity getParent(TTEntity set) {
     if (!set.getIri().endsWith("0"))
@@ -123,7 +167,11 @@ public class BNFImporter implements TTImport {
         reader.readNext(); // NOSONAR - Skip header
         String[] fields;
         while ((fields = reader.readNext()) != null) {
+          i++;
           processCodeLine(fields);
+          if (i%10000==0){
+            LOG.info("Processed {} codes",i);
+          }
         }
       }
     }
@@ -132,7 +180,6 @@ public class BNFImporter implements TTImport {
 
 
   private void importMaps(String path) throws IOException {
-    int i = 0;
     for (String map : bnf_maps) {
       Path file = ImportUtils.findFilesForId(path, map).get(0);
       LOG.info("Processing bnf to snomed maps in {}", file.getFileName().toString());
@@ -141,7 +188,6 @@ public class BNFImporter implements TTImport {
         String line = reader.readLine();
         while (line != null && !line.isEmpty()) {
           processMapLine(line);
-          i++;
           line = reader.readLine();
         }
       }
@@ -155,6 +201,8 @@ public class BNFImporter implements TTImport {
     String bnfCode = fields[2];
     String bnfName = fields[3];
     String snomed = fields[4];
+    if (snomed.contains(" "))
+      System.err.println("bad snomed");
     if (bnfName.equals("") && (bnfCode.equals("")))
       return;
     if (!bnfCode.equals(""))
@@ -167,7 +215,7 @@ public class BNFImporter implements TTImport {
 
   }
 
-  private void processCodeLine(String[] fields) throws JsonProcessingException {
+  private void processCodeLine(String[] fields) {
     String chapter = fields[0];
     String chapterCode = fields[1];
     String section = fields[2];
@@ -205,18 +253,20 @@ public class BNFImporter implements TTImport {
       setNewEntity(subparagraphCode, subParaDot + " " + subparagraph + " (BNF based value sets)", IM.CONCEPT_SET, null, BNF.NAMESPACE + "BNF_" + paragraphCode);
     }
     Set<String> snomeds = bnfCodeToSnomed.get(workingCode);
-    if (snomeds != null)
+    if (snomeds != null) {
+      String setIri= codeToEntity.get(subparagraphCode).getIri();
       for (String snomed : snomeds) {
-        TTEntity set = codeToEntity.get(subparagraphCode);
-        if (set.get(iri(IM.ROLE_GROUP)) == null) {
-          set.set(iri(IM.ROLE_GROUP), new TTNode());
-        }
-        set.get(iri(IM.ROLE_GROUP)).asNode().addObject(iri(IM.HAS_MEMBER_PARENT), iri(SNOMED.NAMESPACE + snomed));
+        setToSnomed.computeIfAbsent(setIri,s-> new HashSet<>()).add(snomed);
       }
+
+    }
+
+
+
   }
 
 
-  private void setNewEntity(String code, String name, String type, String parent, String superset) throws JsonProcessingException {
+  private void setNewEntity(String code, String name, String type, String parent, String superset) {
     TTEntity entity = new TTEntity()
       .setIri(BNF.NAMESPACE + "BNF_" + code)
       .addType(iri(type))
@@ -226,7 +276,7 @@ public class BNFImporter implements TTImport {
       entity.addObject(iri(IM.IS_CONTAINED_IN), iri(parent));
       if (code.matches("\\d+")) {
         String parentOrder = parent.split("#")[1];
-        Integer order;
+        int order;
         if (parentOrder.matches("\\d+")) {
           order = Integer.parseInt(code) - Integer.parseInt(parentOrder);
         } else
@@ -239,20 +289,10 @@ public class BNFImporter implements TTImport {
       entity.addObject(iri(IM.IS_SUBSET_OF), iri(superset));
       children.computeIfAbsent(superset, s -> new HashSet<>()).add(entity.getIri());
     }
-    if (type.equals(IM.CONCEPT_SET)) {
-      entity.set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
-        .match(m -> m
-          .addInstanceOf(new Node()
-            .setDescendantsOrSelfOf(true))
-          .where(w -> w
-            .setInverse(true)
-            .setAnyRoleGroup(true)
-            .setIri(IM.HAS_MEMBER_PARENT)
-            .setName("that have member parents in")
-            .is(i -> i.setIri(entity.getIri()))))));
-    }
+
     document.addEntity(entity);
     codeToEntity.put(code, entity);
+
   }
 
 
