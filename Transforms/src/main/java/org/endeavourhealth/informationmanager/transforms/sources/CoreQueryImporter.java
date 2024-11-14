@@ -40,6 +40,7 @@ public class CoreQueryImporter implements TTImport {
       gpRegistration();
       gmsRegistration();
       gmsRegistrationStatus();
+      gmsRegisteredPractice();
       getDescendants();
       getConcepts();
       getAllowableProperties();
@@ -118,6 +119,50 @@ public class CoreQueryImporter implements TTImport {
     document.addEntity(gpRegistration);
   }
 
+  private void gmsRegisteredPractice() throws JsonProcessingException {
+    TTEntity gms = new TTEntity()
+      .setIri(IM.NAMESPACE + "gmsRegisteredPractice")
+      .setCrud(iri(IM.UPDATE_PREDICATES))
+      .addObject(iri(SHACL.PARAMETER), new TTNode()
+        .set(iri(RDFS.LABEL),TTLiteral.literal("referenceDate"))
+        .set(iri(SHACL.DATATYPE),iri(IM.NAMESPACE+"DateTime")))
+      .set(iri(IM.DEFINITION),
+        TTLiteral.literal(new Query()
+        .setName("GP GMS registeredPractice episode at a reference date")
+        .setDescription("Retrieves the entry for the GP practice if gms registered on the date or null")
+        .match(m->m
+          .setVariable("RegistrationEpisode")
+          .setBoolWhere(Bool.and)
+          .path(p -> p
+            .setIri(IM.NAMESPACE + "episodeOfCare"))
+          .setTypeOf(IM.NAMESPACE + "EpisodeOfCare")
+          .where(p1 -> p1
+            .setIri(IM.NAMESPACE + "patientType")
+            .addIs(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
+          .where(pv -> pv
+            .setIri(IM.NAMESPACE + "effectiveDate")
+            .setOperator(Operator.lte)
+            .setRelativeTo(new PropertyRef().setParameter("$referenceDate")))
+          .where(pv -> pv
+            .setBoolWhere(Bool.or)
+            .where(pv1 -> pv1
+              .setIri(IM.NAMESPACE + "endDate")
+              .setIsNull(true))
+            .where(pv1 -> pv1
+              .setIri(IM.NAMESPACE + "endDate")
+              .setOperator(Operator.gt)
+              .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
+          .orderBy(o->o
+            .setProperty(new OrderDirection().setIri(IM.NAMESPACE+"effectiveDate").setDirection(Order.descending))
+            .setLimit(1)))
+          .return_(r->r
+            .property(p->p
+              .setNodeRef("RegistrationEpisode")
+              .setIri(IM.NAMESPACE+"provider")))));
+    document.addEntity(gms);
+  }
+
+
   private void gmsRegistration() throws JsonProcessingException {
     TTEntity gms = new TTEntity()
       .setIri(IM.NAMESPACE + "gmsRegistrationAtEvent")
@@ -136,6 +181,7 @@ public class CoreQueryImporter implements TTImport {
       .setName("GP GMS registration episode at a reference date")
       .setDescription("Retrieves the entry for an active GMS registration episode on the reference date or null")
       .match(m->m
+        .setVariable("currentEpisode")
         .setBoolWhere(Bool.and)
         .path(p -> p
           .setIri(IM.NAMESPACE + "episodeOfCare"))
@@ -181,13 +227,8 @@ public class CoreQueryImporter implements TTImport {
             .setIri(IM.NAMESPACE+"dateOfDeath")
             .setOperator(Operator.lt)
             .relativeTo(r->r.setParameter("referenceDate"))))
-        .setThen(IM.NAMESPACE+"RegistrationStatusDead"))
+        .setThen(IM.NAMESPACE+"CaseloadStatusDead"))
       .when(when->when
-        .where(w->w
-          .setIri(IM.NAMESPACE+"patientType")
-          .addIs(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
-        .case_(c1->c1
-          .when(when1->when1
         .where(pv -> pv
           .setBoolWhere(Bool.or)
           .where(pv1 -> pv1
@@ -199,8 +240,8 @@ public class CoreQueryImporter implements TTImport {
             .setIri(IM.NAMESPACE + "endDate")
             .setOperator(Operator.gt)
             .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
-        .setThen(IM.NAMESPACE+"RegistrationStatusActive"))
-      .setElse(IM.NAMESPACE+"RegistrationStatusLeft"))));
+        .setThen(IM.NAMESPACE+"CaseloadStatusActive"))
+      .setElse(IM.NAMESPACE+"CaseloadStatusLeft"));
 
     TTEntity gms = new TTEntity()
       .setIri(IM.NAMESPACE + "gmsRegistrationStatus")
@@ -210,6 +251,8 @@ public class CoreQueryImporter implements TTImport {
     document.addEntity(gms);
 
   }
+
+
 
   private void ethnicity() throws JsonProcessingException {
     TTEntity ethnicity = new TTEntity()
