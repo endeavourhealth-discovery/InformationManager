@@ -37,7 +37,6 @@ public class CoreQueryImporter implements TTImport {
 
       age();
       ethnicity();
-      gpRegistration();
       gmsRegistration();
       gmsRegistrationStatus();
       gmsRegisteredPractice();
@@ -72,6 +71,7 @@ public class CoreQueryImporter implements TTImport {
       searchContainedIn();
       searchAllowableSubclass();
       searchAllowableContainedIn();
+      addTestSets();
       output(document, config.getFolder());
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
@@ -81,43 +81,105 @@ public class CoreQueryImporter implements TTImport {
     }
   }
 
-  private void gpRegistration() throws JsonProcessingException {
-    TTEntity gpRegistration = new TTEntity()
-      .setIri(IM.NAMESPACE + "gpRegistrationAtEvent")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .addObject(iri(SHACL.PARAMETER), new TTNode()
-        .set(iri(RDFS.LABEL),TTLiteral.literal("referenceDate"))
-        .set(iri(SHACL.DATATYPE),iri(IM.NAMESPACE+"DateTime")))
-      .set(iri(IM.DEFINITION),
-        TTLiteral.literal(new Query()
-          .setName("gp registration as a point in time")
-          .setDescription("GP registration episode at a point in time passed in as the referenceDate parameter. The default is the query reference date but can bt overridden by another date")
-          .match(m->m
-            .setBoolWhere(Bool.and)
-            .path(p -> p
-              .setIri(IM.NAMESPACE + "episodeOfCare"))
-            .setTypeOf(IM.NAMESPACE + "EpisodeOfCare")
-            .where(p1 -> p1
-              .setIri(IM.NAMESPACE + "patientType")
-              .setIsNotNull(true))
-            .where(pv -> pv
-              .setIri(IM.NAMESPACE + "effectiveDate")
-              .setOperator(Operator.lte)
-              .setRelativeTo(new PropertyRef().setParameter("$referenceDate")))
-            .where(pv -> pv
-              .setBoolWhere(Bool.or)
-              .where(pv1 -> pv1
-                .setIri(IM.NAMESPACE + "endDate")
-                .setIsNull(true))
-              .where(pv1 -> pv1
-                .setIri(IM.NAMESPACE + "endDate")
-                .setOperator(Operator.gt)
-                .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
-            .orderBy(o->o
-              .setProperty(new OrderDirection().setIri(IM.NAMESPACE+"effectiveDate").setDirection(Order.descending))
-              .setLimit(1)))));
-    document.addEntity(gpRegistration);
+
+  private void addTestSets() throws JsonProcessingException {
+    TTEntity set= new TTEntity()
+      .setIri(IM.NAMESPACE+"CSET_Q_Antihypertensives")
+      .setCrud(iri(IM.UPDATE_PREDICATES));
+    Query query= new Query()
+      .setName("Drugs used to treat hypertension (Q group)")
+      .setBoolMatch(Bool.and)
+      .match(m->m
+        .setBoolMatch(Bool.or)
+        .match(m1->m1
+          .instanceOf(i->i
+            .setIri("http://bnf.info/bnf#BNF_020201")
+            .setMemberOf(true))
+          .instanceOf(i->i
+            .setIri("http://bnf.info/bnf#BNF_0204")
+            .setMemberOf(true))
+          .instanceOf(i->i
+            .setIri("http://bnf.info/bnf#BNF_0205051")
+            .setMemberOf(true))
+          .instanceOf(i->i
+            .setIri("http://bnf.info/bnf#BNF_0205052")
+            .setMemberOf(true))
+          .instanceOf(i->i
+            .setIri("http://bnf.info/bnf#BNF_020201")
+            .setMemberOf(true)))
+        .match(m1->m1
+            .instanceOf(i->i
+              .setIri("http://snomed.info/sct#10363801000001108")
+              .setDescendantsOrSelfOf(true))
+            .instanceOf(i->i
+              .setIri("http://snomed.info/sct#10363901000001102")
+              .setDescendantsOrSelfOf(true))
+          .setBoolWhere(Bool.and)
+          .where(w->w
+            .setBoolWhere(Bool.or)
+            .where(w1->w1
+              .setIri("http://snomed.info/sct#127489000")
+              .setAnyRoleGroup(true)
+              .setDescendantsOrSelfOf(true)
+              .is(is->is
+                .setIri("http://snomed.info/sct#860766002")
+                .setDescendantsOrSelfOf(true))
+              .is(is->is
+                .setIri("http://snomed.info/sct#373254001")
+                .setDescendantsOrSelfOf(true))
+              .is(is->is
+                .setIri("http://snomed.info/sct#372733002")
+                .setDescendantsOrSelfOf(true))
+              .is(is->is
+                .setIri("http://snomed.info/sct#372913009")
+                .setDescendantsOrSelfOf(true)))
+            .where(w1->w1
+              .setIri("http://snomed.info/sct#10363001000001101")
+              .setAnyRoleGroup(true)
+              .setDescendantsOrSelfOf(true)
+              .is(is->is
+                .setIri("http://snomed.info/sct#860766002")
+                .setDescendantsOrSelfOf(true))
+              .is(is->is
+                .setIri("http://snomed.info/sct#373254001")
+                .setDescendantsOrSelfOf(true))
+              .is(is->is
+                .setIri("http://snomed.info/sct#372733002")
+                .setDescendantsOrSelfOf(true))
+              .is(is->is
+                .setIri("http://snomed.info/sct#372913009")
+                .setDescendantsOrSelfOf(true))))
+          .where(w->w
+            .setBoolWhere(Bool.or)
+            .where(w1->w1
+              .setIri("http://snomed.info/sct#411116001")
+              .setAnyRoleGroup(true)
+              .setDescendantsOrSelfOf(true)
+              .is(i->i
+                .setIri("http://snomed.info/sct#385268001")
+                .setDescendantsOrSelfOf(true)))
+            .where(w1->w1
+              .setIri("http://snomed.info/sct#13088501000001100")
+              .setAnyRoleGroup(true)
+              .setDescendantsOrSelfOf(true)
+              .is(i->i
+                .setIri("http://snomed.info/sct#385268001")
+                .setDescendantsOrSelfOf(true)))
+            .where(w1->w1
+              .setIri("http://snomed.info/sct#10362901000001105")
+              .setAnyRoleGroup(true)
+              .setDescendantsOrSelfOf(true)
+              .is(i->i
+                .setIri("http://snomed.info/sct#385268001")
+                .setDescendantsOrSelfOf(true))))))
+      .addPrefix("im","http://endhealth.info/im#")
+      .addPrefix("sct","http://snomed.info/sct#");
+    set.set(iri(IM.DEFINITION),TTLiteral.literal(query));
+    document.addEntity(set);
+
   }
+
+
 
   private void gmsRegisteredPractice() throws JsonProcessingException {
     TTEntity gms = new TTEntity()
@@ -178,34 +240,14 @@ public class CoreQueryImporter implements TTImport {
 
   private Query getGmsQuery() {
     return new Query()
-      .setName("GP GMS registration episode at a reference date")
-      .setDescription("Retrieves the entry for an active GMS registration episode on the reference date or null")
+      .setName("GP GMS registration status at a reference date")
+      .setDescription("Retrieves the Registration status of active, left or died")
+      .setTypeOf(IM.NAMESPACE+"Patient")
       .match(m->m
-        .setVariable("currentEpisode")
-        .setBoolWhere(Bool.and)
-        .path(p -> p
-          .setIri(IM.NAMESPACE + "episodeOfCare"))
-        .setTypeOf(IM.NAMESPACE + "EpisodeOfCare")
-        .where(p1 -> p1
-          .setIri(IM.NAMESPACE + "patientType")
-          .addIs(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
-        .where(pv -> pv
-          .setIri(IM.NAMESPACE + "effectiveDate")
-          .setOperator(Operator.lte)
-          .setRelativeTo(new PropertyRef().setParameter("$referenceDate")))
-        .where(pv -> pv
-          .setBoolWhere(Bool.or)
-          .where(pv1 -> pv1
-            .setIri(IM.NAMESPACE + "endDate")
-            .setIsNull(true))
-          .where(pv1 -> pv1
-            .setIri(IM.NAMESPACE + "endDate")
-            .setOperator(Operator.gt)
-            .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
-        .orderBy(o->o
-          .setProperty(new OrderDirection().setIri(IM.NAMESPACE+"effectiveDate").setDirection(Order.descending))
-          .setLimit(1)));
-
+        .where(w->w
+          .setIri(IM.NAMESPACE+"gmsRegistrationStatus")
+          .is(is->is
+            .setIri(IM.NAMESPACE+"CaseloadStatusActive"))));
   }
 
   private void gmsRegistrationStatus() throws JsonProcessingException {

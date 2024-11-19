@@ -381,6 +381,8 @@ public class TPPImporter implements TTImport {
             tpp.addType(iri(IM.CONCEPT));
             if (code.startsWith("."))
               tpp.setStatus(iri(IM.INACTIVE));
+            if (code.equals("....."))
+              tpp.setName("CTV3 codes");
             codeToEntity.put(code, tpp);
             document.addEntity(tpp);
           }

@@ -42,71 +42,63 @@ public class QImporter implements TTImport {
 
   @Override
   public void importData(TTImportConfig ttImportConfig) throws ImportException {
-     try (TTManager manager = new TTManager()) {
-       document.addEntity(manager.createGraph(QR.NAMESPACE,
-         "Q Research scheme and graph"
-         , "Q Research scheme and graph"));
-       addQFolders();
-//	queryQRisk3();
-       importQProjects();
-       importCodeGroups();
-       for (Map.Entry<String, TTEntity> entry : idProjectMap.entrySet()) {
-         document.addEntity(entry.getValue());
-       }
-       for (Map.Entry<String, TTEntity> entry : idCodeGroupMap.entrySet()) {
-         document.addEntity(entry.getValue());
-       }
-       if (ImportApp.testDirectory != null) {
-         String directory = ImportApp.testDirectory.replace("%", " ");
-         manager.setDocument(document);
-         manager.saveDocument(new File(directory + "\\QCodes.json"));
-       }
-       QueryRequest qr = new QueryRequest()
-         .addArgument(new Argument()
-           .setParameter("this")
-           .setValueIri(iri(QR.NAMESPACE)))
-         .setUpdate(new Update().setIri(IM.NAMESPACE + "DeleteSets"));
+    try {
+      try (TTManager manager = new TTManager()) {
+        document.addEntity(manager.createGraph(QR.NAMESPACE,
+          "Q Research scheme and graph"
+          , "Q Research scheme and graph"));
+        addQFolders();
+        importQProjects();
+        importCodeGroups();
+        for (Map.Entry<String, TTEntity> entry : idProjectMap.entrySet()) {
+          document.addEntity(entry.getValue());
+        }
+        for (Map.Entry<String, TTEntity> entry : idCodeGroupMap.entrySet()) {
+          document.addEntity(entry.getValue());
+        }
+        if (ImportApp.testDirectory != null) {
+          String directory = ImportApp.testDirectory.replace("%", " ");
+          manager.setDocument(document);
+          manager.saveDocument(new File(directory + "\\QCodes.json"));
+        }
+        QueryRequest qr = new QueryRequest()
+          .addArgument(new Argument()
+            .setParameter("this")
+            .setValueIri(iri(QR.NAMESPACE)))
+          .setUpdate(new Update().setIri(IM.NAMESPACE + "DeleteSets"));
 
-       LOG.info("Deleting q code groups..");
-       new SearchService().updateIM(qr);
-       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-         filer.fileDocument(document);
-       }
-       LOG.info("if drugs then refiling as member Parents");
-       TTDocument drugDocument = new TTDocument().setGraph(iri(QR.NAMESPACE));
-       SetBinder binder = new SetBinder();
-       for (TTEntity entity : document.getEntities()) {
-         if (entity.isType(iri(IM.CONCEPT_SET))) {
-           if (entity.get(iri(IM.HAS_MEMBER)) != null) {
-             Set<TTNode> datamodels = binder.bindSet(entity.getIri());
-             Optional<TTNode> medication = datamodels.stream().filter(dm -> dm.get(iri(SHACL.NODE)).asIriRef().getIri().contains("Medication")).findFirst();
-             if (medication.isPresent()) {
-               entity.set(iri(IM.ROLE_GROUP), new TTNode());
-               entity.get(iri(IM.ROLE_GROUP)).asNode().set(iri(IM.HAS_MEMBER_PARENT), entity.get(iri(IM.HAS_MEMBER)));
-               entity.getPredicateMap().remove(iri(IM.HAS_MEMBER));
-               entity.set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
-                 .match(m -> m
-                   .addInstanceOf(new Node()
-                     .setDescendantsOrSelfOf(true))
-                   .where(w -> w
-                     .setInverse(true)
-                     .setAnyRoleGroup(true)
-                     .setIri(IM.HAS_MEMBER_PARENT)
-                     .setName("that have member parents in")
-                     .is(i -> i.setIri(entity.getIri()))))));
-               drugDocument.addEntity(entity);
-             }
-           }
-         }
-       }
-       LOG.info("Refiling drug sets");
-       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-         filer.fileDocument(drugDocument);
-       }
-     } catch (Exception e) {
-       throw new ImportException(e.getMessage(), e);
-     }
+        LOG.info("Deleting q code groups..");
+        new SearchService().updateIM(qr);
 
+        LOG.info("if drugs then creating as instances of");
+        TTDocument drugDocument = new TTDocument().setGraph(iri(QR.NAMESPACE));
+        SetBinder binder = new SetBinder();
+        for (TTEntity entity : document.getEntities()) {
+          if (entity.isType(iri(IM.CONCEPT_SET))) {
+            if (entity.get(iri(IM.HAS_MEMBER)) != null) {
+              Query query = new Query()
+                .setName(entity.getName());
+              Match match = new Match();
+              query.addMatch(match);
+              for (TTValue medication : entity.get(iri(IM.HAS_MEMBER)).getElements()) {
+                match
+                  .instanceOf(ins -> ins
+                    .setIri(medication.asIriRef().getIri())
+                    .setDescendantsOrSelfOf(true));
+              }
+              entity.getPredicateMap().remove(iri(IM.HAS_MEMBER));
+              entity.set(iri(IM.DEFINITION), TTLiteral.literal(query));
+            }
+          }
+        }
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+          filer.fileDocument(document);
+        }
+      }
+    }
+    catch (Exception ex) {
+      throw new ImportException(ex.getMessage(), ex);
+    }
   }
 
   private void queryQRisk3() throws JsonProcessingException {
