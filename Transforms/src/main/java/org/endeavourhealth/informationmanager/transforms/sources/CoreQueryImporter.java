@@ -1351,10 +1351,10 @@ public class CoreQueryImporter implements TTImport {
             .where(w -> w
               .setIri(RDFS.SUBCLASS_OF)
               .is(i -> i
-                .setParameter("this")))
-            .return_(s -> s.setNodeRef("subclass")
-              .property(p -> p.setIri(RDFS.LABEL))
-              .property(p -> p.setIri(IM.CODE))))))
+                .setParameter("this"))))
+          .return_(s -> s.setNodeRef("subclass")
+            .property(p -> p.setIri(RDFS.LABEL))
+            .property(p -> p.setIri(IM.CODE))))))
       .getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE + "query"));
   }
 
