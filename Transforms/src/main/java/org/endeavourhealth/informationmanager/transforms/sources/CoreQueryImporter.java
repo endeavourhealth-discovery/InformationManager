@@ -1341,21 +1341,21 @@ public class CoreQueryImporter implements TTImport {
     getQuery("GetSubClasses", "Get active subclasses of entity", "returns all subclasses of an entity, active only, used with Creator/Editor to get Status subclasses")
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(new Query()
-            .setName("All subclasses of an entity, active only")
-            .setDescription("All subclasses of an entity, active only")
-            .setActiveOnly(true)
-            .match(m -> m
-              .setName("subclasses of $this")
-              .setDescription("Is a subclass of")
-              .setVariable("subclass")
-              .where(w -> w
-                .setIri(RDFS.SUBCLASS_OF)
-                .is(i -> i
-                  .setParameter("this")))
-              .return_(s -> s.setNodeRef("subclass")
-                .property(p -> p.setIri(RDFS.LABEL))
-                .property(p -> p.setIri(IM.CODE)))))
-          .getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE + "query"));
+          .setName("All subclasses of an entity, active only")
+          .setDescription("All subclasses of an entity, active only")
+          .setActiveOnly(true)
+          .match(m -> m
+            .setName("subclasses of $this")
+            .setDescription("Is a subclass of")
+            .setVariable("subclass")
+            .where(w -> w
+              .setIri(RDFS.SUBCLASS_OF)
+              .is(i -> i
+                .setParameter("this")))
+            .return_(s -> s.setNodeRef("subclass")
+              .property(p -> p.setIri(RDFS.LABEL))
+              .property(p -> p.setIri(IM.CODE))))))
+      .getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE + "query"));
   }
 
   private void getSubsets() throws JsonProcessingException {
