@@ -1041,6 +1041,7 @@ public class CoreQueryImporter implements TTImport {
             .property(p -> p.setIri(IM.USAGE_TOTAL))
           )));
   }
+  
 
   private void allowableSubTypes() throws IOException {
     Query query = new Query()
