@@ -856,11 +856,15 @@ public class CoreQueryImporter implements TTImport {
               .from(from -> from
                 .setOperator(Operator.gte)
                 .setValue("65")
-                .setUnit("YEARS"))
+                .argument(a->a
+                  .setParameter("units")
+                  .setValueIri(iri(IM.NAMESPACE+"years"))))
               .to(to -> to
                 .setOperator(Operator.lt)
                 .setValue("70")
-                .setUnit("YEARS")))))
+                .argument(a->a
+                  .setParameter("units")
+                  .setValueIri(iri(IM.NAMESPACE+"years")))))))
         .match(or -> or
           .setName("Is on diabetic register")
           .addInstanceOf(new Node().setIri(IM.NAMESPACE + "Q_Diabetics").setMemberOf(true)))
