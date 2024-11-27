@@ -22,6 +22,13 @@ referring to the graph name
 3. Java 11.
 4. 16 gig RAM (jvm -Xmx 16 gig ideal)
 
+### Additional GraphDB setup (for Windows)
+
+After installing the GraphDB for Windows application:
+
+- Remove the spaces and change the name of the folder 'GraphDB Desktop' in your Local path to 'GraphDBDesktop' (fullpath should become C:\Users\<username>\AppData\Local\GraphDBDesktop) 
+- set graphDB.home.data to your Roaming GraphDB data folder, use '/' instead of '\\' (e.g. C:/Users/<username>/AppData/Roaming/GraphDB/data)
+
 ### Instructions for blank bulk load
 
 Before running preload

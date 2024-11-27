@@ -9,3 +9,9 @@
 The purpose of this information Manager sub project is to load data from external files into the IM2 graph database.
 
 See module specific instructions
+
+To generate a new database from scratch follow these steps:
+- Clone ImportData
+- Run TRUDUpdater (org.endeavourhealth.informationmanager.trud)
+- Run Preload (org.endeavourhealth.informationmanager.transforms.preload)
+- (Optional) Run OpenSearchSender (package org.endeavourhealth.informationmanager.utils.opensearch)
