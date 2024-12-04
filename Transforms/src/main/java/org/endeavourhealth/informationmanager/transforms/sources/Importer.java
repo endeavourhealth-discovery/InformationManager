@@ -85,6 +85,8 @@ public class Importer implements TTImportByType {
       return new PRSBImport();
     else if (GRAPH.KINGS_APEX.equals(importType))
       return new ApexKingsImport();
+    else if (GRAPH.QOF.equals(importType))
+      return new QOFImport();
     else if (GRAPH.KINGS_WINPATH.equals(importType))
       return new WinPathKingsImport();
     else if (GRAPH.ODS.equals(importType))

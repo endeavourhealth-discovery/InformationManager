@@ -56,10 +56,6 @@ public class SnomedImporter implements TTImport {
   public static final String[] dmd_form = {
     ".*\\\\DMD\\\\.*\\\\f_vmp_DrugFormType.csv"
   };
-  public static final String[] pcdClusters = {
-    ".*\\\\QOF\\\\.*\\_PCD_Refset_Content.txt"};
-  public static final String[] qofClusters = {
-    ".*\\\\QOF\\\\QOF_.*\\.txt"};
   public static final String[] descriptions = {
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_InternationalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_Snapshot-en_INT_.*\\.txt",
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_Description_UKCLSnapshot-en_.*\\.txt",
@@ -162,10 +158,6 @@ public class SnomedImporter implements TTImport {
       document = dmanager.createDocument(SNOMED.NAMESPACE);
       setRefSetRoot();
       importRefsetFiles(config.getFolder());
-
-
-      importPcdClusters(config.getFolder());
-      importQOFClusters(config.getFolder());
       conceptMap.clear();
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
@@ -224,117 +216,6 @@ public class SnomedImporter implements TTImport {
     root.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(IM.NAMESPACE + "QueryConceptSets")));
   }
 
-  private void importPcdClusters(String path) throws IOException {
-    Set<String> clusterCodes= new HashSet<>();
-    counter = 0;
-    for (String clusterFile : pcdClusters) {
-      Path file = ImportUtils.findFilesForId(path, clusterFile).get(0);
-      LOG.info("Processing qof cluster synonyms in {}", file.getFileName().toString());
-      String qofFile = file.toFile().getName();
-      String version = qofFile.split("_")[0];
-      TTEntity clusters = new TTEntity()
-        .setIri(IM.NAMESPACE + "PcdClusters")
-        .setName("Primary Care refset Portal Code clusters")
-        .setDescription("PCD code cluster reference sets issued on " + version)
-        .addType(iri(IM.FOLDER));
-      clusters.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
-      clusters
-        .addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "QueryConceptSets"));
-      document.addEntity(clusters);
-      TTEntity clusterFolder = new TTEntity()
-        .setIri(IM.NAMESPACE + "PcdClusters" + version)
-        .setName("PCD Code clusters - " + version)
-        .setDescription("PCD  code cluster reference sets issued on " + version)
-        .addType(iri(IM.FOLDER));
-      clusterFolder
-        .addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "PcdClusters"));
-      clusterFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
-      document.addEntity(clusterFolder);
-
-      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-        reader.readLine(); // NOSONAR - Skip header
-        String line = reader.readLine();
-        while (line != null && !line.isEmpty()) {
-          String[] fields = line.split("\t");
-          String refset = fields[4];
-          String clusterCode = fields[0];
-          if (!clusterCodes.contains(clusterCode)) {
-            String normalTerm = StringUtils.capitalize(fields[1]).split(" codes")[0] + " (primary care value set)";
-            addToReferenceSet(clusterFolder, refset, clusterCode, normalTerm);
-            clusterCodes.add(clusterCode);
-          }
-          line = reader.readLine();
-        }
-      }
-    }
-  }
-  private void importQOFClusters(String path) throws IOException {
-    Set<String> clusterCodes= new HashSet<>();
-    int i = 0;
-    counter = 0;
-    for (String clusterFile : qofClusters) {
-      Path file = ImportUtils.findFilesForId(path, clusterFile).get(0);
-      LOG.info("Processing qof cluster synonyms in {}", file.getFileName().toString());
-      String qofFile = file.toFile().getName();
-      String version = qofFile.split("\\.")[0].split("_")[1];
-      TTEntity clusters = new TTEntity()
-        .setIri(IM.NAMESPACE + "QofClusters")
-        .setName("QOF Code clusters")
-        .setDescription("QOF code cluster reference sets issued on " + version)
-        .addType(iri(IM.FOLDER));
-      clusters.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
-      clusters
-        .addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "QueryConceptSets"));
-      document.addEntity(clusters);
-      TTEntity clusterFolder = new TTEntity()
-        .setIri(IM.NAMESPACE + "QofClusters" + version)
-        .setName("QOF Code clusters - " + version)
-        .setDescription("QOF code cluster reference sets issued on " + version)
-        .addType(iri(IM.FOLDER));
-      clusterFolder
-        .addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "QofClusters"));
-      clusterFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
-      document.addEntity(clusterFolder);
-
-      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-        reader.readLine(); // NOSONAR - Skip header
-        String line = reader.readLine();
-        while (line != null && !line.isEmpty()) {
-          String[] fields = line.split("\t");
-          String referenceSet = fields[6].substring(1);
-          String clusterCode = fields[1];
-          if (!clusterCodes.contains(clusterCode)) {
-            String normalTerm = fields[2] + " QOF code cluster version " + version;
-            addToReferenceSet(clusterFolder, referenceSet, clusterCode, normalTerm);
-            clusterCodes.add(clusterCode);
-          }
-          line = reader.readLine();
-        }
-      }
-    }
-  }
-
-  private void addToReferenceSet(TTEntity clusterFolder,String referenceSet, String clusterTerm, String normalTerm) {
-    TTEntity c = new TTEntity().setIri(SNOMED.NAMESPACE + referenceSet);
-    c.setCrud(iri(IM.ADD_QUADS));
-    c.set(iri(IM.PREFERRED_NAME), TTLiteral.literal(normalTerm));
-    if (!hasTermCode(c, clusterTerm)) {
-      c.addObject(iri(IM.HAS_TERM_CODE), new TTNode().set(iri(RDFS.LABEL), TTLiteral.literal(clusterTerm)));
-      c.addObject(iri(IM.IS_CONTAINED_IN), iri(clusterFolder.getIri()));
-    }
-  }
-
-  private boolean hasTermCode(TTEntity entity, String term) {
-    if (entity.get(iri(IM.HAS_TERM_CODE)) == null)
-      return false;
-    for (TTValue tc : entity.get(iri(IM.HAS_TERM_CODE)).getElements()) {
-      if (tc.asNode().get(iri(RDFS.LABEL)).asLiteral().getValue()
-        .equals(term))
-        return true;
-    }
-    return false;
-
-  }
 
   private void importSubstitution(String path) throws IOException {
     int i = 0;
@@ -928,8 +809,8 @@ public class SnomedImporter implements TTImport {
 
   public void validateFiles(String inFolder) {
     ImportUtils.validateFiles(inFolder, usage_clinical, concepts, descriptions,
-      relationships, refsets, attributeRanges, attributeDomains, substitutions, qofClusters, dmd_vmp, dmd_amp, dmd_form, dmd_route,
-      dmd_vpi, usage_clinical, usage_drug,pcdClusters);
+      relationships, refsets, attributeRanges, attributeDomains, substitutions,  dmd_vmp, dmd_amp, dmd_form, dmd_route,
+      dmd_vpi, usage_clinical, usage_drug);
 
   }
 
