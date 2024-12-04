@@ -41,6 +41,7 @@ public class Importer implements TTImportByType {
       return this;
     }
   }
+  
 
   @Override
   public TTImportByType validateByType(TTIriRef importType, String inFolder) throws Exception {
