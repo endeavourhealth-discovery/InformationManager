@@ -109,13 +109,14 @@ unzip -q archives/Dev-IMAPI.zip -d ./archives/IMAPI
 unzip -q archives/Dev-IMUI.zip -d ./archives/IMUI
 
 # Setup GraphDB
-unzip -q archives/graphdb.zip -d ./graphdb
-mkdir graphdb/data
-unzip -q archives/config.zip -d ./graphdb/data/repositories
-unzip -q archives/user.zip -d ./graphdb/data/repositories
-unzip -q archives/im.zip -d ./graphdb/data/repositories
-unzip -q archives/workflow.zip -d ./graphdb/data/repositories
-chmod +x ./graphdb/bin/graphdb
+mkdir /opt/graphdb
+unzip -q archives/graphdb.zip -d /opt/graphdb
+mkdir /opt/graphdb/data
+unzip -q archives/config.zip -d /opt/graphdb/data/repositories
+unzip -q archives/user.zip -d /opt/graphdb/data/repositories
+unzip -q archives/im.zip -d /opt/graphdb/data/repositories
+unzip -q archives/workflow.zip -d /opt/graphdb/data/repositories
+chmod +x /opt/graphdb/bin/graphdb
 
 # Deploy to Tomcat
 mv ./archives/IMAPI/api/build/libs/imapi.war /opt/tomcat/webapps/
@@ -128,7 +129,7 @@ chown -R www-data:www-data /var/www/e2e
 service nginx restart
 
 # Startup
-./graphdb/bin/graphdb -d -s
+/opt/graphdb/bin/graphdb -d -s
 /opt/tomcat/bin/startup.sh
 
 # Cleanup
