@@ -420,7 +420,7 @@ public class CoreQueryImporter implements TTImport {
       .setDescription("Aged 18 or more years old")
       .addWhere(new Where()
         .setIri(IM.NAMESPACE + "age")
-        .setUnit("YEAR")
+        .setUnit(iri(IM.NAMESPACE+"years"))
         .setOperator(Operator.gte)
         .setValue("18"));
 
@@ -634,7 +634,7 @@ public class CoreQueryImporter implements TTImport {
         .setIri(IM.NAMESPACE + "effectiveDate")
         .setOperator(Operator.gte)
         .setValue("-12")
-        .setUnit("MONTHS")
+        .setUnit(iri(IM.NAMESPACE+"months"))
         .relativeTo(r -> r.setParameter("$referenceDate"))
         .setValueLabel("last 12 months"))
       .setOrderBy(new OrderLimit()
@@ -728,7 +728,7 @@ public class CoreQueryImporter implements TTImport {
         .setIri(IM.NAMESPACE + "effectiveDate")
         .setOperator(Operator.gte)
         .setValue("-12")
-        .setUnit("MONTHS")
+        .setUnit(iri(IM.NAMESPACE+"months"))
         .relativeTo(r -> r.setParameter("$referenceDate"))
         .setValueLabel("last 12 months"))
       .setOrderBy(new OrderLimit()
@@ -856,15 +856,11 @@ public class CoreQueryImporter implements TTImport {
               .from(from -> from
                 .setOperator(Operator.gte)
                 .setValue("65")
-                .argument(a->a
-                  .setParameter("units")
-                  .setValueIri(iri(IM.NAMESPACE+"years"))))
+                .setUnit(iri(IM.NAMESPACE+"years")))
               .to(to -> to
                 .setOperator(Operator.lt)
                 .setValue("70")
-                .argument(a->a
-                  .setParameter("units")
-                  .setValueIri(iri(IM.NAMESPACE+"years")))))))
+                .setUnit(iri(IM.NAMESPACE+"years"))))))
         .match(or -> or
           .setName("Is on diabetic register")
           .addInstanceOf(new Node().setIri(IM.NAMESPACE + "Q_Diabetics").setMemberOf(true)))
@@ -898,7 +894,7 @@ public class CoreQueryImporter implements TTImport {
           .setIri(IM.NAMESPACE + "effectiveDate")
           .setOperator(Operator.gte)
           .setValue("-12")
-          .setUnit("MONTHS")
+          .setUnit(iri(IM.NAMESPACE+"months"))
           .relativeTo(r -> r.setParameter("$referenceDate"))
           .setValueLabel("last 12 months"))
         .setOrderBy(new OrderLimit()
@@ -1041,7 +1037,7 @@ public class CoreQueryImporter implements TTImport {
             .property(p -> p.setIri(IM.USAGE_TOTAL))
           )));
   }
-  
+
 
   private void allowableSubTypes() throws IOException {
     Query query = new Query()
