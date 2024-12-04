@@ -139,7 +139,7 @@ public class SnomedImporter implements TTImport {
       );
       graph.addObject(TTIriRef.iri(IM.IS_CONTAINED_IN),TTIriRef.iri(IM.CORE_SCHEMES));
       document.addEntity(graph);
-/*
+
       importConceptFiles(config.getFolder());
       importDescriptionFiles(config.getFolder());
       // removeQualifiers(document);
@@ -163,7 +163,7 @@ public class SnomedImporter implements TTImport {
       setRefSetRoot();
       importRefsetFiles(config.getFolder());
 
- */
+
       importPcdClusters(config.getFolder());
       importQOFClusters(config.getFolder());
       conceptMap.clear();
