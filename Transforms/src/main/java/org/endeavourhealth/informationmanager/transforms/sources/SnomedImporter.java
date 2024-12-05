@@ -232,27 +232,25 @@ public class SnomedImporter implements TTImport {
             String subtype = fields[1];
             if (!subtype.equals(supertype)) {
               String provenance = fields[2];
-              TTEntity c = conceptMap.get(subtype);
-              if (c == null) {
-                c = new TTEntity().setIri(SN + subtype);
-                document.addEntity(c);
-                c.addType(iri(IM.CONCEPT));
-                c.setStatus(iri(IM.INACTIVE));
-                c.setCode(subtype);
-                c.setScheme(iri(SNOMED.NAMESPACE));
+              TTEntity subEntity = conceptMap.get(subtype);
+              TTEntity superEntity = conceptMap.get(supertype);
+              if (subEntity == null) {
+                subEntity = new TTEntity().setIri(SN + subtype)
+                .addType(iri(IM.CONCEPT))
+                .setStatus(iri(IM.INACTIVE))
+                .setCode(subtype)
+                .setScheme(iri(SNOMED.NAMESPACE));
+                document.addEntity(subEntity);
               }
-              TTEntity c2 = conceptMap.get(supertype);
-              if (c2.getStatus().getIri().equals(IM.INACTIVE) && (c.getStatus().getIri().equals(IM.INACTIVE))) {
                 i++;
                 switch (provenance) {
-                  case "0" -> c.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
-                  case "1" -> c.addObject(iri(IM.USUALLY_SUBSUMED_BY), iri(SN + supertype));
-                  case "2" -> c.addObject(iri(IM.APPROXIMATE_SUBSUMED_BY), iri(SN + supertype));
-                  case "3" -> c.addObject(iri(IM.MULTIPLE_SUBSUMED_BY), iri(SN + supertype));
+                  case "0" -> subEntity.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
+                  case "1" -> subEntity.addObject(iri(IM.USUALLY_SUBSUMED_BY), iri(SN + supertype));
+                  case "2" -> subEntity.addObject(iri(IM.APPROXIMATE_SUBSUMED_BY), iri(SN + supertype));
+                  case "3" -> subEntity.addObject(iri(IM.MULTIPLE_SUBSUMED_BY), iri(SN + supertype));
                 }
               }
             }
-          }
           line = reader.readLine();
         }
       }
