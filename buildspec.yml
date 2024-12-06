@@ -23,7 +23,4 @@ artifacts:
     - appspec.yml
     - aws_scripts/cleanup
     - Transforms/build/libs/Transforms-1.0-SNAPSHOT.jar
-    - Transforms/FaCTPlusPlusJNI.dll
-    - Transforms/libFaCTPlusPlusJNI.jnilib
-    - Transforms/libFaCTPlusPlusJNI.so
     - Feeds/build/libs/Feeds-1.0-SNAPSHOT.jar
