@@ -9,7 +9,10 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerException;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.service.SearchService;
 import org.endeavourhealth.imapi.model.imq.*;
@@ -26,7 +29,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -56,8 +62,8 @@ public class QImporter implements TTImport {
         for (Map.Entry<String, TTEntity> entry : idCodeGroupMap.entrySet()) {
           document.addEntity(entry.getValue());
         }
-        if (ImportApp.testDirectory != null) {
-          String directory = ImportApp.testDirectory.replace("%", " ");
+        if (ImportApp.getTestDirectory() != null) {
+          String directory = ImportApp.getTestDirectory().replace("%", " ");
           manager.setDocument(document);
           manager.saveDocument(new File(directory + "\\QCodes.json"));
         }
@@ -95,8 +101,7 @@ public class QImporter implements TTImport {
           filer.fileDocument(document);
         }
       }
-    }
-    catch (Exception ex) {
+    } catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);
     }
   }
@@ -115,8 +120,6 @@ public class QImporter implements TTImport {
     query.addReturn(new Return());
 
   }
-
-
 
 
   private void importCodeGroups() throws JsonProcessingException {

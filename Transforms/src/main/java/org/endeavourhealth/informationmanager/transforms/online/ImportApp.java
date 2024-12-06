@@ -3,12 +3,10 @@ package org.endeavourhealth.informationmanager.transforms.online;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImportByType;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
-import org.endeavourhealth.imapi.filer.rdf4j.LuceneIndexer;
-import org.endeavourhealth.imapi.logic.reasoner.SetExpander;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
+import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,14 +17,21 @@ import java.util.Date;
  */
 public class ImportApp {
   private static final Logger LOG = LoggerFactory.getLogger(ImportApp.class);
-  private static boolean expandValueSets;
 
-  public static String testDirectory;
+  private static String testDirectory;
+
+  public static String getTestDirectory() {
+    return testDirectory;
+  }
+
+  public static void setTestDirectory(String testDirectory) {
+    ImportApp.testDirectory = testDirectory;
+  }
 
   public static void main(String[] args) throws Exception {
     if (args.length < 2) {
-      System.err.println("Insufficient parameters supplied:");
-      System.err.println("<source> <import type> <privacy={0 public 1 private publication 2 private authoring}> [secure|skiptct|skipsearch]");
+      LOG.error("Insufficient parameters supplied:");
+      LOG.error("<source> <import type> <privacy={0 public 1 private publication 2 private authoring}> [secure|skiptct|skipsearch]");
       System.exit(-1);
     }
 
@@ -35,7 +40,6 @@ public class ImportApp {
     // Mandatory/ordered args
     cfg.setFolder(args[0]);
     cfg.setImportType(args[1].toLowerCase());
-    expandValueSets = true;
 
     // Optional switch args
     if (args.length >= 3) {
@@ -49,9 +53,6 @@ public class ImportApp {
             break;
           case "skiptct":
             cfg.setSkiptct(true);
-            break;
-          case "skipvaluesets":
-            expandValueSets = false;
             break;
           case "skipsearch":
             cfg.setSkipsearch(true);
@@ -67,7 +68,7 @@ public class ImportApp {
             if (args[i].contains("test="))
               testDirectory = args[i].substring(args[i].lastIndexOf("=") + 1);
             else
-              System.err.println("Unknown parameter " + args[i]);
+              LOG.error("Unknown parameter {}", args[i]);
         }
       }
     }
@@ -118,7 +119,6 @@ public class ImportApp {
         importer.importByType(GRAPH.BNF, cfg);
         importer.importByType(GRAPH.QOF, cfg);
         importer.importByType(GRAPH.CEG, cfg);
-//                importer.importByType(GRAPH.CONFIG,cfg);
         importer.importByType(GRAPH.IM1, cfg);
         importer.importByType(GRAPH.DELTAS, cfg);
         break;
@@ -155,8 +155,7 @@ public class ImportApp {
         importer = new Importer().validateByType(GRAPH.CPRD_MED, cfg.getFolder());
         importer.importByType(GRAPH.CPRD_MED, cfg);
         break;
-      case "tpp":
-      case "ctv3":
+      case "tpp", "ctv3":
         importer = new Importer().validateByType(GRAPH.TPP, cfg.getFolder());
         importer.importByType(GRAPH.TPP, cfg);
         break;
@@ -172,13 +171,11 @@ public class ImportApp {
         importer = new Importer().validateByType(GRAPH.QOF, cfg.getFolder());
         importer.importByType(GRAPH.QOF, cfg);
         break;
-      case "discoverymaps":
-      case "encounters":
+      case "discoverymaps", "encounters":
         importer = new Importer().validateByType(GRAPH.ENCOUNTERS, cfg.getFolder());
         importer.importByType(GRAPH.ENCOUNTERS, cfg);
         break;
-      case "read2":
-      case "vision":
+      case "read2", "vision":
         importer = new Importer().validateByType(GRAPH.VISION, cfg.getFolder());
         importer.importByType(GRAPH.VISION, cfg);
         break;
@@ -221,6 +218,7 @@ public class ImportApp {
       case "config":
         importer = new Importer().validateByType(GRAPH.CONFIG, cfg.getFolder());
         importer.importByType(GRAPH.CONFIG, cfg);
+        break;
       case "deltas":
         importer = new Importer().validateByType(GRAPH.DELTAS, cfg.getFolder());
         importer.importByType(GRAPH.DELTAS, cfg);
@@ -238,11 +236,11 @@ public class ImportApp {
         importer.importByType(FHIR.GRAPH_FHIR, cfg);
         break;
       default:
-        throw new Exception("Unknown import type");
+        throw new IllegalArgumentException("Unknown import type");
 
     }
 
-    LOG.info("Finished - ", new Date());
+    LOG.info("Finished - {}", new Date());
   }
 }
 

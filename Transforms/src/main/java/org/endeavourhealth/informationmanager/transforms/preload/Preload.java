@@ -63,7 +63,7 @@ public class Preload {
       else if (arg.startsWith("cmd"))
         graphdbCommand = arg.split("=")[1];
       else if (args[i].contains("test="))
-        ImportApp.testDirectory = args[i].substring(args[i].lastIndexOf("=") + 1);
+        ImportApp.setTestDirectory(args[i].substring(args[i].lastIndexOf("=") + 1));
       else if (args[i].toLowerCase().contains("skipbulk"))
         cfg.setSkipBulk(true);
       else
