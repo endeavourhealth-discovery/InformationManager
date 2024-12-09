@@ -1,0 +1,10 @@
+{
+  "@iri": uuidToIri(.LocationGuid, "emis:urn:"),
+  "name": .LocationName,
+  "locationType": {
+    "@iri": getEmisLocationType(.LocationTypeDescription),
+    "name": .LocationTypeDescription
+  },
+  "effective_date": .OpenDate,
+  "end_date": .CloseDate
+}
