@@ -1,10 +1,17 @@
 {
-  "@iri": uuidToIri(.LocationGuid, "emis:urn:"),
+  "@id": uuidToIri(.LocationGuid, "emis:urn:"),
   "name": .LocationName,
   "locationType": {
-    "@iri": getEmisLocationType(.LocationTypeDescription),
+    "@id": getEmisLocationType(.LocationTypeDescription),
     "name": .LocationTypeDescription
   },
   "effective_date": .OpenDate,
-  "end_date": .CloseDate
+  "end_date": .CloseDate,
+  "test": contains("llo","Hello World"),
+  "test2": size("This is a test"),
+  "array": if ((is-array(.SomeField))) error("Not an array"),
+  "rand": random(),
+  "split": split("a,b,c,d,e,f", ","),
+  "forTest": [for (split("a,b,c,d,e,f", ",")) uppercase(.)],
+  "forKeys": {for ({"a": "x", "b": "y"}) "val_" + .key : uppercase(.value)}
 }
