@@ -12,22 +12,23 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public abstract class FileHandler implements AutoCloseable {
   Collection<Function> functions = new ArrayList<>();
 
   protected FileHandler() throws ClassNotFoundException {
-    functions.add(
-      FunctionUtils.wrapStaticMethod("uuidToIri", "org.endeavourhealth.informationManager.DataImport.fileHandlers.FileHandler", "uuidToIri")
-    );
+    functions.add(FunctionUtils.wrapStaticMethod("uuidToIri", "org.endeavourhealth.informationManager.DataImport.fileHandlers.FileHandler", "uuidToIri"));
+    functions.add(FunctionUtils.wrapStaticMethod("newUUIDIri", "org.endeavourhealth.informationManager.DataImport.fileHandlers.FileHandler", "newUUIDIri"));
   }
 
-  public static String uuidToIri(String UUID, String namespace) {
-    return namespace + (UUID.replace("{", "").replace("}", ""));
+  public static String newUUIDIri(String namespace) {
+    String uuid = UUID.randomUUID().toString();
+    return uuidToIri(uuid, namespace);
+  }
+
+  public static String uuidToIri(String uuid, String namespace) {
+    return namespace + (uuid.replace("{", "").replace("}", ""));
   }
 
   public abstract JsonNode getNextObject() throws IOException, URISyntaxException;
