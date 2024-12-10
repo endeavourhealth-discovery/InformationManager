@@ -58,7 +58,6 @@ public class BNFImporter implements TTImport {
       importCodes(config.getFolder());
       setMembers();
       flattenSets();
-      defineSets();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
       }
@@ -67,26 +66,7 @@ public class BNFImporter implements TTImport {
     }
   }
 
-  private void defineSets() throws JsonProcessingException {
-    for (TTEntity set: document.getEntities()){
-      if (set.get(iri(IM.HAS_MEMBER_PARENT))!=null){
-        Query query= new Query()
-          .match(m->m
-            .setTypeOf(IM.CONCEPT)
-            .where(w->w
-              .setIri(IM.IS_A)
-              .match(m1->m1
-                .where(w1->w1
-                  .setInverse(true)
-                  .setIri(IM.HAS_MEMBER_PARENT)
-                  .setName("that have member parents in")
-                  .is(i -> i.setIri(set.getIri()))))));
-        set.set(iri(IM.DEFINITION),TTLiteral.literal(query));
 
-      }
-
-    }
-  }
 
   private void setMembers() {
     LOG.info("Assigning instances to set definition match clause");
@@ -96,7 +76,9 @@ public class BNFImporter implements TTImport {
       if (setToSnomed.get(setIri)!=null){
         i++;
         for (String snomed:setToSnomed.get(setIri)){
-          entity.addObject(iri(IM.HAS_MEMBER_PARENT),iri(SNOMED.NAMESPACE+snomed));
+          entity.addObject(iri(IM.INSTANCE_OF),new TTNode()
+            .set(iri(IM.INCLUDE),iri(SNOMED.NAMESPACE+snomed))
+            .set(iri(IM.DESCENDANTS_OR_SELF_OF),TTLiteral.literal(true)));
         }
       }
     }
@@ -122,10 +104,10 @@ public class BNFImporter implements TTImport {
     TTEntity parent = getParent(set);
     if (!set.getIri().equals(parent.getIri())) {
       toRemove.add(set);
-      if (set.get(iri(IM.HAS_MEMBER_PARENT)) != null) {
+      if (set.get(iri(IM.INSTANCE_OF)) != null) {
         parent.setType(new TTArray().add(iri(IM.CONCEPT_SET)));
-        parent.set(iri(IM.HAS_MEMBER_PARENT),set.get(iri(IM.HAS_MEMBER_PARENT)));
-        set.getPredicateMap().remove(iri(IM.HAS_MEMBER_PARENT));
+        parent.set(iri(IM.INSTANCE_OF),set.get(iri(IM.INSTANCE_OF)));
+        set.getPredicateMap().remove(iri(IM.INSTANCE_OF));
       }
     }
   }

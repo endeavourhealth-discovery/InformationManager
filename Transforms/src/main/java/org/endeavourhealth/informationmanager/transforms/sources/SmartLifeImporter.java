@@ -44,8 +44,8 @@ public class SmartLifeImporter implements TTImport {
 	private static final String[] queries = {".*\\\\Smartlife"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	private TTDocument document;
-	private TTEntity mainFolder;
-	private TTEntity setFolder;
+	private String mainFolder;
+	private String setFolder;
 
 	@Override
 	public void importData(TTImportConfig config) throws ImportException {
@@ -77,20 +77,22 @@ public class SmartLifeImporter implements TTImport {
 
 
 	private void createFolders(TTDocument document) {
-		mainFolder = new TTEntity()
+		TTEntity folder = new TTEntity()
 			.setIri(GRAPH.SMARTLIFE + "Q_SmartLifeQueries")
 			.setName("SmartLife queries")
 			.addType(iri(IM.FOLDER))
 			.set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "Q_Queries"));
-		mainFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
-		document.addEntity(mainFolder);
-		setFolder = new TTEntity()
+		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
+		document.addEntity(folder);
+		mainFolder= folder.getIri();
+		folder = new TTEntity()
 			.setIri(GRAPH.SMARTLIFE + "CSET_SmartLifeConceptSets")
 			.setName("QMUL CEG value set library")
 			.addType(iri(IM.FOLDER))
 			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "QueryConceptSets"));
-		setFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
-		document.addEntity(setFolder);
+		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
+		document.addEntity(folder);
+		setFolder= folder.getIri();
 
 	}
 
@@ -103,8 +105,10 @@ public class SmartLifeImporter implements TTImport {
 
 
 		Path directory = ImportUtils.findFileForId(folder, queries[0]);
-		EQDImporter eqdImporter= new EQDImporter();
-		eqdImporter.importEqds(GRAPH.SMARTLIFE,directory,dataMap,mainFolder,setFolder);
+		try (TTManager manager= new TTManager()) {
+			EQDImporter eqdImporter = new EQDImporter(manager,dataMap,mainFolder,setFolder);
+			eqdImporter.importEqds(GRAPH.SMARTLIFE, directory);
+		}
 	}
 
 

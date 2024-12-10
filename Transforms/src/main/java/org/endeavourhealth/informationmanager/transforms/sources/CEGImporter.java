@@ -28,8 +28,8 @@ public class CEGImporter implements TTImport {
   private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
   private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
   private TTDocument document;
-  private TTEntity mainFolder;
-  private TTEntity setFolder;
+  private String mainFolder;
+  private String setFolder;
 
   @Override
   public void importData(TTImportConfig config) throws ImportException {
@@ -71,20 +71,22 @@ public class CEGImporter implements TTImport {
 
 
   private void createFolders() {
-    mainFolder = new TTEntity()
+    TTEntity folder = new TTEntity()
       .setIri(GRAPH.CEG + "Q_CEGQueries")
       .setName("QMUL CEG query library")
       .addType(iri(IM.FOLDER))
       .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "Q_Queries"));
-    mainFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
-    document.addEntity(mainFolder);
-    setFolder = new TTEntity()
+    folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
+    document.addEntity(folder);
+    mainFolder= folder.getIri();
+    folder = new TTEntity()
       .setIri(GRAPH.CEG + "CSET_CEGConceptSets")
       .setName("QMUL CEG value set library")
       .addType(iri(IM.FOLDER))
       .set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "QueryConceptSets"));
-    setFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
-    document.addEntity(setFolder);
+    folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
+    document.addEntity(folder);
+    setFolder= folder.getIri();
 
   }
 
@@ -109,8 +111,10 @@ public class CEGImporter implements TTImport {
       labels.load(reader);
     }
     Path directory = ImportUtils.findFileForId(folder, queries[0]);
-    EQDImporter eqdImporter= new EQDImporter();
-    eqdImporter.importEqds(GRAPH.CEG,directory,dataMap,mainFolder,setFolder);
+    try (TTManager manager= new TTManager()) {
+      EQDImporter eqdImporter = new EQDImporter(manager,dataMap,mainFolder,setFolder);
+      eqdImporter.importEqds(GRAPH.CEG, directory);
+    }
   }
 
 
