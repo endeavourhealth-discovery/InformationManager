@@ -100,7 +100,7 @@ public class QOFImport implements TTImport{
 		TTEntity clusters = new TTEntity()
 			.setIri(PCDFolder)
 			.setName("Primary Care Code clusters")
-			.setDescription("PCD code cluster reference sets")
+			.setDescription("PCD portal  code cluster, reference sets , which are a subset of the Snomed-CT reference sets. The content of these are sourced from the UK Snomed-CT releases.")
 			.addType(iri(IM.FOLDER));
 		putEntityMap(PCDFolder,clusters);
 		clusters.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
@@ -111,7 +111,7 @@ public class QOFImport implements TTImport{
 			Path file = ImportUtils.findFilesForId(path, clusterFile).get(0);
 			String qofFile = file.toFile().getName();
 			String version = qofFile.split("_")[0];
-			getEntityFromIri(PCDFolder).setName("PCD code cluster reference sets ("+ version+")");
+			getEntityFromIri(PCDFolder).setName("Primary care code clusters ("+ version+")");
 			createFoldersForVersion(version);
 			importPcdClusters(file,version);
 		}
