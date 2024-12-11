@@ -10,7 +10,6 @@ import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.ECLToIMQ;
-import org.endeavourhealth.imapi.transforms.OWLToTT;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
@@ -23,7 +22,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.zip.DataFormatException;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -83,16 +81,16 @@ public class SnomedImporter implements TTImport {
   public static final String[] attributeDomains = {
     ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_InternationalRF2_.*\\\\Snapshot\\\\Refset\\\\Metadata\\\\der2_cissccRefset_MRCMAttributeDomainSnapshot_INT_.*\\.txt",
   };
-  public static final String[] statedAxioms = {
-    ".*\\\\CLINICAL\\\\.*\\\\SnomedCT_InternationalRF2_.*\\\\Snapshot\\\\Terminology\\\\sct2_sRefset_OWLExpressionSnapshot_INT_.*\\.txt"
-  };
   public static final String[] usage_clinical = {
     ".*\\\\DiscoveryNoneCore\\\\SNOMED_code_usage_[0-9\\\\-]*.txt"
   };
   public static final String[] usage_drug = {
     ".*\\\\DiscoveryNoneCore\\\\SNOMED_drug_usage_[0-9\\\\-]*.txt"
   };
-  public static final String[] importList = {"991181000000109"};
+
+  public static final String[] pcdClusters = {
+    ".*\\\\QOF\\\\.*\\_PCD_Refset_Content.txt"};
+
   public static final String FULLY_SPECIFIED = "900000000000003001";
   public static final String DEFINED = "900000000000073002";
   public static final String IS_A = "116680003";
@@ -101,15 +99,15 @@ public class SnomedImporter implements TTImport {
   public static final String ACTIVE = "1";
   public static final String REPLACED_BY = "370124000";
   public static final String SNOMED_ATTRIBUTE = "sn:106237007";
+  public static final String SNOMED_REFERENCE_SETS= IM.NAMESPACE+"SnomedCTReferenceSets";
   private static final Logger LOG = LoggerFactory.getLogger(SnomedImporter.class);
   private final ECLToIMQ eclConverter = new ECLToIMQ();
   private Map<String, TTEntity> conceptMap;
   private Map<String, TTEntity> refsetMap;
   private TTDocument document;
-  private Integer counter;
-  private Map<String, Set<String>> vmp_ingredient = new HashMap<>();
-  private Map<String, String> vmp_route = new HashMap<>();
-  private Map<String, String> vmp_form = new HashMap<>();
+  private final Map<String, Set<String>> vmp_ingredient = new HashMap<>();
+  private final Map<String, String> vmp_route = new HashMap<>();
+  private final Map<String, String> vmp_form = new HashMap<>();
 
   //======================PUBLIC METHODS============================
 
@@ -118,7 +116,7 @@ public class SnomedImporter implements TTImport {
    * followed by uk drug. Loads MRCM models also. Does not load reference sets.
    *
    * @param config import configuration
-   * @throws Exception thrown from document filer
+   * @throws ImportException thrown from document filer
    */
 
   @Override
@@ -158,6 +156,9 @@ public class SnomedImporter implements TTImport {
       document = dmanager.createDocument(SNOMED.NAMESPACE);
       setRefSetRoot();
       importRefsetFiles(config.getFolder());
+      try (QOFImport qofImporter=  new QOFImport(document,conceptMap)){
+        qofImporter.importData(config) ;
+      }
       conceptMap.clear();
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
@@ -190,30 +191,17 @@ public class SnomedImporter implements TTImport {
     dmd.addObject(TTIriRef.iri(RDFS.RANGE), TTIriRef.iri(SNOMED.NAMESPACE + "8653201000001106"));
   }
 
-  private void removeQualifiers(TTDocument document) {
-    LOG.info("Removing bracketed qualifiers");
-    Set<String> duplicates = new HashSet<>();
-    for (TTEntity entity : document.getEntities()) {
-      String name = entity.getName();
-      if (name.contains(" (")) {
-        String[] parts = name.split(" \\(");
-        String qualifier = " (" + parts[parts.length - 1];
-        int endIndex = name.indexOf(qualifier);
-        String shortName = name.substring(0, endIndex);
-        if (!duplicates.contains(shortName)) {
-          entity.setName(shortName);
-          entity.setDescription(name);
-          duplicates.add(shortName);
-        }
-      }
-    }
-  }
 
   private void setRefSetRoot() {
-    TTEntity root = new TTEntity().setIri(SNOMED.NAMESPACE + "900000000000455006");
+    TTEntity root = new TTEntity()
+      .setIri(SNOMED_REFERENCE_SETS)
+      .setGraph(iri(IM.NAMESPACE))
+      .setName("Snomed-CT reference sets")
+        .addType(iri(IM.FOLDER));
+    root.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(IM.NAMESPACE + "QueryConceptSets")));
     document.addEntity(root);
     conceptMap.put(root.getIri(), root);
-    root.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(IM.NAMESPACE + "QueryConceptSets")));
+
   }
 
 
@@ -233,7 +221,6 @@ public class SnomedImporter implements TTImport {
             if (!subtype.equals(supertype)) {
               String provenance = fields[2];
               TTEntity subEntity = conceptMap.get(subtype);
-              TTEntity superEntity = conceptMap.get(supertype);
               if (subEntity == null) {
                 subEntity = new TTEntity().setIri(SN + subtype)
                 .addType(iri(IM.CONCEPT))
@@ -244,7 +231,8 @@ public class SnomedImporter implements TTImport {
               }
                 i++;
                 switch (provenance) {
-                  case "0" -> subEntity.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
+                  case "0" ->
+                    subEntity.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
                   case "1" -> subEntity.addObject(iri(IM.USUALLY_SUBSUMED_BY), iri(SN + supertype));
                   case "2" -> subEntity.addObject(iri(IM.APPROXIMATE_SUBSUMED_BY), iri(SN + supertype));
                   case "3" -> subEntity.addObject(iri(IM.MULTIPLE_SUBSUMED_BY), iri(SN + supertype));
@@ -527,19 +515,12 @@ public class SnomedImporter implements TTImport {
     String[] fields = line.split("\t");
     if (fields[2].equals(ACTIVE)) {
       TTEntity c = conceptMap.get(fields[4]);
-      // if (fields[4].equals("999035921000230109"))
-      // System.out.println(fields[4]);
+      c.setType(new TTArray().add(iri(IM.CONCEPT_SET)));
       if (refsetMap.get(fields[4]) == null) {
         refsetMap.put(fields[4], c);
         document.addEntity(c);
       }
-         /* if (c == null) {
-                c = new TTEntity().setIri(SNOMED.NAMESPACE + fields[4]);
-                c.setType(new TTArray().add(IM.CONCEPT_SET));
-                conceptMap.put(fields[4], c);
-                document.addEntity(c);
-            }
-          */
+      c.set(iri(IM.IS_CONTAINED_IN),iri(SNOMED_REFERENCE_SETS));
       c.addObject(iri(IM.HAS_MEMBER), iri(SNOMED.NAMESPACE + fields[5]));
     }
   }
@@ -597,47 +578,6 @@ public class SnomedImporter implements TTImport {
     }
   }
 
-  private void importStatedFiles(String path) throws IOException {
-    int i = 0;
-    OWLToTT owlConverter = new OWLToTT();
-    TTContext statedContext = new TTContext();
-    statedContext.add(SNOMED.NAMESPACE, "");
-    statedContext.add(IM.NAMESPACE, "im");
-    for (String relationshipFile : statedAxioms) {
-      Path file = ImportUtils.findFilesForId(path, relationshipFile).get(0);
-      LOG.info("Processing owl expressions in {}", file.getFileName().toString());
-      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-        reader.readLine();  // NOSONAR - Skip header
-        String line = reader.readLine();
-        while (line != null && !line.isEmpty()) {
-          processStatedLine(owlConverter, statedContext, line);
-          i++;
-          line = reader.readLine();
-        }
-      } catch (Exception e) {
-        System.err.println(Arrays.toString(e.getStackTrace()));
-        throw new IOException("stated file input problem");
-      }
-
-    }
-
-    LOG.info("Imported {} OWL Axioms", i);
-  }
-
-  private void processStatedLine(OWLToTT owlConverter, TTContext statedContext, String line) throws IOException {
-    String[] fields = line.split("\t");
-    TTEntity c = conceptMap.get(fields[5]);
-    String axiom = fields[6];
-    if (!axiom.startsWith("Prefix") && ACTIVE.equals(fields[2]) && !axiom.startsWith("Ontology"))
-      try {
-        //LOG.info(c.getIri());
-        axiom = axiom.replace(":609096000", "im:roleGroup");
-        owlConverter.convertAxiom(c, axiom, statedContext);
-      } catch (Exception e) {
-        System.err.println(Arrays.toString(e.getStackTrace()));
-        throw new IOException("owl parser error");
-      }
-  }
 
   private void importMRCMDomainFiles(String path) throws IOException {
     int i = 0;
@@ -664,7 +604,7 @@ public class SnomedImporter implements TTImport {
     LOG.info("Imported {} property domain axioms", i);
   }
 
-  private void importMRCMRangeFiles(String path) throws IOException, DataFormatException, EclFormatException {
+  private void importMRCMRangeFiles(String path) throws IOException, EclFormatException {
     int i = 0;
     //gets attribute range files (usually only 1)
     for (String rangeFile : attributeRanges) {
@@ -687,7 +627,7 @@ public class SnomedImporter implements TTImport {
     LOG.info("Imported {} property range axioms", i);
   }
 
-  private void addSnomedPropertyRange(TTEntity op, String ecl) throws DataFormatException, EclFormatException {
+  private void addSnomedPropertyRange(TTEntity op, String ecl) throws EclFormatException {
     if (ecl.matches("^[a-zA-Z].*")) {
       return;
     }
@@ -722,7 +662,6 @@ public class SnomedImporter implements TTImport {
 
   private void importRelationshipFiles(String path) throws IOException {
     int i = 0;
-    counter = 0;
     for (String relationshipFile : relationships) {
       Path file = ImportUtils.findFilesForId(path, relationshipFile).get(0);
       LOG.info("Processing relationships in {}", file.getFileName().toString());
@@ -770,7 +709,6 @@ public class SnomedImporter implements TTImport {
     }
     TTArray isas = entity.get(isa);
     isas.add(iri(SN + parent));
-    counter++;
 
   }
 
@@ -808,7 +746,7 @@ public class SnomedImporter implements TTImport {
   public void validateFiles(String inFolder) {
     ImportUtils.validateFiles(inFolder, usage_clinical, concepts, descriptions,
       relationships, refsets, attributeRanges, attributeDomains, substitutions,  dmd_vmp, dmd_amp, dmd_form, dmd_route,
-      dmd_vpi, usage_clinical, usage_drug);
+      dmd_vpi, usage_clinical, usage_drug,pcdClusters);
 
   }
 

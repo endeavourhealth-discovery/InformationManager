@@ -98,7 +98,6 @@ public class ImportApp {
           .validateByType(GRAPH.NHS_TFC, cfg.getFolder())
           .validateByType(GRAPH.CEG, cfg.getFolder())
           .validateByType(GRAPH.BNF, cfg.getFolder())
-          .validateByType(GRAPH.QOF, cfg.getFolder())
           .validateByType(GRAPH.IM1, cfg.getFolder())
 //                    .validateByType(GRAPH.CONFIG, cfg.getFolder())
           .validateByType(GRAPH.DELTAS, cfg.getFolder());
@@ -117,7 +116,6 @@ public class ImportApp {
         importer.importByType(GRAPH.ODS, cfg);
         importer.importByType(GRAPH.NHS_TFC, cfg);
         importer.importByType(GRAPH.BNF, cfg);
-        importer.importByType(GRAPH.QOF, cfg);
         importer.importByType(GRAPH.CEG, cfg);
         importer.importByType(GRAPH.IM1, cfg);
         importer.importByType(GRAPH.DELTAS, cfg);
