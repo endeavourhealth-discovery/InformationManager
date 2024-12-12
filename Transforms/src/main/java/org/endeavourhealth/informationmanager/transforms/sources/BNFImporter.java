@@ -76,9 +76,9 @@ public class BNFImporter implements TTImport {
       if (setToSnomed.get(setIri)!=null){
         i++;
         for (String snomed:setToSnomed.get(setIri)){
-          entity.addObject(iri(IM.INSTANCE_OF),new TTNode()
-            .set(iri(IM.INCLUDE),iri(SNOMED.NAMESPACE+snomed))
-            .set(iri(IM.DESCENDANTS_OR_SELF_OF),TTLiteral.literal(true)));
+          entity.addObject(iri(IM.ENTAILED_MEMBER),new TTNode()
+            .set(iri(IM.INSTANCE_OF),iri(SNOMED.NAMESPACE+snomed))
+            .set(iri(IM.ENTAILMENT),iri(IM.DESCENDANTS_OR_SELF_OF)));
         }
       }
     }
@@ -104,10 +104,10 @@ public class BNFImporter implements TTImport {
     TTEntity parent = getParent(set);
     if (!set.getIri().equals(parent.getIri())) {
       toRemove.add(set);
-      if (set.get(iri(IM.INSTANCE_OF)) != null) {
+      if (set.get(iri(IM.ENTAILED_MEMBER)) != null) {
         parent.setType(new TTArray().add(iri(IM.CONCEPT_SET)));
-        parent.set(iri(IM.INSTANCE_OF),set.get(iri(IM.INSTANCE_OF)));
-        set.getPredicateMap().remove(iri(IM.INSTANCE_OF));
+        parent.set(iri(IM.ENTAILED_MEMBER),set.get(iri(IM.ENTAILED_MEMBER)));
+        set.getPredicateMap().remove(iri(IM.ENTAILED_MEMBER));
       }
     }
   }

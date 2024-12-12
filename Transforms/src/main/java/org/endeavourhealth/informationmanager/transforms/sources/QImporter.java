@@ -14,6 +14,7 @@ import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
+import org.endeavourhealth.imapi.logic.service.EntityService;
 import org.endeavourhealth.imapi.logic.service.SearchService;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -29,10 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -62,11 +60,6 @@ public class QImporter implements TTImport {
         for (Map.Entry<String, TTEntity> entry : idCodeGroupMap.entrySet()) {
           document.addEntity(entry.getValue());
         }
-        if (ImportApp.getTestDirectory() != null) {
-          String directory = ImportApp.getTestDirectory().replace("%", " ");
-          manager.setDocument(document);
-          manager.saveDocument(new File(directory + "\\QCodes.json"));
-        }
         QueryRequest qr = new QueryRequest()
           .addArgument(new Argument()
             .setParameter("this")
@@ -75,51 +68,54 @@ public class QImporter implements TTImport {
 
         LOG.info("Deleting q code groups..");
         new SearchService().updateIM(qr);
-
-        LOG.info("if drugs then creating as instances of");
-        TTDocument drugDocument = new TTDocument().setGraph(iri(QR.NAMESPACE));
-        SetBinder binder = new SetBinder();
-        for (TTEntity entity : document.getEntities()) {
-          if (entity.isType(iri(IM.CONCEPT_SET))) {
-            if (entity.get(iri(IM.HAS_MEMBER)) != null) {
-              Query query = new Query()
-                .setName(entity.getName());
-              Match match = new Match();
-              query.addMatch(match);
-              for (TTValue medication : entity.get(iri(IM.HAS_MEMBER)).getElements()) {
-                match
-                  .instanceOf(ins -> ins
-                    .setIri(medication.asIriRef().getIri())
-                    .setDescendantsOrSelfOf(true));
-              }
-              entity.getPredicateMap().remove(iri(IM.HAS_MEMBER));
-              entity.set(iri(IM.DEFINITION), TTLiteral.literal(query));
-            }
-          }
-        }
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
           filer.fileDocument(document);
         }
+        resetDrugs();
       }
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);
     }
   }
 
-  private void queryQRisk3() throws JsonProcessingException {
-    TTEntity qRisk3 = new TTEntity()
-      .setIri(IM.NAMESPACE + "Q_QRisk3")
-      .setName("QRisk3 record query")
-      .setDescription("query of health data to set qrisk 3 parameters");
-    Query query = new Query();
-    qRisk3.set(iri(IM.DEFINITION), TTLiteral.literal(query));
-    query
-      .setIri(IM.NAMESPACE + "Q_Qrisk3")
-      .setName("QRisk3 health record query")
-      .setTypeOf(IM.NAMESPACE + "Patient");
-    query.addReturn(new Return());
+  private void resetDrugs() throws QueryException, TTFilerException, JsonProcessingException {
+    TTDocument drugDocument= new TTDocument(iri(QR.NAMESPACE));
+    LOG.info("if drugs then creating as entailed members");
+    for (TTEntity entity : document.getEntities()) {
+      if (entity.isType(iri(IM.CONCEPT_SET))) {
+        if (entity.get(iri(IM.HAS_MEMBER)) != null) {
+          if (isMedicationSet(entity)) {
+            for (TTValue medication : entity.get(iri(IM.HAS_MEMBER)).getElements()) {
+              entity.addObject(iri(IM.ENTAILED_MEMBER), new TTNode()
+                .set(iri(IM.INSTANCE_OF), medication)
+                .set(iri(IM.ENTAILMENT), iri(IM.DESCENDANTS_OR_SELF_OF)));
 
+            }
+            entity.getPredicateMap().remove(iri(IM.HAS_MEMBER));
+            drugDocument.addEntity(entity);
+          }
+        }
+      }
+    }
+    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      filer.fileDocument(drugDocument);
+    }
   }
+
+  private boolean isMedicationSet(TTEntity entity) {
+    if (entity.get(IM.HAS_MEMBER)!=null) {
+      SetBinder binder = new SetBinder();
+      binder.bindSet(entity.getIri());
+      TTEntity boundSet= new EntityService().getBundle(entity.getIri(), Set.of(IM.BINDING)).getEntity();
+      for (TTValue binding : boundSet.get(IM.BINDING).getElements()) {
+        if (binding.asNode().get(SHACL.NODE).asIriRef().getIri().contains("Medication"))
+          return true;
+      }
+    }
+    return false;
+  }
+
+
 
 
   private void importCodeGroups() throws JsonProcessingException {
@@ -139,22 +135,25 @@ public class QImporter implements TTImport {
             JsonNode codeGroup = it.next();
             String id = codeGroup.get("Id").asText();
             String groupId = id;
-            String version = codeGroup.get("CurrentVersion").asText();
-            TTEntity qGroup = idCodeGroupMap.get(groupId);
-            if (qGroup == null) {
-              qGroup = new TTEntity()
-                .setIri(QR.NAMESPACE + "QCodeGroup_" + groupId)
-                .setName("Q code group " + codeGroup.get("Name").asText())
-                .addType(iri(IM.CONCEPT_SET));
-              if (idCodeGroupMap.get(groupId) == null) {
-                idCodeGroupMap.put(groupId, qGroup);
+            if (!codeGroup.get("Name").asText().contains("(ICD10)")) {
+              String version = codeGroup.get("CurrentVersion").asText();
+              TTEntity qGroup = idCodeGroupMap.get(groupId);
+              if (qGroup == null) {
+                qGroup = new TTEntity()
+                  .setIri(QR.NAMESPACE + "QCodeGroup_" + groupId)
+                  .setName("Q code group " + codeGroup.get("Name").asText())
+                  .addType(iri(IM.CONCEPT_SET));
+                if (idCodeGroupMap.get(groupId) == null) {
+                  idCodeGroupMap.put(groupId, qGroup);
+                }
+                qGroup.set(iri(IM.VERSION), TTLiteral.literal(version));
+                importCodes(projectId, qGroup, id);
               }
-              qGroup.set(iri(IM.VERSION), TTLiteral.literal(version));
-              importCodes(projectId, qGroup, id);
+              qGroup.addObject(iri(IM.IS_SUBSET_OF), TTIriRef.iri(project.getValue().getIri()));
             }
-            qGroup.addObject(iri(IM.IS_SUBSET_OF), TTIriRef.iri(project.getValue().getIri()));
           }
-        } else
+        }
+        else
           results = false;
       }
     }
