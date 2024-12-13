@@ -305,7 +305,7 @@ public class CoreQueryImporter implements TTImport {
           .path(p -> p.setIri("observation"))
           .setTypeOf(IM.NAMESPACE + "Observation")
           .where(w -> w
-            .setIri(IM.NAMESPACE + "concept")
+            .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .is(i -> i.setIri("VSET_Ethnicity")))
           .orderBy(o -> o.setProperty(new OrderDirection()
               .setIri(IM.NAMESPACE + "effectiveDate")
@@ -420,7 +420,7 @@ public class CoreQueryImporter implements TTImport {
       .setDescription("Aged 18 or more years old")
       .addWhere(new Where()
         .setIri(IM.NAMESPACE + "age")
-        .setIntervalUnit(iri(IM.NAMESPACE+"years"))
+        .setIntervalUnit(iri(IM.YEARS))
         .setOperator(Operator.gte)
         .setValue("18"));
 
@@ -616,7 +616,7 @@ public class CoreQueryImporter implements TTImport {
         .setIri(IM.NAMESPACE + "observation"))
       .setTypeOf(IM.NAMESPACE + "Observation")
       .where(ww -> ww
-        .setIri(IM.NAMESPACE + "concept")
+        .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
         .setName("concept")
         .addIs(new Node()
           .setIri(SNOMED.NAMESPACE + "999035921000230109")
@@ -634,7 +634,7 @@ public class CoreQueryImporter implements TTImport {
         .setIri(IM.NAMESPACE + "effectiveDate")
         .setOperator(Operator.gte)
         .setValue("-12")
-        .setIntervalUnit(iri(IM.NAMESPACE+"months"))
+        .setIntervalUnit(iri(IM.MONTHS))
         .relativeTo(r -> r.setParameter("$referenceDate"))
         .setValueLabel("last 12 months"))
       .setOrderBy(new OrderLimit()
@@ -651,7 +651,7 @@ public class CoreQueryImporter implements TTImport {
           .setName("Office systolic >140")
           .setDescription("Is an office systolic blood pressure with a value greater than 140")
           .where(w -> w
-            .setIri(IM.NAMESPACE + "concept")
+            .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node()
               .setIri(SNOMED.NAMESPACE + "271649006")
               .setDescendantsOrSelfOf(true)
@@ -667,7 +667,7 @@ public class CoreQueryImporter implements TTImport {
           .addWhere(new Where()
             .setBoolWhere(Bool.and)
             .where(w -> w
-              .setIri(IM.NAMESPACE + "concept")
+              .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
               .addIs(new Node()
                 .setIri(GRAPH.EMIS + "1994021000006104")
                 .setDescendantsOrSelfOf(true)
@@ -716,7 +716,7 @@ public class CoreQueryImporter implements TTImport {
       .path(p -> p
         .setIri(IM.NAMESPACE + "observation"))
       .where(ww -> ww
-        .setIri(IM.NAMESPACE + "concept")
+        .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
         .setName("concept")
         .addIs(new Node()
           .setIri(SNOMED.NAMESPACE + "999035921000230109")
@@ -728,7 +728,7 @@ public class CoreQueryImporter implements TTImport {
         .setIri(IM.NAMESPACE + "effectiveDate")
         .setOperator(Operator.gte)
         .setValue("-12")
-        .setIntervalUnit(iri(IM.NAMESPACE+"months"))
+        .setIntervalUnit(iri(IM.MONTHS))
         .relativeTo(r -> r.setParameter("$referenceDate"))
         .setValueLabel("last 12 months"))
       .setOrderBy(new OrderLimit()
@@ -757,7 +757,7 @@ public class CoreQueryImporter implements TTImport {
       .setTypeOf(IM.NAMESPACE + "Observation")
       .setVariable("latestDiabetes")
       .where(ww -> ww
-        .setIri(IM.NAMESPACE + "concept")
+        .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
         .setName("concept")
         .addIs(new Node()
           .setIri("http://snomed.info/sct#999004691000230108")
@@ -773,7 +773,7 @@ public class CoreQueryImporter implements TTImport {
         .setExclude(true)
         .setVariable("ResolvedDiabetes")
         .where(ww -> ww
-          .setIri(IM.NAMESPACE + "concept")
+          .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
           .setName("concept")
           .addIs(new Node()
             .setIri("http://snomed.info/sct#999003371000230102")
@@ -797,7 +797,7 @@ public class CoreQueryImporter implements TTImport {
           .setIri(IM.NAMESPACE + "observation"))
         .setTypeOf(IM.NAMESPACE + "Observation")
         .where(ww -> ww
-          .setIri(IM.NAMESPACE + "concept")
+          .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
           .setName("concept")
           .addIs(new Node()
             .setIri(activeIri)
@@ -817,7 +817,7 @@ public class CoreQueryImporter implements TTImport {
           .setName("Is " + activeName)
           .setDescription("Is " + activeName)
           .addWhere(new Where()
-            .setIri(IM.NAMESPACE + "concept")
+            .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node()
               .setIri(activeIri)
               .setName(activeName)
@@ -856,11 +856,11 @@ public class CoreQueryImporter implements TTImport {
               .from(from -> from
                 .setOperator(Operator.gte)
                 .setValue("65")
-                .setIntervalUnit(iri(IM.NAMESPACE+"years")))
+                .setIntervalUnit(iri(IM.YEARS)))
               .to(to -> to
                 .setOperator(Operator.lt)
                 .setValue("70")
-                .setIntervalUnit(iri(IM.NAMESPACE+"years"))))))
+                .setIntervalUnit(iri(IM.YEARS))))))
         .match(or -> or
           .setName("Is on diabetic register")
           .addInstanceOf(new Node().setIri(IM.NAMESPACE + "Q_Diabetics").setMemberOf(true)))
@@ -869,7 +869,7 @@ public class CoreQueryImporter implements TTImport {
           .path(p -> p.setIri(IM.NAMESPACE + "observation"))
           .setTypeOf(IM.NAMESPACE + "Observation")
           .addWhere(new Where()
-            .setIri(IM.NAMESPACE + "concept")
+            .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri(SNOMED.NAMESPACE + "714628002").setDescendantsOf(true))
             .setValueLabel("Prediabetes"))))
       .match(m -> m
@@ -879,7 +879,7 @@ public class CoreQueryImporter implements TTImport {
           .setIri(IM.NAMESPACE + "observation"))
         .setTypeOf(IM.NAMESPACE + "Observation")
         .where(ww -> ww
-          .setIri(IM.NAMESPACE + "concept")
+          .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
           .setName("concept")
           .addIs(new Node()
             .setIri(SNOMED.NAMESPACE + "271649006")
@@ -894,7 +894,7 @@ public class CoreQueryImporter implements TTImport {
           .setIri(IM.NAMESPACE + "effectiveDate")
           .setOperator(Operator.gte)
           .setValue("-12")
-          .setIntervalUnit(iri(IM.NAMESPACE+"months"))
+          .setIntervalUnit(iri(IM.MONTHS))
           .relativeTo(r -> r.setParameter("$referenceDate"))
           .setValueLabel("last 12 months"))
         .setOrderBy(new OrderLimit()
@@ -908,7 +908,7 @@ public class CoreQueryImporter implements TTImport {
             .setName("Office systolic > 140")
             .setDescription("Office based systolic blood pressure with value greater than 140")
             .where(w -> w
-              .setIri(IM.NAMESPACE + "concept")
+              .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
               .addIs(new Node()
                 .setIri(SNOMED.NAMESPACE + "271649006")
                 .setDescendantsOrSelfOf(true)
@@ -923,7 +923,7 @@ public class CoreQueryImporter implements TTImport {
             .setDescription("Home based systolic blood pressure with value greater than 130")
             .setBoolWhere(Bool.and)
             .where(w -> w
-              .setIri(IM.NAMESPACE + "concept")
+              .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
               .addIs(new Node()
                 .setIri(GRAPH.EMIS + "1994021000006115")
                 .setDescendantsOrSelfOf(true)
@@ -941,7 +941,7 @@ public class CoreQueryImporter implements TTImport {
         .path(w -> w.setIri(IM.NAMESPACE + "observation"))
         .setTypeOf(IM.NAMESPACE + "Observation")
         .where(inv -> inv
-          .setIri(IM.NAMESPACE + "concept")
+          .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
           .addIs(new Node().setIri("http://snomed.info/sct#310422005").setName("invited for screening").setMemberOf(true)))
         .where(after -> after
           .setIri(IM.NAMESPACE + "effectiveDate")
@@ -1138,7 +1138,7 @@ public class CoreQueryImporter implements TTImport {
             .match(m1 -> m1
               .where(w1 -> w1
                 .setIri(SHACL.PATH)
-                .is(is -> is.setIri(IM.NAMESPACE + "concept")))
+                .is(is -> is.setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)))
               .where(w1 -> w1
                 .setIri(SHACL.NODE)
                 .is(is -> is.setIri(IM.NAMESPACE + "Observation"))))))));
