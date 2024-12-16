@@ -6,15 +6,13 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.model.customexceptions.EQDException;
 import org.endeavourhealth.imapi.model.imq.QueryException;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.model.tripletree.TTValue;
+import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +30,8 @@ public class EQDImporter {
 	private Properties dataMap;
 	private String mainFolder;
 	private String setFolder;
+	private String fileName;
+	private Map<String,TTEntity> createdFolders= new HashMap<>();
 
 	public EQDImporter(TTManager manager, Properties dataMap, String mainFolder, String setFolder) {
 		this.manager= manager;
@@ -47,17 +47,64 @@ public class EQDImporter {
 				String ext = FilenameUtils.getExtension(fileEntry.getName());
 				if (ext.equalsIgnoreCase("xml")) {
 					LOG.info("...{}", fileEntry.getName());
+					fileName= fileEntry.getName().split("\\.")[0];
 					document = manager.createDocument(graph);
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(fileEntry);
 					EqdToIMQ converter = new EqdToIMQ();
 					converter.convertEQD(document, eqd, dataMap);
+					manager.createIndex();
 					for (TTEntity entity : document.getEntities()) {
 						if (entity.isType(iri(IM.FOLDER))) {
-							entity.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
+							if (entity.get(iri(IM.IS_CONTAINED_IN))!=null){
+								boolean hasParentFolder= true;
+								for (TTValue folder:entity.get(IM.IS_CONTAINED_IN).getElements()){
+									if (manager.getEntity(folder.asIriRef().getIri())==null){
+										hasParentFolder= false;
+									}
+								}
+								if (!hasParentFolder)
+									entity.set(iri(IM.IS_CONTAINED_IN),iri(mainFolder));
+							}
+							else{
+								entity.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
+							}
 						}
 					}
+					for (TTEntity entity : document.getEntities()) {
+							if (entity.get(iri(IM.IS_CONTAINED_IN))!=null){
+								TTArray fixedFolders= new TTArray();
+								for (TTValue folder:entity.get(IM.IS_CONTAINED_IN).getElements()){
+									if (manager.getEntity(folder.asIriRef().getIri())==null){
+										if (manager.getEntity(folder.asIriRef().getIri().toLowerCase())!=null){
+											fixedFolders.add(iri(folder.asIriRef().getIri().toLowerCase()));
+										}
+										else {
+											TTEntity createdFolder= createdFolders.get(folder.asIriRef().getIri());
+											if (createdFolder==null){
+												createdFolder= new TTEntity()
+													.setIri("urn:uuid"+ UUID.randomUUID())
+													.setName(fileName)
+													.addType(iri(IM.FOLDER));
+												createdFolder.addObject(iri(IM.IS_CONTAINED_IN),iri(mainFolder));
+												createdFolders.put(folder.asIriRef().getIri(),createdFolder);
+											}
+											fixedFolders.add(iri(createdFolder.getIri()));
+										}
+									}
+								}
+								if (!fixedFolders.isEmpty()) {
+									entity.set(iri(IM.IS_CONTAINED_IN),fixedFolders);
+								}
+							}
+					}
+					if (!createdFolders.entrySet().isEmpty()){
+						for (Map.Entry<String,TTEntity> entry:createdFolders.entrySet()){
+							document.addEntity(entry.getValue());
+						}
+					}
+					manager.createIndex();
 					addSetsToFolders(manager,document);
 					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 						filer.fileDocument(document);
@@ -70,7 +117,6 @@ public class EQDImporter {
 
 	private void addSetsToFolders(TTManager manager,TTDocument document) {
 		Map<String, TTEntity> folderMap = new HashMap<>();
-		manager.createIndex();
 		Set<TTEntity> toAdd = new HashSet<>();
 		for (TTEntity set : document.getEntities()) {
 			if (set.isType(iri(IM.CONCEPT_SET))) {

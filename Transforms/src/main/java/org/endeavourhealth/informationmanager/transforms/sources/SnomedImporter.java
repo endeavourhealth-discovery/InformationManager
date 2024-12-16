@@ -571,7 +571,8 @@ public class SnomedImporter implements TTImport {
         if (term.contains(" simple reference set")) {
           term = term.split(" simple reference set")[0];
           term = StringUtils.capitalize(term) + " (NHS GP value set)";
-          c.set(iri(IM.PREFERRED_NAME), TTLiteral.literal(term));
+          c.set(iri(IM.FULLY_SPECIFIED_NAME), c.getName());
+          c.setName(term);
           TTManager.addTermCode(c, term, fields[0]);
         }
       }

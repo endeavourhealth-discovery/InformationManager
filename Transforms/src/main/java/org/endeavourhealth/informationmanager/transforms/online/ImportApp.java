@@ -20,6 +20,8 @@ public class ImportApp {
 
   private static String testDirectory;
 
+  public static String resourceFolder;
+
   public static String getTestDirectory() {
     return testDirectory;
   }
@@ -62,6 +64,9 @@ public class ImportApp {
             break;
           case "privacy":
             TTFilerFactory.setPrivacyLevel(Integer.parseInt(args[i].split("=")[1]));
+            break;
+          case "resources":
+            ImportApp.resourceFolder= args[i].substring(args[i].lastIndexOf("=") + 1);
             break;
 
           default:

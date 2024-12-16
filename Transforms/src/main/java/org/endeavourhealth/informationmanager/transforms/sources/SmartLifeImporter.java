@@ -42,7 +42,7 @@ public class SmartLifeImporter implements TTImport {
 	private static final Logger LOG = LoggerFactory.getLogger(CEGImporter.class);
 
 	private static final String[] queries = {".*\\\\Smartlife"};
-	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
+	private static String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	private TTDocument document;
 	private String mainFolder;
 	private String setFolder;
@@ -50,7 +50,7 @@ public class SmartLifeImporter implements TTImport {
 	@Override
 	public void importData(TTImportConfig config) throws ImportException {
 		try (TTManager manager = new TTManager()){
-			document = manager.createDocument(GRAPH.CEG);
+			document = manager.createDocument(GRAPH.SMARTLIFE);
 			TTEntity graph = new TTEntity()
 				.setIri(GRAPH.SMARTLIFE)
 				.setName("Smartlife health graph")
@@ -99,9 +99,16 @@ public class SmartLifeImporter implements TTImport {
 
 	public void loadAndConvert(String folder) throws Exception {
 		Properties dataMap = new Properties();
-		try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile()))) {
-			dataMap.load(reader);
+		if (ImportApp.resourceFolder!=null) {
+			try (FileReader reader = new FileReader((ImportApp.resourceFolder))) {
+				dataMap.load(reader);
+			}
 		}
+			else{
+				try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile()))) {
+					dataMap.load(reader);
+				}
+			}
 
 
 		Path directory = ImportUtils.findFileForId(folder, queries[0]);
@@ -116,7 +123,7 @@ public class SmartLifeImporter implements TTImport {
 
 	@Override
 	public void validateFiles(String inFolder) throws TTFilerException {
-		ImportUtils.validateFiles(inFolder, queries,dataMapFile);
+		ImportUtils.validateFiles(inFolder, queries);
 	}
 
 
