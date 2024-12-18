@@ -4,20 +4,15 @@ import jakarta.xml.bind.JAXBContext;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.model.customexceptions.EQDException;
-import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -26,12 +21,10 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 public class EQDImporter {
 	private static final Logger LOG = LoggerFactory.getLogger(CEGImporter.class);
 	private TTManager manager;
-	private TTDocument document;
-	private Properties dataMap;
-	private String mainFolder;
-	private String setFolder;
-	private String fileName;
-	private Map<String,TTEntity> createdFolders= new HashMap<>();
+	private final Properties dataMap;
+	private final String mainFolder;
+	private final String setFolder;
+	private Map<String,String> badToGoodFolder= new HashMap<>();
 
 	public EQDImporter(TTManager manager, Properties dataMap, String mainFolder, String setFolder) {
 		this.manager= manager;
@@ -41,14 +34,12 @@ public class EQDImporter {
 	}
 
 	public void importEqds(String graph,Path directory) throws Exception  {
-
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
 			if (!fileEntry.isDirectory()) {
 				String ext = FilenameUtils.getExtension(fileEntry.getName());
 				if (ext.equalsIgnoreCase("xml")) {
 					LOG.info("...{}", fileEntry.getName());
-					fileName= fileEntry.getName().split("\\.")[0];
-					document = manager.createDocument(graph);
+					TTDocument document = manager.createDocument(graph);
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(fileEntry);
@@ -56,64 +47,43 @@ public class EQDImporter {
 					converter.convertEQD(document, eqd, dataMap);
 					manager.createIndex();
 					for (TTEntity entity : document.getEntities()) {
-						if (entity.isType(iri(IM.FOLDER))) {
-							if (entity.get(iri(IM.IS_CONTAINED_IN))!=null){
-								boolean hasParentFolder= true;
-								for (TTValue folder:entity.get(IM.IS_CONTAINED_IN).getElements()){
-									if (manager.getEntity(folder.asIriRef().getIri())==null){
-										hasParentFolder= false;
-									}
-								}
-								if (!hasParentFolder)
-									entity.set(iri(IM.IS_CONTAINED_IN),iri(mainFolder));
-							}
-							else{
+						if (entity.isType(iri(IM.FOLDER))||entity.isType(iri(IM.COHORT_QUERY))||entity.isType(iri(IM.DATASET_QUERY))) {
+							if (entity.get(iri(IM.IS_CONTAINED_IN)) == null) {
 								entity.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
 							}
-						}
-					}
-					for (TTEntity entity : document.getEntities()) {
-							if (entity.get(iri(IM.IS_CONTAINED_IN))!=null){
-								TTArray fixedFolders= new TTArray();
-								for (TTValue folder:entity.get(IM.IS_CONTAINED_IN).getElements()){
-									if (manager.getEntity(folder.asIriRef().getIri())==null){
-										if (manager.getEntity(folder.asIriRef().getIri().toLowerCase())!=null){
+							else {
+								boolean hasParentFolder = true;
+								TTArray fixedFolders = new TTArray();
+								for (TTValue folder : entity.get(IM.IS_CONTAINED_IN).getElements()) {
+									if (manager.getEntity(folder.asIriRef().getIri()) == null) {
+										if (manager.getEntity(folder.asIriRef().getIri().toLowerCase()) != null) {
 											fixedFolders.add(iri(folder.asIriRef().getIri().toLowerCase()));
+											badToGoodFolder.put(folder.asIriRef().getIri(), folder.asIriRef().getIri().toLowerCase());
 										}
-										else {
-											TTEntity createdFolder= createdFolders.get(folder.asIriRef().getIri());
-											if (createdFolder==null){
-												createdFolder= new TTEntity()
-													.setIri("urn:uuid"+ UUID.randomUUID())
-													.setName(fileName)
-													.addType(iri(IM.FOLDER));
-												createdFolder.addObject(iri(IM.IS_CONTAINED_IN),iri(mainFolder));
-												createdFolders.put(folder.asIriRef().getIri(),createdFolder);
-											}
-											fixedFolders.add(iri(createdFolder.getIri()));
-										}
+										else
+											hasParentFolder = false;
 									}
 								}
 								if (!fixedFolders.isEmpty()) {
-									entity.set(iri(IM.IS_CONTAINED_IN),fixedFolders);
+									entity.set(iri(IM.IS_CONTAINED_IN), fixedFolders);
+								}
+								else if (!hasParentFolder) {
+									entity.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(mainFolder)));
 								}
 							}
-					}
-					if (!createdFolders.entrySet().isEmpty()){
-						for (Map.Entry<String,TTEntity> entry:createdFolders.entrySet()){
-							document.addEntity(entry.getValue());
 						}
 					}
 					manager.createIndex();
-					addSetsToFolders(manager,document);
+					addSetsToFolders(manager, document);
 					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 						filer.fileDocument(document);
 					}
 				}
 			}
 		}
+}
 
-	}
+
 
 	private void addSetsToFolders(TTManager manager,TTDocument document) {
 		Map<String, TTEntity> folderMap = new HashMap<>();
@@ -168,7 +138,7 @@ public class EQDImporter {
 		toAdd.add(folder);
 		folderMap.put(report.getIri(), folder);
 		for (TTValue rf : report.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
-			TTEntity reportFolder = manager.getEntity(rf.asIriRef().getIri());
+			TTIriRef reportFolder = rf.asIriRef();
 			TTEntity groupFolder = folderMap.get(reportFolder.getIri());
 			if (groupFolder == null) {
 				groupFolder = new TTEntity()
