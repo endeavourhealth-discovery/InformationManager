@@ -420,7 +420,7 @@ public class CoreQueryImporter implements TTImport {
       .setDescription("Aged 18 or more years old")
       .addWhere(new Where()
         .setIri(IM.NAMESPACE + "age")
-        .setIntervalUnit(iri(IM.YEARS))
+        .setUnit(iri(IM.YEARS))
         .setOperator(Operator.gte)
         .setValue("18"));
 
@@ -634,7 +634,7 @@ public class CoreQueryImporter implements TTImport {
         .setIri(IM.NAMESPACE + "effectiveDate")
         .setOperator(Operator.gte)
         .setValue("-12")
-        .setIntervalUnit(iri(IM.MONTHS))
+        .setUnit(iri(IM.MONTHS))
         .relativeTo(r -> r.setParameter("$referenceDate"))
         .setValueLabel("last 12 months"))
       .setOrderBy(new OrderLimit()
@@ -728,7 +728,7 @@ public class CoreQueryImporter implements TTImport {
         .setIri(IM.NAMESPACE + "effectiveDate")
         .setOperator(Operator.gte)
         .setValue("-12")
-        .setIntervalUnit(iri(IM.MONTHS))
+        .setUnit(iri(IM.MONTHS))
         .relativeTo(r -> r.setParameter("$referenceDate"))
         .setValueLabel("last 12 months"))
       .setOrderBy(new OrderLimit()
@@ -856,11 +856,11 @@ public class CoreQueryImporter implements TTImport {
               .from(from -> from
                 .setOperator(Operator.gte)
                 .setValue("65")
-                .setIntervalUnit(iri(IM.YEARS)))
+                .setUnit(iri(IM.YEARS)))
               .to(to -> to
                 .setOperator(Operator.lt)
                 .setValue("70")
-                .setIntervalUnit(iri(IM.YEARS))))))
+                .setUnit(iri(IM.YEARS))))))
         .match(or -> or
           .setName("Is on diabetic register")
           .addInstanceOf(new Node().setIri(IM.NAMESPACE + "Q_Diabetics").setMemberOf(true)))
@@ -894,7 +894,7 @@ public class CoreQueryImporter implements TTImport {
           .setIri(IM.NAMESPACE + "effectiveDate")
           .setOperator(Operator.gte)
           .setValue("-12")
-          .setIntervalUnit(iri(IM.MONTHS))
+          .setUnit(iri(IM.MONTHS))
           .relativeTo(r -> r.setParameter("$referenceDate"))
           .setValueLabel("last 12 months"))
         .setOrderBy(new OrderLimit()

@@ -55,6 +55,7 @@ public class SmartLifeImporter implements TTImport {
 				.setIri(GRAPH.SMARTLIFE)
 				.setName("Smartlife health graph")
 				.setDescription("Smartlife library of value sets, queries and profiles")
+				.set(iri(IM.PRIVACY_LEVEL),3)
 				.addType(iri(IM.GRAPH));
 			graph.addObject(iri(RDFS.SUBCLASS_OF), iri(IM.GRAPH));
 			document.addEntity(graph);
@@ -87,7 +88,7 @@ public class SmartLifeImporter implements TTImport {
 		mainFolder= folder.getIri();
 		folder = new TTEntity()
 			.setIri(GRAPH.SMARTLIFE + "CSET_SmartLifeConceptSets")
-			.setName("QMUL CEG value set library")
+			.setName("Smart Life Health value set library")
 			.addType(iri(IM.FOLDER))
 			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "QueryConceptSets"));
 		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
