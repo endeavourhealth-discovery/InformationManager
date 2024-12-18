@@ -55,7 +55,6 @@ public class SmartLifeImporter implements TTImport {
 				.setIri(GRAPH.SMARTLIFE)
 				.setName("Smartlife health graph")
 				.setDescription("Smartlife library of value sets, queries and profiles")
-				.set(iri(IM.PRIVACY_LEVEL),3)
 				.addType(iri(IM.GRAPH));
 			graph.addObject(iri(RDFS.SUBCLASS_OF), iri(IM.GRAPH));
 			document.addEntity(graph);
