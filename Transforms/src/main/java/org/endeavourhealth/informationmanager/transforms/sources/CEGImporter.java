@@ -3,7 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
@@ -38,6 +38,7 @@ public class CEGImporter implements TTImport {
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);
     }
+    /* Not longer active
     try (
       TTManager manager = new TTManager()) {
       document = manager.createDocument(GRAPH.CEG);
@@ -56,6 +57,9 @@ public class CEGImporter implements TTImport {
     catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);
     }
+
+     */
+
   }
 
 

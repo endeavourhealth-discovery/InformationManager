@@ -1,15 +1,11 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTImportByType;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.QR;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
