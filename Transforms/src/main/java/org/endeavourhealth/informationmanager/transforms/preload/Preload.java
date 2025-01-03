@@ -15,7 +15,6 @@ import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetMemberGenerator;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.QR;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -30,17 +29,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
 public class Preload {
   private static final Logger LOG = LoggerFactory.getLogger(Preload.class);
-  private static List<String> localGraphs= new ArrayList<>();
 
   public static void main(String[] args) throws Exception {
-    boolean skipBulk = false;
     LOG.info("Running Preload...");
     if (args.length < 4) {
       LOG.error("Insufficient parameters supplied:");
@@ -54,8 +50,7 @@ public class Preload {
     TTFilerFactory.setBulk(true);
     String graphdbCommand = null;
 
-    for (int i = 0; i < args.length; i++) {
-      String arg = args[i];
+    for (String arg : args) {
       if (arg.startsWith("preload"))
         TTBulkFiler.setPreload(arg.split("=")[1]);
       else if (arg.startsWith("temp="))
@@ -64,9 +59,9 @@ public class Preload {
         TTBulkFiler.setPrivacyLevel(Integer.parseInt(arg.split("=")[1]));
       else if (arg.startsWith("cmd"))
         graphdbCommand = arg.split("=")[1];
-      else if (args[i].contains("test="))
-        ImportApp.setTestDirectory(args[i].substring(args[i].lastIndexOf("=") + 1));
-      else if (args[i].toLowerCase().contains("skipbulk"))
+      else if (arg.contains("test="))
+        ImportApp.setTestDirectory(arg.substring(arg.lastIndexOf("=") + 1));
+      else if (arg.toLowerCase().contains("skipbulk"))
         cfg.setSkipBulk(true);
     }
 
@@ -196,20 +191,21 @@ public class Preload {
   }
 
   private static boolean pingGraphServer() {
-    Client client = ClientBuilder.newClient();
-    client.property("jersey.config.client.connectTimeout", 20000);
-    client.property("jersey.config.client.readTimeout", 20000);
+    try (Client client = ClientBuilder.newClient()) {
+      client.property("jersey.config.client.connectTimeout", 20000);
+      client.property("jersey.config.client.readTimeout", 20000);
 
-    WebTarget resource = client.target("http://localhost:7200/protocol");
+      WebTarget resource = client.target("http://localhost:7200/protocol");
 
-    Invocation.Builder request = resource.request();
-    request.accept(MediaType.APPLICATION_JSON);
+      Invocation.Builder request = resource.request();
+      request.accept(MediaType.APPLICATION_JSON);
 
-    try {
-      Response response = request.get();
-      return response.getStatus() == HttpStatus.SC_OK;
-    } catch (Exception e) {
-      return false;
+      try {
+        Response response = request.get();
+        return response.getStatus() == HttpStatus.SC_OK;
+      } catch (Exception e) {
+        return false;
+      }
     }
   }
 }
