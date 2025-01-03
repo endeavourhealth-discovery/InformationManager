@@ -22,7 +22,7 @@ To generate a new database from scratch follow these steps:
   - Preload should be run with the following arguments
       source // the local folder for Import data    e.g. source=C:\ImportData
       graphs // the name of the file in the import data that holds the list of graphs to file e.g. graphs=Endeavour.json
-      preload  // the folder location of the rdf builk import program   e.g. preload=C:\Users\Fred\AppData\Local\GraphDBDesktop\app\bin
+      preload  // the folder location of the rdf bulk import program   e.g. preload=C:\Users\Fred\AppData\Local\GraphDBDesktop\app\bin
       temp  // the folder where the quads  and look ups are held. Note that this is cleared so use an empty folder   e.g. temp=c:\temp
       cmd // the command for starting graph db  e.g. cmd=C:\Users\david\AppData\Local\GraphDBDesktop\GraphDB" "Desktop.exe
 - 
