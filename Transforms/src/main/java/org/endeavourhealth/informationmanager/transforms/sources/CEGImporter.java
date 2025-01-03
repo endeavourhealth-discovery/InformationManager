@@ -33,12 +33,7 @@ public class CEGImporter implements TTImport {
 
   @Override
   public void importData(TTImportConfig config) throws ImportException {
-    try (CEGEthnicityImport ethnicityImport = new CEGEthnicityImport()) {
-      ethnicityImport.importData(config);
-    } catch (Exception ex) {
-      throw new ImportException(ex.getMessage(), ex);
-    }
-    /* Not longer active
+
     try (
       TTManager manager = new TTManager()) {
       document = manager.createDocument(GRAPH.CEG);
@@ -58,7 +53,7 @@ public class CEGImporter implements TTImport {
       throw new ImportException(ex.getMessage(), ex);
     }
 
-     */
+
 
   }
 

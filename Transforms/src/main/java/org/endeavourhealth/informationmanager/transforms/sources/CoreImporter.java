@@ -18,6 +18,7 @@ import java.nio.file.Path;
 
 public class CoreImporter implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(CoreImporter.class);
+  private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
 
   private static final String[] coreEntities = {
     ".*\\\\SemanticWeb\\\\RDFOntology.json",
@@ -68,7 +69,7 @@ public class CoreImporter implements TTImport {
   }
 
   public void validateFiles(String inFolder) {
-    ImportUtils.validateFiles(inFolder, coreEntities);
+    ImportUtils.validateFiles(inFolder, coreEntities,lookups);
   }
 
   /**
@@ -103,6 +104,11 @@ public class CoreImporter implements TTImport {
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);
+    }
+    try (CoreEthnicityImport ethnicityImport = new CoreEthnicityImport()) {
+      ethnicityImport.importData(config);
+    } catch (Exception ex) {
+      throw new ImportException(ex.getMessage(), ex);
     }
 
   }
