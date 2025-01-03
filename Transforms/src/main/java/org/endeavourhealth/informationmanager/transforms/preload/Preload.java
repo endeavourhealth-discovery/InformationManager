@@ -93,6 +93,7 @@ public class Preload {
 
   public static List<String> canBulk= List.of(
     GRAPH.DISCOVERY, SNOMED.NAMESPACE,
+    GRAPH.ENCOUNTERS,
     GRAPH.QUERY,GRAPH.IM1,GRAPH.FHIR,
     GRAPH.EMIS
     ,GRAPH.TPP
