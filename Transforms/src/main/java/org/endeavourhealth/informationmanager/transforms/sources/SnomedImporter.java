@@ -3,7 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.apache.commons.lang3.StringUtils;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.customexceptions.EclFormatException;
 import org.endeavourhealth.imapi.model.imq.Bool;
 import org.endeavourhealth.imapi.model.imq.Match;
@@ -229,13 +229,52 @@ public class SnomedImporter implements TTImport {
                 .setScheme(iri(SNOMED.NAMESPACE));
                 document.addEntity(subEntity);
               }
+              TTEntity superEntity = conceptMap.get(supertype);
+              if (superEntity == null) {
+                superEntity = new TTEntity().setIri(SN + supertype)
+                  .addType(iri(IM.CONCEPT))
+                  .setStatus(iri(IM.INACTIVE))
+                  .setCode(supertype)
+                  .setScheme(iri(SNOMED.NAMESPACE));
+                document.addEntity(subEntity);
+              }
+              String subStatus= subEntity.getStatus().getIri();
+              String superStatus= superEntity.getStatus().getIri();
                 i++;
                 switch (provenance) {
-                  case "0" ->
-                    subEntity.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
-                  case "1" -> subEntity.addObject(iri(IM.USUALLY_SUBSUMED_BY), iri(SN + supertype));
-                  case "2" -> subEntity.addObject(iri(IM.APPROXIMATE_SUBSUMED_BY), iri(SN + supertype));
-                  case "3" -> subEntity.addObject(iri(IM.MULTIPLE_SUBSUMED_BY), iri(SN + supertype));
+                  case "0" :
+                    if (superStatus.equals(IM.ACTIVE)) {
+                      if (subStatus.equals(IM.INACTIVE)) {
+                        subEntity.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
+                      }
+                    }
+                    else {
+                      subEntity.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
+                    }
+                    break;
+                  case "1" :
+                    if (superStatus.equals(IM.ACTIVE)){
+                      if (subStatus.equals(IM.INACTIVE)){
+                            subEntity.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
+                      }
+                    }
+                    else {
+                      subEntity.addObject(iri(IM.MAY_BE_SUBSUMED_BY), iri(SN + supertype));
+                    }
+                    break;
+                  case "2" : subEntity.addObject(iri(IM.APPROXIMATE_SUBSUMED_BY), iri(SN + supertype));
+                  case "3" :
+                    if (superStatus.equals(IM.ACTIVE)){
+                      if (subStatus.equals(IM.INACTIVE)){
+                        subEntity.addObject(iri(IM.SUBSUMED_BY), iri(SN + supertype));
+                      }
+                    }
+                    else {
+                      if (subStatus.equals(IM.ACTIVE)){
+                        subEntity.addObject(iri(IM.APPROXIMATE_SUBSUMED_BY), iri(SN + supertype));
+
+                      }
+                    }
                 }
               }
             }

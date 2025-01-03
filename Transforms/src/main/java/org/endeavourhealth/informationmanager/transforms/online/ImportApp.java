@@ -1,10 +1,10 @@
 package org.endeavourhealth.informationmanager.transforms.online;
 
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImportByType;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
 import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
 import org.slf4j.Logger;
@@ -25,6 +25,8 @@ public class ImportApp {
   public static String getTestDirectory() {
     return testDirectory;
   }
+
+
 
   public static void setTestDirectory(String testDirectory) {
     ImportApp.testDirectory = testDirectory;

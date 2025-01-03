@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.filer.TTImportConfig;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -255,7 +255,7 @@ public class CoreQueryImporter implements TTImport {
     query.setName("Returns the gpRegistration status of a patient if they are currently registered as a regular GMS patient, or if died");
     query.setVariable("currentEpisode");
     Return ret = new Return();
-    query.addReturn(ret);
+    query.setReturn(ret);
     ReturnProperty returnProperty = new ReturnProperty();
     ret.addProperty(returnProperty);
     returnProperty.case_(c -> c
@@ -1185,11 +1185,8 @@ public class CoreQueryImporter implements TTImport {
             .addWhere(new Where()
               .setIri(RDFS.DOMAIN)
               .addIs(new Node().setParameter("this").setAncestorsOf(true))
-            ))
-          .query(q -> q
-            .match(m -> m
-              .addInstanceOf(new Node()
-                .setDescendantsOrSelfOf(true))))));
+            )
+            .setEntailement(Entail.descendantsOrSelfOf))));
   }
 
   private void searchProperties() throws JsonProcessingException {
@@ -1256,8 +1253,8 @@ public class CoreQueryImporter implements TTImport {
           .setDescription("Search for entities contained in parent folder $value")
           .setActiveOnly(true)
           .match(f -> f
-            .setName("Conained in $value")
-            .setDescription("Conained in $value")
+            .setName("Contained in $value")
+            .setDescription("Contained in $value")
             .addWhere(new Where()
               .setIri(IM.IS_CONTAINED_IN)
               .is(i -> i
