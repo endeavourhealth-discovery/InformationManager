@@ -24,7 +24,7 @@ public class EQDImporter {
 	private final Properties dataMap;
 	private final String mainFolder;
 	private final String setFolder;
-	private Map<String,String> badToGoodFolder= new HashMap<>();
+	private final EqdToIMQ converter = new EqdToIMQ();
 
 	public EQDImporter(TTManager manager, Properties dataMap, String mainFolder, String setFolder) {
 		this.manager= manager;
@@ -34,19 +34,21 @@ public class EQDImporter {
 	}
 
 	public void importEqds(String graph,Path directory) throws Exception  {
+		TTDocument document = manager.createDocument(graph);
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
 			if (!fileEntry.isDirectory()) {
 				String ext = FilenameUtils.getExtension(fileEntry.getName());
 				if (ext.equalsIgnoreCase("xml")) {
 					LOG.info("...{}", fileEntry.getName());
-					TTDocument document = manager.createDocument(graph);
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(fileEntry);
-					EqdToIMQ converter = new EqdToIMQ();
 					converter.convertEQD(document, eqd, dataMap);
-					manager.createIndex();
-					for (TTEntity entity : document.getEntities()) {
+				}
+			}
+		}
+		manager.createIndex();
+		for (TTEntity entity : document.getEntities()) {
 						if (entity.isType(iri(IM.FOLDER))||entity.isType(iri(IM.COHORT_QUERY))||entity.isType(iri(IM.DATASET_QUERY))) {
 							if (entity.get(iri(IM.IS_CONTAINED_IN)) == null) {
 								entity.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
@@ -56,9 +58,9 @@ public class EQDImporter {
 								TTArray fixedFolders = new TTArray();
 								for (TTValue folder : entity.get(IM.IS_CONTAINED_IN).getElements()) {
 									if (manager.getEntity(folder.asIriRef().getIri()) == null) {
-										if (manager.getEntity(folder.asIriRef().getIri().toLowerCase()) != null) {
-											fixedFolders.add(iri(folder.asIriRef().getIri().toLowerCase()));
-											badToGoodFolder.put(folder.asIriRef().getIri(), folder.asIriRef().getIri().toLowerCase());
+										String fixedFolder= fixFolder(folder.asIriRef().getIri());
+										if (manager.getEntity(fixedFolder) != null) {
+											fixedFolders.add(iri(fixedFolder));
 										}
 										else
 											hasParentFolder = false;
@@ -73,14 +75,17 @@ public class EQDImporter {
 							}
 						}
 					}
-					manager.createIndex();
-					addSetsToFolders(manager, document);
-					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+		manager.createIndex();
+		addSetsToFolders(manager, document);
+		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 						filer.fileDocument(document);
 					}
-				}
-			}
-		}
+
+}
+
+private String fixFolder(String folder){
+		String part=folder.split("Folder_")[1].toLowerCase();
+		return folder.split("Folder_")[0]+"Folder_"+ part;
 }
 
 

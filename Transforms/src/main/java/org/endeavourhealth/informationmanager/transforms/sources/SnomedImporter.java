@@ -587,8 +587,6 @@ public class SnomedImporter implements TTImport {
 
   private void processDescriptionLine(String line) {
     String[] fields = line.split("\t");
-    // if (fields[4].equals("900000000000455006"))
-    // LOG.info(fields[7]);
     TTEntity c = conceptMap.get(fields[4]);
     String term = fields[7];
 
@@ -599,12 +597,10 @@ public class SnomedImporter implements TTImport {
       if (FULLY_SPECIFIED.equals(fields[6]) || c.getName() == null) {
         c.setName(fields[7]);
       }
-      if (c.getStatus().getIri().equals(IM.ACTIVE)) {
-        if (ACTIVE.equals(fields[2]))
+      if (ACTIVE.equals(fields[2]))
           TTManager.addTermCode(c, term, fields[0], iri(IM.ACTIVE));
-        else
-          TTManager.addTermCode(c, term, fields[0], iri(IM.INACTIVE));
-      }
+      else
+          TTManager.addTermCode(c, null, fields[0], iri(IM.INACTIVE));
       if (term.contains(" General practice data extraction - ")) {
         term = term.split(" General practice data extraction - ")[1];
         if (term.contains(" simple reference set")) {

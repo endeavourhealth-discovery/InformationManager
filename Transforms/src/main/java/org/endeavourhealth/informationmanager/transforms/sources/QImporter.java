@@ -146,6 +146,9 @@ public class QImporter implements TTImport {
                 if (idCodeGroupMap.get(groupId) == null) {
                   idCodeGroupMap.put(groupId, qGroup);
                 }
+                if (qGroup.getIri().equals("http://apiqcodes.org/qcodes#QPredict_347")){
+                  qGroup.addObject(iri(IM.IS_CONTAINED_IN),iri(IM.NAMESPACE+"EthnicitySets"));
+                }
                 qGroup.set(iri(IM.VERSION), TTLiteral.literal(version));
                 importCodes(projectId, qGroup, id);
               }
@@ -204,6 +207,9 @@ public class QImporter implements TTImport {
       qset.set(iri(SHACL.ORDER), TTLiteral.literal(1));
       String version = project.get("Version").asText();
       qset.set(iri(IM.VERSION), TTLiteral.literal(version));
+      if (qset.getIri().equals("http://apiqcodes.org/qcodes#QPredict_347")){
+        qset.addObject(iri(IM.IS_CONTAINED_IN),iri(IM.NAMESPACE+"EthnicitySets"));
+      }
       if (idProjectMap.get(id) == null) {
         idProjectMap.put(id, qset);
         projectVersion.put(id, version);
