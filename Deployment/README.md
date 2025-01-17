@@ -13,7 +13,7 @@ Select the Key pair `PublicServers`
 
 Edit the Network Settings, select the `Endeavour live` VPC and either the `Public-A1` or `Public-B1` subnet.
 Change the Firewall security group to the existing `Admin-Access`.
-Add the relevant access group, either `IM2-Private` or `IM2-Public`.
+Add the relevant access group, either `IM2-Restricted` or `IM2-Internet`.
 
 Configure 20GiB storage minimum.
 

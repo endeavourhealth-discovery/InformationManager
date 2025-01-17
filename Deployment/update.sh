@@ -50,7 +50,7 @@ rm /opt/tomcat/webapps/imapi.war
 mv ./archives/IMAPI/api/build/libs/imapi.war /opt/tomcat/webapps/
 
 echo "....UI...."
-unzip -Q archives/Dev-IMUI.zip -d ./archives/IMUI
+unzip -q archives/Dev-IMUI.zip -d ./archives/IMUI
 rm -r /var/www/e2e
 mv ./archives/IMUI/dist /var/www/e2e
 chown -R www-data:www-data /var/www/e2e
