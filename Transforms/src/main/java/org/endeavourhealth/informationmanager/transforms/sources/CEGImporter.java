@@ -30,9 +30,11 @@ public class CEGImporter implements TTImport {
   private TTDocument document;
   private String mainFolder;
   private String setFolder;
+  private TTImportConfig config;
 
   @Override
   public void importData(TTImportConfig config) throws ImportException {
+    this.config= config;
 
     try (
       TTManager manager = new TTManager()) {
@@ -111,7 +113,7 @@ public class CEGImporter implements TTImport {
     }
     Path directory = ImportUtils.findFileForId(folder, queries[0]);
     try (TTManager manager= new TTManager()) {
-      EQDImporter eqdImporter = new EQDImporter(manager,dataMap,mainFolder,setFolder);
+      EQDImporter eqdImporter = new EQDImporter(manager,dataMap,mainFolder,setFolder,config.getSingleEntity());
       eqdImporter.importEqds(GRAPH.CEG, directory);
     }
   }

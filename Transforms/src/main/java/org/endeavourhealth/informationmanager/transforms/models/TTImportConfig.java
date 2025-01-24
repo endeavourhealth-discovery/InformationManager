@@ -17,6 +17,19 @@ public class TTImportConfig {
   private boolean skipBulk = false;
   private String resourceFolder;
   private List<String> graph = new ArrayList<>();
+  private String singleEntity;
+
+
+
+
+  public String getSingleEntity() {
+    return singleEntity;
+  }
+
+  public TTImportConfig setSingleEntity(String singleEntity) {
+    this.singleEntity = singleEntity;
+    return this;
+  }
 
   public List<String> getGraph() {
     return graph;

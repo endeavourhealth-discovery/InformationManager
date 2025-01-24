@@ -70,7 +70,9 @@ public class ImportApp {
           case "resources":
             ImportApp.resourceFolder= args[i].substring(args[i].lastIndexOf("=") + 1);
             break;
-
+          case "entity":
+            cfg.setSingleEntity(args[i].split("=")[1]);
+            break;
           default:
             if (args[i].contains("test="))
               testDirectory = args[i].substring(args[i].lastIndexOf("=") + 1);
