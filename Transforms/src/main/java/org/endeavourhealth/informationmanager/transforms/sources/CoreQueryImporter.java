@@ -1186,7 +1186,11 @@ public class CoreQueryImporter implements TTImport {
               .setIri(RDFS.DOMAIN)
               .addIs(new Node().setParameter("this").setAncestorsOf(true))
             )
-            .setEntailement(Entail.descendantsOrSelfOf))));
+            .setEntailement(Entail.descendantsOrSelfOf))
+          .return_(r -> r
+            .setNodeRef("concept")
+            .property(p->p.setIri(IM.CODE))
+            .property(p->p.setIri(RDFS.LABEL)))));
   }
 
   private void searchProperties() throws JsonProcessingException {
