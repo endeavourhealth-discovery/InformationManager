@@ -7,7 +7,7 @@ Launch a new instance and enter a name.
 Select "My AMIs" then "Owned by me".
 Select image `Endeavour-Ubuntu22-Hardened-amd64-2024-05-01_10-32-45`
 
-The instance type should be a minimum of `t2.large`
+The instance type should be `m6a.large`
 
 Select the Key pair `PublicServers`
 

@@ -18,6 +18,16 @@ wget -O - https://apt.corretto.aws/corretto.key | sudo gpg --dearmor -o /usr/sha
 sudo apt-get update
 sudo apt-get install -y java-17-amazon-corretto-jdk
 
+########################
+## Install CodeDeploy ##
+########################
+sudo apt -y install ruby-full
+sudo apt -y install wget
+wget https://aws-codedeploy-eu-west-2.s3.eu-west-2.amazonaws.com/latest/install
+chmod +x ./install
+sudo ./install auto
+systemctl start codedeploy-agent
+
 ############################
 ## Fetch packages from S3 ##
 ############################
@@ -124,8 +134,8 @@ mv ./archives/IMAPI/api/build/libs/imapi.war /opt/tomcat/webapps/
 # Deploy to Nginx
 cp ./archives/default.conf /etc/nginx/conf.d/default.conf
 mkdir /var/www
-mv ./archives/IMUI/dist /var/www/e2e
-chown -R www-data:www-data /var/www/e2e
+mv ./archives/IMUI/dist /usr/share/nginx/html
+chown -R www-data:www-data /usr/share/nginx/html
 service nginx restart
 
 # Startup
