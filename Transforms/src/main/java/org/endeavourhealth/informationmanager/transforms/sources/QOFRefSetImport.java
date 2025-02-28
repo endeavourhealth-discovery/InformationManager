@@ -21,25 +21,25 @@ import java.util.*;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
-public class QOFImport implements TTImport {
+public class QOFRefSetImport implements TTImport {
 
   public static final String[] pcdClusters = {
     ".*\\\\QOF\\\\.*\\_PCD_Refset_Content.txt"};
 
 
   public static final String PCDFolder = IM.NAMESPACE + "PCDClusters";
-  private static final Logger LOG = LoggerFactory.getLogger(QOFImport.class);
+  private static final Logger LOG = LoggerFactory.getLogger(QOFRefSetImport.class);
   private Map<String, TTEntity> conceptMap;
   private Map<String, TTEntity> qofMap;
   private TTDocument document;
   private boolean isSnomedImporter;
 
-  public QOFImport() {
+  public QOFRefSetImport() {
     isSnomedImporter = false;
 
   }
 
-  public QOFImport(TTDocument document, Map<String, TTEntity> conceptMap) {
+  public QOFRefSetImport(TTDocument document, Map<String, TTEntity> conceptMap) {
     this.document = document;
     this.conceptMap = conceptMap;
     this.isSnomedImporter = true;
@@ -49,7 +49,7 @@ public class QOFImport implements TTImport {
     return conceptMap;
   }
 
-  public QOFImport setConceptMap(Map<String, TTEntity> conceptMap) {
+  public QOFRefSetImport setConceptMap(Map<String, TTEntity> conceptMap) {
     this.conceptMap = conceptMap;
     return this;
   }

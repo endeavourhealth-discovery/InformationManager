@@ -23,11 +23,9 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 public class CEGImporter implements TTImport {
 
   private static final String[] queries = {".*\\\\CEGQuery"};
-  private static final String[] annotations = {".*\\\\QueryAnnotations.properties"};
   private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
   private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
   private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
-  private TTDocument document;
   private String mainFolder;
   private String setFolder;
   private TTImportConfig config;
@@ -38,21 +36,19 @@ public class CEGImporter implements TTImport {
 
     try (
       TTManager manager = new TTManager()) {
-      document = manager.createDocument(GRAPH.CEG);
-      createGraph();
-      createOrg();
-      createFolders();
+      TTDocument document = manager.createDocument(GRAPH.CEG);
+      createGraph(document);
+      createOrg(document);
+      createFolders(document);
+      EQDImporter eqdImporter = new EQDImporter();
+      eqdImporter.loadAndConvert(config,manager,queries[0],GRAPH.CEG,dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
+      } catch (Exception e) {
+        throw new ImportException(e.getMessage(), e);
       }
-    } catch (Exception ex) {
-      throw new ImportException(ex.getMessage(), ex);
-    }
-    try {
-      loadAndConvert(config.getFolder());
-    }
-    catch (Exception ex) {
-      throw new ImportException(ex.getMessage(), ex);
+    } catch (Exception e){
+      throw new ImportException(e.getMessage(),e);
     }
 
 
@@ -60,7 +56,7 @@ public class CEGImporter implements TTImport {
   }
 
 
-  private void createGraph(){
+  private void createGraph(TTDocument document){
     TTEntity graph = new TTEntity()
       .setIri(GRAPH.CEG)
       .setName("CEG (QMUL) graph")
@@ -71,7 +67,7 @@ public class CEGImporter implements TTImport {
   }
 
 
-  private void createFolders() {
+  private void createFolders(TTDocument document) {
     TTEntity folder = new TTEntity()
       .setIri(GRAPH.CEG + "Q_CEGQueries")
       .setName("QMUL CEG query library")
@@ -91,7 +87,7 @@ public class CEGImporter implements TTImport {
 
   }
 
-  private void createOrg() {
+  private void createOrg(TTDocument document) {
     TTEntity owner = new TTEntity()
       .setIri("http://org.endhealth.info/im#QMUL_CEG")
       .addType(TTIriRef.iri(IM.NAMESPACE + "Organisation"))
@@ -101,29 +97,14 @@ public class CEGImporter implements TTImport {
     document.addEntity(owner);
   }
 
-  public void loadAndConvert(String folder) throws Exception {
-    Properties dataMap = new Properties();
-    try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, dataMapFile[0]).toFile()))) {
-      dataMap.load(reader);
-    }
 
-    Properties labels = new Properties();
-    try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, annotations[0]).toFile()))) {
-      labels.load(reader);
-    }
-    Path directory = ImportUtils.findFileForId(folder, queries[0]);
-    try (TTManager manager= new TTManager()) {
-      EQDImporter eqdImporter = new EQDImporter(manager,dataMap,mainFolder,setFolder,config.getSingleEntity());
-      eqdImporter.importEqds(GRAPH.CEG, directory);
-    }
-  }
 
 
 
 
   @Override
   public void validateFiles(String inFolder) throws TTFilerException {
-    ImportUtils.validateFiles(inFolder, queries, annotations, duplicates, lookups);
+    ImportUtils.validateFiles(inFolder, queries, duplicates, lookups);
   }
 
 

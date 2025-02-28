@@ -82,8 +82,6 @@ public class Importer implements TTImportByType {
       return new PRSBImport();
     else if (GRAPH.KINGS_APEX.equals(importType))
       return new ApexKingsImport();
-    else if (GRAPH.QOF.equals(importType))
-      return new QOFImport();
     else if (GRAPH.KINGS_WINPATH.equals(importType))
       return new WinPathKingsImport();
     else if (GRAPH.ODS.equals(importType))
@@ -94,6 +92,8 @@ public class Importer implements TTImportByType {
       return new CEGImporter();
     else if (GRAPH.SMARTLIFE.equals(importType))
       return new SmartLifeImporter();
+    else if (GRAPH.QOF.equals(importType))
+      return new QOFQueryImport();
     else if (GRAPH.NHS_TFC.equals(importType))
       return new NHSTfcImport();
     else if (GRAPH.DELTAS.equals(importType))

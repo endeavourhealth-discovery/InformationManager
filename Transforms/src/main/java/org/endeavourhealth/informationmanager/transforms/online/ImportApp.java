@@ -90,44 +90,9 @@ public class ImportApp {
   private static void importData(TTImportConfig cfg) throws Exception {
     TTImportByType importer = new Importer();
     switch (cfg.getImportType()) {
-      case "all":
-        importer.validateByType(GRAPH.DISCOVERY, cfg.getFolder())
-          .validateByType(GRAPH.QUERY, cfg.getFolder())
-          .validateByType(SNOMED.NAMESPACE, cfg.getFolder())
-          .validateByType(GRAPH.ENCOUNTERS, cfg.getFolder())
-          .validateByType(GRAPH.EMIS, cfg.getFolder())
-          .validateByType(GRAPH.TPP, cfg.getFolder())
-          .validateByType(GRAPH.OPCS4, cfg.getFolder())
-          .validateByType(GRAPH.ICD10, cfg.getFolder())
-          .validateByType(GRAPH.VISION, cfg.getFolder())
-          .validateByType(GRAPH.KINGS_APEX, cfg.getFolder())
-          .validateByType(GRAPH.KINGS_WINPATH, cfg.getFolder())
-          .validateByType(GRAPH.BARTS_CERNER, cfg.getFolder())
-          .validateByType(GRAPH.ODS, cfg.getFolder())
-          .validateByType(GRAPH.NHS_TFC, cfg.getFolder())
-          .validateByType(GRAPH.CEG, cfg.getFolder())
-          .validateByType(GRAPH.BNF, cfg.getFolder())
-          .validateByType(GRAPH.IM1, cfg.getFolder())
-//                    .validateByType(GRAPH.CONFIG, cfg.getFolder())
-          .validateByType(GRAPH.DELTAS, cfg.getFolder());
-        importer.importByType(GRAPH.DISCOVERY, cfg);
-        importer.importByType(GRAPH.QUERY, cfg);
-        importer.importByType(SNOMED.NAMESPACE, cfg);
-        importer.importByType(GRAPH.ENCOUNTERS, cfg);
-        importer.importByType(GRAPH.EMIS, cfg);
-        importer.importByType(GRAPH.TPP, cfg);
-        importer.importByType(GRAPH.OPCS4, cfg);
-        importer.importByType(GRAPH.ICD10, cfg);
-        importer.importByType(GRAPH.VISION, cfg);
-        importer.importByType(GRAPH.KINGS_APEX, cfg);
-        importer.importByType(GRAPH.KINGS_WINPATH, cfg);
-        importer.importByType(GRAPH.BARTS_CERNER, cfg);
-        importer.importByType(GRAPH.ODS, cfg);
-        importer.importByType(GRAPH.NHS_TFC, cfg);
-        importer.importByType(GRAPH.BNF, cfg);
-        importer.importByType(GRAPH.CEG, cfg);
-        importer.importByType(GRAPH.IM1, cfg);
-        importer.importByType(GRAPH.DELTAS, cfg);
+      case "qofquery":
+        importer = new Importer().validateByType(GRAPH.QOF, cfg.getFolder());
+        importer.importByType(GRAPH.QOF, cfg);
         break;
       case "corequery":
         importer = new Importer().validateByType(GRAPH.QUERY, cfg.getFolder());

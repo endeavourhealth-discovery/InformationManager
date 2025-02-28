@@ -36,7 +36,6 @@ public class CoreQueryImporter implements TTImport {
       telephoneProperty("workTelephoneNumber", "mobile");
 
       age();
-      ethnicity();
       gmsRegistration();
       gmsRegistrationStatus();
       gmsRegisteredPractice();
@@ -60,8 +59,6 @@ public class CoreQueryImporter implements TTImport {
         SNOMED.NAMESPACE + "70995007", "Hypertension",
         SNOMED.NAMESPACE + "162659009", "Hypertension resolved");
       testQuery();
-      getActiveDiabetes();
-      latestBPMatch();
       latestHighBP();
       objectPropertyRangeSuggestions();
       dataPropertyRangeSuggestions();
@@ -88,6 +85,8 @@ public class CoreQueryImporter implements TTImport {
       .setIri(IM.NAMESPACE + "CSET_Q_Antihypertensives")
       .setCrud(iri(IM.UPDATE_PREDICATES));
     Query query = new Query()
+      .addPrefix("im", "http://endhealth.info/im#")
+      .addPrefix("sct", "http://snomed.info/sct#")
       .setName("Drugs used to treat hypertension (Q group)")
       .setBoolMatch(Bool.and)
       .match(m -> m
@@ -172,9 +171,7 @@ public class CoreQueryImporter implements TTImport {
               .setDescendantsOrSelfOf(true)
               .is(i -> i
                 .setIri("http://snomed.info/sct#385268001")
-                .setDescendantsOrSelfOf(true))))))
-      .addPrefix("im", "http://endhealth.info/im#")
-      .addPrefix("sct", "http://snomed.info/sct#");
+                .setDescendantsOrSelfOf(true))))));
     set.set(iri(IM.DEFINITION), TTLiteral.literal(query));
     document.addEntity(set);
 
@@ -193,10 +190,10 @@ public class CoreQueryImporter implements TTImport {
           .setName("GP GMS registeredPractice episode at a reference date")
           .setDescription("Retrieves the entry for the GP practice if gms registered on the date or null")
           .match(m -> m
-            .setVariable("RegistrationEpisode")
             .setBoolWhere(Bool.and)
             .path(p -> p
-              .setIri(IM.NAMESPACE + "episodeOfCare"))
+              .setIri(IM.NAMESPACE + "episodeOfCare")
+              .setNode(new Node().setVariable("RegistrationEpisode")))
             .setTypeOf(IM.NAMESPACE + "EpisodeOfCare")
             .where(p1 -> p1
               .setIri(IM.NAMESPACE + "patientType")
@@ -204,7 +201,7 @@ public class CoreQueryImporter implements TTImport {
             .where(pv -> pv
               .setIri(IM.NAMESPACE + "effectiveDate")
               .setOperator(Operator.lte)
-              .setRelativeTo(new PropertyRef().setParameter("$referenceDate")))
+              .setRelativeTo(new RelativeTo().setParameter("$referenceDate")))
             .where(pv -> pv
               .setBoolWhere(Bool.or)
               .where(pv1 -> pv1
@@ -213,13 +210,13 @@ public class CoreQueryImporter implements TTImport {
               .where(pv1 -> pv1
                 .setIri(IM.NAMESPACE + "endDate")
                 .setOperator(Operator.gt)
-                .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
+                .setRelativeTo(new RelativeTo().setParameter("$referenceDate"))))
             .orderBy(o -> o
               .setProperty(new OrderDirection().setIri(IM.NAMESPACE + "effectiveDate").setDirection(Order.descending))
               .setLimit(1)))
           .return_(r -> r
+            .setNodeRef("RegistrationEpisode")
             .property(p -> p
-              .setNodeRef("RegistrationEpisode")
               .setIri(IM.NAMESPACE + "provider")))));
     document.addEntity(gms);
   }
@@ -281,7 +278,7 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("currentEpisode")
             .setIri(IM.NAMESPACE + "endDate")
             .setOperator(Operator.gt)
-            .setRelativeTo(new PropertyRef().setParameter("$referenceDate"))))
+            .setRelativeTo(new RelativeTo().setParameter("$referenceDate"))))
         .setThen(IM.NAMESPACE + "CaseloadStatusActive"))
       .setElse(IM.NAMESPACE + "CaseloadStatusLeft"));
 
@@ -295,24 +292,6 @@ public class CoreQueryImporter implements TTImport {
   }
 
 
-  private void ethnicity() throws JsonProcessingException {
-    TTEntity ethnicity = new TTEntity()
-      .setIri(IM.NAMESPACE + "ethnicity")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .set(iri(IM.DEFINITION),
-        TTLiteral.literal(new Query()
-          .setName("Returns the most recent ethnicity for a patient")
-          .path(p -> p.setIri("observation"))
-          .setTypeOf(IM.NAMESPACE + "Observation")
-          .where(w -> w
-            .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
-            .is(i -> i.setIri("VSET_Ethnicity")))
-          .orderBy(o -> o.setProperty(new OrderDirection()
-              .setIri(IM.NAMESPACE + "effectiveDate")
-              .setDirection(Order.descending))
-            .setLimit(1))));
-    document.addEntity(ethnicity);
-  }
 
   private void addressProperty(String propertyName, String value) throws JsonProcessingException {
     TTEntity address = new TTEntity()
@@ -594,43 +573,37 @@ public class CoreQueryImporter implements TTImport {
     document.addEntity(query);
   }
 
-  private void getActiveDiabetes() throws JsonProcessingException {
-    TTEntity entity = new TTEntity()
-      .addType(iri(IM.MATCH_CLAUSE))
-      .setName("Active Diabetes (Latest entry for diabetes not followed by a resolution)")
-      .setDescription("Entry for diabetes not followed by a diabetes resolved entry")
-      .set(iri(IM.RETURN_TYPE), TTIriRef.iri(IM.NAMESPACE + "Patient"))
-      .setIri(IM.NAMESPACE + "M_ActiveDiabetes")
-      .set(iri(SHACL.ORDER), 2)
-      .set(iri(IM.DEFINITION), TTLiteral.literal(getActiveDiabetesMatch()))
-      .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"));
 
-    document.addEntity(entity);
-  }
 
   private void latestHighBP() throws JsonProcessingException {
     Match match = new Match()
       .setName("Latest systolic in the last year is >140 (office) or >130 (home)")
       .setDescription("Latest home or office systolic blood pressure in last 12 months is either an office one over 140, or a home one over 130")
+      .setBoolMatch(Bool.and)
+      .match(m->m
       .path(p -> p
-        .setIri(IM.NAMESPACE + "observation"))
-      .setTypeOf(IM.NAMESPACE + "Observation")
-      .where(ww -> ww
-        .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
-        .setName("concept")
-        .addIs(new Node()
-          .setIri(SNOMED.NAMESPACE + "999035921000230109")
-          .setDescendantsOrSelfOf(true)
-          .setName("Systolic blood pressure recording"))
+        .setIri(IM.NAMESPACE + "observation")
+         .setNode(new Node().setVariable("observation")))
+        .setTypeOf(IM.NAMESPACE + "Observation")
+        .where(ww -> ww
+          .setNodeRef("observation")
+          .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
+          .setName("concept")
+          .addIs(new Node()
+            .setIri(SNOMED.NAMESPACE + "999035921000230109")
+            .setDescendantsOrSelfOf(true)
+            .setName("Systolic blood pressure recording"))
         .addIs(new Node()
           .setIri(GRAPH.EMIS + "1994021000006104")
           .setDescendantsOrSelfOf(true)
           .setName("Home systolic blood pressure"))
         .setValueLabel("Office home or self recorded systolic blood pressure"))
       .where(ww -> ww
+        .setNodeRef("observation")
         .setIri(IM.NAMESPACE + "value")
         .setIsNotNull(true))
       .where(ww -> ww
+        .setNodeRef("observation")
         .setIri(IM.NAMESPACE + "effectiveDate")
         .setOperator(Operator.gte)
         .setValue("-12")
@@ -642,10 +615,9 @@ public class CoreQueryImporter implements TTImport {
           .setIri(IM.NAMESPACE + "effectiveDate")
           .setDirection(Order.descending))
         .setLimit(1))
-      .then(t -> t
-        .setName("Office systolic >140 or Home systolic >130")
-        .setDescription("Systolic blood pressure is either an office one with a value greater than 140, or a home one with a value greater than 130")
-        .setVariable("highBPReading")
+        .setVariable("highBPReading"))
+      .match(m->m
+        .setNodeRef("highBPReading")
         .setBoolMatch(Bool.or)
         .match(m4 -> m4
           .setName("Office systolic >140")
@@ -709,80 +681,7 @@ public class CoreQueryImporter implements TTImport {
           .property(p -> p.setIri(IM.CODE)))));
   }
 
-  private void latestBPMatch() throws JsonProcessingException {
-    Match match = new Match()
-      .setName("Latest systolic blood pressure in the last 12 months")
-      .setDescription("Latest systolic blood pressure in the last 12 months")
-      .path(p -> p
-        .setIri(IM.NAMESPACE + "observation"))
-      .where(ww -> ww
-        .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
-        .setName("concept")
-        .addIs(new Node()
-          .setIri(SNOMED.NAMESPACE + "999035921000230109")
-          .setName("Systolic blood pressure recording")))
-      .where(ww -> ww
-        .setIri(IM.NAMESPACE + "value")
-        .setIsNotNull(true))
-      .where(ww -> ww
-        .setIri(IM.NAMESPACE + "effectiveDate")
-        .setOperator(Operator.gte)
-        .setValue("-12")
-        .setUnit(iri(IM.MONTHS))
-        .relativeTo(r -> r.setParameter("$referenceDate"))
-        .setValueLabel("last 12 months"))
-      .setOrderBy(new OrderLimit()
-        .setProperty(new OrderDirection()
-          .setIri(IM.NAMESPACE + "effectiveDate")
-          .setDirection(Order.descending))
-        .setLimit(1));
 
-    TTEntity entity = new TTEntity().addType(iri(IM.MATCH_CLAUSE))
-      .set(iri(IM.RETURN_TYPE), TTIriRef.iri(IM.NAMESPACE + "Patient"))
-      .setIri(IM.NAMESPACE + "M_LatestSystolicBP12M")
-      .setName("Latest systolic blood pressure in the last 12 months")
-      .setDescription("The latest systolic blood pressure that has a value")
-      .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "M_CommonClauses"))
-      .set(iri(SHACL.ORDER), 3)
-      .set(iri(IM.DEFINITION), TTLiteral.literal(match));
-
-    document.addEntity(entity);
-  }
-
-  private Match getActiveDiabetesMatch() {
-    return new Match()
-      .setName("Active diabetics")
-      .setDescription("Diabetes observations, not followed by a resolved observation")
-      .path(p -> p.setIri(IM.NAMESPACE + "observation"))
-      .setTypeOf(IM.NAMESPACE + "Observation")
-      .setVariable("latestDiabetes")
-      .where(ww -> ww
-        .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
-        .setName("concept")
-        .addIs(new Node()
-          .setIri("http://snomed.info/sct#999004691000230108")
-          .setName("Diabetes Mellitus")))
-      .setOrderBy(new OrderLimit()
-        .setProperty(new OrderDirection()
-          .setIri(IM.NAMESPACE + "effectiveDate")
-          .setDirection(Order.descending))
-        .setLimit(1))
-      .then(m1 -> m1
-        .setName("Exclude resolved diabetes")
-        .setDescription("Exclude where a diabetes resolved observation exists with an effective date after the effective date of the $latestDiabetes observation")
-        .setExclude(true)
-        .setVariable("ResolvedDiabetes")
-        .where(ww -> ww
-          .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
-          .setName("concept")
-          .addIs(new Node()
-            .setIri("http://snomed.info/sct#999003371000230102")
-            .setName("Diabetes Resolved")))
-        .where(ww -> ww
-          .setIri(IM.NAMESPACE + "effectiveDate")
-          .setOperator(Operator.gte)
-          .relativeTo(r -> r.setNodeRef("latestDiabetes").setIri(IM.NAMESPACE + "effectiveDate"))));
-  }
 
   private void patientsWithActiveCondition(String iri, String name, String activeIri, String activeName, String inactiveIri, String inactiveName) throws JsonProcessingException {
     Query definition = new Query()
@@ -790,11 +689,14 @@ public class CoreQueryImporter implements TTImport {
       .setName(name)
       .setDescription("The latest " + activeName + " or " + inactiveName + " is " + activeName)
       .setTypeOf(IM.NAMESPACE + "Patient")
+      .match(and->and
+        .setBoolMatch(Bool.and)
       .match(m -> m
         .setName("Active {condition}")
         .setDescription("The latest " + activeName + " or " + inactiveName + " is " + activeName)
         .path(p -> p
-          .setIri(IM.NAMESPACE + "observation"))
+          .setIri(IM.NAMESPACE + "observation")
+          .setNode(new Node().setVariable("latestEntry")))
         .setTypeOf(IM.NAMESPACE + "Observation")
         .where(ww -> ww
           .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
@@ -812,10 +714,9 @@ public class CoreQueryImporter implements TTImport {
           .setProperty(new OrderDirection()
             .setIri(IM.NAMESPACE + "effectiveDate")
             .setDirection(Order.descending))
-          .setLimit(1))
-        .then(t -> t
-          .setName("Is " + activeName)
-          .setDescription("Is " + activeName)
+          .setLimit(1)))
+      .match(m->m
+        .setNodeRef("latestEntry")
           .addWhere(new Where()
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node()
@@ -839,11 +740,9 @@ public class CoreQueryImporter implements TTImport {
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring")
       .setDescription("Test for patients either aged between 65 and 70 or with diabetes with the most recent systolic in the last 12 months either home >130 or office >140, not followed by a screening invite, excluding hypertensives")
       .setTypeOf(IM.NAMESPACE + "Patient")
-      .match(m -> m
-        .setName("Patients registered for GMS services on the reference date")
-        .setDescription("For any gpRegistration period, a gpRegistration start date before the reference date and no end date, or an end date after the reference date.")
-        .addInstanceOf(new Node().setIri(IM.NAMESPACE + "Q_RegisteredGMS").setMemberOf(true)
-          .setName("Registered for GMS services on reference date")))
+      .isSubsetOf(m -> m
+        .setIri(IM.NAMESPACE + "Q_RegisteredGMS")
+        .setName("Registered for GMS services on reference date"))
       .match(m -> m
         .setName("Patients 65-70, or diabetes or prediabetes")
         .setDescription("Patients with an age between 65 and 70, or on the diabetic register, or have prediabetes")
@@ -872,13 +771,17 @@ public class CoreQueryImporter implements TTImport {
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri(SNOMED.NAMESPACE + "714628002").setDescendantsOf(true))
             .setValueLabel("Prediabetes"))))
-      .match(m -> m
+      .match(outer -> outer
         .setName("Have high blood pressure in the last year")
         .setDescription("Latest systolic within 12 months of the reference date, is either an office systolic >140 or a home systolic >130")
+        .setBoolMatch(Bool.and)
+        .match(with->with
         .path(p -> p
-          .setIri(IM.NAMESPACE + "observation"))
+          .setIri(IM.NAMESPACE + "observation")
+          .setNode(new Node().setVariable("observation")))
         .setTypeOf(IM.NAMESPACE + "Observation")
         .where(ww -> ww
+          .setNodeRef("observation")
           .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
           .setName("concept")
           .addIs(new Node()
@@ -891,6 +794,7 @@ public class CoreQueryImporter implements TTImport {
             .setName("Home systolic blood pressure"))
           .setValueLabel("Office or home systolic blood pressure"))
         .where(ww -> ww
+          .setNodeRef("observation")
           .setIri(IM.NAMESPACE + "effectiveDate")
           .setOperator(Operator.gte)
           .setValue("-12")
@@ -902,9 +806,13 @@ public class CoreQueryImporter implements TTImport {
             .setIri(IM.NAMESPACE + "effectiveDate")
             .setDirection(Order.descending))
           .setLimit(1))
-        .then(t -> t.setVariable("highBPReading")
+          .return_(r->r
+            .setNodeRef("observation")
+            .as("latestBP")))
+        .match(orMatch-> orMatch
           .setBoolMatch(Bool.or)
-          .match(m4 -> m4
+          .match(or -> or
+            .setNodeRef("latestBP")
             .setName("Office systolic > 140")
             .setDescription("Office based systolic blood pressure with value greater than 140")
             .where(w -> w
@@ -918,7 +826,8 @@ public class CoreQueryImporter implements TTImport {
               .setIri(IM.NAMESPACE + "value")
               .setOperator(Operator.gt)
               .setValue("140")))
-          .match(m4 -> m4
+          .match(or -> or
+            .setNodeRef("latestBP")
             .setName("Home systolic > 130")
             .setDescription("Home based systolic blood pressure with value greater than 130")
             .setBoolWhere(Bool.and)
@@ -932,8 +841,10 @@ public class CoreQueryImporter implements TTImport {
             .where(w -> w
               .setIri(IM.NAMESPACE + "value")
               .setOperator(Operator.gt)
-              .setValue("130")))))
-      .match(m -> m
+              .setValue("130")))
+          .return_(r->r
+            .as("highBPReading"))))
+      .match(exclude -> exclude
         .setName("Not invited for screening since high BP reading")
         .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
         .setBoolWhere(Bool.and)
@@ -1186,11 +1097,7 @@ public class CoreQueryImporter implements TTImport {
               .setIri(RDFS.DOMAIN)
               .addIs(new Node().setParameter("this").setAncestorsOf(true))
             )
-            .setEntailement(Entail.descendantsOrSelfOf))
-          .return_(r -> r
-            .setNodeRef("concept")
-            .property(p->p.setIri(IM.CODE))
-            .property(p->p.setIri(RDFS.LABEL)))));
+            .setEntailment(Entail.descendantsOrSelfOf))));
   }
 
   private void searchProperties() throws JsonProcessingException {

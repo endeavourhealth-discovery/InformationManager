@@ -84,7 +84,7 @@ public class Preload {
       throw new ImportException(" no sources folder set");
     if (graphs==null)
       graphs="endeavour.json";
-    TTImportConfig config=new ObjectMapper().readValue(new File(folder+"/"+ graphs), TTImportConfig.class);
+    TTImportConfig config=new ObjectMapper().readValue(new File(folder+"/PreloadGraphs/"+ graphs), TTImportConfig.class);
     config.setFolder(folder);
     return config;
 
