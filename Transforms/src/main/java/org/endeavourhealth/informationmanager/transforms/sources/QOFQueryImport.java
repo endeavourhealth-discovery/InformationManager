@@ -157,6 +157,7 @@ public class QOFQueryImport implements TTImport {
 				String oldIri= entity.getIri();
 				String newIri= getIri("Q_",entity.getIri(),entity.getName());
 				iriMap.put(oldIri,newIri );
+				
 				Query query= entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 				mapQueryIris(newIri+"_Rule_",query,iriMap);
 				}
