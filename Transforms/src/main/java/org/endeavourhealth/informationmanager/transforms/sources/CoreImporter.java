@@ -1,10 +1,16 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
-import org.endeavourhealth.imapi.model.imq.QueryException;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
+import org.endeavourhealth.imapi.logic.service.SearchService;
+import org.endeavourhealth.imapi.model.imq.*;
+import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.RDFS;
+import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -15,6 +21,11 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.endeavourhealth.imapi.model.tripletree.TTVariable.iri;
 
 public class CoreImporter implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(CoreImporter.class);
@@ -92,6 +103,9 @@ public class CoreImporter implements TTImport {
           Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
           manager.loadDocument(path.toFile());
           TTDocument document = manager.getDocument();
+          if (coreFile.endsWith("CoreOntology-inferred.json")) {
+            generateDefaultCohorts(manager);
+          }
           LOG.info("Filing {} from {}", document.getGraph().getIri(), coreFile);
           try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
             try {
@@ -113,18 +127,54 @@ public class CoreImporter implements TTImport {
 
   }
 
-  /**
-   * Loads the core ontology document, available as TTDocument for various purposes
-   *
-   * @param inFolder root folder containing core ontology document
-   * @return TTDocument containing Discovery ontology
-   * @throws IOException in the event of an IO failure
-   */
-  public TTDocument loadFile(String inFolder) throws IOException {
-    Path file = ImportUtils.findFileForId(inFolder, coreEntities[0]);
-    TTManager manager = new TTManager();
-    return manager.loadDocument(file.toFile());
+  private void generateDefaultCohorts(TTManager manager) throws JsonProcessingException {
+      List<String> shapeFolders = new ArrayList<>();
+      List<TTEntity> cohortEntities= new ArrayList<>();
+      for (TTEntity entity:manager.getDocument().getEntities()) {
+        if (entity.get(iri(IM.IS_CONTAINED_IN))!=null) {
+          if (entity.get(iri(IM.IS_CONTAINED_IN)).getElements().stream().filter(f->f.asIriRef().equals(iri(IM.NAMESPACE+"HealthRecords"))).findAny().isPresent()){
+            String cohortFolderIri = IM.NAMESPACE + "Q_" + entity.getIri().substring(entity.getIri().lastIndexOf("#") + 1);
+            TTEntity cohortFolder = new TTEntity()
+              .addType(iri(IM.FOLDER))
+              .setIri(cohortFolderIri)
+              .setName(entity.getName())
+              .set(iri(IM.CONTENT_TYPE),iri(IM.COHORT_QUERY))
+              .set(iri(SHACL.ORDER), TTLiteral.literal(entity.get(iri(SHACL.ORDER)).asLiteral().intValue()+1));
+            cohortFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE+"Q_DefaultCohorts"));
+            cohortEntities.add(cohortFolder);
+            shapeFolders.add(entity.getIri());
+          }
+        }
+      }
+    for (TTEntity entity:manager.getDocument().getEntities()) {
+        if (entity.isType(iri(SHACL.NODESHAPE))) {
+          if (entity.get(IM.IS_CONTAINED_IN)!=null) {
+            for (TTValue folder : entity.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
+              if (shapeFolders.contains(folder.asIriRef().getIri())) {
+                String shapeFolderIri = folder.asIriRef().getIri();
+                String cohortFolderIri = IM.NAMESPACE + "Q_" + shapeFolderIri.substring(shapeFolderIri.lastIndexOf("#") + 1);
+                int order = entity.get(iri(SHACL.ORDER))!=null ?entity.get(iri(SHACL.ORDER)).asLiteral().intValue() : 1000;
+                TTEntity cohort = new TTEntity()
+                  .setIri(IM.NAMESPACE + "Q_" + entity.getIri().substring(entity.getIri().lastIndexOf("#") + 1))
+                  .addType(iri(IM.COHORT_QUERY))
+                  .setName(entity.getName()+"s")
+                  .setDescription("Cohort Query for entities of "+entity.getName()+"s")
+                  .set(iri(SHACL.ORDER), TTLiteral.literal(order+1));
+                cohort.addObject(iri(IM.IS_CONTAINED_IN), iri(cohortFolderIri));
+                cohort.set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
+                  .setIri(cohort.getIri())
+                  .setName(cohort.getName())
+                  .setTypeOf(IM.NAMESPACE + cohort.getIri().substring(cohort.getIri().lastIndexOf("#") + 1).split("Q_")[1])));
+                cohortEntities.add(cohort);
+              }
+            }
+          }
+        };
+      }
+    manager.getDocument().getEntities().addAll(cohortEntities);
   }
+
+
 
   @Override
   public void close() throws Exception {
