@@ -4,11 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.model.imq.IriLD;
 import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
-import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -17,12 +15,9 @@ import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
-import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileReader;
-import java.nio.file.Path;
 import java.util.*;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
@@ -109,17 +104,23 @@ public class QOFQueryImport implements TTImport {
 		}
 	}
 
-	private void replaceQueryIris(Match query, Map<String, String> iriMap) {
-		if (iriMap.get(query.getIri())!=null) {
-			query.setIri(iriMap.get(query.getIri()));
-		}
-		if (query.getIsSubsetOf()!=null){
-			for (IriLD parent: query.getIsSubsetOf()){
-				if (iriMap.get(parent.getIri())!=null) {
-					parent.setIri(iriMap.get(parent.getIri()));
+	private void replaceQueryIris(Query query, Map<String, String> iriMap) {
+		if (query.getInstanceOf()!=null) {
+			for (Node instanceOf : query.getInstanceOf()) {
+				if (iriMap.get(instanceOf.getIri()) != null) {
+					instanceOf.setIri(iriMap.get(instanceOf.getIri()));
 				}
 			}
 		}
+		replaceMatchIris(query,iriMap);
+	}
+
+
+	private void replaceMatchIris(Match query, Map<String, String> iriMap) {
+		if (iriMap.get(query.getIri())!=null) {
+			query.setIri(iriMap.get(query.getIri()));
+		}
+
 		if (query.getMatch()!=null){
 			for (Match match:query.getMatch()){
 				if (match.getInstanceOf()!=null){
@@ -129,13 +130,12 @@ public class QOFQueryImport implements TTImport {
 						}
 					}
 				}
-				replaceQueryIris(match,iriMap);
+				replaceMatchIris(match,iriMap);
 			}
 		}
 	}
 	private String getIri(String prefix,String iri,String name){
-		String newIri= GRAPH.QOF + prefix + name.split(" ")[0].replaceAll("[^a-zA-Z0-9-_~.]", "")+ getHash(iri);
-		return newIri;
+		return GRAPH.QOF + prefix + name.split(" ")[0].replaceAll("[^a-zA-Z0-9-_~.]", "")+ getHash(iri);
 	}
 
 	private void createIriMap(TTDocument document, Map<String, String> iriMap) throws JsonProcessingException {
@@ -157,7 +157,7 @@ public class QOFQueryImport implements TTImport {
 				String oldIri= entity.getIri();
 				String newIri= getIri("Q_",entity.getIri(),entity.getName());
 				iriMap.put(oldIri,newIri );
-				
+
 				Query query= entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 				mapQueryIris(newIri+"_Rule_",query,iriMap);
 				}
