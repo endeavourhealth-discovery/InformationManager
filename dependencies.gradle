@@ -3,7 +3,7 @@ ext {
     activation     : '2.1.2',
     antlr          : '4.13.1',
     collections4   : '4.4',
-    commonsIO      : '2.15.1',
+    commonsIO      : '2.19.0',
     commonsCompress: '1.26.1',
     commonsutils  : '3.17.0',
     csv            : '1.10.0',
