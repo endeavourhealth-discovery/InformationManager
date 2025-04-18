@@ -7,6 +7,7 @@ import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
+import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -45,6 +46,7 @@ public class QOFQueryImport implements TTImport {
 			createFolders(manager.getDocument());
 			try {
 				EQDImporter eqdImporter = new EQDImporter();
+				EqdToIMQ.gmsPatients.add("71154095-0C58-4193-B58F-21F05EA0BE2F");
 				eqdImporter.loadAndConvert(config,manager,queries[0],GRAPH.QOF,
 					dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
 			}
@@ -89,7 +91,7 @@ public class QOFQueryImport implements TTImport {
 						}
 					}
 				}
-				if (entity.isType(iri(IM.COHORT_QUERY))) {
+				if (entity.isType(iri(IM.QUERY))) {
 					if (entity.get(iri(IM.IS_SUBSET_OF)) != null){
 						for (TTValue superQuery: entity.get(iri(IM.IS_SUBSET_OF)).getElements()){
 							if (iriMap.get(superQuery.asIriRef().getIri())!=null) {
@@ -153,7 +155,7 @@ public class QOFQueryImport implements TTImport {
 				} else {
 					iriMap.put(oldIri,getIri("Folder_",entity.getIri(),entity.getName()));
 				}
-			} else if (entity.isType(iri(IM.COHORT_QUERY))) {
+			} else if (entity.isType(iri(IM.QUERY))) {
 				String oldIri= entity.getIri();
 				String newIri= getIri("Q_",entity.getIri(),entity.getName());
 				iriMap.put(oldIri,newIri );

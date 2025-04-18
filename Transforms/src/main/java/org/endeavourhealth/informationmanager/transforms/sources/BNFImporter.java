@@ -5,12 +5,10 @@ import com.opencsv.exceptions.CsvValidationException;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.BNF;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SHACL;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -34,6 +32,7 @@ public class BNFImporter implements TTImport {
   private final Map<String, Set<String>> bnfCodeToSnomed = new HashMap<>();
   private final Map<String, TTEntity> codeToEntity = new HashMap<>();
   private final Map<String, Set<String>> setToSnomed = new HashMap<>();
+  private final ImportMaps importMaps = new ImportMaps();
 
   private final String topFolder = BNF.NAMESPACE + "BNFValueSets";
   private final Map<String, Set<String>> children = new HashMap<>();
@@ -54,14 +53,57 @@ public class BNFImporter implements TTImport {
       topFolder();
       importMaps(config.getFolder());
       importCodes(config.getFolder());
+      createEMISMaps(document);
       setMembers();
       flattenSets();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
       }
+
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(),ex);
     }
+  }
+
+  private void createEMISMaps(TTDocument document) throws ImportException {
+    try {
+      try {
+        LOG.info("Creating EMIS-bnf maps...");
+        Map<String,String> emisConcepts= importMaps.getCodesToIri(GRAPH.EMIS);
+        for (Map.Entry<String,String> entry:emisConcepts.entrySet()){
+          String code=entry.getKey();
+          if (code.contains("DRGG")){
+            String bnfChapter= chapterFormatter(code.split("DRGG")[1]);
+            String bnfIri=GRAPH.BNF+"BNF_"+bnfChapter;
+            TTEntity bnfEntity = manager.getEntity(bnfIri);
+            if (bnfEntity!=null){
+              TTEntity map= new TTEntity()
+                .setIri(entry.getValue())
+                .setCrud(iri(IM.ADD_QUADS))
+                .set(iri(IM.MATCHED_TO),iri(bnfIri));
+              document.addEntity(map);
+            }
+          }
+        }
+      }
+      catch (Exception ex){
+        LOG.error("Error creating EMIS maps",ex);
+        throw new ImportException(ex.getMessage(),ex);
+      }
+    }
+    catch (Exception ex){
+      throw new ImportException(ex.getMessage(),ex);
+    }
+
+  }
+  public String chapterFormatter(String emisFormat) {
+      String[] parts = emisFormat.split("\\.");
+      StringBuilder result = new StringBuilder();
+      for (String part : parts) {
+        int num = Integer.parseInt(part);
+        result.append(String.format("%02d", num)); // pad with 0s to 2 digits
+      }
+      return result.toString();
   }
 
 

@@ -99,6 +99,7 @@ public class EQDImporter {
 			cleanFolders(document);
 			manager.createIndex();
 			addSetsToFolders(document);
+			addMissingFolders(document);
 			removeRedundantFolders(manager);
 			//createReportFolders(document);
 			//createSubPopulations(document);
@@ -110,6 +111,20 @@ public class EQDImporter {
 
 
 	}
+
+	private void addMissingFolders(TTDocument document) {
+		for (TTEntity report : document.getEntities()) {
+			if (report.isType(iri(IM.QUERY))){
+				for (TTValue folder: report.get(iri(IM.IS_CONTAINED_IN)).getElements()){
+					TTEntity folderEntity= manager.getEntity(folder.asIriRef().getIri());
+					if (folderEntity==null){
+						report.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(mainFolder)));
+					}
+				}
+			}
+		}
+	}
+
 	private TTEntity createFieldGroupFolder(TTEntity fieldGroup, Map<String, TTEntity> folderMap, List<TTEntity> toAdd) {
 		TTEntity folder = new TTEntity()
 			.setIri(namespace + UUID.randomUUID())
@@ -134,7 +149,7 @@ public class EQDImporter {
 
 	private void createReportFolders(TTDocument document) {
 		for (TTEntity entity: document.getEntities()){
-			if (entity.isType(iri(IM.COHORT_QUERY))||entity.isType(iri(IM.DATASET_QUERY))){
+			if (entity.isType(iri(IM.QUERY))||entity.isType(iri(IM.QUERY))){
 				String reportFolderIri= namespace+ "Folder_"+entity.getIri().split("#")[1];
 				TTEntity reportFolder= folderToEntity.get(reportFolderIri);
 				if (reportFolder==null){

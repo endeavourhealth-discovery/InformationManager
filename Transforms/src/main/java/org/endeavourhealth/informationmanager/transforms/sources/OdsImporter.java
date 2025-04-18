@@ -62,7 +62,6 @@ public class OdsImporter implements TTImport {
       doc = manager.createDocument(GRAPH.ODS);
       doc.setCrud(iri(IM.UPDATE_ALL));
       doc.addEntity(manager.createGraph(GRAPH.ODS, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
-
       importOrganisationData(config, doc);
       importOrganisationRelationships(config);
       importOrganisationRoles(config);
@@ -83,6 +82,7 @@ public class OdsImporter implements TTImport {
     recordClassSet = new TTArray();
     TTEntity odsCodeFolder= new TTEntity()
       .setIri(IM.NAMESPACE+"OdsCodeSystems")
+      .setScheme(iri(GRAPH.ODS))
         .addType(iri(IM.FOLDER))
           .setName("ODS code systems")
             .setDescription("Foldr containing ODS code schemes")
@@ -227,6 +227,7 @@ public class OdsImporter implements TTImport {
     TTEntity org = new TTEntity(ORG.ORGANISATION_NAMESPACE + odsCode)
       .addType(TTIriRef.iri(IM.NAMESPACE + "Organisation"))
       .setName(fieldByName("Name"))
+      .setScheme(iri(GRAPH.ODS))
       .setStatus("Active".equals(fieldByName("Status")) ? iri(IM.ACTIVE) : iri(IM.INACTIVE))
       .set(iri(ORG.ODS_CODE), literal(odsCode))
       .set(iri(IM.ADDRESS), iri(addIri))
@@ -332,7 +333,7 @@ public class OdsImporter implements TTImport {
       }
 
       TTNode role = new TTNode()
-        .set(iri(IM.CONCEPT), iri(ODS.ORGANISATION_ROLE_TYPE + "_" + roleId.substring(2)))
+        .set(iri(IM.NAMESPACE+"concept"), iri(ODS.ORGANISATION_ROLE_TYPE + "_" + roleId.substring(2)))
         .set(iri(IM.EFFECTIVE_DATE), literal(fieldByName("OperationalStartDate")))
         .set(iri(IM.END_DATE), literal(fieldByName("OperationalEndDate")))
         .set(iri(IM.HAS_STATUS), "Active".equals(fieldByName("Status")) ? iri(IM.ACTIVE) : iri(IM.INACTIVE));
