@@ -263,16 +263,16 @@ public class BNFImporter implements TTImport {
       return;
     }
     if (codeToEntity.get(chapterCode) == null) {
-      setNewEntity(chapterCode, chapterDot + " " + chapter + " (BNF based value sets)", IM.FOLDER, topFolder, null);
+      setNewEntity(chapterCode, chapterDot + " " + chapter + " (BNF based set)", IM.FOLDER, topFolder, null);
     }
     if (codeToEntity.get(sectionCode) == null) {
-      setNewEntity(sectionCode, sectionDot + " " + section + " (BNF based value sets)", IM.FOLDER, BNF.NAMESPACE + "BNF_" + chapterCode, null);
+      setNewEntity(sectionCode, sectionDot + " " + section + " (BNF based set)", IM.FOLDER, BNF.NAMESPACE + "BNF_" + chapterCode, null);
     }
     if (codeToEntity.get(paragraphCode) == null) {
-      setNewEntity(paragraphCode, paraDot + " " + paragraph + " (BNF based value sets)", IM.CONCEPT_SET, BNF.NAMESPACE + "BNF_" + sectionCode, null);
+      setNewEntity(paragraphCode, paraDot + " " + paragraph + " (BNF based set)", IM.CONCEPT_SET, BNF.NAMESPACE + "BNF_" + sectionCode, null);
     }
     if (codeToEntity.get(subparagraphCode) == null) {
-      setNewEntity(subparagraphCode, subParaDot + " " + subparagraph + " (BNF based value sets)", IM.CONCEPT_SET, null, BNF.NAMESPACE + "BNF_" + paragraphCode);
+      setNewEntity(subparagraphCode, subParaDot + " " + subparagraph + " (BNF based set)", IM.CONCEPT_SET, null, BNF.NAMESPACE + "BNF_" + paragraphCode);
     }
     Set<String> snomeds = bnfCodeToSnomed.get(workingCode);
     if (snomeds != null) {
