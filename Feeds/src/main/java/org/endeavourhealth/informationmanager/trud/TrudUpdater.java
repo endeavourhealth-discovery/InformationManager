@@ -476,7 +476,7 @@ public class TrudUpdater {
   public static Path findFileForId(String path, String filePattern) throws IOException {
     try (Stream<Path> stream = Files.list(Paths.get(path))) { //, 16, (file, attr) -> file.toString().replace("/", "\\").matches(filePattern))) {
       List<Path> paths = stream.collect(Collectors.toList());
-      paths = paths.stream().filter(f -> f.toString().replaceAll("\\\\", "/").matches(filePattern)).collect(Collectors.toList());
+      paths = paths.stream().filter(f -> f.toString().replaceAll("\\\\", "/").matches(filePattern)).toList();
 
 
       if (paths.size() == 1)
