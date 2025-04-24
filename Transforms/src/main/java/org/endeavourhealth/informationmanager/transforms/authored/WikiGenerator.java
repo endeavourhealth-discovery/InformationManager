@@ -121,10 +121,9 @@ public class WikiGenerator {
     }
 
 
-    for (int i = 0; i < shapesToDo.size(); i++) {
-      String iri = shapesToDo.get(i);
+    for (String iri : shapesToDo) {
       if (iri.contains("/im#")) {
-        TTEntity toDo = getEntity(shapesToDo.get(i));
+        TTEntity toDo = getEntity(iri);
         if (!shapesDone.contains(toDo.getIri()))
           classText.append(generateClass(toDo));
       }
@@ -135,17 +134,18 @@ public class WikiGenerator {
 
   private String getTable(TTEntity shape) throws DataFormatException, IOException {
     table = new StringBuilder();
-    table.append("{| class=\"wikitable\"\n" +
-      "|+\n" +
-      "|colspan=\"2\"|Property\n" +
-      "|Card.\n" +
-      "|Value type\n" +
-      "|Description\n" +
-      "|-\n");
+    table.append("""
+      {| class="wikitable"
+      |+
+      |colspan="2"|Property
+      |Card.
+      |Value type
+      |Description
+      |-
+      """);
 
     processProperties(shape);
     table.append("\n|}\n");
-    //table.append("\n|-\n");
     return table.toString();
   }
 
@@ -183,7 +183,7 @@ public class WikiGenerator {
 
         List<TTNode> properties = shape.get(iri(SHACL.PROPERTY)).getElements().stream().map(TTValue::asNode)
           .sorted(Comparator.comparing((TTNode p) -> p.get(iri(SHACL.ORDER)).asLiteral().intValue()))
-          .collect(Collectors.toList());
+          .toList();
         int propCount = 0;
         for (TTNode property : properties) {
           if (property.get(iri(IM.INHERITED_FROM)) != null)
@@ -258,25 +258,32 @@ public class WikiGenerator {
   }
 
   private String getTitle(TTIriRef iri) throws DataFormatException, IOException {
-    if (iri.getIri().equals(SHACL.IRI))
-      return "international resource identifier";
-    else if (iri.getIri().equals(XSD.STRING))
-      return "any valid json value characters with json escapes";
-    else if (iri.getIri().equals(XSD.INTEGER))
-      return "whole number";
-    else if (iri.getIri().equals(IM.NAMESPACE + "DateTime"))
-      return "im date time format";
-    else if (iri.getIri().equals(XSD.BOOLEAN))
-      return "boolean true or false";
-    else {
-      TTEntity entity = getEntity(iri.getIri());
-      if (entity != null) {
-        if (entity.get(iri(RDFS.COMMENT)) != null)
-          return entity.get(iri(RDFS.COMMENT)).asLiteral().getValue().replaceAll("<br>", "");
-        else
+    switch (iri.getIri()) {
+      case SHACL.IRI -> {
+        return "international resource identifier";
+      }
+      case XSD.STRING -> {
+        return "any valid json value characters with json escapes";
+      }
+      case XSD.INTEGER -> {
+        return "whole number";
+      }
+      case IM.NAMESPACE + "DateTime" -> {
+        return "im date time format";
+      }
+      case XSD.BOOLEAN -> {
+        return "boolean true or false";
+      }
+      default -> {
+        TTEntity entity = getEntity(iri.getIri());
+        if (entity != null) {
+          if (entity.get(iri(RDFS.COMMENT)) != null)
+            return entity.get(iri(RDFS.COMMENT)).asLiteral().getValue().replaceAll("<br>", "");
+          else
+            return "";
+        } else
           return "";
-      } else
-        return "";
+      }
     }
   }
 

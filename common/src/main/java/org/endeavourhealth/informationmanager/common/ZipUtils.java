@@ -32,12 +32,12 @@ public class ZipUtils {
     try (ZipFile zipFile = new ZipFile(fileToUnzip)) {
 
       List<FileHeader> zipEntries = zipFile.getFileHeaders();
-      if (zipEntries.isEmpty() || zipEntries.size() > 1) {
+      if (zipEntries.size() != 1) {
         LOG.error("Zip contains more than 1 file!");
         System.exit(-1);
       }
 
-      FileHeader entry = zipEntries.get(0);
+      FileHeader entry = zipEntries.getFirst();
 
       zipFile.extractFile(entry, workDir);
       return new File(workDir, entry.getFileName());
