@@ -31,9 +31,9 @@ dependencies {
     implementation(libs.slf4j)
     implementation(libs.wsrs)
 
-    testimplementation(libs.junit)
-    testimplementation(libs.junitEngine)
-    testimplementation(libs.junitRunner)
+    testImplementation(libs.junit)
+    testImplementation(libs.junitEngine)
+    testImplementation(libs.junitRunner)
 }
 
 tasks.test {

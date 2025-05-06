@@ -7,10 +7,10 @@ version = "1.2-SNAPSHOT"
 
 gradlePlugin {
   plugins {
-    VocabGenerator {
+    /*VocabGenerator {
       id = "org.endeavourhealth.plugins.StaticConstGenerator"
       implementationClass = "org.endeavourhealth.plugins.StaticConstGenerator"
-    }
+    }*/
   }
 }
 

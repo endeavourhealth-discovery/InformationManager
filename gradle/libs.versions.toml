@@ -10,7 +10,7 @@ csv            = "1.10.0"
 factPlusPlus   = "1.6.5"
 gradleApi      = "8.4"
 guava          = "32.1.3-jre"
-jackarta       = "4.0.1"
+jakarta       = "4.0.1"
 jackson        = "2.16.0"
 jaxb           = "4.0.4"
 jersey         = "3.1.3"
@@ -35,45 +35,45 @@ sonar = { id = "org.sonarqube", version = "4.4.1.3373" }
 [libraries]
 imapi             = "org.endeavourhealth.imapi:api:1.0-SNAPSHOT"
 
-activation        = "jakarta.activation:jakarta.activation-api:$versions.activation"
-antlr             = "org.antlr:antlr4-runtime:$versions.antlr"
-collections4      = "org.apache.commons:commons-collections4:$versions.collections4"
-commonsIO         = "commons-io:commons-io:$versions.commonsIO"
-commonsutils      = "org.apache.commons:commons-lang3.StringUtils:$versions.commonsutils"
-commonsCompress   = "org.apache.commons:commons-compress:$versions.commonsCompress"
-csv               = "org.apache.commons:commons-csv:$versions.csv"
-factPlusPlus      = "uk.ac.manchester.cs:factplusplus:$versions.factPlusPlus"
-gradleApi         = "dev.gradleplugins:gradle-api:$versions.gradleApi"
-guava             = "com.google.guava:guava:$versions.guava"
-jacksonCore       = "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
-jacksonAnnotations= "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson"
-jacksonDatabind   = "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
-jacksonJax        = "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:$versions.jackson"
+activation        = { module = "jakarta.activation:jakarta.activation-api", version.ref =  "activation" }
+antlr             = { module = "org.antlr:antlr4-runtime", version.ref = "antlr" }
+collections4      = { module = "org.apache.commons:commons-collections4", version.ref = "collections4" }
+commonsIO         = { module = "commons-io:commons-io", version.ref = "commonsIO" }
+commonsutils      = { module = "org.apache.commons:commons-lang3.StringUtils", version.ref =  "commonsutils" }
+commonsCompress   = { module = "org.apache.commons:commons-compress", version.ref =  "commonsCompress" }
+csv               = { module = "org.apache.commons:commons-csv", version.ref =  "csv" }
+factPlusPlus      = { module = "uk.ac.manchester.cs:factplusplus", version.ref =  "factPlusPlus" }
+gradleApi         = { module = "dev.gradleplugins:gradle-api", version.ref =  "gradleApi" }
+guava             = { module = "com.google.guava:guava", version.ref =  "guava" }
+jacksonCore       = { module = "com.fasterxml.jackson.core:jackson-core", version.ref =  "jackson" }
+jacksonAnnotations= { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref =  "jackson" }
+jacksonDatabind   = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref =  "jackson" }
+jacksonJax        = { module = "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base", version.ref =  "jackson" }
 
-jaxbApi           = "jakarta.xml.bind:jakarta.xml.bind-api:$versions.jackarta"
-jaxbRuntime       = "com.sun.xml.bind:jaxb-impl:$versions.jaxb"
+jaxbApi           = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref =  "jakarta" }
+jaxbRuntime       = { module = "com.sun.xml.bind:jaxb-impl", version.ref =  "jaxb" }
 
-jerseyClient      = "org.glassfish.jersey.core:jersey-client:$versions.jersey"
-jerseyInject      = "org.glassfish.jersey.inject:jersey-hk2:$versions.jersey"
-juneau            = "org.apache.juneau:juneau-marshall-rdf:$versions.juneau"
-junit             = "org.junit.jupiter:junit-jupiter-api:$versions.junit"
-junitEngine       = "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
-junitRunner       = "org.junit.platform:junit-platform-runner:$versions.junitRunner"
-json              = "org.json:json:$versions.json"
-jsonSimple        = "org.apache.clerezza.ext:org.json.simple:$versions.jsonSimple"
-logbackCore       = "ch.qos.logback:logback-core:$versions.logback"
-logbackClassic    = "ch.qos.logback:logback-classic:$versions.logback"
-openCsv           = "com.opencsv:opencsv:$versions.openCsv"
-openLlet          = "com.github.galigator.openllet:openllet-owlapi:$versions.openLlet"
-owlApiApiBinding  = "net.sourceforge.owlapi:owlapi-apibinding:$versions.owlApi"
-owlApiDistribution= "net.sourceforge.owlapi:owlapi-distribution:$versions.owlApi"
-rdf4jQuery        = "org.eclipse.rdf4j:rdf4j-query:$versions.rdf4j"
-rdf4jCommon       = "org.eclipse.rdf4j:rdf4j-common-io:$versions.rdf4j"
-rdf4jIterator     = "org.eclipse.rdf4j:rdf4j-common-iterator:$versions.rdf4j"
-rdf4jRepoApi      = "org.eclipse.rdf4j:rdf4j-repository-api:$versions.rdf4j"
-rdf4jRepoHttp     = "org.eclipse.rdf4j:rdf4j-repository-http:$versions.rdf4j"
-rdf4jRepoSail     = "org.eclipse.rdf4j:rdf4j-repository-sail:$versions.rdf4j"
-slf4j             = "org.slf4j:slf4j-api:$versions.slf4j"
-snomed            = "org.snomed.languages:snomed-ecl-parser:$versions.snomed"
-wsrs              = "jakarta.ws.rs:jakarta.ws.rs-api:$versions.wsrs"
-zip4j             = "net.lingala.zip4j:zip4j:$versions.zip4j"
+jerseyClient      = { module = "org.glassfish.jersey.core:jersey-client", version.ref =  "jersey" }
+jerseyInject      = { module = "org.glassfish.jersey.inject:jersey-hk2", version.ref =  "jersey" }
+juneau            = { module = "org.apache.juneau:juneau-marshall-rdf", version.ref =  "juneau" }
+junit             = { module = "org.junit.jupiter:junit-jupiter-api", version.ref =  "junit" }
+junitEngine       = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref =  "junit" }
+junitRunner       = { module = "org.junit.platform:junit-platform-runner", version.ref =  "junitRunner" }
+json              = { module = "org.json:json", version.ref =  "json" }
+jsonSimple        = { module = "org.apache.clerezza.ext:org.json.simple", version.ref =  "jsonSimple" }
+logbackCore       = { module = "ch.qos.logback:logback-core", version.ref =  "logback" }
+logbackClassic    = { module = "ch.qos.logback:logback-classic", version.ref =  "logback" }
+openCsv           = { module = "com.opencsv:opencsv", version.ref =  "openCsv" }
+openLlet          = { module = "com.github.galigator.openllet:openllet-owlapi", version.ref =  "openLlet" }
+owlApiApiBinding  = { module = "net.sourceforge.owlapi:owlapi-apibinding", version.ref =  "owlApi" }
+owlApiDistribution= { module = "net.sourceforge.owlapi:owlapi-distribution", version.ref =  "owlApi" }
+rdf4jQuery        = { module = "org.eclipse.rdf4j:rdf4j-query", version.ref =  "rdf4j" }
+rdf4jCommon       = { module = "org.eclipse.rdf4j:rdf4j-common-io", version.ref =  "rdf4j" }
+rdf4jIterator     = { module = "org.eclipse.rdf4j:rdf4j-common-iterator", version.ref =  "rdf4j" }
+rdf4jRepoApi      = { module = "org.eclipse.rdf4j:rdf4j-repository-api", version.ref =  "rdf4j" }
+rdf4jRepoHttp     = { module = "org.eclipse.rdf4j:rdf4j-repository-http", version.ref =  "rdf4j" }
+rdf4jRepoSail     = { module = "org.eclipse.rdf4j:rdf4j-repository-sail", version.ref =  "rdf4j" }
+slf4j             = { module = "org.slf4j:slf4j-api", version.ref =  "slf4j" }
+snomed            = { module = "org.snomed.languages:snomed-ecl-parser", version.ref =  "snomed" }
+wsrs              = { module = "jakarta.ws.rs:jakarta.ws.rs-api", version.ref =  "wsrs" }
+zip4j             = { module = "net.lingala.zip4j:zip4j", version.ref =  "zip4j" }

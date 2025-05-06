@@ -6,8 +6,8 @@ sonar {
 
 dependencies {
     api(project(":common"))
+    api(project(":Transforms"))
     implementation(libs.imapi)
-    implementation(project(":Transforms"))
 
   implementation(libs.commonsIO)
     implementation(libs.jacksonAnnotations)
@@ -24,9 +24,9 @@ dependencies {
     implementation(libs.slf4j)
     implementation(libs.wsrs)
 
-    testimplementation(libs.junit)
-    testimplementation(libs.junitEngine)
-    testimplementation(libs.junitRunner)
+    testImplementation(libs.junit)
+    testImplementation(libs.junitEngine)
+    testImplementation(libs.junitRunner)
 }
 
 tasks.test {
