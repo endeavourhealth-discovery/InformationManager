@@ -35,8 +35,8 @@ configure<PublishingExtension> {
     maven {
       url = uri("https://artifactory.endhealth.co.uk/repository/maven-snapshots")
       credentials {
-        username = System.getProperty("MAVEN_USERNAME")
-        password = System.getProperty("MAVEN_PASSWORD")
+        username = System.getenv("MAVEN_USERNAME")
+        password = System.getenv("MAVEN_PASSWORD")
       }
     }
   }
