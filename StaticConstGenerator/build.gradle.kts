@@ -1,5 +1,6 @@
 plugins {
   id("java-gradle-plugin")
+  id("maven-publish")
 }
 
 group = "org.endeavourhealth.plugins"
@@ -7,9 +8,10 @@ version = "1.2-SNAPSHOT"
 
 gradlePlugin {
   plugins {
-    create("VocabGenerator") {
+    create("StaticConstGenerator") {
       id = "org.endeavourhealth.plugins.StaticConstGenerator"
       implementationClass = "org.endeavourhealth.plugins.StaticConstGenerator"
+
     }
   }
 }
@@ -30,7 +32,7 @@ dependencies {
   implementation(libs.gradleApi)
 }
 
-configure<PublishingExtension> {
+publishing {
   repositories {
     maven {
       url = uri("https://artifactory.endhealth.co.uk/repository/maven-snapshots")

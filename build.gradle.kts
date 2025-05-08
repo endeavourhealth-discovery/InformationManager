@@ -1,7 +1,5 @@
-
 plugins {
   jacoco
-  id("maven-publish")
   id("groovy-gradle-plugin")
   alias(libs.plugins.sonar)
 }
@@ -33,8 +31,7 @@ configurations.all {
 }
 
 allprojects {
-  apply(plugin = "java-library")
-  apply(plugin = "maven-publish")
+  apply(plugin = "java")
   apply(plugin = "jacoco")
 
   group = "org.endeavourhealth.informationManager"
@@ -55,28 +52,18 @@ allprojects {
     }
   }
 
-  tasks.build {
-    finalizedBy("publish")
-  }
-
-  tasks.test{
+  tasks.test {
     finalizedBy(tasks.jacocoTestReport)
   }
 
-    repositories {
-      mavenLocal()
-      mavenCentral()
-      maven {
-        url = uri("https://artifactory.endhealth.co.uk/repository/maven-releases")
-      }
-      maven {
-        url = uri("https://artifactory.endhealth.co.uk/repository/maven-snapshots")
-      }
+  repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+      url = uri("https://artifactory.endhealth.co.uk/repository/maven-releases")
     }
-
-  configure<PublishingExtension> {
-    publications.create<MavenPublication>("test") {
-      //from(components.java)
+    maven {
+      url = uri("https://artifactory.endhealth.co.uk/repository/maven-snapshots")
     }
   }
 }

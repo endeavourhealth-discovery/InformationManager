@@ -3,14 +3,14 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.apache.commons.text.CaseUtils;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.informationmanager.common.ZipUtils;
+import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,6 +135,13 @@ public class IM1MapImport implements TTImport {
     iriToConcept.clear();
     importMaps.close();
     codeToIri.clear();
+  }
+
+  public String getNameSpace(String s) {
+    if (s.length() > 10)
+      return s.substring(s.length() - 10, s.length() - 3);
+    else
+      return "";
   }
 
   private void createFHIRMaps(String inFolder) throws IOException {
@@ -561,13 +568,6 @@ public class IM1MapImport implements TTImport {
       }
     }
     return false;
-  }
-
-  public String getNameSpace(String s) {
-    if (s.length() > 10)
-      return s.substring(s.length() - 10, s.length() - 3);
-    else
-      return "";
   }
 
   private void checkEntity(String scheme, String lname, String im1Scheme, String term, String code, String oldIri,

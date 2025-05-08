@@ -2,17 +2,19 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
-import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerException;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.informationmanager.common.Logger;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
@@ -27,22 +29,19 @@ import java.util.Set;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class VisionImport implements TTImport {
-  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(VisionImport.class);
+  private static final Logger LOG = LoggerFactory.getLogger(VisionImport.class);
   private static final String[] r2Terms = {".*\\\\READ\\\\Term.csv"};
   private static final String[] r2Desc = {".*\\\\READ\\\\DESC.csv"};
   private static final String[] visionRead2Code = {".*\\\\TPP_Vision_Maps\\\\vision_read2_code.csv"};
   private static final String[] visionRead2toSnomed = {".*\\\\TPP_Vision_Maps\\\\vision_read2_to_snomed_map.csv"};
 
   private final Map<String, TTEntity> codeToConcept = new HashMap<>();
-  private Set<String> snomedCodes;
-
-
-  private TTDocument document;
   private final Map<String, TTEntity> r2TermIdMap = new HashMap<>();
   private final Set<String> preferredId = new HashSet<>();
-  private Map<String, TTEntity> emisRead;
   private final ImportMaps importMaps = new ImportMaps();
-
+  private Set<String> snomedCodes;
+  private TTDocument document;
+  private Map<String, TTEntity> emisRead;
 
   @Override
   public void importData(TTImportConfig config) throws ImportException {
@@ -70,6 +69,52 @@ public class VisionImport implements TTImport {
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);
     }
+  }
+
+  public Boolean isEMIS(String s) {
+    if (s.length() > 5)
+      return true;
+    else if (s.contains("DRG") || s.contains("SHAPT") || s.contains("EMIS"))
+      return true;
+    else
+      return false;
+  }
+
+  public String[] readQuotedCSVLine(BufferedReader reader, String line) throws IOException {
+    if (line.split(",").length < 5) {
+      do {
+        String nextLine = reader.readLine();
+        line = line.concat("\n").concat(nextLine);
+      } while (line.split(",").length < 5);
+    }
+    String[] fields = line.split(",");
+    if (fields.length > 5) {
+      for (int i = 2; i < fields.length - 3; i++) {
+        fields[1] = fields[1].concat(",").concat(fields[i]);
+      }
+    }
+    return fields;
+  }
+
+  public Boolean isSnomed(String s) {
+    return snomedCodes.contains(s);
+  }
+
+  @Override
+  public void validateFiles(String inFolder) {
+    ImportUtils.validateFiles(inFolder, r2Terms, r2Desc, visionRead2Code, visionRead2toSnomed);
+  }
+
+  @Override
+  public void close() throws Exception {
+    if (snomedCodes != null) snomedCodes.clear();
+    if (emisRead != null) emisRead.clear();
+    codeToConcept.clear();
+    r2TermIdMap.clear();
+    preferredId.clear();
+
+    importMaps.close();
+
   }
 
   private void addMoreReadCodes() throws TTFilerException {
@@ -108,7 +153,6 @@ public class VisionImport implements TTImport {
     }
   }
 
-
   private void importR2Terms(String folder) throws IOException, CsvValidationException {
 
     Path file = ImportUtils.findFileForId(folder, r2Terms[0]);
@@ -142,7 +186,6 @@ public class VisionImport implements TTImport {
     emisRead = importMaps.getEMISReadAsVision();
 
   }
-
 
   private void importR2Desc(String folder) throws IOException {
 
@@ -192,19 +235,8 @@ public class VisionImport implements TTImport {
     }
   }
 
-
-  public Boolean isEMIS(String s) {
-    if (s.length() > 5)
-      return true;
-    else if (s.contains("DRG") || s.contains("SHAPT") || s.contains("EMIS"))
-      return true;
-    else
-      return false;
-  }
-
-
   private void createHierarchy() {
-    Logger.info("Creating child parent hierarchy");
+    LOG.info("Creating child parent hierarchy");
     TTEntity vision = new TTEntity()
       .setIri(GRAPH.VISION + "VisionCodes")
       .setName("Vision read 2 and localcodes")
@@ -231,7 +263,6 @@ public class VisionImport implements TTImport {
       }
     }
   }
-
 
   private void importVisionCodes(String folder) throws IOException {
     Path file = ImportUtils.findFileForId(folder, visionRead2Code[0]);
@@ -268,23 +299,6 @@ public class VisionImport implements TTImport {
     }
   }
 
-  public String[] readQuotedCSVLine(BufferedReader reader, String line) throws IOException {
-    if (line.split(",").length < 5) {
-      do {
-        String nextLine = reader.readLine();
-        line = line.concat("\n").concat(nextLine);
-      } while (line.split(",").length < 5);
-    }
-    String[] fields = line.split(",");
-    if (fields.length > 5) {
-      for (int i = 2; i < fields.length - 3; i++) {
-        fields[1] = fields[1].concat(",").concat(fields[i]);
-      }
-    }
-    return fields;
-  }
-
-
   private void addVisionMaps(String folder) throws IOException {
     Path file = ImportUtils.findFileForId(folder, visionRead2toSnomed[0]);
     LOG.info("Retrieving Vision snomed maps");
@@ -311,27 +325,5 @@ public class VisionImport implements TTImport {
       }
       LOG.info("Process ended with {}", count);
     }
-  }
-
-
-  public Boolean isSnomed(String s) {
-    return snomedCodes.contains(s);
-  }
-
-  @Override
-  public void validateFiles(String inFolder) {
-    ImportUtils.validateFiles(inFolder, r2Terms, r2Desc, visionRead2Code, visionRead2toSnomed);
-  }
-
-  @Override
-  public void close() throws Exception {
-    if (snomedCodes != null) snomedCodes.clear();
-    if (emisRead != null) emisRead.clear();
-    codeToConcept.clear();
-    r2TermIdMap.clear();
-    preferredId.clear();
-
-    importMaps.close();
-
   }
 }
