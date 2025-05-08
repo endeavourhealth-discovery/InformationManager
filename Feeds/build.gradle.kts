@@ -1,20 +1,15 @@
 sonar {
   properties {
     property("sonar.projectKey", "endeavourhealth-discovery_informationManager::Feeds")
-    }
+  }
 }
 
 dependencies {
-    implementation(libs.imapi)
+  implementation(libs.imapi)
 
   implementation(libs.jacksonDatabind)
-    implementation(libs.activation)
-    implementation(libs.jerseyClient)
-    implementation(libs.jerseyInject)
-    implementation(libs.logbackCore)
-    implementation(libs.logbackClassic)
-    implementation(libs.slf4j)
-    implementation(libs.wsrs)
+  implementation(libs.slf4j)
+  implementation(libs.wsrs)
 }
 
 description = "Feeds"

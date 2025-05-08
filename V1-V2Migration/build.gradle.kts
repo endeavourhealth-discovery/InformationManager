@@ -4,8 +4,4 @@ sonar {
   }
 }
 
-dependencies {
-  // implementation("mysql:mysql-connector-java:8.0.19")
-}
-
 description = "V1-V2Migration"
