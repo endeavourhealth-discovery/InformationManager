@@ -17,7 +17,7 @@ wsrs = "3.1.0"
 zip4j = "2.11.5"
 
 [plugins]
-sonar = { id = "org.sonarqube", version = "4.4.1.3373" }
+sonar = { id = "org.sonarqube", version = "6.1.0.5360" }
 
 [libraries]
 imapi = "org.endeavourhealth.imapi:api:1.0-SNAPSHOT"
