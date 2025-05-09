@@ -4,15 +4,16 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
-import org.endeavourhealth.imapi.filer.*;
+import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerException;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
-import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.informationmanager.common.ZipUtils;
+import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -24,7 +25,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -49,11 +49,11 @@ public class TPPImporter implements TTImport {
   private static final String[] vaccineMaps = {".*\\\\TPP\\\\VaccineMaps.json"};
   private static final String[] tppCtv3Lookup = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_lookup_2.zip"};
   private static final String[] tppCtv3ToSnomed = {".*\\\\TPP_Vision_Maps\\\\tpp_ctv3_to_snomed.zip"};
+  private static final Map<String, TTEntity> codeToEntity = new HashMap<>();
+  private static final Map<String, String> termCodes = new HashMap<>();
   private Map<String, Set<String>> emisToSnomed;
   private TTDocument document;
   private TTDocument vDocument;
-  private static final Map<String, TTEntity> codeToEntity = new HashMap<>();
-  private static final Map<String, String> termCodes = new HashMap<>();
   private ImportMaps importMaps = new ImportMaps();
 
 
@@ -95,6 +95,30 @@ public class TPPImporter implements TTImport {
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);
     }
+  }
+
+  @Override
+  public void validateFiles(String inFolder) {
+    ImportUtils.validateFiles(inFolder, concepts, descriptions, dcf, terms, hierarchies, tppCtv3Lookup, tppCtv3ToSnomed, nhsMap, vaccineMaps, localCodeMap);
+  }
+
+  public String[] readQuotedCSVLine(String line) {
+    String[] fields = line.split(",");
+    if (fields.length > 3) {
+      for (int i = 2; i < fields.length - 1; i++) {
+        fields[1] = fields[1].concat(",").concat(fields[i]);
+      }
+    }
+    return fields;
+  }
+
+  @Override
+  public void close() throws Exception {
+    if (emisToSnomed != null) emisToSnomed.clear();
+    codeToEntity.clear();
+    termCodes.clear();
+
+    importMaps.close();
   }
 
   private void setOrphanC0des() {
@@ -162,7 +186,6 @@ public class TPPImporter implements TTImport {
       }
     }
   }
-
 
   private void importEMISMaps() throws TTFilerException, IOException {
     LOG.info("Getting EMIS maps");
@@ -413,12 +436,6 @@ public class TPPImporter implements TTImport {
     document.addEntity(c);
   }
 
-  @Override
-  public void validateFiles(String inFolder) {
-    ImportUtils.validateFiles(inFolder, concepts, descriptions, dcf, terms, hierarchies, tppCtv3Lookup, tppCtv3ToSnomed, nhsMap, vaccineMaps, localCodeMap);
-  }
-
-
   private void importTppCtv3ToSnomed(String folder) throws IOException, CsvValidationException {
     Path zip = ImportUtils.findFileForId(folder, tppCtv3ToSnomed[0]);
     File file = ZipUtils.unzipFile(zip.getFileName().toString(), zip.getParent().toString());
@@ -457,7 +474,6 @@ public class TPPImporter implements TTImport {
     }
   }
 
-
   private void importTppLocalMaps(String folder) throws IOException, CsvValidationException {
     Path file = ImportUtils.findFileForId(folder, localCodeMap[0]);
     LOG.info("Importing TPP Local Code map");
@@ -494,25 +510,5 @@ public class TPPImporter implements TTImport {
       }
       LOG.info("Process ended with {}", count);
     }
-  }
-
-
-  public String[] readQuotedCSVLine(String line) {
-    String[] fields = line.split(",");
-    if (fields.length > 3) {
-      for (int i = 2; i < fields.length - 1; i++) {
-        fields[1] = fields[1].concat(",").concat(fields[i]);
-      }
-    }
-    return fields;
-  }
-
-  @Override
-  public void close() throws Exception {
-    if (emisToSnomed != null) emisToSnomed.clear();
-    codeToEntity.clear();
-    termCodes.clear();
-
-    importMaps.close();
   }
 }
