@@ -8,14 +8,12 @@ public class Main {
   public static void main(String[] argv) throws IOException, InterruptedException {
     boolean update = false;
     String cache = null;
-    if (argv.length > 0) {
-      for (String arg : argv)
-        if (arg.toLowerCase().equals("update"))
-          update = true;
-        else if (arg.toLowerCase().startsWith("cache=")) {
-          cache = arg.split("=")[1];
-        }
-    }
+    for (String arg : argv)
+      if (arg.equalsIgnoreCase("update"))
+        update = true;
+      else if (arg.toLowerCase().startsWith("cache=")) {
+        cache = arg.split("=")[1];
+      }
     new OpenSearchSender().execute(update);
   }
 }

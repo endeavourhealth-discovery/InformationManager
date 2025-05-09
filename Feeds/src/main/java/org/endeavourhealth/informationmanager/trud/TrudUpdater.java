@@ -14,6 +14,8 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
@@ -50,7 +52,7 @@ public class TrudUpdater {
   private static ObjectMapper mapper;
   private static ObjectNode localVersions;
 
-  public static void main(String argv[]) {
+  public static void main(String[] argv) {
     if (argv.length != 2) {
       System.err.println("You must provide an API key and working directory as parameters");
       System.err.println("TrudUpdater <api key> <working dir>");
@@ -81,12 +83,12 @@ public class TrudUpdater {
     Client client = ClientBuilder.newClient();
     ObjectMapper om = new ObjectMapper();
     for (TrudFeed feed : feeds) {
-      LOG.info("Fetching remote version [" + feed.getName() + "]...");
+      LOG.info("Fetching remote version [{}]...", feed.getName());
       WebTarget target = client.target("https://isd.digital.nhs.uk").path("/trud3/api/v1/keys/" + APIKey + "/items/" + feed.getId() + "/releases?latest");
       Response response = target.request().get();
       String responseRaw = response.readEntity(String.class);
       if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-        LOG.error("Could not get remote version for " + feed.getName());
+        LOG.error("Could not get remote version for {}", feed.getName());
         LOG.error(responseRaw);
         System.exit(-1);
       } else {
@@ -107,7 +109,7 @@ public class TrudUpdater {
     }
   }
 
-  private static void processFeeds() throws IOException {
+  private static void processFeeds() throws IOException, URISyntaxException {
     for (TrudFeed feed : feeds) {
       if (versionMismatch(feed) || !downloadExists(feed))
         downloadFeed(feed);
@@ -140,7 +142,7 @@ public class TrudUpdater {
     }
   }
 
-  private static void downloadFeed(TrudFeed feed) throws IOException {
+  private static void downloadFeed(TrudFeed feed) throws IOException, URISyntaxException {
     LOG.info("Downloading {}", feed.getName());
 
     if (feed.getUpdated() && localVersions.get(feed.getName()) != null) {
@@ -163,8 +165,8 @@ public class TrudUpdater {
     updateLocalVersions(feed);
   }
 
-  private static void downloadFile(String sourceUrl, String destination) throws IOException {
-    URL url = new URL(sourceUrl);
+  private static void downloadFile(String sourceUrl, String destination) throws IOException, URISyntaxException {
+    URL url = new URI(sourceUrl).toURL();
     URLConnection con = url.openConnection();
     long contentLength = con.getContentLengthLong();
     LOG.info("Downloading {} - {} bytes", url, contentLength);
@@ -468,7 +470,7 @@ public class TrudUpdater {
   }
 
   private static String getStreamAsString(InputStream is) throws IOException {
-    byte b[] = new byte[is.available()];
+    byte[] b = new byte[is.available()];
     is.read(b, 0, b.length);
     return new String(b).trim();
   }
@@ -480,7 +482,7 @@ public class TrudUpdater {
 
 
       if (paths.size() == 1)
-        return paths.get(0);
+        return paths.getFirst();
 
       if (paths.isEmpty())
         throw new IOException("No files found in [" + path + "] for expression [" + filePattern + "]");

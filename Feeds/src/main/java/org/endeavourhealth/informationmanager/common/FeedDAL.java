@@ -4,7 +4,7 @@ import java.sql.*;
 import java.util.Properties;
 
 public class FeedDAL {
-  private Connection connection;
+  private final Connection connection;
 
   public FeedDAL() throws SQLException {
     Properties props = new Properties();
