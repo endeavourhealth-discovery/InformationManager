@@ -3,7 +3,7 @@
 apache = "4.5.14"
 antlr = "4.13.1"
 gradleApi = "8.4"
-jakarta = "4.0.1"
+jakarta = "4.0.2"
 jackson = "2.16.0"
 jaxb = "4.0.4"
 junit = "5.10.1"
