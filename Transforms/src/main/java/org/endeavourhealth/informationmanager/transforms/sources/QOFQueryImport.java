@@ -123,8 +123,8 @@ public class QOFQueryImport implements TTImport {
 			query.setIri(iriMap.get(query.getIri()));
 		}
 
-		if (query.getMatch()!=null){
-			for (Match match:query.getMatch()){
+		if (query.getRule()!=null){
+			for (Match match:query.getRule()){
 				if (match.getInstanceOf()!=null){
 					for (Node instanceOf: match.getInstanceOf()){
 						if (iriMap.get(instanceOf.getIri())!=null) {
@@ -167,9 +167,9 @@ public class QOFQueryImport implements TTImport {
 	}
 
 	private void mapQueryIris(String prefix, Match outer, Map<String, String> iriMap) {
-		if (outer.getMatch()==null) return;
+		if (outer.getRule()==null) return;
 		int clause=0;
-		for (Match match:outer.getMatch()){
+		for (Match match:outer.getRule()){
 			clause++;
 			if (match.getIri()!=null) iriMap.put(match.getIri(),prefix+clause);
 			mapQueryIris(prefix+clause+"_",match,iriMap);
