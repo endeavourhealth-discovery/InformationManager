@@ -367,6 +367,8 @@ public class EMISImport implements TTImport {
 
         EmisCode ec = new EmisCode();
         ec.setCodeId(fields[0]);
+        if (fields[0].equals("29711000033114"))
+          System.out.println("here");
         ec.setTerm(fields[2]);
         ec.setCode(fields[3]);
         ec.setConceptId(fields[4]);

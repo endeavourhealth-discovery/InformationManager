@@ -136,7 +136,6 @@ public class Preload {
     LOG.info("expanding value sets");
     new SetMemberGenerator().generateAllSetMembers();
     new SetBinder().bindSets();
-
     LOG.info("Filing into live graph");
     TTFilerFactory.setBulk(false);
     TTFilerFactory.setTransactional(true);

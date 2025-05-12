@@ -99,6 +99,7 @@ public class EQDImporter {
 			cleanFolders(document);
 			manager.createIndex();
 			addSetsToFolders(document);
+			addMissingFolders(document);
 			removeRedundantFolders(manager);
 			//createReportFolders(document);
 			//createSubPopulations(document);
@@ -110,6 +111,20 @@ public class EQDImporter {
 
 
 	}
+
+	private void addMissingFolders(TTDocument document) {
+		for (TTEntity report : document.getEntities()) {
+			if (report.isType(iri(IM.QUERY))){
+				for (TTValue folder: report.get(iri(IM.IS_CONTAINED_IN)).getElements()){
+					TTEntity folderEntity= manager.getEntity(folder.asIriRef().getIri());
+					if (folderEntity==null){
+						report.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(mainFolder)));
+					}
+				}
+			}
+		}
+	}
+
 	private TTEntity createFieldGroupFolder(TTEntity fieldGroup, Map<String, TTEntity> folderMap, List<TTEntity> toAdd) {
 		TTEntity folder = new TTEntity()
 			.setIri(namespace + UUID.randomUUID())
@@ -134,7 +149,7 @@ public class EQDImporter {
 
 	private void createReportFolders(TTDocument document) {
 		for (TTEntity entity: document.getEntities()){
-			if (entity.isType(iri(IM.COHORT_QUERY))||entity.isType(iri(IM.DATASET_QUERY))){
+			if (entity.isType(iri(IM.QUERY))||entity.isType(iri(IM.QUERY))){
 				String reportFolderIri= namespace+ "Folder_"+entity.getIri().split("#")[1];
 				TTEntity reportFolder= folderToEntity.get(reportFolderIri);
 				if (reportFolder==null){
@@ -156,40 +171,6 @@ public class EQDImporter {
 
 	}
 
-	private void createSubPopulations(TTDocument document) throws JsonProcessingException {
-		for (TTEntity entity : document.getEntities()) {
-			if (entity.get(iri(IM.DEFINITION))!=null){
-				Query query= entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-				if (query.getMatch()!=null){
-					for (Match match:query.getMatch()){
-						if (match.getInstanceOf()!=null){
-							for (Node node:match.getInstanceOf()){
-								if (node.isMemberOf()){
-									if (!node.getIri().equals(IM.NAMESPACE+"Q_RegisteredGMS")&&!EqdToIMQ.gmsPatients.contains(node.getIri())) {
-										TTEntity parentReport= manager.getEntity(node.getIri());
-										TTEntity parentReportFolder= folderToEntity.get(namespace+"Folder_"+ node.getIri().split("#")[1]);
-										String subFolderIri=namespace+"SubFolder_"+node.getIri().split("#")[1];
-										TTEntity subFolder= folderToEntity.get(subFolderIri);
-										if (subFolder==null) {
-											subFolder = new TTEntity()
-												.setIri(subFolderIri)
-												.setName("Child queries of " + parentReport.getName() + " (folder)")
-												.addType(iri(IM.FOLDER));
-											subFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(parentReportFolder.getIri()));
-											folderToEntity.put(subFolderIri, subFolder);
-											newFolders.add(subFolder);
-										}
-										TTEntity reportFolder= folderToEntity.get(namespace+"Folder_"+ entity.getIri().split("#")[1]);
-										reportFolder.addObject(iri(IM.IS_CONTAINED_IN),iri(subFolderIri));
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-	}
 
 	private void cleanFolders(TTDocument document){
 		for (TTEntity entity : document.getEntities()) {
@@ -300,12 +281,12 @@ public class EQDImporter {
 		for (TTEntity entity : document.getEntities()) {
 			if (entity.get(iri(IM.DEFINITION)) != null) {
 				Query qry = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-				if (qry.getMatch() != null && qry.getMatch().get(0).getInstanceOf() != null) {
-					for (Node parent : qry.getMatch().get(0).getInstanceOf()) {
+				if (qry.getAnd() != null && qry.getAnd().get(0).getInstanceOf() != null) {
+					for (Node parent : qry.getAnd().get(0).getInstanceOf()) {
 						if (parent.getIri().equals(GRAPH.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
 							List<Node> parentList = new ArrayList<>();
 							parentList.add(new Node().setIri(IM.NAMESPACE + "Q_RegisteredGMS").setMemberOf(true));
-							qry.getMatch().get(0).setInstanceOf(parentList);
+							qry.getAnd().get(0).setInstanceOf(parentList);
 						}
 					}
 				}

@@ -62,7 +62,6 @@ public class OdsImporter implements TTImport {
       doc = manager.createDocument(GRAPH.ODS);
       doc.setCrud(iri(IM.UPDATE_ALL));
       doc.addEntity(manager.createGraph(GRAPH.ODS, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
-
       importOrganisationData(config, doc);
       importOrganisationRelationships(config);
       importOrganisationRoles(config);
@@ -83,6 +82,7 @@ public class OdsImporter implements TTImport {
     recordClassSet = new TTArray();
     TTEntity odsCodeFolder= new TTEntity()
       .setIri(IM.NAMESPACE+"OdsCodeSystems")
+      .setScheme(iri(GRAPH.ODS))
         .addType(iri(IM.FOLDER))
           .setName("ODS code systems")
             .setDescription("Foldr containing ODS code schemes")
@@ -122,7 +122,7 @@ public class OdsImporter implements TTImport {
         .addType(iri(IM.VALUESET))
         .setDescription("Value set for Organisation (data model) / role")
         .setStatus(iri(IM.ACTIVE))
-        .set(iri(IM.DEFINITION), literal("{\"match\":[{\"name\":\"Organisation role\",\"instanceOf\":[{\"@id\":\"" + ODS.ORGANISATION_ROLE_TYPE + "\",\"descendantsOf\":true}]}]}"))
+        .set(iri(IM.DEFINITION), literal("{\"name\":\"Organisation role\",\"instanceOf\":[{\"@id\":\"" + ODS.ORGANISATION_ROLE_TYPE + "\",\"descendantsOf\":true}]}"))
         .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "VSET_DataModel"))
         .set(iri(IM.HAS_MEMBER), relationshipSet)
       ).addEntity(new TTEntity(IM.NAMESPACE + "VSET_OrganisationRelationshipType")
@@ -130,7 +130,7 @@ public class OdsImporter implements TTImport {
         .addType(iri(IM.VALUESET))
         .setDescription("Value set for Organisation (data model) / relationship")
         .setStatus(iri(IM.ACTIVE))
-        .set(iri(IM.DEFINITION), literal("{\"match\":[{\"name\":\"Organisation relationshipType\",\"instanceOf\":[{\"@id\":\"" + ODS.ORGANISATION_RELATIONSHIP + "\",\"descendantsOf\":true}]}]}"))
+        .set(iri(IM.DEFINITION), literal("{\"name\":\"Organisation relationshipType\",\"instanceOf\":[{\"@id\":\"" + ODS.ORGANISATION_RELATIONSHIP + "\",\"descendantsOf\":true}]}"))
         .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "VSET_DataModel"))
         .set(iri(IM.HAS_MEMBER), relationshipSet)
       ).addEntity(new TTEntity(IM.NAMESPACE + "VSET_OrganisationRecordClass")
@@ -138,7 +138,7 @@ public class OdsImporter implements TTImport {
         .addType(iri(IM.VALUESET))
         .setDescription("Value set for Organisation (data model) / record class")
         .setStatus(iri(IM.ACTIVE))
-        .set(iri(IM.DEFINITION), literal("{\"match\":[{\"name\":\"Organisation role\",\"instanceOf\":[{\"@id\":\"" + ODS.ORGANISATION_RECORD_CLASS + "\",\"descendantsOf\":true}]}]}"))
+        .set(iri(IM.DEFINITION), literal("{\"name\":\"Organisation role\",\"instanceOf\":[{\"@id\":\"" + ODS.ORGANISATION_RECORD_CLASS + "\",\"descendantsOf\":true}]}"))
         .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "VSET_DataModel"))
         .set(iri(IM.HAS_MEMBER), recordClassSet)
       )
@@ -227,6 +227,7 @@ public class OdsImporter implements TTImport {
     TTEntity org = new TTEntity(ORG.ORGANISATION_NAMESPACE + odsCode)
       .addType(TTIriRef.iri(IM.NAMESPACE + "Organisation"))
       .setName(fieldByName("Name"))
+      .setScheme(iri(GRAPH.ODS))
       .setStatus("Active".equals(fieldByName("Status")) ? iri(IM.ACTIVE) : iri(IM.INACTIVE))
       .set(iri(ORG.ODS_CODE), literal(odsCode))
       .set(iri(IM.ADDRESS), iri(addIri))
@@ -332,7 +333,7 @@ public class OdsImporter implements TTImport {
       }
 
       TTNode role = new TTNode()
-        .set(iri(IM.CONCEPT), iri(ODS.ORGANISATION_ROLE_TYPE + "_" + roleId.substring(2)))
+        .set(iri(IM.NAMESPACE+"concept"), iri(ODS.ORGANISATION_ROLE_TYPE + "_" + roleId.substring(2)))
         .set(iri(IM.EFFECTIVE_DATE), literal(fieldByName("OperationalStartDate")))
         .set(iri(IM.END_DATE), literal(fieldByName("OperationalEndDate")))
         .set(iri(IM.HAS_STATUS), "Active".equals(fieldByName("Status")) ? iri(IM.ACTIVE) : iri(IM.INACTIVE));
