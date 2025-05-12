@@ -2,7 +2,7 @@
 [versions]
 apache = "4.5.14"
 antlr = "4.13.1"
-gradleApi = "8.4"
+gradleApi = "8.11.1"
 jakarta = "4.0.1"
 jackson = "2.16.0"
 jaxb = "4.0.4"
