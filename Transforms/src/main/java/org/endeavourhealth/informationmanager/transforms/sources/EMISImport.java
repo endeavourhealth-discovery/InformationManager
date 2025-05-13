@@ -1,17 +1,17 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.informationmanager.common.ZipUtils;
+import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +28,8 @@ import java.util.*;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class EMISImport implements TTImport {
-  private static final Logger LOG = LoggerFactory.getLogger(EMISImport.class);
   public static final String EMIS = "http://endhealth.info/emis#";
-
+  private static final Logger LOG = LoggerFactory.getLogger(EMISImport.class);
   private static final String[] emisCodes = {".*\\\\EMIS\\\\emis_codes.zip"};
   private static final String[] allergies = {".*\\\\EMIS\\\\Allergies.json"};
   private static final String[] drugIds = {".*\\\\EMIS\\\\EMISDrugs.zip"};
@@ -43,15 +42,21 @@ public class EMISImport implements TTImport {
   private final Map<String, List<String>> parentMap = new HashMap<>();
   private final Map<String, String> remaps = new HashMap<>();
   private final Map<String, String> alternateParents = new HashMap<>();
-  List<String> emisNs = Arrays.asList("1000006", "1000033", "1000034", "1000035", "1000027");
-
   private final TTManager manager = new TTManager();
+  List<String> emisNs = Arrays.asList("1000006", "1000033", "1000034", "1000035", "1000027");
   private TTDocument document;
 
 
   public EMISImport() {
   }
 
+  public static void populateRemaps(Map<String, String> remaps) {
+    remaps.put("65O2", "116813009");
+    remaps.put("65O3", "268504008");
+    remaps.put("65O4", "271498007");
+    remaps.put("65O5", "384702009");
+    remaps.put("65OZ", "709562004");
+  }
 
   /**
    * Imports EMIS , Read and EMIS codes and creates term code map to Snomed or local legacy entities
@@ -88,8 +93,62 @@ public class EMISImport implements TTImport {
         filer.fileDocument(document);
       }
     } catch (Exception e) {
-      throw new ImportException(e.getMessage(),e);
+      throw new ImportException(e.getMessage(), e);
     }
+  }
+
+  public void populateAlternateParents() {
+    alternateParents.put("1994021000006104", "271649006");
+  }
+
+  public boolean isBlackList(String code) {
+    String[] blacklist = {"373873005"};
+    return Arrays.asList(blacklist).contains(code);
+
+  }
+
+  public Boolean isSnomed(String s) {
+
+    if (getNameSpace(s).equals(""))
+      return true;
+    return !emisNs.contains(getNameSpace(s));
+  }
+
+  public String getNameSpace(String s) {
+    if (s.length() > 10)
+      return s.substring(s.length() - 10, s.length() - 3);
+    else
+      return "";
+  }
+
+  public String getEmisCode(String code, String term) {
+
+    int index = code.indexOf(".");
+    if (index != -1) {
+      code = code.substring(0, index);
+    }
+    if ("00".equals(term.substring(0, 2))) {
+      return code;
+    } else if (term.startsWith("1")) {
+      return code + "-" + term.charAt(1);
+    } else {
+      return code + "-" + term.substring(0, 2);
+    }
+  }
+
+  public void validateFiles(String inFolder) {
+    ImportUtils.validateFiles(inFolder, emisCodes, allergies, localCodeMaps);
+  }
+
+  @Override
+  public void close() throws Exception {
+    conceptIdToEntity.clear();
+    codeIdToEntity.clear();
+    snomedToEmis.clear();
+    termToEmis.clear();
+    parentMap.clear();
+    remaps.clear();
+    manager.close();
   }
 
   private void checkAndUnzip(String folder) throws IOException {
@@ -167,7 +226,6 @@ public class EMISImport implements TTImport {
     }
   }
 
-
   private void importDrugs(String folder) throws IOException {
     Path zip = ImportUtils.findFileForId(folder, drugIds[0]);
     File file = ZipUtils.unzipFile(zip.getFileName().toString(), zip.getParent().toString());
@@ -244,19 +302,6 @@ public class EMISImport implements TTImport {
     }
   }
 
-  public void populateAlternateParents() {
-    alternateParents.put("1994021000006104", "271649006");
-  }
-
-  public static void populateRemaps(Map<String, String> remaps) {
-    remaps.put("65O2", "116813009");
-    remaps.put("65O3", "268504008");
-    remaps.put("65O4", "271498007");
-    remaps.put("65O5", "384702009");
-    remaps.put("65OZ", "709562004");
-  }
-
-
   private void setEmisHierarchy() {
     LOG.info("Creating local code subclasses of core");
     for (Map.Entry<String, List<String>> entry : parentMap.entrySet()) {
@@ -294,7 +339,6 @@ public class EMISImport implements TTImport {
     }
   }
 
-
   private void addEMISTopLevel() {
     TTEntity c = new TTEntity().setIri(EMIS + "EMISOrphanCodes")
       .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(EMIS + "1669671000006112")))
@@ -323,6 +367,8 @@ public class EMISImport implements TTImport {
 
         EmisCode ec = new EmisCode();
         ec.setCodeId(fields[0]);
+        if (fields[0].equals("29711000033114"))
+          System.out.println("here");
         ec.setTerm(fields[2]);
         ec.setCode(fields[3]);
         ec.setConceptId(fields[4]);
@@ -343,7 +389,6 @@ public class EMISImport implements TTImport {
     }
 
   }
-
 
   private void addConcept(EmisCode ec) {
     String codeId = ec.getCodeId();
@@ -387,7 +432,7 @@ public class EMISImport implements TTImport {
     if (isSnomed(conceptId)) {
       if (!isBlackList(conceptId)) {
         emisConcept.setStatus(iri(IM.INACTIVE));
-        emisConcept.setName(name+" (emis code id)");
+        emisConcept.setName(name + " (emis code id)");
         snomedToEmis.put(conceptId, emisConcept);
         if (notFound(emisConcept, iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + conceptId)))
           emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + conceptId));
@@ -406,7 +451,6 @@ public class EMISImport implements TTImport {
       }
     }
   }
-
 
   private boolean notFound(TTNode node, TTIriRef predicate, TTValue value) {
     if (node.get(predicate) == null)
@@ -428,59 +472,5 @@ public class EMISImport implements TTImport {
       }
     }
     return true;
-  }
-
-
-  public boolean isBlackList(String code) {
-    String[] blacklist = {"373873005"};
-    return Arrays.asList(blacklist).contains(code);
-
-  }
-
-
-  public Boolean isSnomed(String s) {
-
-    if (getNameSpace(s).equals(""))
-      return true;
-    return !emisNs.contains(getNameSpace(s));
-  }
-
-
-  public String getNameSpace(String s) {
-    if (s.length() > 10)
-      return s.substring(s.length() - 10, s.length() - 3);
-    else
-      return "";
-  }
-
-  public String getEmisCode(String code, String term) {
-
-    int index = code.indexOf(".");
-    if (index != -1) {
-      code = code.substring(0, index);
-    }
-    if ("00".equals(term.substring(0, 2))) {
-      return code;
-    } else if (term.startsWith("1")) {
-      return code + "-" + term.charAt(1);
-    } else {
-      return code + "-" + term.substring(0, 2);
-    }
-  }
-
-
-  public void validateFiles(String inFolder) {
-    ImportUtils.validateFiles(inFolder, emisCodes, allergies, localCodeMaps);
-  }
-
-  @Override
-  public void close() throws Exception {
-    conceptIdToEntity.clear();
-    codeIdToEntity.clear();
-    snomedToEmis.clear();
-    termToEmis.clear();
-    parentMap.clear();
-    remaps.clear();
-    manager.close();
   }
 }
