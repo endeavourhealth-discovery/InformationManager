@@ -2,16 +2,16 @@
 "mappings" :
  {
  	 "properties": {
- 		 "scheme.@id": {
+ 		 "scheme.iri": {
  			 "type": "keyword"
  		},
- 		 "entityType.@id": {
+ 		 "entityType.iri": {
  			 "type": "keyword"
  		},
- 		 "status.@id": {
+ 		 "status.iri": {
  			 "type": "keyword"
  		},
- 		 "isA.@id": {
+ 		 "isA.iri": {
  			 "type": "keyword"
  		},
  		 "code": {
