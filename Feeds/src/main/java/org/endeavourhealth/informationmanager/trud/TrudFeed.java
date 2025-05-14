@@ -9,7 +9,7 @@ public class TrudFeed {
   private String download;
   private boolean updated = false;
 
-  private Consumer<TrudFeed> postProcess;
+  private final Consumer<TrudFeed> postProcess;
 
   public TrudFeed(String name, String id) {
     this(name, id, null);

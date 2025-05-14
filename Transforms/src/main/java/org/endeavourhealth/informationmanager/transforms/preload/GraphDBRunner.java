@@ -11,7 +11,7 @@ import java.util.List;
 
 public class GraphDBRunner implements Runnable {
 
-  private String graphdb;
+  private final String graphdb;
 
 
   public GraphDBRunner(String graphStart) {
@@ -20,7 +20,7 @@ public class GraphDBRunner implements Runnable {
 
   @Override
   public void run() {
-    List<String> cmds = new ArrayList();
+    List<String> cmds = new ArrayList<>();
     if (System.getProperty("os.name").toLowerCase().contains("windows")) {
       ProcessBuilder processBuilder = new ProcessBuilder();
       processBuilder.command("cmd", "/c", graphdb);
@@ -32,7 +32,6 @@ public class GraphDBRunner implements Runnable {
           new InputStreamReader(process.getInputStream()));
         String line;
         while ((line = reader.readLine()) != null) {
-          //System.out.println(line);
           Thread.sleep(500);
         }
 

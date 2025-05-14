@@ -115,7 +115,7 @@ public class StaticConstGenerator implements Plugin<Project> {
     File f = new File(filename);
 
     try {
-      String original = FileUtils.readFileToString(f);
+      String original = FileUtils.readFileToString(f, StandardCharsets.UTF_8);
       if (original.equals(output)) {
         // System.out.println(f.getName() + " unchanged...");
         return;
@@ -126,7 +126,7 @@ public class StaticConstGenerator implements Plugin<Project> {
     }
 
     try {
-      Files.write(Paths.get(filename), output.getBytes(StandardCharsets.UTF_8));
+      Files.writeString(Paths.get(filename), output);
     } catch (IOException e) {
       System.err.println("Error writing output " + f.getName());
       System.exit(-1);
