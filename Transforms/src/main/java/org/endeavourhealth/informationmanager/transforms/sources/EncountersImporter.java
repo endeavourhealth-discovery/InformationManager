@@ -29,10 +29,11 @@ public class EncountersImporter implements TTImport {
 
   private void importNoneCoreFile(TTImportConfig config) throws Exception {
     Path file = ImportUtils.findFileForId(config.getFolder(), encounters[0]);
-    TTManager manager = new TTManager();
-    TTDocument document = manager.loadDocument(file.toFile());
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      filer.fileDocument(document);
+    try(TTManager manager = new TTManager()) {
+      TTDocument document = manager.loadDocument(file.toFile());
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        filer.fileDocument(document);
+      }
     }
   }
 

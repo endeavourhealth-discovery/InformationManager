@@ -38,7 +38,7 @@ public class DiscoveryReportsImporter implements TTImport {
       TTDocument document = loadFile(config.getFolder());
       filer.fileDocument(document);
     } catch (Exception e) {
-      throw new ImportException(e.getMessage(),e);
+      throw new ImportException(e.getMessage(), e);
     }
   }
 
@@ -51,10 +51,9 @@ public class DiscoveryReportsImporter implements TTImport {
    */
   public TTDocument loadFile(String inFolder) throws IOException {
     Path file = ImportUtils.findFileForId(inFolder, ReportsConcepts[0]);
-    TTManager manager = new TTManager();
-    TTDocument document = manager.loadDocument(file.toFile());
-    return document;
-
+    try (TTManager manager = new TTManager()) {
+      return manager.loadDocument(file.toFile());
+    }
   }
 
   @Override
