@@ -8,6 +8,7 @@ jackson = "2.16.0"
 jaxb = "4.0.4"
 junit = "5.10.1"
 junitRunner = "1.10.1"
+junitSuite = "1.11.4"
 jsonSimple = "0.4"
 openCsv = "5.9"
 owlApi = "5.5.0"
@@ -33,6 +34,7 @@ jaxbRuntime = { module = "com.sun.xml.bind:jaxb-impl", version.ref = "jaxb" }
 junit = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junitRunner = { module = "org.junit.platform:junit-platform-runner", version.ref = "junitRunner" }
+junitSuite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junitSuite" }
 jsonSimple = { module = "org.apache.clerezza.ext:org.json.simple", version.ref = "jsonSimple" }
 openCsv = { module = "com.opencsv:opencsv", version.ref = "openCsv" }
 owlApiApiBinding = { module = "net.sourceforge.owlapi:owlapi-apibinding", version.ref = "owlApi" }

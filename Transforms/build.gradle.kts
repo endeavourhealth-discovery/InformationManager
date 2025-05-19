@@ -21,6 +21,7 @@ dependencies {
   implementation(libs.zip4j)
 
   testImplementation(libs.junit)
+  testImplementation(libs.junitSuite)
   testImplementation(libs.cucumber)
   testImplementation(libs.cucumber.junit)
   testImplementation(libs.mockito)
