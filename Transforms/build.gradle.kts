@@ -21,6 +21,9 @@ dependencies {
   implementation(libs.zip4j)
 
   testImplementation(libs.junit)
+  testImplementation(libs.cucumber)
+  testImplementation(libs.cucumber.junit)
+  testImplementation(libs.mockito)
   testImplementation(libs.junitEngine)
   testImplementation(libs.junitRunner)
 }
@@ -37,4 +40,24 @@ tasks.jar {
   }
   from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+val cucumberRuntime by getConfigurations().creating {
+  extendsFrom(configurations["testImplementation"])
+}
+
+tasks.register("cucumberCli") {
+  dependsOn("assemble", "testClasses")
+  doLast {
+    providers.javaexec {
+      mainClass.set("io.cucumber.core.cli.Main")
+      classpath = cucumberRuntime + sourceSets.main.get().output + sourceSets.test.get().output
+      args = listOf(
+        "--plugin", "pretty",
+        "--plugin", "html:build/reports/cucumber/cucumber-report.html",
+        "--glue", "org.endeavourhealth.informationmanager",
+        "src/test/resources"
+      )
+    }
+  }
 }

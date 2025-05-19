@@ -40,8 +40,7 @@ public class Preload {
     LOG.info("Running Preload...");
     if (args.length < 4) {
       LOG.error("Insufficient parameters supplied:");
-      LOG.error("source={sourcefolder} preload={foldercontaing preload} " +
-        "temp= {folder for temporary data} and privacy= {0 public, 1 private publisher 2 private for authoring} [cmd={graphdbExecutable}]");
+      LOG.error("source={sourcefolder} preload={foldercontaing preload} " + "temp= {folder for temporary data} and privacy= {0 public, 1 private publisher 2 private for authoring} [cmd={graphdbExecutable}]");
       System.exit(-1);
     }
     LOG.info("Configuring...");
@@ -51,18 +50,12 @@ public class Preload {
     String graphdbCommand = null;
 
     for (String arg : args) {
-      if (arg.startsWith("preload"))
-        TTBulkFiler.setPreload(arg.split("=")[1]);
-      else if (arg.startsWith("temp="))
-        TTBulkFiler.setDataPath(arg.split("=")[1]);
-      else if (arg.startsWith("privacy"))
-        TTBulkFiler.setPrivacyLevel(Integer.parseInt(arg.split("=")[1]));
-      else if (arg.startsWith("cmd"))
-        graphdbCommand = arg.split("=")[1];
-      else if (arg.contains("test="))
-        ImportApp.setTestDirectory(arg.substring(arg.lastIndexOf("=") + 1));
-      else if (arg.toLowerCase().contains("skipbulk"))
-        cfg.setSkipBulk(true);
+      if (arg.startsWith("preload")) TTBulkFiler.setPreload(arg.split("=")[1]);
+      else if (arg.startsWith("temp=")) TTBulkFiler.setDataPath(arg.split("=")[1]);
+      else if (arg.startsWith("privacy")) TTBulkFiler.setPrivacyLevel(Integer.parseInt(arg.split("=")[1]));
+      else if (arg.startsWith("cmd")) graphdbCommand = arg.split("=")[1];
+      else if (arg.contains("test=")) ImportApp.setTestDirectory(arg.substring(arg.lastIndexOf("=") + 1));
+      else if (arg.toLowerCase().contains("skipbulk")) cfg.setSkipBulk(true);
     }
 
     LOG.info("Starting import...");
@@ -70,40 +63,26 @@ public class Preload {
   }
 
   private static TTImportConfig getGraphsToLoad(String[] args) throws ImportException, IOException {
-    String folder=null;
-    String graphs=null;
+    String folder = null;
+    String graphs = null;
     for (String argument : args) {
       if (argument.startsWith("source=")) {
         folder = (argument.split("=")[1]);
       }
       if (argument.toLowerCase().split("=")[0].equals("graphs")) {
-        graphs=argument.split("=")[1].trim();
-        }
+        graphs = argument.split("=")[1].trim();
       }
-    if (folder==null)
-      throw new ImportException(" no sources folder set");
-    if (graphs==null)
-      graphs="endeavour.json";
-    TTImportConfig config=new ObjectMapper().readValue(new File(folder+"/PreloadGraphs/"+ graphs), TTImportConfig.class);
+    }
+    if (folder == null) throw new ImportException(" no sources folder set");
+    if (graphs == null) graphs = "endeavour.json";
+    TTImportConfig config = new ObjectMapper().readValue(new File(folder + "/PreloadGraphs/" + graphs), TTImportConfig.class);
     config.setFolder(folder);
     return config;
 
   }
 
 
-  public static List<String> canBulk= List.of(
-    GRAPH.DISCOVERY, SNOMED.NAMESPACE,
-    GRAPH.ENCOUNTERS,
-    GRAPH.QUERY,GRAPH.IM1,GRAPH.FHIR,
-    GRAPH.EMIS
-    ,GRAPH.TPP
-    ,GRAPH.OPCS4
-    ,GRAPH.ICD10
-    ,GRAPH.VISION
-    ,GRAPH.ODS
-    ,GRAPH.BARTS_CERNER
-    ,GRAPH.NHS_TFC
-    ,GRAPH.BNF);
+  public static List<String> canBulk = List.of(GRAPH.DISCOVERY, SNOMED.NAMESPACE, GRAPH.ENCOUNTERS, GRAPH.QUERY, GRAPH.IM1, GRAPH.FHIR, GRAPH.EMIS, GRAPH.TPP, GRAPH.OPCS4, GRAPH.ICD10, GRAPH.VISION, GRAPH.ODS, GRAPH.BARTS_CERNER, GRAPH.NHS_TFC, GRAPH.BNF);
 
 
   private static void importData(TTImportConfig cfg, String graphdb) throws Exception {
@@ -111,16 +90,14 @@ public class Preload {
     validateGraphConfig(cfg.getFolder());
 
 
-
-
     LOG.info("Validating data files...");
     TTImportByType importer = new Importer();
-    for (String graph:cfg.getGraph()){
-      importer.validateByType(graph,cfg.getFolder());
+    for (String graph : cfg.getGraph()) {
+      importer.validateByType(graph, cfg.getFolder());
     }
     LOG.info("Importing files...");
     if (!cfg.isSkipBulk()) {
-      for (String graph: cfg.getGraph()){
+      for (String graph : cfg.getGraph()) {
         if (canBulk.contains(graph)) {
           importer.importByType(graph, cfg);
         }
@@ -139,9 +116,9 @@ public class Preload {
     LOG.info("Filing into live graph");
     TTFilerFactory.setBulk(false);
     TTFilerFactory.setTransactional(true);
-    for (String graph:cfg.getGraph()){
-      if (!canBulk.contains(graph)){
-        importer.importByType(graph,cfg);
+    for (String graph : cfg.getGraph()) {
+      if (!canBulk.contains(graph)) {
+        importer.importByType(graph, cfg);
       }
     }
     try (TTImport deltaImporter = new DeltaImporter()) {
@@ -166,8 +143,7 @@ public class Preload {
         LOG.info("");
         LOG.error("Please start graph db in the usual manner and enter 'OK' when done : ");
         String line = scanner.nextLine();
-        if (line.equalsIgnoreCase("ok"))
-          ok = true;
+        if (line.equalsIgnoreCase("ok")) ok = true;
       }
     } else {
       LOG.info("Starting graph db....");

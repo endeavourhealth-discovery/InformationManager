@@ -6,7 +6,6 @@ import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
-import org.endeavourhealth.informationmanager.transforms.sources.LoadDataTester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,9 +80,6 @@ public class ImportApp {
         }
       }
     }
-
-
-    LoadDataTester.testLoadData(cfg.getFolder(), cfg.isSecure());
     importData(cfg);
   }
 

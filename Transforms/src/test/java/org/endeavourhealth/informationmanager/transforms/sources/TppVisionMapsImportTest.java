@@ -1,7 +1,5 @@
-package org.endeavourhealth.informationmanager.common.transform;
+package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.informationmanager.transforms.sources.TPPImporter;
-import org.endeavourhealth.informationmanager.transforms.sources.VisionImport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

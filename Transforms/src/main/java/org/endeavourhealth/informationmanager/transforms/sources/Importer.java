@@ -54,58 +54,34 @@ public class Importer implements TTImportByType {
 
 
   private TTImport getImporter(String importType) throws ImportException {
-    if (importType.equals(IM.NAMESPACE + "SingleFileImporter"))
-      return new SingleFileImporter();
-    else if (GRAPH.QUERY.equals(importType))
-      return new CoreQueryImporter();
-    else if (GRAPH.BNF.equals(importType))
-      return new BNFImporter();
-    else if (GRAPH.DISCOVERY.equals(importType))
-      return new CoreImporter();
-    else if (GRAPH.BARTS_CERNER.equals(importType))
-      return new BartsCernerImport();
-    else if (SNOMED.NAMESPACE.equals(importType))
-      return new SnomedImporter();
-    else if (GRAPH.EMIS.equals(importType))
-      return new EMISImport();
-    else if (GRAPH.TPP.equals(importType))
-      return new TPPImporter();
-    else if (GRAPH.OPCS4.equals(importType))
-      return new OPCS4Importer();
-    else if (GRAPH.ICD10.equals(importType))
-      return new ICD10Importer();
-    else if (GRAPH.ENCOUNTERS.equals(importType))
-      return new EncountersImporter();
-    else if (GRAPH.VISION.equals(importType))
-      return new VisionImport();
-    else if (GRAPH.PRSB.equals(importType))
-      return new PRSBImport();
-    else if (GRAPH.KINGS_APEX.equals(importType))
-      return new ApexKingsImport();
-    else if (GRAPH.KINGS_WINPATH.equals(importType))
-      return new WinPathKingsImport();
-    else if (GRAPH.ODS.equals(importType))
-      return new OdsImporter();
-    else if (GRAPH.IM1.equals(importType))
-      return new IM1MapImport();
-    else if (GRAPH.CEG.equals(importType))
-      return new CEGImporter();
-    else if (GRAPH.SMARTLIFE.equals(importType))
-      return new SmartLifeImporter();
-    else if (GRAPH.QOF.equals(importType))
-      return new QOFQueryImport();
-    else if (GRAPH.NHS_TFC.equals(importType))
-      return new NHSTfcImport();
-    else if (GRAPH.DELTAS.equals(importType))
-      return new DeltaImporter();
-    else if (QR.NAMESPACE.equals(importType))
-      return new QImporter();
-    else if (GRAPH.CPRD_MED.equals(importType))
-      return new CPRDImport();
-    else if (FHIR.GRAPH_FHIR.equals(importType))
-      return new FHIRImporter();
-    else
-      throw new ImportException("Unrecognised import type [" + importType + "]");
+    return switch (importType) {
+      case IM.NAMESPACE + "SingleFileImporter" -> new SingleFileImporter();
+      case GRAPH.QUERY -> new CoreQueryImporter();
+      case GRAPH.BNF -> new BNFImporter();
+      case GRAPH.DISCOVERY -> new CoreImporter();
+      case GRAPH.BARTS_CERNER -> new BartsCernerImport();
+      case SNOMED.NAMESPACE -> new SnomedImporter();
+      case GRAPH.EMIS -> new EMISImport();
+      case GRAPH.TPP -> new TPPImporter();
+      case GRAPH.OPCS4 -> new OPCS4Importer();
+      case GRAPH.ICD10 -> new ICD10Importer();
+      case GRAPH.ENCOUNTERS -> new EncountersImporter();
+      case GRAPH.VISION -> new VisionImport();
+      case GRAPH.PRSB -> new PRSBImport();
+      case GRAPH.KINGS_APEX -> new ApexKingsImport();
+      case GRAPH.KINGS_WINPATH -> new WinPathKingsImport();
+      case GRAPH.ODS -> new OdsImporter();
+      case GRAPH.IM1 -> new IM1MapImport();
+      case GRAPH.CEG -> new CEGImporter();
+      case GRAPH.SMARTLIFE -> new SmartLifeImporter();
+      case GRAPH.QOF -> new QOFQueryImport();
+      case GRAPH.NHS_TFC -> new NHSTfcImport();
+      case GRAPH.DELTAS -> new DeltaImporter();
+      case QR.NAMESPACE -> new QImporter();
+      case GRAPH.CPRD_MED -> new CPRDImport();
+      case FHIR.GRAPH_FHIR -> new FHIRImporter();
+      default -> throw new ImportException("Unrecognised import type [" + importType + "]");
+    };
   }
 
 

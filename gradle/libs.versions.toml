@@ -15,6 +15,8 @@ rdf4j = "4.3.8"
 slf4j = "2.0.9"
 wsrs = "3.1.0"
 zip4j = "2.11.5"
+cucumber = "7.22.0"
+mockito = "5.14.2"
 
 [plugins]
 sonar = { id = "org.sonarqube", version = "4.4.1.3373" }
@@ -39,3 +41,6 @@ rdf4jRepoApi = { module = "org.eclipse.rdf4j:rdf4j-repository-api", version.ref 
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 wsrs = { module = "jakarta.ws.rs:jakarta.ws.rs-api", version.ref = "wsrs" }
 zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "zip4j" }
+cucumber = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
+cucumber-junit = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
+mockito = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
