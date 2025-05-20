@@ -8,6 +8,7 @@ jackson = "2.16.0"
 jaxb = "4.0.4"
 junit = "5.10.1"
 junitRunner = "1.10.1"
+junitSuite = "1.11.4"
 jsonSimple = "0.4"
 openCsv = "5.9"
 owlApi = "5.5.0"
@@ -15,6 +16,8 @@ rdf4j = "4.3.8"
 slf4j = "2.0.9"
 wsrs = "3.1.0"
 zip4j = "2.11.5"
+cucumber = "7.22.0"
+mockito = "5.14.2"
 
 [plugins]
 sonar = { id = "org.sonarqube", version = "4.4.1.3373" }
@@ -31,6 +34,7 @@ jaxbRuntime = { module = "com.sun.xml.bind:jaxb-impl", version.ref = "jaxb" }
 junit = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junitRunner = { module = "org.junit.platform:junit-platform-runner", version.ref = "junitRunner" }
+junitSuite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junitSuite" }
 jsonSimple = { module = "org.apache.clerezza.ext:org.json.simple", version.ref = "jsonSimple" }
 openCsv = { module = "com.opencsv:opencsv", version.ref = "openCsv" }
 owlApiApiBinding = { module = "net.sourceforge.owlapi:owlapi-apibinding", version.ref = "owlApi" }
@@ -39,3 +43,6 @@ rdf4jRepoApi = { module = "org.eclipse.rdf4j:rdf4j-repository-api", version.ref 
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 wsrs = { module = "jakarta.ws.rs:jakarta.ws.rs-api", version.ref = "wsrs" }
 zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "zip4j" }
+cucumber = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
+cucumber-junit = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
+mockito = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }

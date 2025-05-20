@@ -335,11 +335,12 @@ public class WikiGenerator {
     for (String document : List.of("/DiscoveryCore/CoreOntology", "/SemanticWeb/RDFOntology", "/SemanticWeb/RDFSOntology",
       "/SemanticWeb/SHACLOntology", "/SemanticWeb/OWLOntology", "/DiscoveryCore/Sets")) {
       String file = importFolder + document + ".json";
-      TTManager manager = new TTManager();
-      manager.loadDocument(new File(file));
-      TTEntity entity = manager.getEntity(iri);
-      if (entity != null)
-        return entity;
+      try (TTManager manager = new TTManager()) {
+        manager.loadDocument(new File(file));
+        TTEntity entity = manager.getEntity(iri);
+        if (entity != null)
+          return entity;
+      }
     }
     EntityService es = new EntityService();
     TTBundle bundle = es.getBundle(iri, null);
@@ -352,19 +353,20 @@ public class WikiGenerator {
 
 
   private List<TTEntity> getFolderContent(String iri) throws IOException {
-    TTManager manager = new TTManager();
-    manager.loadDocument(new File(importFolder + "/DiscoveryCore/CoreOntology.json"));
-    List<TTEntity> folders = new ArrayList<>();
-    for (TTEntity entity : manager.getDocument().getEntities()) {
-      if (entity.get(iri(IM.IS_CONTAINED_IN)) != null) {
-        for (TTValue value : entity.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
-          if (value.asIriRef().getIri().equals(iri))
-            folders.add(entity);
+    try (TTManager manager = new TTManager()) {
+      manager.loadDocument(new File(importFolder + "/DiscoveryCore/CoreOntology.json"));
+      List<TTEntity> folders = new ArrayList<>();
+      for (TTEntity entity : manager.getDocument().getEntities()) {
+        if (entity.get(iri(IM.IS_CONTAINED_IN)) != null) {
+          for (TTValue value : entity.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
+            if (value.asIriRef().getIri().equals(iri))
+              folders.add(entity);
+          }
         }
       }
+      folders.sort(Comparator.comparing((TTNode p) -> p.get(iri(SHACL.ORDER)).asLiteral().intValue()));
+      return folders;
     }
-    folders.sort(Comparator.comparing((TTNode p) -> p.get(iri(SHACL.ORDER)).asLiteral().intValue()));
-    return folders;
   }
 
 }

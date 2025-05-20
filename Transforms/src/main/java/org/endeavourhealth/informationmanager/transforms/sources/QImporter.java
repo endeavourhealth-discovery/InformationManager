@@ -79,7 +79,7 @@ public class QImporter implements TTImport {
   }
 
   private void resetDrugs() throws QueryException, TTFilerException, JsonProcessingException {
-    TTDocument drugDocument= new TTDocument(iri(QR.NAMESPACE));
+    TTDocument drugDocument = new TTDocument(iri(QR.NAMESPACE));
     LOG.info("if drugs then creating as entailed members");
     for (TTEntity entity : document.getEntities()) {
       if (entity.isType(iri(IM.CONCEPT_SET))) {
@@ -103,10 +103,10 @@ public class QImporter implements TTImport {
   }
 
   private boolean isMedicationSet(TTEntity entity) {
-    if (entity.get(IM.HAS_MEMBER)!=null) {
+    if (entity.get(IM.HAS_MEMBER) != null) {
       SetBinder binder = new SetBinder();
       binder.bindSet(entity.getIri());
-      TTEntity boundSet= new EntityService().getBundle(entity.getIri(), Set.of(IM.BINDING)).getEntity();
+      TTEntity boundSet = new EntityService().getBundle(entity.getIri(), Set.of(IM.BINDING)).getEntity();
       for (TTValue binding : boundSet.get(IM.BINDING).getElements()) {
         if (binding.asNode().get(SHACL.NODE).asIriRef().getIri().contains("Medication"))
           return true;
@@ -114,8 +114,6 @@ public class QImporter implements TTImport {
     }
     return false;
   }
-
-
 
 
   private void importCodeGroups() throws JsonProcessingException {
@@ -146,8 +144,8 @@ public class QImporter implements TTImport {
                 if (idCodeGroupMap.get(groupId) == null) {
                   idCodeGroupMap.put(groupId, qGroup);
                 }
-                if (qGroup.getIri().equals("http://apiqcodes.org/qcodes#QPredict_347")){
-                  qGroup.addObject(iri(IM.IS_CONTAINED_IN),iri(IM.NAMESPACE+"EthnicitySets"));
+                if (qGroup.getIri().equals("http://apiqcodes.org/qcodes#QPredict_347")) {
+                  qGroup.addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "EthnicitySets"));
                 }
                 qGroup.set(iri(IM.VERSION), TTLiteral.literal(version));
                 importCodes(projectId, qGroup, id);
@@ -155,8 +153,7 @@ public class QImporter implements TTImport {
               qGroup.addObject(iri(IM.IS_SUBSET_OF), TTIriRef.iri(project.getValue().getIri()));
             }
           }
-        }
-        else
+        } else
           results = false;
       }
     }
@@ -207,8 +204,8 @@ public class QImporter implements TTImport {
       qset.set(iri(SHACL.ORDER), TTLiteral.literal(1));
       String version = project.get("Version").asText();
       qset.set(iri(IM.VERSION), TTLiteral.literal(version));
-      if (qset.getIri().equals("http://apiqcodes.org/qcodes#QPredict_347")){
-        qset.addObject(iri(IM.IS_CONTAINED_IN),iri(IM.NAMESPACE+"EthnicitySets"));
+      if (qset.getIri().equals("http://apiqcodes.org/qcodes#QPredict_347")) {
+        qset.addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "EthnicitySets"));
       }
       if (idProjectMap.get(id) == null) {
         idProjectMap.put(id, qset);

@@ -80,23 +80,24 @@ public class TrudUpdater {
   }
 
   private static void getRemoteVersions() throws IOException {
-    Client client = ClientBuilder.newClient();
-    ObjectMapper om = new ObjectMapper();
-    for (TrudFeed feed : feeds) {
-      LOG.info("Fetching remote version [{}]...", feed.getName());
-      WebTarget target = client.target("https://isd.digital.nhs.uk").path("/trud3/api/v1/keys/" + APIKey + "/items/" + feed.getId() + "/releases?latest");
-      Response response = target.request().get();
-      String responseRaw = response.readEntity(String.class);
-      if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-        LOG.error("Could not get remote version for {}", feed.getName());
-        LOG.error(responseRaw);
-        System.exit(-1);
-      } else {
-        JsonNode json = om.readTree(responseRaw);
-        ArrayNode releases = (ArrayNode) json.get("releases");
-        JsonNode latest = releases.get(0);
-        feed.setRemoteVersion(latest.get("releaseDate").asText());
-        feed.setDownload(latest.get("archiveFileUrl").asText());
+    try (Client client = ClientBuilder.newClient()) {
+      ObjectMapper om = new ObjectMapper();
+      for (TrudFeed feed : feeds) {
+        LOG.info("Fetching remote version [{}]...", feed.getName());
+        WebTarget target = client.target("https://isd.digital.nhs.uk").path("/trud3/api/v1/keys/" + APIKey + "/items/" + feed.getId() + "/releases?latest");
+        Response response = target.request().get();
+        String responseRaw = response.readEntity(String.class);
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+          LOG.error("Could not get remote version for {}", feed.getName());
+          LOG.error(responseRaw);
+          System.exit(-1);
+        } else {
+          JsonNode json = om.readTree(responseRaw);
+          ArrayNode releases = (ArrayNode) json.get("releases");
+          JsonNode latest = releases.get(0);
+          feed.setRemoteVersion(latest.get("releaseDate").asText());
+          feed.setDownload(latest.get("archiveFileUrl").asText());
+        }
       }
     }
   }
