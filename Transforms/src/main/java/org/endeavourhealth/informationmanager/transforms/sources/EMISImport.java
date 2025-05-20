@@ -282,21 +282,22 @@ public class EMISImport implements TTImport {
 
   private void allergyMaps(String folder) throws IOException {
     Path path = ImportUtils.findFileForId(folder, allergies[0]);
-    TTManager allMgr = new TTManager();
-    TTDocument allDoc = allMgr.loadDocument(path.toFile());
-    for (TTEntity all : allDoc.getEntities()) {
-      String oldCode = all.getIri().substring(all.getIri().lastIndexOf("#") + 1);
-      oldCode = oldCode.replaceAll("_", ".");
-      TTEntity emisEntity = oldCodeToEntity.get(oldCode);
-      if (all.get(iri(IM.MATCHED_TO)) != null) {
-        for (TTValue superClass : all.get(iri(IM.MATCHED_TO)).getElements()) {
-          emisEntity.addObject(iri(IM.MATCHED_TO), superClass);
-        }
-      } else if (all.get(iri(IM.ROLE_GROUP)) != null)
-        emisEntity.set(iri(IM.ROLE_GROUP), all.get(iri(IM.ROLE_GROUP)));
-      if (all.get(iri(RDFS.SUBCLASS_OF)) != null) {
-        for (TTValue sup : all.get(iri(RDFS.SUBCLASS_OF)).getElements()) {
-          emisEntity.addObject(iri(RDFS.SUBCLASS_OF), sup.asIriRef());
+    try (TTManager allMgr = new TTManager()) {
+      TTDocument allDoc = allMgr.loadDocument(path.toFile());
+      for (TTEntity all : allDoc.getEntities()) {
+        String oldCode = all.getIri().substring(all.getIri().lastIndexOf("#") + 1);
+        oldCode = oldCode.replaceAll("_", ".");
+        TTEntity emisEntity = oldCodeToEntity.get(oldCode);
+        if (all.get(iri(IM.MATCHED_TO)) != null) {
+          for (TTValue superClass : all.get(iri(IM.MATCHED_TO)).getElements()) {
+            emisEntity.addObject(iri(IM.MATCHED_TO), superClass);
+          }
+        } else if (all.get(iri(IM.ROLE_GROUP)) != null)
+          emisEntity.set(iri(IM.ROLE_GROUP), all.get(iri(IM.ROLE_GROUP)));
+        if (all.get(iri(RDFS.SUBCLASS_OF)) != null) {
+          for (TTValue sup : all.get(iri(RDFS.SUBCLASS_OF)).getElements()) {
+            emisEntity.addObject(iri(RDFS.SUBCLASS_OF), sup.asIriRef());
+          }
         }
       }
     }
