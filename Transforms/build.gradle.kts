@@ -1,6 +1,10 @@
 sonar {
   properties {
     property("sonar.projectKey", "endeavourhealth-discovery_informationManager::Transforms")
+    property(
+      "sonar.exclusions",
+      "**/authored/**, **/models/**, **/online/**, **/preload/**"
+    )
   }
 }
 dependencies {
