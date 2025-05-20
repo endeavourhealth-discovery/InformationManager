@@ -36,6 +36,18 @@ public class ImporterStepDefs {
     this.folderPath = folderPath;
   }
 
+  @And("a mock importer is set up for unknown type")
+  public void mock_importer_for_unknown_type() {
+    mockImporter = mock(TTImport.class);
+    service = new TTImportByTypeMock("http://endhealth.info/im#SingleFileImporter", mockImporter);
+  }
+
+  @And("a mock importer is set up")
+  public void a_mock_importer_is_set_up() throws Exception {
+    mockImporter = mock(TTImport.class);
+    service = new TTImportByTypeMock(importType, mockImporter);
+  }
+
   @And("the correct importer should be used")
   public void correct_importer_should_be_used() throws TTFilerException {
     verify(mockImporter, times(1)).validateFiles(folderPath);
@@ -49,14 +61,13 @@ public class ImporterStepDefs {
   @And("the importer throws an exception during validateFiles")
   public void importer_throws_exception_during_validateFiles() throws Exception {
     mockImporter = mock(TTImport.class);
-    doThrow(new IOException("File issue")).when(mockImporter).validateFiles(anyString());
-    service = new TTImportByTypeMock(importType, mockImporter); // use a mocked subclass
+    doThrow(new RuntimeException("File issue")).when(mockImporter).validateFiles(anyString());
+    service = new TTImportByTypeMock(importType, mockImporter);
   }
 
   @When("I call validateByType")
   public void i_call_validateByType() {
     try {
-      service = new TTImportByTypeMock(importType, mockImporter);
       service.validateByType(importType, folderPath);
     } catch (Exception e) {
       this.caughtException = e;
@@ -70,7 +81,9 @@ public class ImporterStepDefs {
 
   @Then("an ImportException should be thrown with message {string}")
   public void an_import_exception_should_be_thrown(String expectedMessage) {
-    assertTrue(caughtException instanceof ImportException);
+    assertNotNull("Expected an exception but none was thrown", caughtException);
+    assertTrue("Expected ImportException but got: " + caughtException.getClass().getSimpleName(),
+      caughtException instanceof ImportException);
     assertEquals(expectedMessage, caughtException.getMessage());
   }
 
@@ -105,7 +118,9 @@ public class ImporterStepDefs {
 
     @Override
     public TTImportByType validateByType(String importType, String inFolder) throws Exception {
-      return null;
+      TTImport imp = getImporter(importType);
+      imp.validateFiles(inFolder);
+      return this;
     }
 
     protected TTImport getImporter(String importType) throws ImportException {
@@ -115,6 +130,4 @@ public class ImporterStepDefs {
       return importer;
     }
   }
-
-
 }
