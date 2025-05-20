@@ -724,7 +724,7 @@ public class CoreQueryImporter implements TTImport {
   private void allowableSubTypes() throws JsonProcessingException {
     Query query= new Query()
       .setName("Allowable subtypes for a particular entity type")
-      .setDescription("pass 'this' as the type iri for the selected entity e.g. {'@id': 'http://sometype'}")
+      .setDescription("pass 'this' as the type iri for the selected entity e.g. {'iri': 'http://sometype'}")
       .or(m->m
         .setParameter("this")
         .where(w->w
