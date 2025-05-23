@@ -1,5 +1,6 @@
 plugins {
-  jacoco
+  id("java")
+  id("jacoco")
   id("groovy-gradle-plugin")
   alias(libs.plugins.sonar)
 }
@@ -8,53 +9,31 @@ repositories {
   gradlePluginPortal()
 }
 
+java.sourceCompatibility = JavaVersion.VERSION_21
+java.targetCompatibility = JavaVersion.VERSION_21
+
+val ENV = System.getenv("ENV") ?: "dev"
+println("Build environment = [$ENV]")
+if (ENV == "prod") {
+  tasks.build { finalizedBy("sonar") }
+}
+
 sonar {
   properties {
-    property("sonar.projectKey", "endeavourhealth-discovery_informationManager")
-    property("sonar.organization", "endeavourhealth-discovery")
     property("sonar.token", System.getenv("SONAR_LOGIN"))
     property("sonar.host.url", "https://sonarcloud.io")
-    property("sonar.junit.reportPaths", "build/test-results/test/binary")
+    property("sonar.organization", "endeavourhealth-discovery")
+    property("sonar.projectKey", "InformationManager")
+    property("sonar.projectName", "Information Manager Tools")
+    property("sonar.sources", "src/main/java")
+    property("sonar.tests", "src/test/java")
+    property("sonar.junit.reportPaths", "build/test-results/test")
   }
 }
 
-if (System.getenv("ENV") == "prod") {
-  tasks.build {
-    finalizedBy("sonar")
-  }
-}
-
-configurations.all {
-  resolutionStrategy {
-    cacheDynamicVersionsFor(30, "minutes")
-  }
-}
-
-allprojects {
+subprojects {
   apply(plugin = "java")
   apply(plugin = "jacoco")
-
-  group = "org.endeavourhealth.informationManager"
-  version = "1.0-SNAPSHOT"
-
-  java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-  }
-
-  tasks.withType<JavaCompile>().configureEach {
-    options.encoding = "UTF-8"
-  }
-
-  tasks.jacocoTestReport {
-    reports {
-      xml.required.set(true)
-    }
-  }
-
-  tasks.test {
-    finalizedBy(tasks.jacocoTestReport)
-  }
 
   repositories {
     mavenLocal()
@@ -64,6 +43,18 @@ allprojects {
     }
     maven {
       url = uri("https://artifactory.endhealth.co.uk/repository/maven-snapshots")
+    }
+  }
+
+  tasks.test {
+    jvmArgs("-XX:+EnableDynamicAgentLoading")
+    useJUnitPlatform()
+    finalizedBy("jacocoTestReport")
+  }
+
+  tasks.jacocoTestReport {
+    reports {
+      xml.required.set(true)
     }
   }
 }

@@ -20,7 +20,7 @@ cucumber = "7.22.0"
 mockito = "5.14.2"
 
 [plugins]
-sonar = { id = "org.sonarqube", version = "4.4.1.3373" }
+sonar = { id = "org.sonarqube", version = "6.2.0.5505" }
 
 [libraries]
 imapi = "org.endeavourhealth.imapi:api:1.0-SNAPSHOT"

@@ -1,8 +1,4 @@
-sonar {
-  properties {
-    property("sonar.projectKey", "endeavourhealth-discovery_informationManager::Feeds")
-  }
-}
+description = "Feeds"
 
 dependencies {
   implementation(libs.imapi)
@@ -11,8 +7,6 @@ dependencies {
   implementation(libs.slf4j)
   implementation(libs.wsrs)
 }
-
-description = "Feeds"
 
 tasks.jar {
   manifest {

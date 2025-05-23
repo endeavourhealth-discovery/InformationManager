@@ -1,8 +1,4 @@
-sonar {
-  properties {
-    property("sonar.projectKey", "endeavourhealth-discovery_informationManager::Utils")
-  }
-}
+description = "IM Utilities"
 
 dependencies {
   implementation(project(":Transforms"))
@@ -12,9 +8,3 @@ dependencies {
   testImplementation(libs.junitEngine)
   testImplementation(libs.junitRunner)
 }
-
-tasks.test {
-  useJUnitPlatform()
-}
-
-description = "Utils"
