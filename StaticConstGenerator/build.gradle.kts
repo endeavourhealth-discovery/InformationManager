@@ -5,6 +5,7 @@ plugins {
 
 group = "org.endeavourhealth.plugins"
 version = "1.2-SNAPSHOT"
+description = "Static Const Generator"
 
 gradlePlugin {
   plugins {
@@ -13,17 +14,6 @@ gradlePlugin {
       implementationClass = "org.endeavourhealth.plugins.StaticConstGenerator"
 
     }
-  }
-}
-
-repositories {
-  mavenLocal()
-  mavenCentral()
-  maven {
-    url = uri("https://artifactory.endhealth.co.uk/repository/maven-releases")
-  }
-  maven {
-    url = uri("https://artifactory.endhealth.co.uk/repository/maven-snapshots")
   }
 }
 
@@ -42,8 +32,4 @@ publishing {
       }
     }
   }
-}
-
-tasks.test {
-  useJUnitPlatform()
 }

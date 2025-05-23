@@ -1,12 +1,5 @@
-sonar {
-  properties {
-    property("sonar.projectKey", "endeavourhealth-discovery_informationManager::Transforms")
-    property(
-      "sonar.exclusions",
-      "**/authored/**, **/models/**, **/online/**, **/preload/**"
-    )
-  }
-}
+description = "Transforms"
+
 dependencies {
   implementation(libs.imapi)
 
@@ -33,11 +26,6 @@ dependencies {
   testImplementation(libs.junitRunner)
 }
 
-tasks.test {
-  useJUnitPlatform()
-}
-
-description = "Transforms"
 
 tasks.jar {
   manifest {
@@ -47,22 +35,11 @@ tasks.jar {
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-val cucumberRuntime by getConfigurations().creating {
-  extendsFrom(configurations["testImplementation"])
-}
-
-tasks.register("cucumberCli") {
-  dependsOn("assemble", "testClasses")
-  doLast {
-    providers.javaexec {
-      mainClass.set("io.cucumber.core.cli.Main")
-      classpath = cucumberRuntime + sourceSets.main.get().output + sourceSets.test.get().output
-      args = listOf(
-        "--plugin", "pretty",
-        "--plugin", "html:build/reports/cucumber/cucumber-report.html",
-        "--glue", "org.endeavourhealth.informationmanager",
-        "src/test/resources"
-      )
-    }
+sonar {
+  properties {
+    property(
+      "sonar.exclusions",
+      "**/authored/**, **/models/**, **/online/**, **/preload/**"
+    )
   }
 }
