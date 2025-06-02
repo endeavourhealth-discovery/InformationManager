@@ -256,7 +256,7 @@ public class EMISImport implements TTImport {
           emisConcept.setStatus(snomed.equals("NULL") ? iri(IM.INACTIVE) : iri(IM.ACTIVE));
         }
         if (notFoundValue(emisConcept, iri(IM.HAS_TERM_CODE), iri(IM.CODE), codeId))
-          TTManager.addTermCode(emisConcept, null, codeId);
+          TTManager.addTermCode(emisConcept, term, codeId);
         if (!snomed.equals("NULL")) {
           emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + snomed));
         }

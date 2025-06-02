@@ -190,8 +190,11 @@ public class QOFRefSetImport implements TTImport {
         putEntityMap(ruleSetFolderIri, ruleSetFolder);
         document.addEntity(ruleSetFolder);
       }
-      if (!hasTermCode(set, clusterCode)) {
-        set.addObject(iri(IM.HAS_TERM_CODE), new TTNode().set(iri(RDFS.LABEL), TTLiteral.literal(clusterCode)));
+      if (!hasTermCode(set, clusterTerm)) {
+        TTNode termCode = new TTNode();
+        set.addObject(iri(IM.HAS_TERM_CODE), termCode);
+        termCode.set(iri(RDFS.LABEL), TTLiteral.literal(clusterTerm));
+        termCode.addObject(iri(IM.KEY_TERM),TTLiteral.literal(clusterCode));
       }
       set.setName(clusterTerm);
       set.addObject(iri(IM.IS_CONTAINED_IN), iri(ruleSetFolderIri));

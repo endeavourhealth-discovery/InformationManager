@@ -593,21 +593,18 @@ public class SnomedImporter implements TTImport {
         c.addType(iri(RDF.PROPERTY));
       }
       if (FULLY_SPECIFIED.equals(fields[6]) || c.getName() == null) {
-        c.setName(fields[7]);
+        c.setName(term);
+        if (term.contains(" General practice data extraction - ")) {
+          term = term.split(" General practice data extraction - ")[1];
+          if (term.contains(" simple reference set")) {
+            term = term.split(" simple reference set")[0];
+            term = StringUtils.capitalize(term) + " (NHS GP value set)";
+          }
       }
       if (ACTIVE.equals(fields[2]))
         TTManager.addTermCode(c, term, fields[0], iri(IM.ACTIVE));
       else
         TTManager.addTermCode(c, null, fields[0], iri(IM.INACTIVE));
-      if (term.contains(" General practice data extraction - ")) {
-        term = term.split(" General practice data extraction - ")[1];
-        if (term.contains(" simple reference set")) {
-          term = term.split(" simple reference set")[0];
-          term = StringUtils.capitalize(term) + " (NHS GP value set)";
-          c.set(iri(IM.FULLY_SPECIFIED_NAME), c.getName());
-          c.setName(term);
-          TTManager.addTermCode(c, term, fields[0]);
-        }
       }
     }
   }

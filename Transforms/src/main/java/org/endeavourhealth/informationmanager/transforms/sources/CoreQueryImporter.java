@@ -43,8 +43,10 @@ public class CoreQueryImporter implements TTImport {
       getSubclasses();
       getConcepts();
       getAllowableProperties();
+      getAllowablePropertyAncestors();
+      isValidProperty();
       boundEntities();
-      getAllowableRanges();
+      isAllowableRange();
       getSearchAll();
       allowableSubTypes();
       currentGMS();
@@ -85,6 +87,7 @@ public class CoreQueryImporter implements TTImport {
         .set(iri(RDFS.LABEL), TTLiteral.literal("referenceDate"))
         .set(iri(SHACL.DATATYPE), iri(IM.NAMESPACE + "DateTime")));
     Query query = getGmsIsRegistered();
+    query.orderBy(o->o.addProperty(new OrderDirection().setIri(IM.NAMESPACE+"effectiveDate").setDirection(Order.descending)).setLimit(1));
     query.return_(r -> r
       .setNodeRef("RegistrationEpisode")
       .property(p -> p
@@ -96,10 +99,9 @@ public class CoreQueryImporter implements TTImport {
 
   private Query getGmsIsRegistered() {
         return new Query()
-          .setName("GP GMS registeredPractice episode at a reference date")
-          .setDescription("Retrieves the entry for the GP practice if gms registered on the date or null")
+          .setName("Patient registered as GMS on the reference date")
+          .setDescription("Is the patient registered as a GMS patient on the reference date?")
           .setTypeOf(IM.NAMESPACE+"Patient")
-          .and(m -> m
             .path(p -> p
               .setIri(IM.NAMESPACE + "episodeOfCare")
                .setTypeOf(IM.NAMESPACE + "EpisodeOfCare")
@@ -107,7 +109,7 @@ public class CoreQueryImporter implements TTImport {
             .where(w->w
                 .and(pv->pv
                   .setNodeRef("RegistrationEpisode")
-                  .setIri(IM.NAMESPACE + "patientType")
+                  .setIri(IM.NAMESPACE + "gmsPatientType")
                   .addIs(new Node().setIri(IM.GMS_PATIENT).setName("Regular GMS patient")))
                 .and(pv -> pv
                   .setNodeRef("RegistrationEpisode")
@@ -124,12 +126,8 @@ public class CoreQueryImporter implements TTImport {
                     .setNodeRef("RegistrationEpisode")
                     .setIri(IM.NAMESPACE + "endDate")
                     .setOperator(Operator.gt)
-                    .setRelativeTo(new RelativeTo().setParameter("$referenceDate"))))))
-            .orderBy(o -> o
-              .addProperty(new OrderDirection().setIri(IM.NAMESPACE + "effectiveDate").setDirection(Order.descending))
-              .setLimit(1))
-          .return_(r -> r
-            .as("gmsRegistrationEpisode"));
+                    .setRelativeTo(new RelativeTo().setParameter("$referenceDate")))));
+
 
   }
 
@@ -493,9 +491,9 @@ public class CoreQueryImporter implements TTImport {
     query.getPredicateMap().remove(TTIriRef.iri(IM.NAMESPACE + "query"));
     query.set(iri(IM.DEFINITION),
       TTLiteral.literal(new Query()
-        .setName("All subtypes of an entity, active only")
+        .setName("All supert types of an entity, active only")
         .setActiveOnly(true)
-          .setDescription("All subtypes of an entity (where the entity 'is a' $this)")
+          .setDescription("All super types of an entity (where the entity 'is a' $this)")
           .setVariable("isa")
           .addInstanceOf(new Node()
             .setParameter("this")
@@ -504,6 +502,9 @@ public class CoreQueryImporter implements TTImport {
           .property(p -> p.setIri(RDFS.LABEL))
           .property(p -> p.setIri(IM.CODE)))));
   }
+
+
+
 
 
 
@@ -765,33 +766,41 @@ public class CoreQueryImporter implements TTImport {
   }
 
 
-  private void getAllowableRanges() throws JsonProcessingException {
-    getQuery("AllowableRanges", "Allowable ranges for a particular property or its ancestors", "uses inverse range property to return the ranges of the property as authored. Should be used with another ")
+  private void isAllowableRange() throws JsonProcessingException {
+    getQuery("IsAllowableRange", "Is an entity an allowable range a particular property", "uses inverse range property to check the ranges of the property as authored. Should be used with another ")
+      .set(iri(IM.DEFINITION), TTLiteral.literal(
+        new Query()
+          .setName("Is an entity an allowable range a particular property")
+          .setActiveOnly(true)
+          .instanceOf(ins->ins
+            .setDescendantsOrSelfOf(true)
+            .setParameter("ranges"))
+          .return_(r->r
+            .property(p->p.setIri(RDFS.LABEL))
+            .property(p->p.setIri(IM.HAS_TERM_CODE)
+              .return_(r1->r1.property(p1->p1.setIri(RDFS.LABEL)))))));
+  }
+  private void isValidProperty() throws JsonProcessingException {
+    getQuery("IsValidProperty", "is a valid property","is the property a valid value for the concept(s)")
       .set(iri(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setImQuery(true)
-          .setName("Allowable Ranges for a property and super properties")
-          .setDescription("Allowable Ranges for a property and super properties")
+          .setName("Is it a valid property")
+          .setDescription("is the property 'property' a valid value for the concept(s) 'concepts")
           .setActiveOnly(true)
-            .setName("Inverse of range is $this or its ancestors")
-            .setWhere(new Where()
-              .setInverse(true)
-              .setIri(RDFS.RANGE)
-              .addIs(new Node().setParameter("this")
-                .setAncestorsOf(true)))
-          .dataset(q1 -> q1
-            .return_(r -> r
-              .property(s -> s.setIri(IM.CODE))
-              .property(s -> s.setIri(RDFS.LABEL)))
-              .addInstanceOf(new Node()
-                .setDescendantsOrSelfOf(true)))));
+          .instanceOf(i->i.setParameter("property").setAncestorsOrSelfOf(true))
+          .setWhere(new Where()
+            .setIri(RDFS.DOMAIN)
+            .addIs(new Node().setParameter("concept").setAncestorsOf(true))
+          )));
   }
+
 
   private void getAllowableProperties() throws JsonProcessingException {
     getQuery("AllowableProperties", "Allowable properties for a terminology concept", "Returns a list of properties for a particular term concept, used in value set definitions with RCL")
       .set(iri(IM.DEFINITION), TTLiteral.literal(
         new Query()
-          .setImQuery(true)
+          .setTypeOf(RDF.PROPERTY)
           .setName("Allowable Properties for a terminology concept")
           .setDescription("Allowable Properties for a terminology concept")
           .setActiveOnly(true)
@@ -799,10 +808,36 @@ public class CoreQueryImporter implements TTImport {
             .setDescription("property that has $this (or supertype) as a domain")
             .setVariable("concept")
             .setWhere(new Where()
+              .and(w->w
+                .setIri(IM.HAS_SCHEME)
+                .is(is->is.setIri(SNOMED.NAMESPACE)))
+              .and(w->w
               .setIri(RDFS.DOMAIN)
               .addIs(new Node().setParameter("this").setAncestorsOf(true))
-            )
-            .setEntailment(Entail.descendantsOrSelfOf)));
+            ))
+            .setEntailment(Entail.descendantsOrSelfOf)
+          .return_(r->r.setNodeRef("concept")
+            .property(p->p.setIri(RDFS.LABEL))
+            .property(p->p.setIri(IM.HAS_TERM_CODE)
+              .return_(r1->r1.property(p1->p1.setIri(RDFS.LABEL)))))));
+  }
+
+  private void getAllowablePropertyAncestors() throws JsonProcessingException {
+    getQuery("AllowablePropertyAncestors", "Allowable properties for a terminology concept", "Returns a list of properties for a particular term concept, used in value set definitions with RCL")
+      .set(iri(IM.DEFINITION), TTLiteral.literal(
+        new Query()
+          .setTypeOf(RDF.PROPERTY)
+          .setName("Allowable Properties for a terminology concept")
+          .setDescription("Allowable Properties for a terminology concept")
+          .setActiveOnly(true)
+          .setName("property that has $this (or supertype) as a domain")
+          .setDescription("property that has $this (or supertype) as a domain")
+          .setVariable("concept")
+          .setWhere(new Where()
+            .setIri(RDFS.DOMAIN)
+            .addIs(new Node().setParameter("this").setAncestorsOf(true))
+          )
+          .return_(r->r.property(p->p.setIri(RDFS.LABEL)))));
   }
 
   private void searchProperties() throws JsonProcessingException {
