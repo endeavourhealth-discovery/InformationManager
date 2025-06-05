@@ -11,6 +11,7 @@ import org.apache.http.HttpStatus;
 import org.endeavourhealth.imapi.filer.TCGenerator;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
+import org.endeavourhealth.imapi.logic.reasoner.DomainResolver;
 import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetMemberGenerator;
@@ -124,6 +125,8 @@ public class Preload {
     try (TTImport deltaImporter = new DeltaImporter()) {
       deltaImporter.importData(cfg);
     }
+    LOG.info("adding missing properties into concept domains");
+    new DomainResolver().updateDomains();
 
     LOG.info("Finished - " + (new Date()));
 

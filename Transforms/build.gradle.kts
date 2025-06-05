@@ -3,7 +3,6 @@ version = "1.0-SNAPSHOT"
 
 dependencies {
   implementation(libs.imapi)
-
   implementation(libs.apache)
   implementation(libs.antlr)
   implementation(libs.jacksonDatabind)
