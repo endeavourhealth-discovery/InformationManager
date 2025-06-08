@@ -735,7 +735,7 @@ public class CoreQueryImporter implements TTImport {
         .where(w->w
           .setInverse(true)
           .setIri(IM.CONTENT_TYPE)
-          .is(is->is.setParameter("this")))
+          .is(is->is.setParameter("this"))))
       .return_(r->r
         .property(p -> p
           .setIri(RDFS.LABEL))
@@ -744,7 +744,7 @@ public class CoreQueryImporter implements TTImport {
           .return_(s1 -> s1
             .setNodeRef("predicate")
             .property(p1 -> p1
-              .setIri(SHACL.PATH))))));
+              .setIri(SHACL.PATH)))));
     getQuery("AllowableChildTypes", "Allowable child types for editor", "used in the editor to select the type of entity being created as a subtype")
       .set(iri(IM.DEFINITION), TTLiteral.literal(query));
   }
