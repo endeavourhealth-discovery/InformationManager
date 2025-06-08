@@ -724,22 +724,27 @@ public class CoreQueryImporter implements TTImport {
 
   private void allowableSubTypes() throws JsonProcessingException {
     Query query= new Query()
-      .setName("Allowable subtypes for a particular entity type")
-      .setDescription("pass 'this' as the type iri for the selected entity e.g. {'iri': 'http://sometype'}")
+      .setName("Allowable subtypes for a particular entity")
+      .setDescription("pass 'this' as the iri for the selected entity e.g. {'iri': 'http://sometype'}")
       .or(m->m
-        .setParameter("this")
         .where(w->w
+          .setInverse(true)
           .setIri(RDF.TYPE)
-          .is(is->is.setVariable("entity").setDescendantsOrSelfOf(true))
-          .setValueVariable("entity")))
+          .is(is->is.setParameter("this"))))
       .or(m->m
-          .setParameter("this")
         .where(w->w
+          .setInverse(true)
           .setIri(IM.CONTENT_TYPE)
-          .is(is->is.setVariable("entity")
-            .setDescendantsOrSelfOf(true))
-          .setValueVariable("entity")))
-      .return_(r->r.setValueRef("entity"));
+          .is(is->is.setParameter("this")))
+      .return_(r->r
+        .property(p -> p
+          .setIri(RDFS.LABEL))
+        .property(p -> p
+          .setIri(SHACL.PROPERTY)
+          .return_(s1 -> s1
+            .setNodeRef("predicate")
+            .property(p1 -> p1
+              .setIri(SHACL.PATH))))));
     getQuery("AllowableChildTypes", "Allowable child types for editor", "used in the editor to select the type of entity being created as a subtype")
       .set(iri(IM.DEFINITION), TTLiteral.literal(query));
   }
@@ -777,6 +782,8 @@ public class CoreQueryImporter implements TTImport {
             .setParameter("ranges"))
           .return_(r->r
             .property(p->p.setIri(RDFS.LABEL))
+            .property(p -> p.setIri(RDF.TYPE))
+            .property(p -> p.setIri(IM.HAS_SCHEME))
             .property(p->p.setIri(IM.HAS_TERM_CODE)
               .return_(r1->r1.property(p1->p1.setIri(RDFS.LABEL)))))));
   }
@@ -818,6 +825,8 @@ public class CoreQueryImporter implements TTImport {
             .setEntailment(Entail.descendantsOrSelfOf)
           .return_(r->r.setNodeRef("concept")
             .property(p->p.setIri(RDFS.LABEL))
+            .property(p -> p.setIri(RDF.TYPE))
+            .property(p -> p.setIri(IM.HAS_SCHEME))
             .property(p->p.setIri(IM.HAS_TERM_CODE)
               .return_(r1->r1.property(p1->p1.setIri(RDFS.LABEL)))))));
   }
@@ -837,7 +846,7 @@ public class CoreQueryImporter implements TTImport {
             .setIri(RDFS.DOMAIN)
             .addIs(new Node().setParameter("this").setAncestorsOf(true))
           )
-          .return_(r->r.property(p->p.setIri(RDFS.LABEL)))));
+          .return_(r->r.property(p->p.setIri(RDFS.LABEL)).property(p -> p.setIri(RDF.TYPE)))));
   }
 
   private void searchProperties() throws JsonProcessingException {
