@@ -742,7 +742,6 @@ public class CoreQueryImporter implements TTImport {
         .property(p -> p
           .setIri(SHACL.PROPERTY)
           .return_(s1 -> s1
-            .setNodeRef("predicate")
             .property(p1 -> p1
               .setIri(SHACL.PATH)))));
     getQuery("AllowableChildTypes", "Allowable child types for editor", "used in the editor to select the type of entity being created as a subtype")

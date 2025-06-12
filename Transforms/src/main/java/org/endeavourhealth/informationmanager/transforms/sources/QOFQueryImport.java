@@ -47,6 +47,7 @@ public class QOFQueryImport implements TTImport {
 			try {
 				EQDImporter eqdImporter = new EQDImporter();
 				EqdToIMQ.gmsPatients.add("71154095-0C58-4193-B58F-21F05EA0BE2F");
+				EqdToIMQ.gmsPatients.add("DA05DBF2-72AB-41A3-968F-E4A061F411A4");
 				eqdImporter.loadAndConvert(config,manager,queries[0],GRAPH.QOF,
 					dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
 			}
