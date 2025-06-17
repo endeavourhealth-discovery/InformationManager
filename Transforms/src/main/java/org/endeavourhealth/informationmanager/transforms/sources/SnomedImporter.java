@@ -671,7 +671,7 @@ public class SnomedImporter implements TTImport {
       op.addObject(iri(RDFS.RANGE), iri(expression.getInstanceOf().get(0).getIri()));
     }
     if (expression.getOr() != null) {
-      for (Match match : expression.getAnd()) {
+      for (Match match : expression.getOr()) {
         if (match.getInstanceOf() != null) {
           op.addObject(iri(RDFS.RANGE), iri(match.getInstanceOf().get(0).getIri()));
         } else {
