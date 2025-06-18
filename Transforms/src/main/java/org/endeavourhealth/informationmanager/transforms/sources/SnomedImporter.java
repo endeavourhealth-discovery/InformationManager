@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.apache.commons.lang3.StringUtils;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.model.imq.ECLQuery;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.customexceptions.EclFormatException;
 import org.endeavourhealth.imapi.model.imq.Bool;
@@ -662,12 +663,15 @@ public class SnomedImporter implements TTImport {
     if (ecl.matches("^[a-zA-Z].*")) {
       return;
     }
-    Query expression = eclConverter.getQueryFromECL(ecl);
+    ECLQuery eclQuery = new ECLQuery();
+    eclQuery.setEcl(ecl);
+    eclConverter.getQueryFromECL(eclQuery);
+    Query expression = eclQuery.getQuery();
     if (expression.getInstanceOf() != null) {
       op.addObject(iri(RDFS.RANGE), iri(expression.getInstanceOf().get(0).getIri()));
     }
-    if (expression.getAnd() != null) {
-      for (Match match : expression.getAnd()) {
+    if (expression.getOr() != null) {
+      for (Match match : expression.getOr()) {
         if (match.getInstanceOf() != null) {
           op.addObject(iri(RDFS.RANGE), iri(match.getInstanceOf().get(0).getIri()));
         } else {
