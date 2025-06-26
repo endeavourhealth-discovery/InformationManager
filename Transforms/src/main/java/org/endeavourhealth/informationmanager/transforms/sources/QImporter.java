@@ -12,6 +12,8 @@ import jakarta.ws.rs.core.Response;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.model.requests.QueryRequest;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.service.EntityService;
@@ -19,10 +21,6 @@ import org.endeavourhealth.imapi.logic.service.SearchService;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.QR;
-import org.endeavourhealth.imapi.vocabulary.SHACL;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
@@ -48,7 +46,7 @@ public class QImporter implements TTImport {
   public void importData(TTImportConfig ttImportConfig) throws ImportException {
     try {
       try (TTManager manager = new TTManager()) {
-        document.addEntity(manager.createGraph(QR.NAMESPACE,
+        document.addEntity(manager.createScheme(QR.NAMESPACE,
           "Q Research scheme and graph"
           , "Q Research scheme and graph"));
         addQFolders();
@@ -105,7 +103,7 @@ public class QImporter implements TTImport {
   private boolean isMedicationSet(TTEntity entity) {
     if (entity.get(IM.HAS_MEMBER) != null) {
       SetBinder binder = new SetBinder();
-      binder.bindSet(entity.getIri());
+      binder.bindSet(entity.getIri(), GRAPH.DISCOVERY);
       TTEntity boundSet = new EntityService().getBundle(entity.getIri(), Set.of(IM.BINDING)).getEntity();
       for (TTValue binding : boundSet.get(IM.BINDING).getElements()) {
         if (binding.asNode().get(SHACL.NODE).asIriRef().getIri().contains("Medication"))

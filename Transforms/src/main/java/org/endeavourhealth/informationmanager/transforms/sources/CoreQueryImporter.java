@@ -26,7 +26,7 @@ public class CoreQueryImporter implements TTImport {
   @Override
   public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager()) {
-      document = manager.createDocument(GRAPH.DISCOVERY);
+      document = manager.createDocument();
       addressProperty("homeAddress", "home");
       addressProperty("workAddress", "work");
       addressProperty("temporaryAddress", "temp");
@@ -565,7 +565,7 @@ public class CoreQueryImporter implements TTImport {
                 .setDescendantsOrSelfOf(true)
               .setName("Systolic blood pressure"))
               .addIs(new Node()
-              .setIri(GRAPH.EMIS + "1994021000006115")
+              .setIri(SCHEME.EMIS + "1994021000006115")
               .setDescendantsOrSelfOf(true)
               .setName("Home systolic blood pressure"))
               .setValueLabel("Office or home systolic blood pressure"))
@@ -605,7 +605,7 @@ public class CoreQueryImporter implements TTImport {
             .and(w1 -> w1
               .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
               .addIs(new Node()
-                .setIri(GRAPH.EMIS + "1994021000006115")
+                .setIri(SCHEME.EMIS + "1994021000006115")
                 .setDescendantsOrSelfOf(true)
                 .setName("Home systolic blood pressure"))
               .setValueLabel("Home blood pressure"))

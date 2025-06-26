@@ -49,7 +49,7 @@ public class BNFImporter implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try {
       manager = new TTManager();
-      document = manager.createDocument(BNF.NAMESPACE);
+      document = manager.createDocument();
       topFolder();
       importMaps(config.getFolder());
       importCodes(config.getFolder());
@@ -69,12 +69,12 @@ public class BNFImporter implements TTImport {
     try {
       try {
         LOG.info("Creating EMIS-bnf maps...");
-        Map<String,String> emisConcepts= importMaps.getCodesToIri(GRAPH.EMIS);
+        Map<String,String> emisConcepts= importMaps.getCodesToIri(SCHEME.EMIS, GRAPH.DISCOVERY);
         for (Map.Entry<String,String> entry:emisConcepts.entrySet()){
           String code=entry.getKey();
           if (code.contains("DRGG")){
             String bnfChapter= chapterFormatter(code.split("DRGG")[1]);
-            String bnfIri=GRAPH.BNF+"BNF_"+bnfChapter;
+            String bnfIri=SCHEME.BNF+"BNF_"+bnfChapter;
             TTEntity bnfEntity = manager.getEntity(bnfIri);
             if (bnfEntity!=null){
               TTEntity map= new TTEntity()

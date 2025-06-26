@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.online;
 
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.vocabulary.IM;
@@ -21,8 +22,8 @@ public class IM1MapApp {
     // Mandatory/ordered args
     cfg.setFolder(args[0]);
     TTImportByType importer = new Importer();
-    importer.validateByType(GRAPH.IM1, cfg.getFolder());
-    importer.importByType(GRAPH.IM1, cfg);
+    importer.validateByType(SCHEME.IM1, cfg.getFolder());
+    importer.importByType(SCHEME.IM1, cfg);
   }
 
 }

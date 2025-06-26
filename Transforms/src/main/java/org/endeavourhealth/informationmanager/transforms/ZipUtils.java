@@ -24,7 +24,7 @@ public class ZipUtils {
         System.exit(-1);
       }
 
-      FileHeader entry = zipEntries.getFirst();
+      FileHeader entry = zipEntries.get(0);
 
       zipFile.extractFile(entry, workDir);
       return new File(workDir, entry.getFileName());

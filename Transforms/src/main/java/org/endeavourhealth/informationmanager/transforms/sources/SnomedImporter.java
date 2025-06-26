@@ -3,7 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.apache.commons.lang3.StringUtils;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.model.imq.ECLQuery;
+import org.endeavourhealth.imapi.model.imq.ECLQueryRequest;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.customexceptions.EclFormatException;
 import org.endeavourhealth.imapi.model.imq.Bool;
@@ -126,14 +126,14 @@ public class SnomedImporter implements TTImport {
     conceptMap = new HashMap<>();
     try (TTManager dmanager = new TTManager()) {
 
-      document = dmanager.createDocument(SNOMED.NAMESPACE);
-      TTEntity graph = dmanager.createGraph(
+      document = dmanager.createDocument();
+      TTEntity scheme = dmanager.createScheme(
         SNOMED.NAMESPACE,
         "Snomed-CT code scheme and graph",
         "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions"
       );
-      graph.addObject(TTIriRef.iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.CORE_SCHEMES));
-      document.addEntity(graph);
+      scheme.addObject(TTIriRef.iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.CORE_SCHEMES));
+      document.addEntity(scheme);
 
       importConceptFiles(config.getFolder());
       importDescriptionFiles(config.getFolder());
@@ -154,7 +154,7 @@ public class SnomedImporter implements TTImport {
         filer.fileDocument(document);
       }
 
-      document = dmanager.createDocument(SNOMED.NAMESPACE);
+      document = dmanager.createDocument();
       setRefSetRoot();
       importRefsetFiles(config.getFolder());
       try (QOFRefSetImport qofImporter = new QOFRefSetImport(document, conceptMap)) {
@@ -663,7 +663,7 @@ public class SnomedImporter implements TTImport {
     if (ecl.matches("^[a-zA-Z].*")) {
       return;
     }
-    ECLQuery eclQuery = new ECLQuery();
+    ECLQueryRequest eclQuery = new ECLQueryRequest();
     eclQuery.setEcl(ecl);
     eclConverter.getQueryFromECL(eclQuery);
     Query expression = eclQuery.getQuery();

@@ -16,6 +16,7 @@ import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetMemberGenerator;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -83,7 +84,7 @@ public class Preload {
   }
 
 
-  public static List<String> canBulk = List.of(GRAPH.DISCOVERY, SNOMED.NAMESPACE, GRAPH.ENCOUNTERS, GRAPH.QUERY, GRAPH.IM1, GRAPH.FHIR, GRAPH.EMIS, GRAPH.TPP, GRAPH.OPCS4, GRAPH.ICD10, GRAPH.VISION, GRAPH.ODS, GRAPH.BARTS_CERNER, GRAPH.NHS_TFC, GRAPH.BNF);
+  public static List<String> canBulk = List.of(SCHEME.DISCOVERY, SNOMED.NAMESPACE, SCHEME.ENCOUNTERS, SCHEME.QUERY, SCHEME.IM1, SCHEME.FHIR, SCHEME.EMIS, SCHEME.TPP, SCHEME.OPCS4, SCHEME.ICD10, SCHEME.VISION, SCHEME.ODS, SCHEME.BARTS_CERNER, SCHEME.NHS_TFC, SCHEME.BNF);
 
 
   private static void importData(TTImportConfig cfg, String graphdb) throws Exception {
@@ -110,10 +111,10 @@ public class Preload {
       TTBulkFiler.createRepository();
       startGraph(graphdb);
     }
-    new RangeInheritor().inheritRanges(null);
+    new RangeInheritor().inheritRanges(null, GRAPH.DISCOVERY);
     LOG.info("expanding value sets");
-    new SetMemberGenerator().generateAllSetMembers();
-    new SetBinder().bindSets();
+    new SetMemberGenerator().generateAllSetMembers(GRAPH.DISCOVERY);
+    new SetBinder().bindSets(GRAPH.DISCOVERY);
     LOG.info("Filing into live graph");
     TTFilerFactory.setBulk(false);
     TTFilerFactory.setTransactional(true);
@@ -126,7 +127,7 @@ public class Preload {
       deltaImporter.importData(cfg);
     }
     LOG.info("adding missing properties into concept domains");
-    new DomainResolver().updateDomains();
+    new DomainResolver().updateDomains(GRAPH.DISCOVERY);
 
     LOG.info("Finished - " + (new Date()));
 

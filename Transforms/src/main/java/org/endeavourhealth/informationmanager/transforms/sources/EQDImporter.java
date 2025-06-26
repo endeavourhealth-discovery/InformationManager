@@ -13,6 +13,7 @@ import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.RDFS;
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
@@ -89,7 +90,7 @@ public class EQDImporter {
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(fileEntry);
-					converter.convertEQD(document, eqd, dataMap,criteriaMaps);
+					converter.convertEQD(document, eqd, dataMap,criteriaMaps, GRAPH.DISCOVERY);
 				}
 			}
 		}
@@ -283,7 +284,7 @@ public class EQDImporter {
 				Query qry = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 				if (qry.getAnd() != null && qry.getAnd().get(0).getInstanceOf() != null) {
 					for (Node parent : qry.getAnd().get(0).getInstanceOf()) {
-						if (parent.getIri().equals(GRAPH.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
+						if (parent.getIri().equals(SCHEME.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
 							List<Node> parentList = new ArrayList<>();
 							parentList.add(new Node().setIri(IM.NAMESPACE + "Q_RegisteredGMS").setMemberOf(true));
 							qry.getAnd().get(0).setInstanceOf(parentList);

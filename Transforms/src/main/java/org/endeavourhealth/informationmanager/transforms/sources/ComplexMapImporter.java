@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.slf4j.Logger;
@@ -52,9 +53,9 @@ public class ComplexMapImporter {
     this.legacyCodeToEntity = legacyCodeToEntity;
     document.setCrud(iri(IM.UPDATE_PREDICATES));
     if (refset.equals(OPCS4_REFERENCE_SET))
-      namespace = GRAPH.OPCS4;
+      namespace = SCHEME.OPCS4;
     else if (refset.equals(ICD10_REFERENCE_SET))
-      namespace = GRAPH.ICD10;
+      namespace = SCHEME.ICD10;
     else
       throw new IllegalArgumentException(refset + " reference set is not supported yet");
 

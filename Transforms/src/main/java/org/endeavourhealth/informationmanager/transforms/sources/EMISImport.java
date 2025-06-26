@@ -4,10 +4,7 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -70,8 +67,8 @@ public class EMISImport implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try {
       LOG.info("Retrieving filed snomed codes");
-      document = manager.createDocument(GRAPH.EMIS);
-      document.addEntity(manager.createGraph(GRAPH.EMIS, "EMIS codes",
+      document = manager.createDocument();
+      document.addEntity(manager.createScheme(SCHEME.EMIS, "EMIS codes",
         "The EMIS code scheme including codes directly matched to UK Snomed-CT, and EMIS unmatched local codes."));
 
       checkAndUnzip(config.getFolder());
@@ -347,7 +344,7 @@ public class EMISImport implements TTImport {
       .addType(iri(IM.CONCEPT))
       .setDescription("EMIS orphan codes that have no parent and are not matched to UK Snomed-CT." +
         " Each has a code id and an original text code and an EMIS Snomed concept id but no parent code")
-      .setScheme(iri(GRAPH.EMIS));
+      .setScheme(iri(SCHEME.EMIS));
     document.addEntity(c);
     document.addEntity(c);
   }
@@ -364,7 +361,7 @@ public class EMISImport implements TTImport {
         String[] fields = line.split("\t");
         count++;
         if (count % 100000 == 0)
-          LOG.info("Imported {} emis codes for " + document.getGraph().getIri(), count);
+          LOG.info("Imported {} emis codes for " + SCHEME.EMIS, count);
 
         EmisCode ec = new EmisCode();
         ec.setCodeId(fields[0]);
@@ -414,11 +411,11 @@ public class EMISImport implements TTImport {
       if (remaps.get(code) != null)
         conceptId = remaps.get(code);
       emisConcept = new TTEntity()
-        .setIri(GRAPH.EMIS + codeId)
+        .setIri(SCHEME.EMIS + codeId)
         .setCode(ec.conceptId)
         .set(TTIriRef.iri(IM.ALTERNATIVE_CODE), TTLiteral.literal(code))
         .addType(iri(IM.CONCEPT))
-        .setScheme(iri(GRAPH.EMIS));
+        .setScheme(iri(SCHEME.EMIS));
       emisConcept
         .setName(name);
 

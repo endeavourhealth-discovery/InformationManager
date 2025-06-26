@@ -5,12 +5,8 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.ODS;
-import org.endeavourhealth.imapi.vocabulary.ORG;
+import org.endeavourhealth.imapi.vocabulary.*;
 
-import org.endeavourhealth.imapi.vocabulary.RDFS;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -51,17 +47,17 @@ public class OdsImporter implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager();
          TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
-      TTDocument doc = manager.createDocument(GRAPH.ODS);
+      TTDocument doc = manager.createDocument();
       doc.setCrud(iri(IM.UPDATE_ALL));
-      doc.addEntity(manager.createGraph(GRAPH.ODS, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
+      doc.addEntity(manager.createScheme(SCHEME.ODS, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
 
 
       importCodingSystem(config, doc);
       filer.fileDocument(doc);
 
-      doc = manager.createDocument(GRAPH.ODS);
+      doc = manager.createDocument();
       doc.setCrud(iri(IM.UPDATE_ALL));
-      doc.addEntity(manager.createGraph(GRAPH.ODS, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
+      doc.addEntity(manager.createScheme(SCHEME.ODS, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
       importOrganisationData(config, doc);
       importOrganisationRelationships(config);
       importOrganisationRoles(config);
@@ -82,7 +78,7 @@ public class OdsImporter implements TTImport {
     recordClassSet = new TTArray();
     TTEntity odsCodeFolder= new TTEntity()
       .setIri(IM.NAMESPACE+"OdsCodeSystems")
-      .setScheme(iri(GRAPH.ODS))
+      .setScheme(iri(SCHEME.ODS))
         .addType(iri(IM.FOLDER))
           .setName("ODS code systems")
             .setDescription("Foldr containing ODS code schemes")
@@ -95,7 +91,7 @@ public class OdsImporter implements TTImport {
       .addEntity(new TTEntity(ODS.ORGANISATION_ROLE_TYPE)
         .setName("Organisation role")
         .addType(iri(IM.CONCEPT))
-        .setScheme(iri(GRAPH.ODS))
+        .setScheme(iri(SCHEME.ODS))
         .setDescription("The business role the organisation performs")
         .setStatus(iri(IM.ACTIVE))
         .set(iri(IM.IS_CONTAINED_IN), odsCodes)
@@ -103,14 +99,14 @@ public class OdsImporter implements TTImport {
       .addEntity(new TTEntity(ODS.ORGANISATION_RELATIONSHIP)
         .setName("Organisation relationship")
         .addType(iri(IM.CONCEPT))
-        .setScheme(iri(GRAPH.ODS))
+        .setScheme(iri(SCHEME.ODS))
         .setDescription("The type of the relationship with another organisation")
         .setStatus(iri(IM.ACTIVE))
         .set(iri(IM.IS_CONTAINED_IN), odsCodes)
       ).addEntity(new TTEntity(ODS.ORGANISATION_RECORD_CLASS)
         .setName("Organisation record class")
         .addType(iri(IM.CONCEPT))
-        .setScheme(iri(GRAPH.ODS))
+        .setScheme(iri(SCHEME.ODS))
         .setDescription("The business role the organisation performs")
         .setStatus(iri(IM.ACTIVE))
         .set(iri(IM.IS_CONTAINED_IN), odsCodes)
@@ -191,7 +187,7 @@ public class OdsImporter implements TTImport {
       TTEntity concept = new TTEntity(prefix + "_" + fieldByName("Code"))
         .addType(iri(IM.CONCEPT))
         .setName(fieldByName("DisplayName") + " " + suffix)
-        .setScheme(iri(GRAPH.ODS))
+        .setScheme(iri(SCHEME.ODS))
         .setCode(fieldByName("Id"))
         .set(iri(RDFS.SUBCLASS_OF), new TTArray().add(iri(prefix)))
         .setStatus(iri(IM.ACTIVE));
@@ -227,7 +223,7 @@ public class OdsImporter implements TTImport {
     TTEntity org = new TTEntity(ORG.ORGANISATION_NAMESPACE + odsCode)
       .addType(TTIriRef.iri(IM.NAMESPACE + "Organisation"))
       .setName(fieldByName("Name"))
-      .setScheme(iri(GRAPH.ODS))
+      .setScheme(iri(SCHEME.ODS))
       .setStatus("Active".equals(fieldByName("Status")) ? iri(IM.ACTIVE) : iri(IM.INACTIVE))
       .set(iri(ORG.ODS_CODE), literal(odsCode))
       .set(iri(IM.ADDRESS), iri(addIri))

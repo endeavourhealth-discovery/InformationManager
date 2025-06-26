@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.logic.CachedObjectMapper;
 import org.endeavourhealth.imapi.model.fhir.CodeSystem;
@@ -46,7 +47,7 @@ public class FHIRImporter implements TTImport {
 		try {
 			LOG.info("Importing FHIR Resources");
 			manager = new TTManager();
-			document = manager.createDocument(FHIR.GRAPH_FHIR);
+			document = manager.createDocument();
 			FHIRToIM converter = new FHIRToIM();
 			for (String coreFile : fhirResources) {
 				try (TTManager manager = new TTManager()) {
@@ -65,7 +66,7 @@ public class FHIRImporter implements TTImport {
 							document.getEntities().addAll(concepts);
 						}
 					}
-					LOG.info("Filing {} from {}", document.getGraph().getIri());
+					LOG.info("Filing {} from {}", SCHEME.FHIR);
 					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 						try {
 							filer.fileDocument(document);

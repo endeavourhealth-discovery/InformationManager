@@ -7,10 +7,7 @@ import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.logic.service.SetService;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -54,14 +51,10 @@ public class CoreEthnicityImport implements TTImport {
   @Override
   public void importData(TTImportConfig config) throws ImportException {
     try {
-      document = manager.createDocument(GRAPH.CEG);
-      document.addEntity(new TTEntity()
-        .setIri(GRAPH.CEG)
-        .setName("CEG resources")
-        .addType(iri(RDFS.CLASS))
-        .set(iri(RDFS.SUBCLASS_OF),iri(IM.NAMESPACE+"Graph")));
-      nhsDocument = nhsManager.createDocument(GRAPH.NHSDD_ETHNIC_2001);
-      document.addEntity(manager.createGraph(GRAPH.NHSDD_ETHNIC_2001,
+      document = manager.createDocument();
+      document.addEntity(manager.createScheme(SCHEME.CEG, "CEG (QMUL) scheme","CEG library of value sets, queries and profiles"));
+      nhsDocument = nhsManager.createDocument();
+      document.addEntity(manager.createScheme(SCHEME.NHSDD_ETHNIC_2001,
         "NHS Ethnicity scheme and graph"
         , "NHS Ethnicity scheme and graph"));
       setConceptSetGroups();
@@ -95,7 +88,7 @@ public class CoreEthnicityImport implements TTImport {
 
 
   private void retrieveEthnicity(boolean secure) throws TTFilerException, IOException {
-    census2001 = importMaps.getDescendants(SNOMED.NAMESPACE + "92381000000106");
+    census2001 = importMaps.getDescendants(SNOMED.NAMESPACE + "92381000000106", GRAPH.DISCOVERY);
     for (Map.Entry<String, Set<String>> entry : census2001.entrySet()) {
       String snomed = entry.getKey();
       for (String term : entry.getValue()) {
@@ -194,11 +187,11 @@ public class CoreEthnicityImport implements TTImport {
     TTEntity cegSubset = cegCatMap.get(cat16);
     if (cegSubset == null) {
       cegSubset = new TTEntity()
-        .setIri(GRAPH.CEG+ "CSET_EthnicCategoryCEG16_" + cat16)
+        .setIri(SCHEME.CEG+ "CSET_EthnicCategoryCEG16_" + cat16)
         .addType(iri(IM.CONCEPT_SET))
         .setName("Value set - " + catTerm)
         .setCode(cat16)
-        .setScheme(iri(GRAPH.CEG))
+        .setScheme(iri(SCHEME.CEG))
         .setDescription("QMUL CEG 16+ Ethnic category " + cat16)
         .set(iri(IM.IS_SUBSET_OF), TTIriRef.iri(cegSet.getIri()));
       document.addEntity(cegSubset);
@@ -229,7 +222,7 @@ public class CoreEthnicityImport implements TTImport {
 
   private void setConceptSetGroups() {
     cegSet = new TTEntity()
-      .setIri(GRAPH.CEG + "CSET_EthnicCategoryCEG16")
+      .setIri(SCHEME.CEG + "CSET_EthnicCategoryCEG16")
       .addType(iri(IM.CONCEPT_SET))
       .setName("CEG 16+1 Ethnic category (set group)")
       .setDescription("QMUL-CEG categorisations of ethnic groups");

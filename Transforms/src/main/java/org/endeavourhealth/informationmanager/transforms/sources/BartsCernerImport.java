@@ -9,6 +9,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -36,8 +37,8 @@ public class BartsCernerImport implements TTImport {
   private static final String[] hierarchy = {".*\\\\Barts\\\\V500_event_set_canon.txt"};
   private static final String[] maps = {".*\\\\Barts\\\\Snomed-Barts-Cerner.txt"};
 
-  private static final String BARTS_CERNER_CODES = GRAPH.BARTS_CERNER + "BartsCernerCodes";
-  private static final String UNCLASSIFIED = GRAPH.BARTS_CERNER + "UnClassifiedBartsCernerCode";
+  private static final String BARTS_CERNER_CODES = SCHEME.BARTS_CERNER + "BartsCernerCodes";
+  private static final String UNCLASSIFIED = SCHEME.BARTS_CERNER + "UnClassifiedBartsCernerCode";
 
   private final Map<String, TTEntity> codeToConcept = new HashMap<>();
   private final Map<String, TTEntity> codeToSet = new HashMap<>();
@@ -52,8 +53,8 @@ public class BartsCernerImport implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     LOG.info("retrieving snomed codes from IM");
     try {
-      document = manager.createDocument(GRAPH.BARTS_CERNER);
-      document.addEntity(manager.createGraph(GRAPH.BARTS_CERNER, "Barts Cerner code scheme and graph"
+      document = manager.createDocument();
+      document.addEntity(manager.createScheme(SCHEME.BARTS_CERNER, "Barts Cerner code scheme and graph"
         , "The Barts Cerner local code scheme and graph i.e. local codes with links to cor"));
       importSets(config.getFolder());
       importHierarchy(config.getFolder());
@@ -106,7 +107,7 @@ public class BartsCernerImport implements TTImport {
           count++;
           String[] fields = line.split("\t");
           String code = fields[0];
-          String iri = GRAPH.BARTS_CERNER + code;
+          String iri = SCHEME.BARTS_CERNER + code;
           String snomed = fields[2];
           TTEntity barts = codeToConcept.get(code);
           if (snomed.contains("1000252"))
@@ -127,7 +128,7 @@ public class BartsCernerImport implements TTImport {
       .addType(iri(IM.CONCEPT))
       .setName("Barts Cerner codes")
       .setCode("BartsCernerCodes")
-      .setScheme(iri(GRAPH.BARTS_CERNER))
+      .setScheme(iri(SCHEME.BARTS_CERNER))
       .setDescription("The Cerner codes used in Barts NHS Trust Millennium system");
     topConcept.addObject(iri(IM.IS_CHILD_OF), iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
     document.addEntity(topConcept);
@@ -181,7 +182,7 @@ public class BartsCernerImport implements TTImport {
       LOG.info("missing event set cd {} {}", parent, fields[1]);
     Integer order = Integer.parseInt(fields[4]);
     TTEntity eventSet = codeToSet.get(child);
-    eventSet.addObject(iri(IM.IS_CHILD_OF), iri(GRAPH.BARTS_CERNER + parent));
+    eventSet.addObject(iri(IM.IS_CHILD_OF), iri(SCHEME.BARTS_CERNER + parent));
     eventSet.set(iri(IM.DISPLAY_ORDER), TTLiteral.literal(order));
     if (childToParent.get(child) == null)
       childToParent.put(child, new HashSet<>());
@@ -212,7 +213,7 @@ public class BartsCernerImport implements TTImport {
     String code = fields[7];
     if (codeToSet.get(code) != null)
       throw new IllegalArgumentException("duplicate event code and set code");
-    String iri = GRAPH.BARTS_CERNER + fields[7];
+    String iri = SCHEME.BARTS_CERNER + fields[7];
     String term = fields[4].replace("\"", "");
     TTEntity usedConcept = codeToConcept.get(code);
     if (usedConcept == null) {
@@ -220,7 +221,7 @@ public class BartsCernerImport implements TTImport {
         .setIri(iri)
         .addType(iri(IM.CONCEPT))
         .setCode(code)
-        .setScheme(iri(GRAPH.BARTS_CERNER));
+        .setScheme(iri(SCHEME.BARTS_CERNER));
       usedConcept.addObject(iri(IM.IS_CHILD_OF), iri(UNCLASSIFIED));
       document.addEntity(usedConcept);
       codeToConcept.put(code, usedConcept);
@@ -254,13 +255,13 @@ public class BartsCernerImport implements TTImport {
     String code = fields[7];
     String term = fields[11].replace("\"", "");
     String xterm = term.toLowerCase();
-    String iri = GRAPH.BARTS_CERNER + code;
+    String iri = SCHEME.BARTS_CERNER + code;
     TTEntity eventSet = new TTEntity()
       .setIri(iri)
       .addType(iri(IM.CONCEPT))
       .setName(term)
       .setCode(code)
-      .setScheme(iri(GRAPH.BARTS_CERNER));
+      .setScheme(iri(SCHEME.BARTS_CERNER));
     codeToSet.put(code, eventSet);
     termToSet.put(xterm, eventSet);
   }
@@ -293,12 +294,12 @@ public class BartsCernerImport implements TTImport {
     String term = fields[3].replace("\"", "");
     String setTerm = fields[15].toLowerCase().replace("\"", "");
     TTEntity eventSet = termToSet.get(setTerm);
-    String iri = GRAPH.BARTS_CERNER + code;
+    String iri = SCHEME.BARTS_CERNER + code;
     TTEntity codeConcept = new TTEntity()
       .setIri(iri)
       .addType(iri(IM.CONCEPT))
       .setCode(code)
-      .setScheme(iri(GRAPH.BARTS_CERNER));
+      .setScheme(iri(SCHEME.BARTS_CERNER));
     if (term.equals("")) {
       codeConcept.setName("no name assigned");
     } else {

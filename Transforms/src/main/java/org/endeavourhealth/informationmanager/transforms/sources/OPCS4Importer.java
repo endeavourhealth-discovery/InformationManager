@@ -10,6 +10,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -35,7 +36,7 @@ public class OPCS4Importer implements TTImport {
   private static final String[] chapters = {".*\\\\OPCS4\\\\OPCSChapters.txt"};
   private static final String[] maps = {".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
 
-  private final TTIriRef opcscodes = TTIriRef.iri(GRAPH.OPCS4 + "OPCS49Classification");
+  private final TTIriRef opcscodes = TTIriRef.iri(SCHEME.OPCS4 + "OPCS49Classification");
   private final Map<String, TTEntity> codeToEntity = new HashMap<>();
   private final Map<String, TTEntity> altCodeToEntity = new HashMap<>();
   private final ImportMaps importMaps = new ImportMaps();
@@ -48,14 +49,14 @@ public class OPCS4Importer implements TTImport {
     LOG.info("Importing OPCS4.....");
     LOG.info("Checking Snomed codes first");
     try {
-      snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
+      snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE, GRAPH.DISCOVERY);
       try (TTManager manager = new TTManager()) {
-        document = manager.createDocument(GRAPH.OPCS4);
-        document.addEntity(manager.createGraph(GRAPH.OPCS4, "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
+        document = manager.createDocument();
+        document.addEntity(manager.createScheme(SCHEME.OPCS4, "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
         importChapters(config.getFolder(), document);
         importEntities(config.getFolder(), document);
 
-        mapDocument = manager.createDocument(GRAPH.OPCS4);
+        mapDocument = manager.createDocument();
         importMaps(config.getFolder());
         //Important to file after maps set
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
@@ -84,7 +85,7 @@ public class OPCS4Importer implements TTImport {
       .addType(iri(IM.CONCEPT))
       .setName("OPCS 4-9 Classification")
       .setCode("OPCS49Classification")
-      .setScheme(iri(GRAPH.OPCS4))
+      .setScheme(iri(SCHEME.OPCS4))
       .setDescription("Classification of OPCS4 with chapter headings");
     opcs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
     document.addEntity(opcs);
@@ -96,10 +97,10 @@ public class OPCS4Importer implements TTImport {
         String chapter = fields[0];
         String term = fields[1];
         TTEntity c = new TTEntity();
-        c.setIri(GRAPH.OPCS4 + chapter)
+        c.setIri(SCHEME.OPCS4 + chapter)
           .setName(term + " (chapter " + chapter + ")")
           .setCode(chapter)
-          .setScheme(iri(GRAPH.OPCS4))
+          .setScheme(iri(SCHEME.OPCS4))
           .addType(iri(IM.CONCEPT))
           .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(opcs.getIri())));
         codeToEntity.put(chapter, c);
@@ -108,7 +109,7 @@ public class OPCS4Importer implements TTImport {
       }
     }
     TTEntity c = new TTEntity()
-      .setIri(GRAPH.OPCS4 + "O")
+      .setIri(SCHEME.OPCS4 + "O")
       .setName("Overflow codes (chapter " + "O" + ")")
       .setCode("O")
       .addType(iri(IM.CONCEPT))
@@ -134,8 +135,8 @@ public class OPCS4Importer implements TTImport {
         String code = fields[0];
         TTEntity c = new TTEntity()
           .setCode(fields[0])
-          .setScheme(iri(GRAPH.OPCS4))
-          .setIri(GRAPH.OPCS4 + (fields[0].replace(".", "")))
+          .setScheme(iri(SCHEME.OPCS4))
+          .setIri(SCHEME.OPCS4 + (fields[0].replace(".", "")))
           .addType(iri(IM.CONCEPT));
         if (code.contains(".")) {
           String qParent = code.substring(0, code.indexOf("."));

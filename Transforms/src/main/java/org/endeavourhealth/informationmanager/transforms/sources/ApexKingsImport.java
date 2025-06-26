@@ -29,7 +29,7 @@ public class ApexKingsImport implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(ApexKingsImport.class);
 
   private static final String[] kingsPath = {".*\\\\Kings\\\\KingsPathMap.txt"};
-  private static final String KINGS_APEX_CODES = GRAPH.KINGS_APEX + "KingsApexCodes";
+  private static final String KINGS_APEX_CODES = SCHEME.KINGS_APEX + "KingsApexCodes";
   private TTDocument document;
   private Map<String, Set<String>> readToSnomed = new HashMap<>();
   private final Map<String, String> apexToRead = new HashMap<>();
@@ -40,8 +40,8 @@ public class ApexKingsImport implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
 
     try (TTManager manager = new TTManager()) {
-      document = manager.createDocument(GRAPH.KINGS_APEX);
-      document.addEntity(manager.createGraph(GRAPH.KINGS_APEX, "Kings Apex pathology code scheme and graph",
+      document = manager.createDocument();
+      document.addEntity(manager.createScheme(SCHEME.KINGS_APEX, "Kings Apex pathology code scheme and graph",
         "The Kings Apex LIMB local code scheme and graph"));
 
       importR2Matches();
@@ -61,7 +61,7 @@ public class ApexKingsImport implements TTImport {
       .addType(iri(IM.CONCEPT))
       .setName("Kings College Hospital Apex path codes")
       .setCode("KingsApexCodes")
-      .setScheme(iri(GRAPH.KINGS_APEX))
+      .setScheme(iri(SCHEME.KINGS_APEX))
       .setDescription("Local codes for the Apex pathology system in kings")
       .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies")));
     document.addEntity(kings);
@@ -70,7 +70,7 @@ public class ApexKingsImport implements TTImport {
 
   private void importR2Matches() throws SQLException, TTFilerException, IOException {
     LOG.info("Retrieving read vision 2 snomed map");
-    readToSnomed = importMaps.importReadToSnomed();
+    readToSnomed = importMaps.importReadToSnomed(GRAPH.DISCOVERY);
 
   }
 
@@ -86,14 +86,14 @@ public class ApexKingsImport implements TTImport {
         String[] fields = line.split("\t");
         String readCode = fields[0];
         String code = fields[1];
-        String iri = GRAPH.KINGS_APEX + (fields[1].replaceAll("[ .,\"%]", ""));
+        String iri = SCHEME.KINGS_APEX + (fields[1].replaceAll("[ .,\"%]", ""));
         TTEntity entity = new TTEntity()
           .setIri(iri)
           .addType(iri(IM.CONCEPT))
           .setName(fields[2])
           .setDescription("Local apex Kings trust pathology system entity ")
           .setCode(code)
-          .setScheme(iri(GRAPH.KINGS_APEX))
+          .setScheme(iri(SCHEME.KINGS_APEX))
           .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(KINGS_APEX_CODES)));
         document.addEntity(entity);
         apexToRead.put(code, readCode);

@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
@@ -36,12 +37,12 @@ public class CEGImporter implements TTImport {
 
     try (
       TTManager manager = new TTManager()) {
-      TTDocument document = manager.createDocument(GRAPH.CEG);
-      createGraph(document);
+      TTDocument document = manager.createDocument();
+      document.addEntity(manager.createScheme(SCHEME.CEG,"CEG (QMUL) scheme","CEG library of value sets, queries and profiles"));
       createOrg(document);
       createFolders(document);
       EQDImporter eqdImporter = new EQDImporter();
-      eqdImporter.loadAndConvert(config,manager,queries[0],GRAPH.CEG,dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
+      eqdImporter.loadAndConvert(config,manager,queries[0], SCHEME.CEG,dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
       } catch (Exception e) {
@@ -50,26 +51,11 @@ public class CEGImporter implements TTImport {
     } catch (Exception e){
       throw new ImportException(e.getMessage(),e);
     }
-
-
-
   }
-
-
-  private void createGraph(TTDocument document){
-    TTEntity graph = new TTEntity()
-      .setIri(GRAPH.CEG)
-      .setName("CEG (QMUL) graph")
-      .setDescription("CEG library of value sets, queries and profiles")
-      .addType(iri(IM.GRAPH));
-    graph.addObject(iri(RDFS.SUBCLASS_OF), iri(IM.GRAPH));
-    document.addEntity(graph);
-  }
-
 
   private void createFolders(TTDocument document) {
     TTEntity folder = new TTEntity()
-      .setIri(GRAPH.CEG + "Q_CEGQueries")
+      .setIri(SCHEME.CEG + "Q_CEGQueries")
       .setName("QMUL CEG query library")
       .addType(iri(IM.FOLDER))
       .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "Q_Queries"));
@@ -77,7 +63,7 @@ public class CEGImporter implements TTImport {
     document.addEntity(folder);
     mainFolder= folder.getIri();
     folder = new TTEntity()
-      .setIri(GRAPH.CEG + "CSET_CEGConceptSets")
+      .setIri(SCHEME.CEG + "CSET_CEGConceptSets")
       .setName("QMUL CEG value set library")
       .addType(iri(IM.FOLDER))
       .set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "QueryConceptSets"));

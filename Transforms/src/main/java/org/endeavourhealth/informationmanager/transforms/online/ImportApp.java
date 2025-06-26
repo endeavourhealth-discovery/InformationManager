@@ -72,24 +72,24 @@ public class ImportApp {
     TTImportByType importer = new Importer();
     switch (cfg.getImportType()) {
       case "qofquery", "qof" -> {
-        importer = new Importer().validateByType(GRAPH.QOF, cfg.getFolder());
-        importer.importByType(GRAPH.QOF, cfg);
+        importer = new Importer().validateByType(SCHEME.QOF, cfg.getFolder());
+        importer.importByType(SCHEME.QOF, cfg);
       }
       case "corequery" -> {
-        importer = new Importer().validateByType(GRAPH.QUERY, cfg.getFolder());
-        importer.importByType(GRAPH.QUERY, cfg);
+        importer = new Importer().validateByType(SCHEME.QUERY, cfg.getFolder());
+        importer.importByType(SCHEME.QUERY, cfg);
       }
       case "imv1" -> {
-        importer = new Importer().validateByType(GRAPH.IM1, cfg.getFolder());
-        importer.importByType(GRAPH.IM1, cfg);
+        importer = new Importer().validateByType(SCHEME.IM1, cfg.getFolder());
+        importer.importByType(SCHEME.IM1, cfg);
       }
       case "bnf" -> {
-        importer = new Importer().validateByType(GRAPH.BNF, cfg.getFolder());
-        importer.importByType(GRAPH.BNF, cfg);
+        importer = new Importer().validateByType(SCHEME.BNF, cfg.getFolder());
+        importer.importByType(SCHEME.BNF, cfg);
       }
       case "prsb" -> {
-        importer = new Importer().validateByType(GRAPH.PRSB, cfg.getFolder());
-        importer.importByType(GRAPH.PRSB, cfg);
+        importer = new Importer().validateByType(SCHEME.PRSB, cfg.getFolder());
+        importer.importByType(SCHEME.PRSB, cfg);
       }
       case "core" -> {
         importer = new Importer().validateByType(GRAPH.DISCOVERY, cfg.getFolder());
@@ -100,70 +100,70 @@ public class ImportApp {
         importer.importByType(SNOMED.NAMESPACE, cfg);
       }
       case "emis" -> {
-        importer = new Importer().validateByType(GRAPH.EMIS, cfg.getFolder());
-        importer.importByType(GRAPH.EMIS, cfg);
+        importer = new Importer().validateByType(SCHEME.EMIS, cfg.getFolder());
+        importer.importByType(SCHEME.EMIS, cfg);
       }
       case "cprd" -> {
-        importer = new Importer().validateByType(GRAPH.CPRD_MED, cfg.getFolder());
-        importer.importByType(GRAPH.CPRD_MED, cfg);
+        importer = new Importer().validateByType(SCHEME.CPRD_MED, cfg.getFolder());
+        importer.importByType(SCHEME.CPRD_MED, cfg);
       }
       case "tpp", "ctv3" -> {
-        importer = new Importer().validateByType(GRAPH.TPP, cfg.getFolder());
-        importer.importByType(GRAPH.TPP, cfg);
+        importer = new Importer().validateByType(SCHEME.TPP, cfg.getFolder());
+        importer.importByType(SCHEME.TPP, cfg);
       }
       case "opcs4" -> {
-        importer = new Importer().validateByType(GRAPH.OPCS4, cfg.getFolder());
-        importer.importByType(GRAPH.OPCS4, cfg);
+        importer = new Importer().validateByType(SCHEME.OPCS4, cfg.getFolder());
+        importer.importByType(SCHEME.OPCS4, cfg);
       }
       case "icd10" -> {
-        importer = new Importer().validateByType(GRAPH.ICD10, cfg.getFolder());
-        importer.importByType(GRAPH.ICD10, cfg);
+        importer = new Importer().validateByType(SCHEME.ICD10, cfg.getFolder());
+        importer.importByType(SCHEME.ICD10, cfg);
       }
       case "discoverymaps", "encounters" -> {
-        importer = new Importer().validateByType(GRAPH.ENCOUNTERS, cfg.getFolder());
-        importer.importByType(GRAPH.ENCOUNTERS, cfg);
+        importer = new Importer().validateByType(SCHEME.ENCOUNTERS, cfg.getFolder());
+        importer.importByType(SCHEME.ENCOUNTERS, cfg);
       }
       case "read2", "vision" -> {
-        importer = new Importer().validateByType(GRAPH.VISION, cfg.getFolder());
-        importer.importByType(GRAPH.VISION, cfg);
+        importer = new Importer().validateByType(SCHEME.VISION, cfg.getFolder());
+        importer.importByType(SCHEME.VISION, cfg);
       }
       case "kingsapex" -> {
-        importer = new Importer().validateByType(GRAPH.KINGS_APEX, cfg.getFolder());
-        importer.importByType(GRAPH.KINGS_APEX, cfg);
+        importer = new Importer().validateByType(SCHEME.KINGS_APEX, cfg.getFolder());
+        importer.importByType(SCHEME.KINGS_APEX, cfg);
       }
       case "kingswinpath" -> {
-        importer = new Importer().validateByType(GRAPH.KINGS_WINPATH, cfg.getFolder());
-        importer.importByType(GRAPH.KINGS_WINPATH, cfg);
+        importer = new Importer().validateByType(SCHEME.KINGS_WINPATH, cfg.getFolder());
+        importer.importByType(SCHEME.KINGS_WINPATH, cfg);
       }
       case "smartlifequery" -> {
-        importer = new Importer().validateByType(GRAPH.SMARTLIFE, cfg.getFolder());
-        importer.importByType(GRAPH.SMARTLIFE, cfg);
+        importer = new Importer().validateByType(SCHEME.SMARTLIFE, cfg.getFolder());
+        importer.importByType(SCHEME.SMARTLIFE, cfg);
       }
       case "ceg" -> {
-        importer = new Importer().validateByType(GRAPH.CEG, cfg.getFolder());
-        importer.importByType(GRAPH.CEG, cfg);
+        importer = new Importer().validateByType(SCHEME.CEG, cfg.getFolder());
+        importer.importByType(SCHEME.CEG, cfg);
       }
       case "barts" -> {
-        importer = new Importer().validateByType(GRAPH.BARTS_CERNER, cfg.getFolder());
-        importer.importByType(GRAPH.BARTS_CERNER, cfg);
+        importer = new Importer().validateByType(SCHEME.BARTS_CERNER, cfg.getFolder());
+        importer.importByType(SCHEME.BARTS_CERNER, cfg);
       }
       case "ods" -> {
-        importer = new Importer().validateByType(GRAPH.ODS, cfg.getFolder());
-        importer.importByType(GRAPH.ODS, cfg);
+        importer = new Importer().validateByType(SCHEME.ODS, cfg.getFolder());
+        importer.importByType(SCHEME.ODS, cfg);
       }
       case "nhstfc" -> {
-        importer = new Importer().validateByType(GRAPH.NHS_TFC, cfg.getFolder());
-        importer.importByType(GRAPH.NHS_TFC, cfg);
+        importer = new Importer().validateByType(SCHEME.NHS_TFC, cfg.getFolder());
+        importer.importByType(SCHEME.NHS_TFC, cfg);
       }
       case "tct" -> cfg.setSkipsearch(true);
       case "search" -> cfg.setSkiptct(true);
       case "config" -> {
-        importer = new Importer().validateByType(GRAPH.CONFIG, cfg.getFolder());
-        importer.importByType(GRAPH.CONFIG, cfg);
+        importer = new Importer().validateByType(SCHEME.CONFIG, cfg.getFolder());
+        importer.importByType(SCHEME.CONFIG, cfg);
       }
       case "deltas" -> {
-        importer = new Importer().validateByType(GRAPH.DELTAS, cfg.getFolder());
-        importer.importByType(GRAPH.DELTAS, cfg);
+        importer = new Importer().validateByType(SCHEME.DELTAS, cfg.getFolder());
+        importer.importByType(SCHEME.DELTAS, cfg);
       }
       case "singlefile" -> {
         importer = new Importer().validateByType(TTIriRef.iri(IM.NAMESPACE + "SingleFileImporter"), cfg.getFolder());

@@ -10,6 +10,7 @@ import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -49,9 +50,9 @@ public class VisionImport implements TTImport {
     LOG.info("importing vision codes");
     LOG.info("retrieving snomed codes from IM");
     try (TTManager manager = new TTManager()) {
-      snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE);
-      document = manager.createDocument(GRAPH.VISION);
-      document.addEntity(manager.createGraph(GRAPH.VISION, "Vision (including Read) codes",
+      snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE, GRAPH.DISCOVERY);
+      document = manager.createDocument();
+      document.addEntity(manager.createScheme(SCHEME.VISION, "Vision (including Read) codes",
         "The Vision local code scheme and graph including Read 2 and Vision local codes"));
 
       importEmis();
@@ -183,7 +184,7 @@ public class VisionImport implements TTImport {
 
   private void importEmis() throws IOException {
     LOG.info("Importing EMIS/Read from IM for look up....");
-    emisRead = importMaps.getEMISReadAsVision();
+    emisRead = importMaps.getEMISReadAsVision(GRAPH.DISCOVERY);
 
   }
 
@@ -209,10 +210,10 @@ public class VisionImport implements TTImport {
                 String lname = code.replaceAll("[.&/'| ()^]", "_");
                 lname = lname.replace("[", "_").replace("]", "_");
                 readConcept = new TTEntity()
-                  .setIri(GRAPH.VISION + lname)
+                  .setIri(SCHEME.VISION + lname)
                   .setCode(code)
                   .setStatus(iri(IM.ACTIVE))
-                  .setScheme(iri(GRAPH.VISION))
+                  .setScheme(iri(SCHEME.VISION))
                   .addType(iri(IM.CONCEPT));
                 document.addEntity(readConcept);
                 codeToConcept.put(code, readConcept);
@@ -238,11 +239,11 @@ public class VisionImport implements TTImport {
   private void createHierarchy() {
     LOG.info("Creating child parent hierarchy");
     TTEntity vision = new TTEntity()
-      .setIri(GRAPH.VISION + "VisionCodes")
+      .setIri(SCHEME.VISION + "VisionCodes")
       .setName("Vision read 2 and localcodes")
       .addType(iri(IM.CONCEPT))
       .setCode("VisionCodes")
-      .setScheme(iri(GRAPH.VISION))
+      .setScheme(iri(SCHEME.VISION))
       .setDescription("Vision and read 2 codes mapped to core");
     vision.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
     document.addEntity(vision);
@@ -258,7 +259,7 @@ public class VisionImport implements TTImport {
           while (parent.length() < 5) {
             parent.append("_");
           }
-          entity.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(GRAPH.VISION + parent)));
+          entity.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(SCHEME.VISION + parent)));
         }
       }
     }
@@ -285,11 +286,11 @@ public class VisionImport implements TTImport {
         lname = lname.replace("[", "_").replace("]", "_");
         if (!code.startsWith(".") && !Character.isLowerCase(code.charAt(0)) && codeToConcept.get(code) == null) {
           TTEntity c = new TTEntity();
-          c.setIri(GRAPH.VISION + lname);
+          c.setIri(SCHEME.VISION + lname);
           c.addType(iri(IM.CONCEPT));
           c.setName(term);
           c.setCode(code);
-          c.setScheme(iri(GRAPH.VISION));
+          c.setScheme(iri(SCHEME.VISION));
           document.addEntity(c);
           codeToConcept.put(code, c);
         }

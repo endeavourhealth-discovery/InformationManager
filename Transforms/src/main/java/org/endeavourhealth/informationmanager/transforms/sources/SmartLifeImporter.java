@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -34,18 +35,12 @@ public class SmartLifeImporter implements TTImport {
 	public void importData(TTImportConfig config) throws ImportException {
 		this.config=config;
 		try (TTManager manager = new TTManager()){
-			TTDocument document = manager.createDocument(GRAPH.SMARTLIFE);
-			TTEntity graph = new TTEntity()
-				.setIri(GRAPH.SMARTLIFE)
-				.setName("Smartlife health graph")
-				.setDescription("Smartlife library of value sets, queries and profiles")
-				.addType(iri(IM.GRAPH));
-			graph.addObject(iri(RDFS.SUBCLASS_OF), iri(IM.GRAPH));
-			document.addEntity(graph);
+			TTDocument document = manager.createDocument();
+			document.addEntity(manager.createScheme(SCHEME.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles"));
 			createFolders(document);
 			try {
 				EQDImporter eqdImporter = new EQDImporter();
-				eqdImporter.loadAndConvert(config,manager,queries[0],GRAPH.SMARTLIFE,dataMapFile[0],
+				eqdImporter.loadAndConvert(config,manager,queries[0],SCHEME.SMARTLIFE,dataMapFile[0],
 					"criteriaMaps.properties",mainFolder,setFolder);
 			}
 			catch (Exception ex) {
@@ -64,7 +59,7 @@ public class SmartLifeImporter implements TTImport {
 
 	private void createFolders(TTDocument document) {
 		TTEntity folder = new TTEntity()
-			.setIri(GRAPH.SMARTLIFE + "Q_SmartLifeQueries")
+			.setIri(SCHEME.SMARTLIFE + "Q_SmartLifeQueries")
 			.setName("SmartLife queries")
 			.addType(iri(IM.FOLDER))
 			.set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "Q_Queries"));
@@ -72,7 +67,7 @@ public class SmartLifeImporter implements TTImport {
 		document.addEntity(folder);
 		mainFolder= folder.getIri();
 		folder = new TTEntity()
-			.setIri(GRAPH.SMARTLIFE + "CSET_SmartLifeConceptSets")
+			.setIri(SCHEME.SMARTLIFE + "CSET_SmartLifeConceptSets")
 			.setName("Smart Life Health value set library")
 			.addType(iri(IM.FOLDER))
 			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "QueryConceptSets"));
