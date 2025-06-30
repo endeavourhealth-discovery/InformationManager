@@ -123,17 +123,19 @@ public class QOFQueryImport implements TTImport {
 		if (iriMap.get(query.getIri())!=null) {
 			query.setIri(iriMap.get(query.getIri()));
 		}
-
-		if (query.getRule()!=null){
-			for (Match match:query.getRule()){
-				if (match.getInstanceOf()!=null){
-					for (Node instanceOf: match.getInstanceOf()){
-						if (iriMap.get(instanceOf.getIri())!=null) {
-							instanceOf.setIri(iriMap.get(instanceOf.getIri()));
-						}
-					}
+		if (query.getInstanceOf()!=null){
+			for (Node instanceOf: query.getInstanceOf()){
+				if (iriMap.get(instanceOf.getIri())!=null) {
+					instanceOf.setIri(iriMap.get(instanceOf.getIri()));
 				}
-				replaceMatchIris(match,iriMap);
+			}
+		}
+
+		for (List<Match> matches:Arrays.asList(query.getRule(),query.getAnd(),query.getOr(),query.getNot())){
+			if (matches!=null){
+				for (Match match:matches){
+					replaceMatchIris(match,iriMap);
+				}
 			}
 		}
 	}
