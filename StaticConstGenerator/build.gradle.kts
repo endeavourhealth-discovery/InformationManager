@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.endeavourhealth.plugins"
-version = "1.2-SNAPSHOT"
+version = "1.3-SNAPSHOT"
 description = "Static Const Generator"
 
 gradlePlugin {

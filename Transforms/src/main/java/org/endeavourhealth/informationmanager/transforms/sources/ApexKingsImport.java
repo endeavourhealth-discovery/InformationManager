@@ -70,7 +70,7 @@ public class ApexKingsImport implements TTImport {
 
   private void importR2Matches() throws SQLException, TTFilerException, IOException {
     LOG.info("Retrieving read vision 2 snomed map");
-    readToSnomed = importMaps.importReadToSnomed(GRAPH.DISCOVERY);
+    readToSnomed = importMaps.importReadToSnomed(SCHEME.DISCOVERY);
 
   }
 

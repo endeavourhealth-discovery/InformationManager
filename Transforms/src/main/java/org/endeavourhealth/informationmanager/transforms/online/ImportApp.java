@@ -92,8 +92,8 @@ public class ImportApp {
         importer.importByType(SCHEME.PRSB, cfg);
       }
       case "core" -> {
-        importer = new Importer().validateByType(GRAPH.DISCOVERY, cfg.getFolder());
-        importer.importByType(GRAPH.DISCOVERY, cfg);
+        importer = new Importer().validateByType(SCHEME.DISCOVERY, cfg.getFolder());
+        importer.importByType(SCHEME.DISCOVERY, cfg);
       }
       case "snomed" -> {
         importer = new Importer().validateByType(SNOMED.NAMESPACE, cfg.getFolder());

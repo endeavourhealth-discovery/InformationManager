@@ -83,9 +83,7 @@ public class Preload {
 
   }
 
-
   public static List<String> canBulk = List.of(SCHEME.DISCOVERY, SNOMED.NAMESPACE, SCHEME.ENCOUNTERS, SCHEME.QUERY, SCHEME.IM1, SCHEME.FHIR, SCHEME.EMIS, SCHEME.TPP, SCHEME.OPCS4, SCHEME.ICD10, SCHEME.VISION, SCHEME.ODS, SCHEME.BARTS_CERNER, SCHEME.NHS_TFC, SCHEME.BNF);
-
 
   private static void importData(TTImportConfig cfg, String graphdb) throws Exception {
     LOG.info("Validating config...");
@@ -94,16 +92,13 @@ public class Preload {
 
     LOG.info("Validating data files...");
     TTImportByType importer = new Importer();
-    for (String graph : cfg.getGraph()) {
-      importer.validateByType(graph, cfg.getFolder());
-    }
+    importer.validateByType(cfg.getScheme(), cfg.getFolder());
+
     LOG.info("Importing files...");
     if (!cfg.isSkipBulk()) {
-      for (String graph : cfg.getGraph()) {
-        if (canBulk.contains(graph)) {
-          importer.importByType(graph, cfg);
+        if (canBulk.contains(cfg.getScheme())) {
+          importer.importByType(cfg.getScheme(), cfg);
         }
-      }
       LOG.info("Generating closure...");
       TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
       closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
@@ -111,23 +106,22 @@ public class Preload {
       TTBulkFiler.createRepository();
       startGraph(graphdb);
     }
-    new RangeInheritor().inheritRanges(null, GRAPH.DISCOVERY);
+    new RangeInheritor().inheritRanges(null, SCHEME.DISCOVERY);
     LOG.info("expanding value sets");
-    new SetMemberGenerator().generateAllSetMembers(GRAPH.DISCOVERY);
-    new SetBinder().bindSets(GRAPH.DISCOVERY);
+    new SetMemberGenerator().generateAllSetMembers(SCHEME.DISCOVERY);
+    new SetBinder().bindSets(SCHEME.DISCOVERY);
     LOG.info("Filing into live graph");
     TTFilerFactory.setBulk(false);
     TTFilerFactory.setTransactional(true);
-    for (String graph : cfg.getGraph()) {
-      if (!canBulk.contains(graph)) {
-        importer.importByType(graph, cfg);
+      if (!canBulk.contains(cfg.getScheme())) {
+        importer.importByType(cfg.getScheme(), cfg);
       }
-    }
+
     try (TTImport deltaImporter = new DeltaImporter()) {
       deltaImporter.importData(cfg);
     }
     LOG.info("adding missing properties into concept domains");
-    new DomainResolver().updateDomains(GRAPH.DISCOVERY);
+    new DomainResolver().updateDomains(SCHEME.DISCOVERY);
 
     LOG.info("Finished - " + (new Date()));
 

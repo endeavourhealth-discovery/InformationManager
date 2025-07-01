@@ -69,7 +69,7 @@ public class BNFImporter implements TTImport {
     try {
       try {
         LOG.info("Creating EMIS-bnf maps...");
-        Map<String,String> emisConcepts= importMaps.getCodesToIri(SCHEME.EMIS, GRAPH.DISCOVERY);
+        Map<String,String> emisConcepts= importMaps.getCodesToIri(SCHEME.EMIS, GRAPH.IM);
         for (Map.Entry<String,String> entry:emisConcepts.entrySet()){
           String code=entry.getKey();
           if (code.contains("DRGG")){

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
-import org.endeavourhealth.imapi.logic.service.SetService;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
@@ -43,7 +42,6 @@ public class CoreEthnicityImport implements TTImport {
   private TTEntity nhsSet;
   private TTEntity cegSet;
   private ImportMaps importMaps = new ImportMaps();
-  private SetService setService = new SetService();
 
   Map<String, Set<String>> census2001;
 

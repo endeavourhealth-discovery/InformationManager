@@ -16,7 +16,7 @@ public class TTImportConfig {
   private boolean skiplucene = false;
   private boolean skipBulk = false;
   private String resourceFolder;
-  private List<String> graph = new ArrayList<>();
+  private String scheme;
   private String singleEntity;
 
 
@@ -31,25 +31,14 @@ public class TTImportConfig {
     return this;
   }
 
-  public List<String> getGraph() {
-    return graph;
+  public String getScheme() {
+    return scheme;
   }
 
-  public TTImportConfig setGraph(List<String> graph) {
-    this.graph = graph;
+  public TTImportConfig setScheme(String scheme) {
+    this.scheme = scheme;
     return this;
   }
-    public TTImportConfig addGraph (String includeGraph){
-      if (this.graph == null) {
-        this.graph = new ArrayList<>();
-      }
-      this.graph.add(includeGraph);
-      return this;
-    }
-
-
-
-
 
   public String getResourceFolder() {
     return resourceFolder;
