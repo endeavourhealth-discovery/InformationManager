@@ -1,6 +1,6 @@
 package org.endeavourhealth.qofextractor;
 
-public class RegisterRule {
+public class Rule {
     private int rule;
     private String logic;
     private String ifTrue;
@@ -11,7 +11,7 @@ public class RegisterRule {
         return rule;
     }
 
-    public RegisterRule setRule(int rule) {
+    public Rule setRule(int rule) {
         this.rule = rule;
         return this;
     }
@@ -20,7 +20,7 @@ public class RegisterRule {
         return logic;
     }
 
-    public RegisterRule setLogic(String logic) {
+    public Rule setLogic(String logic) {
         this.logic = logic;
         return this;
     }
@@ -29,7 +29,7 @@ public class RegisterRule {
         return ifTrue;
     }
 
-    public RegisterRule setIfTrue(String ifTrue) {
+    public Rule setIfTrue(String ifTrue) {
         this.ifTrue = ifTrue;
         return this;
     }
@@ -38,7 +38,7 @@ public class RegisterRule {
         return ifFalse;
     }
 
-    public RegisterRule setIfFalse(String ifFalse) {
+    public Rule setIfFalse(String ifFalse) {
         this.ifFalse = ifFalse;
         return this;
     }
@@ -47,7 +47,7 @@ public class RegisterRule {
         return description;
     }
 
-    public RegisterRule setDescription(String description) {
+    public Rule setDescription(String description) {
         this.description = description;
         return this;
     }

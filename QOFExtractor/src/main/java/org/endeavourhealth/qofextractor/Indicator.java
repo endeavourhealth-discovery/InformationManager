@@ -3,7 +3,7 @@ package org.endeavourhealth.qofextractor;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Register {
+public class Indicator {
     private String name;
     private String description;
     private String base;
@@ -13,7 +13,7 @@ public class Register {
         return name;
     }
 
-    public Register setName(String name) {
+    public Indicator setName(String name) {
         this.name = name;
         return this;
     }
@@ -22,7 +22,7 @@ public class Register {
         return description;
     }
 
-    public Register setDescription(String description) {
+    public Indicator setDescription(String description) {
         this.description = description;
         return this;
     }
@@ -31,7 +31,7 @@ public class Register {
         return base;
     }
 
-    public Register setBase(String base) {
+    public Indicator setBase(String base) {
         this.base = base;
         return this;
     }
@@ -40,12 +40,12 @@ public class Register {
         return rules;
     }
 
-    public Register setRules(List<Rule> rules) {
+    public Indicator setRules(List<Rule> rules) {
         this.rules = rules;
         return this;
     }
 
-    public Register addRule(Rule rule) {
+    public Indicator addRule(Rule rule) {
         this.rules.add(rule);
         return this;
     }
