@@ -8,10 +8,7 @@ import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -50,7 +47,7 @@ public class VisionImport implements TTImport {
     LOG.info("importing vision codes");
     LOG.info("retrieving snomed codes from IM");
     try (TTManager manager = new TTManager()) {
-      snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE, GRAPH.DISCOVERY);
+      snomedCodes = importMaps.getCodes(SCHEME.SNOMED, Graph.IM);
       document = manager.createDocument();
       document.addEntity(manager.createScheme(SCHEME.VISION, "Vision (including Read) codes",
         "The Vision local code scheme and graph including Read 2 and Vision local codes"));
@@ -63,7 +60,7 @@ public class VisionImport implements TTImport {
       createHierarchy();
       addVisionMaps(config.getFolder());
       addMissingMaps();
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
 
@@ -97,7 +94,7 @@ public class VisionImport implements TTImport {
     return fields;
   }
 
-  public Boolean isSnomed(String s) {
+  public boolean isSnomed(String s) {
     return snomedCodes.contains(s);
   }
 
@@ -184,7 +181,7 @@ public class VisionImport implements TTImport {
 
   private void importEmis() throws IOException {
     LOG.info("Importing EMIS/Read from IM for look up....");
-    emisRead = importMaps.getEMISReadAsVision(GRAPH.DISCOVERY);
+    emisRead = importMaps.getEMISReadAsVision(Graph.IM);
 
   }
 
@@ -245,7 +242,7 @@ public class VisionImport implements TTImport {
       .setCode("VisionCodes")
       .setScheme(iri(SCHEME.VISION))
       .setDescription("Vision and read 2 codes mapped to core");
-    vision.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
+    vision.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies"));
     document.addEntity(vision);
     for (TTEntity entity : document.getEntities()) {
       String shortCode = entity.getCode();
@@ -259,7 +256,7 @@ public class VisionImport implements TTImport {
           while (parent.length() < 5) {
             parent.append("_");
           }
-          entity.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(SCHEME.VISION + parent)));
+          entity.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(SCHEME.VISION.toString() + parent)));
         }
       }
     }
@@ -318,8 +315,7 @@ public class VisionImport implements TTImport {
         TTEntity vision = codeToConcept.get(code);
         if (vision != null) {
           if (isSnomed(snomed)) {
-            String iri = SNOMED.NAMESPACE + snomed;
-            vision.addObject(iri(IM.MATCHED_TO), iri(SNOMED.NAMESPACE + snomed));
+            vision.addObject(iri(IM.MATCHED_TO), iri(Namespace.SNOMED + snomed));
           }
         }
         line = reader.readLine();

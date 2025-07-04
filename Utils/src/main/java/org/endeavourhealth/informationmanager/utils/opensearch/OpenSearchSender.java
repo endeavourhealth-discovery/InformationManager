@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.client.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
@@ -17,8 +16,10 @@ import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
 import org.endeavourhealth.imapi.model.search.EntityDocument;
 import org.endeavourhealth.imapi.model.search.SearchTermCode;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.Namespace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -29,9 +30,9 @@ import java.util.stream.Collectors;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
-@Slf4j
 public class OpenSearchSender {
   private static final int BATCH_SIZE = 5000;
+  private static final Logger log = LoggerFactory.getLogger(OpenSearchSender.class);
   private final Client client = ClientBuilder.newClient();
   private final ObjectMapper om = new ObjectMapper();
 
@@ -57,9 +58,9 @@ public class OpenSearchSender {
         FILTER(isIri(?iri))
       }
       """;
-    try (RepositoryConnection conn = IMDB.getConnection()) {
+    try (IMDB conn = IMDB.getConnection(Graph.IM)) {
       log.info("Fetching entity iris  ...");
-      TupleQuery tupleQuery = IMDB.prepareTupleSparql(conn, sql, GRAPH.IM);
+      TupleQuery tupleQuery = conn.prepareTupleSparql(sql);
 
       int count = 0;
       try (TupleQueryResult qr = tupleQuery.evaluate()) {
@@ -139,8 +140,8 @@ public class OpenSearchSender {
   private void getCore(Map<String, EntityDocument> batch, String inList) {
     String sql = getBatchCoreSql(inList);
 
-    try (RepositoryConnection conn = IMDB.getConnection()) {
-      TupleQuery tupleQuery = IMDB.prepareTupleSparql(conn, sql, GRAPH.IM);
+    try (IMDB conn = IMDB.getConnection(Graph.IM)) {
+      TupleQuery tupleQuery = conn.prepareTupleSparql(sql);
       try (TupleQueryResult qr = tupleQuery.evaluate()) {
         while (qr.hasNext()) {
           BindingSet rs = qr.next();
@@ -197,7 +198,7 @@ public class OpenSearchSender {
             extraType = iri(rs.getValue("extraType").stringValue());
             extraType.setName(rs.getValue("extraTypeName").stringValue());
             blob.addType(extraType);
-            if (extraType.equals(iri(IM.NAMESPACE + "DataModelEntity"))) {
+            if (extraType.equals(iri(Namespace.IM + "DataModelEntity"))) {
               int usageTotal = 2000000;
               blob.setUsageTotal(usageTotal);
             }
@@ -261,8 +262,8 @@ public class OpenSearchSender {
 
   private void getTermCodes(Map<String, EntityDocument> batch, String inList) {
     String sql = getBatchTermsSql(inList);
-    try (RepositoryConnection conn = IMDB.getConnection()) {
-      TupleQuery tupleQuery = IMDB.prepareTupleSparql(conn, sql, GRAPH.IM);
+    try (IMDB conn = IMDB.getConnection(Graph.IM)) {
+      TupleQuery tupleQuery = conn.prepareTupleSparql(sql);
       try (TupleQueryResult qr = tupleQuery.evaluate()) {
         while (qr.hasNext()) {
           BindingSet rs = qr.next();
@@ -311,8 +312,8 @@ public class OpenSearchSender {
 
   private void getIsas(Map<String, EntityDocument> batch, String inList) {
     String sql = getBatchIsaSql(inList);
-    try (RepositoryConnection conn = IMDB.getConnection()) {
-      TupleQuery tupleQuery = IMDB.prepareTupleSparql(conn, sql, GRAPH.IM);
+    try (IMDB conn = IMDB.getConnection(Graph.IM)) {
+      TupleQuery tupleQuery = conn.prepareTupleSparql(sql);
       try (TupleQueryResult qr = tupleQuery.evaluate()) {
         while (qr.hasNext()) {
           BindingSet rs = qr.next();
@@ -327,8 +328,8 @@ public class OpenSearchSender {
 
   private void getSubsumptions(Map<String, EntityDocument> batch, String inList) {
     String sql = getSubsumptionSql(inList);
-    try (RepositoryConnection conn = IMDB.getConnection()) {
-      TupleQuery tupleQuery = IMDB.prepareTupleSparql(conn, sql, GRAPH.IM);
+    try (IMDB conn = IMDB.getConnection(Graph.IM)) {
+      TupleQuery tupleQuery = conn.prepareTupleSparql(sql);
       try (TupleQueryResult qr = tupleQuery.evaluate()) {
         while (qr.hasNext()) {
           BindingSet rs = qr.next();
@@ -369,8 +370,8 @@ public class OpenSearchSender {
 
   private void getSetMembership(Map<String, EntityDocument> batch, String inList) {
     String sql = getSetMembershipSql(inList);
-    try (RepositoryConnection conn = IMDB.getConnection()) {
-      TupleQuery tupleQuery = IMDB.prepareTupleSparql(conn, sql, GRAPH.IM);
+    try (IMDB conn = IMDB.getConnection(Graph.IM)) {
+      TupleQuery tupleQuery = conn.prepareTupleSparql(sql);
       try (TupleQueryResult qr = tupleQuery.evaluate()) {
         while (qr.hasNext()) {
           BindingSet rs = qr.next();
@@ -387,8 +388,8 @@ public class OpenSearchSender {
 
   private void getBindings(Map<String, EntityDocument> batch, String inList) {
     String sql = getBindingsSql(inList);
-    try (RepositoryConnection conn = IMDB.getConnection()) {
-      TupleQuery tupleQuery = IMDB.prepareTupleSparql(conn, sql, GRAPH.IM);
+    try (IMDB conn = IMDB.getConnection(Graph.IM)) {
+      TupleQuery tupleQuery = conn.prepareTupleSparql(sql);
       try (TupleQueryResult qr = tupleQuery.evaluate()) {
         while (qr.hasNext()) {
           BindingSet rs = qr.next();

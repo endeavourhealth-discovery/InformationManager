@@ -1,10 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.models;
 
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.QR;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
-
-import java.util.*;
+import org.endeavourhealth.imapi.vocabulary.IMPORT;
+import org.endeavourhealth.imapi.vocabulary.SCHEME;
 
 public class TTImportConfig {
   private String folder = ".";
@@ -16,7 +13,7 @@ public class TTImportConfig {
   private boolean skiplucene = false;
   private boolean skipBulk = false;
   private String resourceFolder;
-  private String scheme;
+  private SCHEME scheme;
   private String singleEntity;
 
 
@@ -31,11 +28,11 @@ public class TTImportConfig {
     return this;
   }
 
-  public String getScheme() {
+  public SCHEME getScheme() {
     return scheme;
   }
 
-  public TTImportConfig setScheme(String scheme) {
+  public TTImportConfig setScheme(SCHEME scheme) {
     this.scheme = scheme;
     return this;
   }

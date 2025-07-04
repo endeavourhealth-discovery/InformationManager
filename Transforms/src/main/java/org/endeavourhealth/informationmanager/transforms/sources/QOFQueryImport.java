@@ -8,13 +8,13 @@ import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
+import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ public class QOFQueryImport implements TTImport {
 				EQDImporter eqdImporter = new EQDImporter();
 				EqdToIMQ.gmsPatients.add("71154095-0C58-4193-B58F-21F05EA0BE2F");
 				EqdToIMQ.gmsPatients.add("DA05DBF2-72AB-41A3-968F-E4A061F411A4");
-				eqdImporter.loadAndConvert(config,manager,queries[0],SCHEME.QOF,
+				eqdImporter.loadAndConvert(config,manager,queries[0], Namespace.QOF,
 					dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
 			}
 			catch (Exception ex) {
@@ -51,7 +51,7 @@ public class QOFQueryImport implements TTImport {
 			}
 
 		 reformIris(manager.getDocument());
-			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 				try {
 					filer.fileDocument(manager.getDocument());
 				} catch (Exception e) {
@@ -178,7 +178,7 @@ public class QOFQueryImport implements TTImport {
 			.setIri(SCHEME.QOF + "Q_QOFQueries")
 			.setName("QOF  queries")
 			.addType(iri(IM.FOLDER))
-			.set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "Q_Queries"));
+			.set(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "Q_Queries"));
 		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
 		document.addEntity(folder);
 		mainFolder= folder.getIri();
@@ -186,7 +186,7 @@ public class QOFQueryImport implements TTImport {
 			.setIri(SCHEME.QOF+ "CSET_QOFConceptSets")
 			.setName("QOF Health value set library")
 			.addType(iri(IM.FOLDER))
-			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "QueryConceptSets"));
+			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "QueryConceptSets"));
 		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
 		document.addEntity(folder);
 		setFolder= folder.getIri();

@@ -100,7 +100,7 @@ public class SnomedImporter implements TTImport {
   public static final String ACTIVE = "1";
   public static final String REPLACED_BY = "370124000";
   public static final String SNOMED_ATTRIBUTE = "sn:106237007";
-  public static final String SNOMED_REFERENCE_SETS = IM.NAMESPACE + "SnomedCTReferenceSets";
+  public static final String SNOMED_REFERENCE_SETS = Namespace.IM + "SnomedCTReferenceSets";
   private static final Logger LOG = LoggerFactory.getLogger(SnomedImporter.class);
   private final ECLToIMQ eclConverter = new ECLToIMQ();
   private Map<String, TTEntity> conceptMap;
@@ -128,7 +128,7 @@ public class SnomedImporter implements TTImport {
 
       document = dmanager.createDocument();
       TTEntity scheme = dmanager.createScheme(
-        SNOMED.NAMESPACE,
+        SCHEME.SNOMED,
         "Snomed-CT code scheme and graph",
         "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions"
       );
@@ -150,7 +150,7 @@ public class SnomedImporter implements TTImport {
       importClinicalUsage(config.getFolder());
       importDrugUsage(config.getFolder());
 
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
 
@@ -162,7 +162,7 @@ public class SnomedImporter implements TTImport {
       }
       conceptMap.clear();
 
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
 
@@ -176,29 +176,29 @@ public class SnomedImporter implements TTImport {
   private void addSpecials(TTDocument document) {
     //Snomed telephone is a device
     TTEntity telephone = new TTEntity()
-      .setIri(SNOMED.NAMESPACE + "359993007")
+      .setIri(Namespace.SNOMED + "359993007")
       .setCrud(iri(IM.ADD_QUADS))
-      .setGraph(iri(GRAPH.DISCOVERY));
-    telephone.addObject(iri(RDFS.SUBCLASS_OF), iri(IM.NAMESPACE + "71000252102"));
+      .setGraph(Graph.IM);
+    telephone.addObject(iri(RDFS.SUBCLASS_OF), iri(Namespace.IM + "71000252102"));
     document.addEntity(telephone);
     TTEntity specific = conceptMap.get("10362801000001104");
-    specific.addObject(iri(RDFS.SUBCLASS_OF), iri(SNOMED.NAMESPACE + "127489000"));
+    specific.addObject(iri(RDFS.SUBCLASS_OF), iri(Namespace.SNOMED + "127489000"));
     specific = conceptMap.get("10363001000001101");
-    specific.addObject(iri(RDFS.SUBCLASS_OF), iri(SNOMED.NAMESPACE + "127489000"));
+    specific.addObject(iri(RDFS.SUBCLASS_OF), iri(Namespace.SNOMED + "127489000"));
 
     TTEntity dmd = conceptMap.get("8653001000001100");
-    dmd.addObject(TTIriRef.iri(RDFS.DOMAIN), TTIriRef.iri(SNOMED.NAMESPACE + "763158003"));
-    dmd.addObject(TTIriRef.iri(RDFS.RANGE), TTIriRef.iri(SNOMED.NAMESPACE + "8653201000001106"));
+    dmd.addObject(TTIriRef.iri(RDFS.DOMAIN), TTIriRef.iri(Namespace.SNOMED + "763158003"));
+    dmd.addObject(TTIriRef.iri(RDFS.RANGE), TTIriRef.iri(Namespace.SNOMED + "8653201000001106"));
   }
 
 
   private void setRefSetRoot() {
     TTEntity root = new TTEntity()
       .setIri(SNOMED_REFERENCE_SETS)
-      .setGraph(iri(IM.NAMESPACE))
+      .setGraph(Graph.IM)
       .setName("Snomed-CT reference sets")
       .addType(iri(IM.FOLDER));
-    root.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(IM.NAMESPACE + "QueryConceptSets")));
+    root.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(Namespace.IM + "QueryConceptSets")));
     document.addEntity(root);
     conceptMap.put(root.getIri(), root);
 
@@ -226,7 +226,7 @@ public class SnomedImporter implements TTImport {
                   .addType(iri(IM.CONCEPT))
                   .setStatus(iri(IM.INACTIVE))
                   .setCode(subtype)
-                  .setScheme(iri(SNOMED.NAMESPACE));
+                  .setScheme(iri(Namespace.SNOMED));
                 document.addEntity(subEntity);
               }
               TTEntity superEntity = conceptMap.get(supertype);
@@ -235,7 +235,7 @@ public class SnomedImporter implements TTImport {
                   .addType(iri(IM.CONCEPT))
                   .setStatus(iri(IM.INACTIVE))
                   .setCode(supertype)
-                  .setScheme(iri(SNOMED.NAMESPACE));
+                  .setScheme(iri(Namespace.SNOMED));
                 document.addEntity(subEntity);
               }
               String subStatus = subEntity.getStatus().getIri();
@@ -361,21 +361,21 @@ public class SnomedImporter implements TTImport {
         TTNode group = new TTNode();
         entity.addObject(iri(IM.ROLE_GROUP), group);
         if (route != null) {
-          group.set(iri(SNOMED.NAMESPACE + "26643006"), iri(SNOMED.NAMESPACE + route));
+          group.set(iri(Namespace.SNOMED + "26643006"), iri(Namespace.SNOMED + route));
         }
         if (form != null) {
-          group.set(iri(SNOMED.NAMESPACE + "10362901000001105"), iri(SNOMED.NAMESPACE + form));
+          group.set(iri(Namespace.SNOMED + "10362901000001105"), iri(Namespace.SNOMED + form));
         }
         if (ingredients != null) {
           int i = 0;
           for (String ingredient : ingredients) {
             i++;
             if (i == 1)
-              group.set(iri(SNOMED.NAMESPACE + "127489000"), iri(SNOMED.NAMESPACE + ingredient));
+              group.set(iri(Namespace.SNOMED + "127489000"), iri(Namespace.SNOMED + ingredient));
             else {
               TTNode newGroup = new TTNode();
               entity.addObject(iri(IM.ROLE_GROUP), newGroup);
-              newGroup.set(iri(SNOMED.NAMESPACE + "127489000"), iri(SNOMED.NAMESPACE + ingredient));
+              newGroup.set(iri(Namespace.SNOMED + "127489000"), iri(Namespace.SNOMED + ingredient));
             }
           }
         }
@@ -441,7 +441,7 @@ public class SnomedImporter implements TTImport {
       TTEntity c = new TTEntity();
       c.setIri(SN + fields[0]);
       c.setCode(fields[0]);
-      c.setScheme(iri(SNOMED.NAMESPACE));
+      c.setScheme(iri(Namespace.SNOMED));
       if (conceptFile.contains("Refset") || conceptFile.contains("UKPrimaryCare"))
         c.addType(iri(IM.CONCEPT_SET));
       else
@@ -450,7 +450,7 @@ public class SnomedImporter implements TTImport {
         c.set(iri(IM.DEFINITIONAL_STATUS), iri(IM.SUFFICIENTLY_DEFINED));
       c.setStatus(ACTIVE.equals(fields[2]) ? iri(IM.ACTIVE) : iri(IM.INACTIVE));
       if (fields[0].equals("138875005")) { // snomed root
-        c.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(IM.NAMESPACE + "HealthModelOntology")));
+        c.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(Namespace.IM + "HealthModelOntology")));
         c.set(iri(SHACL.ORDER), TTLiteral.literal(1));
       }
       document.addEntity(c);
@@ -559,7 +559,7 @@ public class SnomedImporter implements TTImport {
         document.addEntity(c);
       }
       c.set(iri(IM.IS_CONTAINED_IN), iri(SNOMED_REFERENCE_SETS));
-      c.addObject(iri(IM.HAS_MEMBER), iri(SNOMED.NAMESPACE + fields[5]));
+      c.addObject(iri(IM.HAS_MEMBER), iri(Namespace.SNOMED + fields[5]));
     }
   }
 

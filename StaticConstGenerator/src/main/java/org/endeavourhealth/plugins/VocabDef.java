@@ -11,5 +11,6 @@ public class VocabDef {
   }
 
   public String name;
+  public List<String> imports;
   public List<Entry> entries;
 }

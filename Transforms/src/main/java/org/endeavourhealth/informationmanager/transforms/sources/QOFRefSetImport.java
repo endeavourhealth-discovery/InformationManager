@@ -4,9 +4,7 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -27,7 +25,7 @@ public class QOFRefSetImport implements TTImport {
     ".*\\\\QOF\\\\.*\\_PCD_Refset_Content.txt"};
 
 
-  public static final String PCDFolder = IM.NAMESPACE + "PCDClusters";
+  public static final String PCDFolder = Namespace.IM + "PCDClusters";
   private static final Logger LOG = LoggerFactory.getLogger(QOFRefSetImport.class);
   private Map<String, TTEntity> conceptMap;
   private Map<String, TTEntity> qofMap;
@@ -59,11 +57,11 @@ public class QOFRefSetImport implements TTImport {
     try {
       if (!isSnomedImporter) {
         qofMap = new HashMap<>();
-        document = new TTDocument(iri(SNOMED.NAMESPACE));
+        document = new TTDocument(iri(Namespace.SNOMED));
       }
       processSets(config.getFolder());
       if (!isSnomedImporter) {
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
           filer.fileDocument(document);
         }
       }
@@ -102,7 +100,7 @@ public class QOFRefSetImport implements TTImport {
     putEntityMap(PCDFolder, clusters);
     clusters.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
     clusters
-      .addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "QueryConceptSets"));
+      .addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "QueryConceptSets"));
     document.addEntity(clusters);
     for (String clusterFile : pcdClusters) {
       Path file = ImportUtils.findFilesForId(path, clusterFile).get(0);
@@ -128,7 +126,7 @@ public class QOFRefSetImport implements TTImport {
   }
 
   private void createServiceFolder(String serviceMnemonic, String serviceName, String version) {
-    String serviceFolderIri = IM.NAMESPACE + "SetServiceFolder_" + serviceMnemonic;
+    String serviceFolderIri = Namespace.IM + "SetServiceFolder_" + serviceMnemonic;
     TTEntity serviceFolder = getEntityFromIri(serviceFolderIri);
     if (serviceFolder == null) {
       serviceFolder = new TTEntity()
@@ -169,7 +167,7 @@ public class QOFRefSetImport implements TTImport {
     TTEntity set = getEntityFromIri(referenceSet);
     if (set == null) {
       set = new TTEntity()
-        .setIri(SNOMED.NAMESPACE + referenceSet)
+        .setIri(Namespace.SNOMED + referenceSet)
         .setCrud(iri(IM.ADD_QUADS));
       document.addEntity(set);
     }
@@ -179,14 +177,14 @@ public class QOFRefSetImport implements TTImport {
       String serviceRuleSet = s.trim();
       String service = serviceRuleSet.split("\\s+")[0];
       String ruleSetName = String.join(" ", Arrays.asList(serviceRuleSet.split("\\s+")).subList(1, serviceRuleSet.split("\\s+").length));
-      String ruleSetFolderIri = IM.NAMESPACE + "RuleSetFolder_" + service + ruleSetName.replace(" ", "");
+      String ruleSetFolderIri = Namespace.IM + "RuleSetFolder_" + service + ruleSetName.replace(" ", "");
       TTEntity ruleSetFolder = getEntityFromIri(ruleSetFolderIri);
       if (ruleSetFolder == null) {
         ruleSetFolder = new TTEntity()
           .setIri(ruleSetFolderIri)
           .setName("Sets for ruleset " + service + " " + ruleSetName)
           .addType(iri(IM.FOLDER));
-        ruleSetFolder.addObject(iri(IM.IS_CONTAINED_IN), IM.NAMESPACE + "SetServiceFolder_" + service);
+        ruleSetFolder.addObject(iri(IM.IS_CONTAINED_IN), Namespace.IM + "SetServiceFolder_" + service);
         putEntityMap(ruleSetFolderIri, ruleSetFolder);
         document.addEntity(ruleSetFolder);
       }

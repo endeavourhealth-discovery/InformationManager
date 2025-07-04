@@ -60,11 +60,11 @@ public class CoreEthnicityImport implements TTImport {
       spellCorrections();
       importEthnicGroups(config.getFolder());
 
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
 
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(nhsDocument);
       }
     } catch (Exception ex) {
@@ -86,7 +86,7 @@ public class CoreEthnicityImport implements TTImport {
 
 
   private void retrieveEthnicity(boolean secure) throws TTFilerException, IOException {
-    census2001 = importMaps.getDescendants(SNOMED.NAMESPACE + "92381000000106", GRAPH.DISCOVERY);
+    census2001 = importMaps.getDescendants(Namespace.SNOMED + "92381000000106", Graph.IM);
     for (Map.Entry<String, Set<String>> entry : census2001.entrySet()) {
       String snomed = entry.getKey();
       for (String term : entry.getValue()) {
@@ -196,14 +196,14 @@ public class CoreEthnicityImport implements TTImport {
       cegCatMap.put(cat16, cegSubset);
 
     }
-    cegSubset.addObject(iri(IM.HAS_MEMBER), iri(SNOMED.NAMESPACE + snomed));
+    cegSubset.addObject(iri(IM.HAS_MEMBER), iri(Namespace.SNOMED + snomed));
     if (cegSubset.get(iri(IM.HAS_TERM_CODE)) == null)
       TTManager.addTermCode(cegSubset, catTerm, null);
     if (!UNCLASSIFIED.equals(snoNhs)) {
       TTEntity nhsSubset = nhsCatmap.get(snoNhs);
       if (nhsSubset == null) {
         nhsSubset = new TTEntity()
-          .setIri(IM.NAMESPACE + "CSET_EthnicCategoryNHS2001_" + nhs16)
+          .setIri(Namespace.IM + "CSET_EthnicCategoryNHS2001_" + nhs16)
           .setCode(nhs16)
           .addType(iri(IM.CONCEPT_SET))
           .setName("Value set - " + nhsTerm + " (2001 census ethnic category " + nhs16 + ")")
@@ -214,7 +214,7 @@ public class CoreEthnicityImport implements TTImport {
       }
       if (nhsSubset.get(iri(IM.HAS_TERM_CODE)) == null)
         TTManager.addTermCode(nhsSubset, nhsTerm, null);
-      nhsSubset.addObject(iri(IM.HAS_MEMBER), iri(SNOMED.NAMESPACE + snomed));
+      nhsSubset.addObject(iri(IM.HAS_MEMBER), iri(Namespace.SNOMED + snomed));
     }
   }
 
@@ -224,14 +224,14 @@ public class CoreEthnicityImport implements TTImport {
       .addType(iri(IM.CONCEPT_SET))
       .setName("CEG 16+1 Ethnic category (set group)")
       .setDescription("QMUL-CEG categorisations of ethnic groups");
-    cegSet.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "EthnicitySets")));
+    cegSet.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(Namespace.IM + "EthnicitySets")));
     document.addEntity(cegSet);
     nhsSet = new TTEntity()
-      .setIri(IM.NAMESPACE + "CSET_EthnicCategory2001")
+      .setIri(Namespace.IM + "CSET_EthnicCategory2001")
       .addType(iri(IM.CONCEPT_SET))
       .setName("Value set - 2001 census Ethnic category (set group")
       .setDescription("NHS Data Dictionary 2001 census based categorisations of ethnic groups");
-    nhsSet.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "EthnicitySets")));
+    nhsSet.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(Namespace.IM + "EthnicitySets")));
     document.addEntity(nhsSet);
   }
 

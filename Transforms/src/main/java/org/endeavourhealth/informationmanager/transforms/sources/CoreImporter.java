@@ -6,7 +6,9 @@ import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -106,7 +108,7 @@ public class CoreImporter implements TTImport {
             generateDefaultCohorts(manager);
           }
           LOG.info("Filing {} from {}", document.getNamespace().getIri(), coreFile);
-          try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+          try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
             try {
               filer.fileDocument(document);
             } catch (TTFilerException | QueryException e) {
@@ -131,15 +133,15 @@ public class CoreImporter implements TTImport {
     List<TTEntity> cohortEntities = new ArrayList<>();
     for (TTEntity entity : manager.getDocument().getEntities()) {
       if (entity.get(iri(IM.IS_CONTAINED_IN)) != null) {
-        if (entity.get(iri(IM.IS_CONTAINED_IN)).getElements().stream().filter(f -> f.asIriRef().equals(iri(IM.NAMESPACE + "HealthRecords"))).findAny().isPresent()) {
-          String cohortFolderIri = IM.NAMESPACE + "Q_" + entity.getIri().substring(entity.getIri().lastIndexOf("#") + 1);
+        if (entity.get(iri(IM.IS_CONTAINED_IN)).getElements().stream().filter(f -> f.asIriRef().equals(iri(Namespace.IM + "HealthRecords"))).findAny().isPresent()) {
+          String cohortFolderIri = Namespace.IM + "Q_" + entity.getIri().substring(entity.getIri().lastIndexOf("#") + 1);
           TTEntity cohortFolder = new TTEntity()
             .addType(iri(IM.FOLDER))
             .setIri(cohortFolderIri)
             .setName(entity.getName())
             .set(iri(IM.CONTENT_TYPE), iri(IM.QUERY))
             .set(iri(SHACL.ORDER), TTLiteral.literal(entity.get(iri(SHACL.ORDER)).asLiteral().intValue() + 1));
-          cohortFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "Q_DefaultCohorts"));
+          cohortFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "Q_DefaultCohorts"));
           cohortEntities.add(cohortFolder);
           shapeFolders.add(entity.getIri());
         }
@@ -151,10 +153,10 @@ public class CoreImporter implements TTImport {
           for (TTValue folder : entity.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
             if (shapeFolders.contains(folder.asIriRef().getIri())) {
               String shapeFolderIri = folder.asIriRef().getIri();
-              String cohortFolderIri = IM.NAMESPACE + "Q_" + shapeFolderIri.substring(shapeFolderIri.lastIndexOf("#") + 1);
+              String cohortFolderIri = Namespace.IM + "Q_" + shapeFolderIri.substring(shapeFolderIri.lastIndexOf("#") + 1);
               int order = entity.get(iri(SHACL.ORDER)) != null ? entity.get(iri(SHACL.ORDER)).asLiteral().intValue() : 1000;
               TTEntity cohort = new TTEntity()
-                .setIri(IM.NAMESPACE + "Q_" + entity.getIri().substring(entity.getIri().lastIndexOf("#") + 1))
+                .setIri(Namespace.IM + "Q_" + entity.getIri().substring(entity.getIri().lastIndexOf("#") + 1))
                 .addType(iri(IM.QUERY))
                 .setName(entity.getName() + "s")
                 .setDescription("Cohort Query for entities of " + entity.getName() + "s")
@@ -163,7 +165,7 @@ public class CoreImporter implements TTImport {
               cohort.set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
                 .setIri(cohort.getIri())
                 .setName(cohort.getName())
-                .setTypeOf(IM.NAMESPACE + cohort.getIri().substring(cohort.getIri().lastIndexOf("#") + 1).split("Q_")[1])));
+                .setTypeOf(Namespace.IM + cohort.getIri().substring(cohort.getIri().lastIndexOf("#") + 1).split("Q_")[1])));
               cohortEntities.add(cohort);
             }
           }

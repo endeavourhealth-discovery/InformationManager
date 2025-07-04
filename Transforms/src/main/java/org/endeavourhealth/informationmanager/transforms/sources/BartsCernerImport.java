@@ -7,10 +7,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -64,7 +61,7 @@ public class BartsCernerImport implements TTImport {
       setTopLevel();
       importMaps(config.getFolder());
 
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception e) {
@@ -111,9 +108,9 @@ public class BartsCernerImport implements TTImport {
           String snomed = fields[2];
           TTEntity barts = codeToConcept.get(code);
           if (snomed.contains("1000252"))
-            barts.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(IM.NAMESPACE + snomed));
+            barts.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.IM + snomed));
           else
-            barts.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+            barts.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomed));
           line = reader.readLine();
         }
       }
@@ -130,7 +127,7 @@ public class BartsCernerImport implements TTImport {
       .setCode("BartsCernerCodes")
       .setScheme(iri(SCHEME.BARTS_CERNER))
       .setDescription("The Cerner codes used in Barts NHS Trust Millennium system");
-    topConcept.addObject(iri(IM.IS_CHILD_OF), iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
+    topConcept.addObject(iri(IM.IS_CHILD_OF), iri(Namespace.IM + "CodeBasedTaxonomies"));
     document.addEntity(topConcept);
     TTEntity unmatchedConcept = new TTEntity()
       .setIri(UNCLASSIFIED)

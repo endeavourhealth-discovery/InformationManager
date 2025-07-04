@@ -2,16 +2,12 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
-import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.TTArray;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -49,7 +45,7 @@ public class OPCS4Importer implements TTImport {
     LOG.info("Importing OPCS4.....");
     LOG.info("Checking Snomed codes first");
     try {
-      snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE, GRAPH.DISCOVERY);
+      snomedCodes = importMaps.getCodes(SCHEME.SNOMED, Graph.IM);
       try (TTManager manager = new TTManager()) {
         document = manager.createDocument();
         document.addEntity(manager.createScheme(SCHEME.OPCS4, "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
@@ -59,10 +55,8 @@ public class OPCS4Importer implements TTImport {
         mapDocument = manager.createDocument();
         importMaps(config.getFolder());
         //Important to file after maps set
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
           filer.fileDocument(document);
-        }
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
           filer.fileDocument(mapDocument);
         }
       }
@@ -87,7 +81,7 @@ public class OPCS4Importer implements TTImport {
       .setCode("OPCS49Classification")
       .setScheme(iri(SCHEME.OPCS4))
       .setDescription("Classification of OPCS4 with chapter headings");
-    opcs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
+    opcs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies"));
     document.addEntity(opcs);
 
     try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {

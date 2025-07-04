@@ -5,10 +5,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -35,7 +32,7 @@ public class NHSTfcImport implements TTImport {
         , "NHS Data dictionary concepts that are not snomed"));
       setNHSDD();
       importFunctionCodes(config.getFolder());
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception ex) {
@@ -52,7 +49,7 @@ public class NHSTfcImport implements TTImport {
       .setCode("0")
       .addType(iri(IM.CONCEPT))
       .setStatus(iri(IM.ACTIVE));
-    nhs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
+    nhs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies"));
     document.addEntity(nhs);
   }
 
@@ -77,7 +74,7 @@ public class NHSTfcImport implements TTImport {
           .addType(iri(IM.CONCEPT))
           .setStatus(iri(IM.ACTIVE));
         tfc.addObject(iri(IM.IS_CHILD_OF), nhsTfc);
-        tfc.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+        tfc.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomed));
         document.addEntity(tfc);
         line = reader.readLine();
       }

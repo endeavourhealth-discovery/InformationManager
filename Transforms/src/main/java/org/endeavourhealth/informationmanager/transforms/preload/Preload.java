@@ -15,7 +15,8 @@ import org.endeavourhealth.imapi.logic.reasoner.DomainResolver;
 import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetMemberGenerator;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.IMPORT;
 import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.imapi.vocabulary.SNOMED;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
@@ -83,7 +84,7 @@ public class Preload {
 
   }
 
-  public static List<String> canBulk = List.of(SCHEME.DISCOVERY, SNOMED.NAMESPACE, SCHEME.ENCOUNTERS, SCHEME.QUERY, SCHEME.IM1, SCHEME.FHIR, SCHEME.EMIS, SCHEME.TPP, SCHEME.OPCS4, SCHEME.ICD10, SCHEME.VISION, SCHEME.ODS, SCHEME.BARTS_CERNER, SCHEME.NHS_TFC, SCHEME.BNF);
+  public static List<IMPORT> canBulk = List.of(IMPORT.CORE, IMPORT.SNOMED, IMPORT.ENCOUNTERS, IMPORT.QUERY, IMPORT.IM1, IMPORT.FHIR, IMPORT.EMIS, IMPORT.TPP, IMPORT.OPCS4, IMPORT.ICD10, IMPORT.VISION, IMPORT.ODS, IMPORT.BARTS_CERNER, IMPORT.NHS_TFC, IMPORT.BNF);
 
   private static void importData(TTImportConfig cfg, String graphdb) throws Exception {
     LOG.info("Validating config...");
@@ -91,13 +92,14 @@ public class Preload {
 
 
     LOG.info("Validating data files...");
+    IMPORT importType = IMPORT.from(cfg.getImportType());
     TTImportByType importer = new Importer();
-    importer.validateByType(cfg.getScheme(), cfg.getFolder());
+    importer.validateByType(importType, cfg.getFolder());
 
     LOG.info("Importing files...");
     if (!cfg.isSkipBulk()) {
-        if (canBulk.contains(cfg.getScheme())) {
-          importer.importByType(cfg.getScheme(), cfg);
+        if (canBulk.contains(importType)) {
+          importer.importByType(importType, cfg);
         }
       LOG.info("Generating closure...");
       TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
@@ -106,24 +108,24 @@ public class Preload {
       TTBulkFiler.createRepository();
       startGraph(graphdb);
     }
-    new RangeInheritor().inheritRanges(null, SCHEME.DISCOVERY);
+    new RangeInheritor().inheritRanges(null, Graph.IM);
     LOG.info("expanding value sets");
-    new SetMemberGenerator().generateAllSetMembers(SCHEME.DISCOVERY);
-    new SetBinder().bindSets(SCHEME.DISCOVERY);
+    new SetMemberGenerator().generateAllSetMembers(Graph.IM);
+    new SetBinder().bindSets(Graph.IM);
     LOG.info("Filing into live graph");
     TTFilerFactory.setBulk(false);
     TTFilerFactory.setTransactional(true);
-      if (!canBulk.contains(cfg.getScheme())) {
-        importer.importByType(cfg.getScheme(), cfg);
+      if (!canBulk.contains(importType)) {
+        importer.importByType(importType, cfg);
       }
 
     try (TTImport deltaImporter = new DeltaImporter()) {
       deltaImporter.importData(cfg);
     }
     LOG.info("adding missing properties into concept domains");
-    new DomainResolver().updateDomains(SCHEME.DISCOVERY);
+    new DomainResolver().updateDomains(Graph.IM);
 
-    LOG.info("Finished - " + (new Date()));
+    LOG.info("Finished - {}" ,new Date());
 
     System.exit(0);
   }

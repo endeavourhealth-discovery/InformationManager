@@ -1,7 +1,7 @@
 Feature: Validate files by importer type
 
   Scenario: Valid import type with valid folder
-    Given I have the import type "http://endhealth.info/im#SingleFileImporter"
+    Given I have the import type "singlefile"
     And the folder path is "/mock/folder"
     And a mock importer is set up
     When I call validateByType
@@ -14,7 +14,7 @@ Feature: Validate files by importer type
     And the folder path is "/mock/folder"
     And a mock importer is set up for unknown type
     When I call validateByType
-    Then an ImportException should be thrown with message "Unrecognised import type [unknown-type]"
+    Then an ImportException should be thrown with message "Unrecognised import type"
 
   Scenario: Importer throws an exception during validation
     Given I have the import type "http://endhealth.info/im#SingleFileImporter"

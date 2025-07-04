@@ -2,15 +2,11 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
-import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -49,7 +45,7 @@ public class ICD10Importer implements TTImport {
       validateFiles(config.getFolder());
       LOG.info("Importing ICD10....");
       LOG.info("Getting snomed codes");
-      snomedCodes = importMaps.getCodes(SNOMED.NAMESPACE,GRAPH.DISCOVERY);
+      snomedCodes = importMaps.getCodes(SCHEME.SNOMED,Graph.IM);
       document = manager.createDocument();
       document.addEntity(manager.createScheme(SCHEME.ICD10, "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
       createTaxonomy();
@@ -60,10 +56,10 @@ public class ICD10Importer implements TTImport {
 
       mapDocument = manager.createDocument();
       importMaps(config.getFolder());
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(mapDocument);
       }
     } catch (Exception ex) {
@@ -105,7 +101,7 @@ public class ICD10Importer implements TTImport {
       .setCode("ICD10Codes")
       .setScheme(iri(SCHEME.ICD10))
       .setDescription("ICD1O classification used in backward maps from Snomed");
-    icd10.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
+    icd10.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies"));
     document.addEntity(icd10);
 
   }

@@ -9,7 +9,9 @@ import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -25,7 +27,7 @@ public class CoreVerbImporter implements TTImport {
       document = manager.createDocument();
       verbs();
       ownerships();
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception e) {
@@ -43,10 +45,10 @@ public class CoreVerbImporter implements TTImport {
 
   private void addEntity(String iri, Map<String, String> keyValue, String superClass) {
     TTEntity entity = new TTEntity()
-      .setIri(IM.NAMESPACE + iri)
+      .setIri(Namespace.IM + iri)
       .setName(iri);
     keyValue.entrySet().stream().forEach(e ->
-      entity.set(TTIriRef.iri(IM.NAMESPACE + e.getKey()), TTLiteral.literal(e.getValue())));
+      entity.set(TTIriRef.iri(Namespace.IM + e.getKey()), TTLiteral.literal(e.getValue())));
     document.addEntity(entity);
   }
 

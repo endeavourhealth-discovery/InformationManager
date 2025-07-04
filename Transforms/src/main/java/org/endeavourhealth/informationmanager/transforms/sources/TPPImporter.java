@@ -10,10 +10,7 @@ import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -90,7 +87,7 @@ public class TPPImporter implements TTImport {
       setOrphanC0des();
       importTppLocalMaps(config.getFolder());
 
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception e) {
@@ -137,12 +134,12 @@ public class TPPImporter implements TTImport {
     TTEntity entity = new TTEntity()
       .setIri(SCHEME.TPP + "Y2a0e")
       .setCrud(iri(IM.ADD_QUADS))
-      .set(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + "1156257007"));
+      .set(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + "1156257007"));
     document.addEntity(entity);
     entity = new TTEntity()
       .setIri(SCHEME.TPP + "Y29ea")
       .setCrud(iri(IM.ADD_QUADS))
-      .set(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + "1324671000000103"));
+      .set(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + "1324671000000103"));
     document.addEntity(entity);
   }
 
@@ -190,7 +187,7 @@ public class TPPImporter implements TTImport {
 
   private void importEMISMaps() throws TTFilerException, IOException {
     LOG.info("Getting EMIS maps");
-    emisToSnomed = importMaps.importEmisToSnomed(GRAPH.DISCOVERY);
+    emisToSnomed = importMaps.importEmisToSnomed(Graph.IM);
   }
 
   private void importLocals(String folder) throws IOException, CsvValidationException {
@@ -246,7 +243,7 @@ public class TPPImporter implements TTImport {
           TTEntity tpp = codeToEntity.get(code);
           if (tpp != null) {
             if (!alreadyMapped(tpp, snomed))
-              tpp.addObject(iri(IM.MATCHED_TO), iri(SNOMED.NAMESPACE + snomed));
+              tpp.addObject(iri(IM.MATCHED_TO), iri(Namespace.SNOMED + snomed));
           }
         }
 
@@ -426,7 +423,7 @@ public class TPPImporter implements TTImport {
       .setScheme(iri(SCHEME.TPP))
       .setCode("TPPCodes");
     c.set(iri(IM.IS_CONTAINED_IN), new TTArray());
-    c.get(iri(IM.IS_CONTAINED_IN)).add(TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
+    c.get(iri(IM.IS_CONTAINED_IN)).add(TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies"));
     document.addEntity(c);
     c = new TTEntity().setIri(SCHEME.TPP + "TPPOrphanCodes")
       .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(SCHEME.TPP + "TPPCodes")))
@@ -468,7 +465,7 @@ public class TPPImporter implements TTImport {
 
         }
         if (!alreadyMapped(tpp, snomed)) {
-          tpp.addObject(iri(IM.MATCHED_TO), iri(SNOMED.NAMESPACE + snomed));
+          tpp.addObject(iri(IM.MATCHED_TO), iri(Namespace.SNOMED + snomed));
         }
       }
       LOG.info("Process ended with {}", count);

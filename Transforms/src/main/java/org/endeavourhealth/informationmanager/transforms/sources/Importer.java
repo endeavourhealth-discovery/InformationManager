@@ -24,12 +24,7 @@ public class Importer implements TTImportByType {
    * @throws Exception if one of the sources is invalid
    */
   @Override
-  public TTImportByType importByType(TTIriRef importType, TTImportConfig config) throws Exception {
-    return importByType(importType.getIri(), config);
-  }
-
-  @Override
-  public TTImportByType importByType(String importType, TTImportConfig config) throws Exception {
+  public TTImportByType importByType(IMPORT importType, TTImportConfig config) throws Exception {
     LOG.info("Importing {}", importType);
     try (TTImport importer = getImporter(importType)) {
       importer.validateFiles(config.getFolder());
@@ -38,14 +33,8 @@ public class Importer implements TTImportByType {
     }
   }
 
-
   @Override
-  public TTImportByType validateByType(TTIriRef importType, String inFolder) throws Exception {
-    return validateByType(importType.getIri(), inFolder);
-  }
-
-  @Override
-  public TTImportByType validateByType(String importType, String inFolder) throws Exception {
+  public TTImportByType validateByType(IMPORT importType, String inFolder) throws Exception {
     try (TTImport importer = getImporter(importType)) {
       importer.validateFiles(inFolder);
       return this;
@@ -53,33 +42,33 @@ public class Importer implements TTImportByType {
   }
 
 
-  private TTImport getImporter(String importType) throws ImportException {
+  private TTImport getImporter(IMPORT importType) throws ImportException {
     return switch (importType) {
-      case IM.NAMESPACE + "SingleFileImporter" -> new SingleFileImporter();
-      case SCHEME.QUERY -> new CoreQueryImporter();
-      case SCHEME.BNF -> new BNFImporter();
-      case SCHEME.DISCOVERY -> new CoreImporter();
-      case SCHEME.BARTS_CERNER -> new BartsCernerImport();
-      case SNOMED.NAMESPACE -> new SnomedImporter();
-      case SCHEME.EMIS -> new EMISImport();
-      case SCHEME.TPP -> new TPPImporter();
-      case SCHEME.OPCS4 -> new OPCS4Importer();
-      case SCHEME.ICD10 -> new ICD10Importer();
-      case SCHEME.ENCOUNTERS -> new EncountersImporter();
-      case SCHEME.VISION -> new VisionImport();
-      case SCHEME.PRSB -> new PRSBImport();
-      case SCHEME.KINGS_APEX -> new ApexKingsImport();
-      case SCHEME.KINGS_WINPATH -> new WinPathKingsImport();
-      case SCHEME.ODS -> new OdsImporter();
-      case SCHEME.IM1 -> new IM1MapImport();
-      case SCHEME.CEG -> new CEGImporter();
-      case SCHEME.SMARTLIFE -> new SmartLifeImporter();
-      case SCHEME.QOF -> new QOFQueryImport();
-      case SCHEME.NHS_TFC -> new NHSTfcImport();
-      case SCHEME.DELTAS -> new DeltaImporter();
-      case QR.NAMESPACE -> new QImporter();
-      case SCHEME.CPRD_MED -> new CPRDImport();
-      case FHIR.GRAPH_FHIR -> new FHIRImporter();
+      case IMPORT.SINGLE_FILE -> new SingleFileImporter();
+      case IMPORT.QUERY -> new CoreQueryImporter();
+      case IMPORT.BNF -> new BNFImporter();
+      case IMPORT.CORE -> new CoreImporter();
+      case IMPORT.BARTS_CERNER -> new BartsCernerImport();
+      case IMPORT.SNOMED -> new SnomedImporter();
+      case IMPORT.EMIS -> new EMISImport();
+      case IMPORT.TPP -> new TPPImporter();
+      case IMPORT.OPCS4 -> new OPCS4Importer();
+      case IMPORT.ICD10 -> new ICD10Importer();
+      case IMPORT.ENCOUNTERS -> new EncountersImporter();
+      case IMPORT.VISION -> new VisionImport();
+      case IMPORT.PRSB -> new PRSBImport();
+      case IMPORT.KINGS_APEX -> new ApexKingsImport();
+      case IMPORT.KINGS_WINPATH -> new WinPathKingsImport();
+      case IMPORT.ODS -> new OdsImporter();
+      case IMPORT.IM1 -> new IM1MapImport();
+      case IMPORT.CEG -> new CEGImporter();
+      case IMPORT.SMARTLIFE -> new SmartLifeImporter();
+      case IMPORT.QOF -> new QOFQueryImport();
+      case IMPORT.NHS_TFC -> new NHSTfcImport();
+      case IMPORT.DELTAS -> new DeltaImporter();
+      case IMPORT.QR -> new QImporter();
+      case IMPORT.CPRD_MED -> new CPRDImport();
+      case IMPORT.FHIR -> new FHIRImporter();
       default -> throw new ImportException("Unrecognised import type [" + importType + "]");
     };
   }

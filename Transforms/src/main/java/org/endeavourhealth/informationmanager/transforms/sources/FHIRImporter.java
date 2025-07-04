@@ -3,7 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.logic.CachedObjectMapper;
 import org.endeavourhealth.imapi.model.fhir.CodeSystem;
@@ -14,8 +14,6 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.transforms.FHIRToIM;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.FHIR;
-import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
@@ -34,8 +32,8 @@ public class FHIRImporter implements TTImport {
 	private TTDocument document;
 	private TTManager manager;
 	private static final Logger LOG = LoggerFactory.getLogger(FHIRImporter.class);
-	private String valueSetFolder= IM.NAMESPACE+"VSET_FHIR";
-	private String codeSystemFolder= IM.NAMESPACE+"FHIRCodeSystems";
+	private String valueSetFolder= Namespace.IM+"VSET_FHIR";
+	private String codeSystemFolder= Namespace.IM+"FHIRCodeSystems";
 
 	private static final String[] fhirResources = {
 		".*\\\\FHIR\\\\FHIRValueSets.json",
@@ -66,8 +64,8 @@ public class FHIRImporter implements TTImport {
 							document.getEntities().addAll(concepts);
 						}
 					}
-					LOG.info("Filing {} from {}", SCHEME.FHIR);
-					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+					LOG.info("Filing {}", SCHEME.FHIR);
+					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 						try {
 							filer.fileDocument(document);
 						} catch (TTFilerException | QueryException e) {
@@ -97,7 +95,7 @@ public class FHIRImporter implements TTImport {
 			.setName(" based value set library")
 			.setStatus(iri(IM.ACTIVE))
 			.setDescription("A library of value sets generated from BNF codes and NHS BNF snomed maps");
-		entity.addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "QueryConceptSets"));
+		entity.addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "QueryConceptSets"));
 		document.addEntity(entity);
 	}
 

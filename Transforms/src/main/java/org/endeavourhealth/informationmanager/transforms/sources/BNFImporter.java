@@ -34,7 +34,7 @@ public class BNFImporter implements TTImport {
   private final Map<String, Set<String>> setToSnomed = new HashMap<>();
   private final ImportMaps importMaps = new ImportMaps();
 
-  private final String topFolder = BNF.NAMESPACE + "BNFValueSets";
+  private final String topFolder = Namespace.BNF + "BNFValueSets";
   private final Map<String, Set<String>> children = new HashMap<>();
 
   public static final String[] bnf_maps = {
@@ -56,7 +56,7 @@ public class BNFImporter implements TTImport {
       createEMISMaps(document);
       setMembers();
       flattenSets();
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
 
@@ -69,7 +69,7 @@ public class BNFImporter implements TTImport {
     try {
       try {
         LOG.info("Creating EMIS-bnf maps...");
-        Map<String,String> emisConcepts= importMaps.getCodesToIri(SCHEME.EMIS, GRAPH.IM);
+        Map<String,String> emisConcepts= importMaps.getCodesToIri(SCHEME.EMIS, Graph.IM);
         for (Map.Entry<String,String> entry:emisConcepts.entrySet()){
           String code=entry.getKey();
           if (code.contains("DRGG")){
@@ -117,7 +117,7 @@ public class BNFImporter implements TTImport {
         i++;
         for (String snomed:setToSnomed.get(setIri)){
           entity.addObject(iri(IM.ENTAILED_MEMBER),new TTNode()
-            .set(iri(IM.INSTANCE_OF),iri(SNOMED.NAMESPACE+snomed))
+            .set(iri(IM.INSTANCE_OF),iri(Namespace.SNOMED+snomed))
             .set(iri(IM.ENTAILMENT),iri(IM.DESCENDANTS_OR_SELF_OF)));
         }
       }
@@ -176,7 +176,7 @@ public class BNFImporter implements TTImport {
       .setName("BNF based value set library")
       .setStatus(iri(IM.ACTIVE))
       .setDescription("A library of value sets generated from BNF codes and NHS BNF snomed maps");
-    entity.addObject(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "QueryConceptSets"));
+    entity.addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "QueryConceptSets"));
     document.addEntity(entity);
   }
 
@@ -263,16 +263,16 @@ public class BNFImporter implements TTImport {
       return;
     }
     if (codeToEntity.get(chapterCode) == null) {
-      setNewEntity(chapterCode, chapterDot + " " + chapter + " (BNF based set)", IM.FOLDER, topFolder, null);
+      setNewEntity(chapterCode, chapterDot + " " + chapter + " (BNF based set)", IM.FOLDER.toString(), topFolder, null);
     }
     if (codeToEntity.get(sectionCode) == null) {
-      setNewEntity(sectionCode, sectionDot + " " + section + " (BNF based set)", IM.FOLDER, BNF.NAMESPACE + "BNF_" + chapterCode, null);
+      setNewEntity(sectionCode, sectionDot + " " + section + " (BNF based set)", IM.FOLDER.toString(), Namespace.BNF + "BNF_" + chapterCode, null);
     }
     if (codeToEntity.get(paragraphCode) == null) {
-      setNewEntity(paragraphCode, paraDot + " " + paragraph + " (BNF based set)", IM.CONCEPT_SET, BNF.NAMESPACE + "BNF_" + sectionCode, null);
+      setNewEntity(paragraphCode, paraDot + " " + paragraph + " (BNF based set)", IM.CONCEPT_SET.toString(), Namespace.BNF + "BNF_" + sectionCode, null);
     }
     if (codeToEntity.get(subparagraphCode) == null) {
-      setNewEntity(subparagraphCode, subParaDot + " " + subparagraph + " (BNF based set)", IM.CONCEPT_SET, null, BNF.NAMESPACE + "BNF_" + paragraphCode);
+      setNewEntity(subparagraphCode, subParaDot + " " + subparagraph + " (BNF based set)", IM.CONCEPT_SET.toString(), null, Namespace.BNF + "BNF_" + paragraphCode);
     }
     Set<String> snomeds = bnfCodeToSnomed.get(workingCode);
     if (snomeds != null) {
@@ -290,9 +290,9 @@ public class BNFImporter implements TTImport {
 
   private void setNewEntity(String code, String name, String type, String parent, String superset) {
     TTEntity entity = new TTEntity()
-      .setIri(BNF.NAMESPACE + "BNF_" + code)
+      .setIri(Namespace.BNF + "BNF_" + code)
       .addType(iri(type))
-      .setScheme(iri(BNF.NAMESPACE))
+      .setScheme(SCHEME.BNF.asIri())
       .setName(name);
     if (parent != null) {
       entity.addObject(iri(IM.IS_CONTAINED_IN), iri(parent));

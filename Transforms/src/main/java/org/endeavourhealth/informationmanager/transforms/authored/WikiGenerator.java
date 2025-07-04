@@ -3,10 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.authored;
 import org.endeavourhealth.imapi.logic.service.EntityService;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
-import org.endeavourhealth.imapi.vocabulary.SHACL;
-import org.endeavourhealth.imapi.vocabulary.XSD;
+import org.endeavourhealth.imapi.vocabulary.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,11 +26,11 @@ public class WikiGenerator {
   public String generateDocs(String importFolder) throws DataFormatException, IOException {
     this.importFolder = importFolder;
     StringBuilder documentation = new StringBuilder();
-    veto.add(IM.NAMESPACE + "Organisation");
-    veto.add(IM.NAMESPACE + "ComputerSystem");
+    veto.add(Namespace.IM + "Organisation");
+    veto.add(Namespace.IM + "ComputerSystem");
     List<String> folders = List.of("BasicShapes", "DataModelShapes", "ConceptShapes", "QueryShapes", "TransformMapShapes", "TransactionalShapes");
     for (String folder : folders) {
-      String folderIri = IM.NAMESPACE + folder;
+      String folderIri = Namespace.IM + folder;
       TTEntity heading = getEntity(folderIri);
       documentation.append("== ").append(heading.getName()).append(" ==\n");
       String description = convertHtml(heading.getDescription());
@@ -258,33 +255,25 @@ public class WikiGenerator {
   }
 
   private String getTitle(TTIriRef iri) throws DataFormatException, IOException {
-    switch (iri.getIri()) {
-      case SHACL.IRI -> {
-        return "international resource identifier";
-      }
-      case XSD.STRING -> {
-        return "any valid json value characters with json escapes";
-      }
-      case XSD.INTEGER -> {
-        return "whole number";
-      }
-      case IM.NAMESPACE + "DateTime" -> {
-        return "im date time format";
-      }
-      case XSD.BOOLEAN -> {
-        return "boolean true or false";
-      }
-      default -> {
-        TTEntity entity = getEntity(iri.getIri());
-        if (entity != null) {
-          if (entity.get(iri(RDFS.COMMENT)) != null)
-            return entity.get(iri(RDFS.COMMENT)).asLiteral().getValue().replaceAll("<br>", "");
-          else
-            return "";
-        } else
-          return "";
-      }
+    if (iri.getIri().equals(SHACL.IRI.toString())) {
+      return "international resource identifier";
+    } else if (iri.getIri().equals(XSD.STRING.toString())) {
+      return "any valid json value characters with json escapes";
+    } else if (iri.getIri().equals(XSD.INTEGER.toString())) {
+      return "whole number";
+    } else if (iri.getIri().equals((Namespace.IM + "DateTime"))) {
+      return "im date time format";
+    } else if (iri.getIri().equals(XSD.BOOLEAN.toString())) {
+      return "boolean true or false";
     }
+    TTEntity entity = getEntity(iri.getIri());
+    if (entity != null) {
+      if (entity.get(iri(RDFS.COMMENT)) != null)
+        return entity.get(iri(RDFS.COMMENT)).asLiteral().getValue().replaceAll("<br>", "");
+      else
+        return "";
+    } else
+      return "";
   }
 
   private static String getShort(String iri) {

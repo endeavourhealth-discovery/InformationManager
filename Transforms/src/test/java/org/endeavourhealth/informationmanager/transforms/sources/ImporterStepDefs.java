@@ -6,6 +6,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
+import org.endeavourhealth.imapi.vocabulary.IMPORT;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
@@ -20,7 +21,7 @@ import static org.mockito.Mockito.verify;
 
 
 public class ImporterStepDefs {
-  private String importType;
+  private IMPORT importType;
   private String folderPath;
   private TTImport mockImporter;
   private TTImportByType service;
@@ -28,7 +29,7 @@ public class ImporterStepDefs {
 
   @Given("I have the import type {string}")
   public void i_have_the_import_type(String importType) {
-    this.importType = importType;
+    this.importType = IMPORT.from(importType);
   }
 
   @And("the folder path is {string}")
@@ -39,7 +40,7 @@ public class ImporterStepDefs {
   @And("a mock importer is set up for unknown type")
   public void mock_importer_for_unknown_type() {
     mockImporter = mock(TTImport.class);
-    service = new TTImportByTypeMock("http://endhealth.info/im#SingleFileImporter", mockImporter);
+    service = new TTImportByTypeMock(IMPORT.SINGLE_FILE, mockImporter);
   }
 
   @And("a mock importer is set up")
@@ -93,39 +94,29 @@ public class ImporterStepDefs {
   }
 
   public static class TTImportByTypeMock implements TTImportByType {
-    private final String matchType;
+    private final IMPORT matchType;
     private final TTImport importer;
 
-    public TTImportByTypeMock(String matchType, TTImport importer) {
+    public TTImportByTypeMock(IMPORT matchType, TTImport importer) {
       this.matchType = matchType;
       this.importer = importer;
     }
 
     @Override
-    public TTImportByType importByType(TTIriRef importType, TTImportConfig config) throws Exception {
+    public TTImportByType importByType(IMPORT importType, TTImportConfig config) throws Exception {
       return null;
     }
 
     @Override
-    public TTImportByType importByType(String importType, TTImportConfig config) throws Exception {
-      return null;
-    }
-
-    @Override
-    public TTImportByType validateByType(TTIriRef importType, String inFolder) throws Exception {
-      return null;
-    }
-
-    @Override
-    public TTImportByType validateByType(String importType, String inFolder) throws Exception {
+    public TTImportByType validateByType(IMPORT importType, String inFolder) throws Exception {
       TTImport imp = getImporter(importType);
       imp.validateFiles(inFolder);
       return this;
     }
 
-    protected TTImport getImporter(String importType) throws ImportException {
-      if (!importType.equals(matchType)) {
-        throw new ImportException("Unrecognised import type [" + importType + "]");
+    protected TTImport getImporter(IMPORT importType) throws ImportException {
+      if (importType == null) {
+        throw new ImportException("Unrecognised import type");
       }
       return importer;
     }

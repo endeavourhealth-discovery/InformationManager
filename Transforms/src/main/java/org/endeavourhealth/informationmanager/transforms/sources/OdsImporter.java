@@ -46,7 +46,7 @@ public class OdsImporter implements TTImport {
   @Override
   public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager();
-         TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+         TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
       TTDocument doc = manager.createDocument();
       doc.setCrud(iri(IM.UPDATE_ALL));
       doc.addEntity(manager.createScheme(SCHEME.ODS, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
@@ -77,18 +77,18 @@ public class OdsImporter implements TTImport {
     relationshipSet = new TTArray();
     recordClassSet = new TTArray();
     TTEntity odsCodeFolder= new TTEntity()
-      .setIri(IM.NAMESPACE+"OdsCodeSystems")
+      .setIri(Namespace.IM+"OdsCodeSystems")
       .setScheme(iri(SCHEME.ODS))
         .addType(iri(IM.FOLDER))
           .setName("ODS code systems")
             .setDescription("Foldr containing ODS code schemes")
-              .set(iri(IM.IS_CONTAINED_IN),iri(IM.NAMESPACE+"HealthModelOntology"));
+              .set(iri(IM.IS_CONTAINED_IN),iri(Namespace.IM+"HealthModelOntology"));
     doc.addEntity(odsCodeFolder);
     TTIriRef odsCodes= iri(odsCodeFolder.getIri());
 
     // Add/create base types
     doc
-      .addEntity(new TTEntity(ODS.ORGANISATION_ROLE_TYPE)
+      .addEntity(new TTEntity(ODS.ORGANISATION_ROLE_TYPE.toString())
         .setName("Organisation role")
         .addType(iri(IM.CONCEPT))
         .setScheme(iri(SCHEME.ODS))
@@ -96,14 +96,14 @@ public class OdsImporter implements TTImport {
         .setStatus(iri(IM.ACTIVE))
         .set(iri(IM.IS_CONTAINED_IN), odsCodes)
       )
-      .addEntity(new TTEntity(ODS.ORGANISATION_RELATIONSHIP)
+      .addEntity(new TTEntity(ODS.ORGANISATION_RELATIONSHIP.toString())
         .setName("Organisation relationship")
         .addType(iri(IM.CONCEPT))
         .setScheme(iri(SCHEME.ODS))
         .setDescription("The type of the relationship with another organisation")
         .setStatus(iri(IM.ACTIVE))
         .set(iri(IM.IS_CONTAINED_IN), odsCodes)
-      ).addEntity(new TTEntity(ODS.ORGANISATION_RECORD_CLASS)
+      ).addEntity(new TTEntity(ODS.ORGANISATION_RECORD_CLASS.toString())
         .setName("Organisation record class")
         .addType(iri(IM.CONCEPT))
         .setScheme(iri(SCHEME.ODS))
@@ -113,29 +113,29 @@ public class OdsImporter implements TTImport {
       )
 
       // Add/create value sets
-      .addEntity(new TTEntity(IM.NAMESPACE + "VSET_OrganisationRole")
+      .addEntity(new TTEntity(Namespace.IM + "VSET_OrganisationRole")
         .setName("Value set - Organisation role")
         .addType(iri(IM.VALUESET))
         .setDescription("Value set for Organisation (data model) / role")
         .setStatus(iri(IM.ACTIVE))
         .set(iri(IM.DEFINITION), literal("{\"name\":\"Organisation role\",\"instanceOf\":[{\"iri\":\"" + ODS.ORGANISATION_ROLE_TYPE + "\",\"descendantsOf\":true}]}"))
-        .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "VSET_DataModel"))
+        .set(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "VSET_DataModel"))
         .set(iri(IM.HAS_MEMBER), relationshipSet)
-      ).addEntity(new TTEntity(IM.NAMESPACE + "VSET_OrganisationRelationshipType")
+      ).addEntity(new TTEntity(Namespace.IM + "VSET_OrganisationRelationshipType")
         .setName("Value set - Organisation relationship")
         .addType(iri(IM.VALUESET))
         .setDescription("Value set for Organisation (data model) / relationship")
         .setStatus(iri(IM.ACTIVE))
         .set(iri(IM.DEFINITION), literal("{\"name\":\"Organisation relationshipType\",\"instanceOf\":[{\"iri\":\"" + ODS.ORGANISATION_RELATIONSHIP + "\",\"descendantsOf\":true}]}"))
-        .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "VSET_DataModel"))
+        .set(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "VSET_DataModel"))
         .set(iri(IM.HAS_MEMBER), relationshipSet)
-      ).addEntity(new TTEntity(IM.NAMESPACE + "VSET_OrganisationRecordClass")
+      ).addEntity(new TTEntity(Namespace.IM + "VSET_OrganisationRecordClass")
         .setName("Value set - Organisation record class")
         .addType(iri(IM.VALUESET))
         .setDescription("Value set for Organisation (data model) / record class")
         .setStatus(iri(IM.ACTIVE))
         .set(iri(IM.DEFINITION), literal("{\"name\":\"Organisation role\",\"instanceOf\":[{\"iri\":\"" + ODS.ORGANISATION_RECORD_CLASS + "\",\"descendantsOf\":true}]}"))
-        .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "VSET_DataModel"))
+        .set(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "VSET_DataModel"))
         .set(iri(IM.HAS_MEMBER), recordClassSet)
       )
 
@@ -162,7 +162,7 @@ public class OdsImporter implements TTImport {
     if (null == codeSystem)
       return;
 
-    String prefix = null;
+    ODS prefix = null;
     String suffix = null;
 
     switch (codeSystem) {
@@ -218,10 +218,10 @@ public class OdsImporter implements TTImport {
 
   private void processOrganisationLine(TTDocument doc) {
     String odsCode = fieldByName("OrganisationId");
-    String addIri = ORG.LOCATION_NAMESPACE + "ODS_" + odsCode;
+    String addIri = Namespace.LOCATION + "ODS_" + odsCode;
 
-    TTEntity org = new TTEntity(ORG.ORGANISATION_NAMESPACE + odsCode)
-      .addType(TTIriRef.iri(IM.NAMESPACE + "Organisation"))
+    TTEntity org = new TTEntity(Namespace.ORGANISATION + odsCode)
+      .addType(TTIriRef.iri(Namespace.IM + "Organisation"))
       .setName(fieldByName("Name"))
       .setScheme(iri(SCHEME.ODS))
       .setStatus("Active".equals(fieldByName("Status")) ? iri(IM.ACTIVE) : iri(IM.INACTIVE))
@@ -272,7 +272,7 @@ public class OdsImporter implements TTImport {
   private void processRelationshipLine() {
     String odsCode = fieldByName("OrganisationId");
 
-    TTEntity org = entityIndex.get(ORG.ORGANISATION_NAMESPACE + odsCode);
+    TTEntity org = entityIndex.get(Namespace.ORGANISATION + odsCode);
     if (null == org)
       LOG.error("Unknown organisation [{}]", odsCode);
     else {
@@ -287,7 +287,7 @@ public class OdsImporter implements TTImport {
         .set(iri(IM.EFFECTIVE_DATE), literal(fieldByName("OperationalStartDate")))
         .set(iri(IM.END_DATE), literal(fieldByName("OperationalEndDate")))
         .set(iri(IM.HAS_STATUS), "Active".equals(fieldByName("Status")) ? iri(IM.ACTIVE) : iri(IM.INACTIVE))
-        .set(iri(ORG.TARGET), iri(ORG.ORGANISATION_NAMESPACE + fieldByName("TargetOrganisationId")));
+        .set(iri(ORG.TARGET), iri(Namespace.ORGANISATION + fieldByName("TargetOrganisationId")));
 
       rels.add(rel);
     }
@@ -318,7 +318,7 @@ public class OdsImporter implements TTImport {
     String odsCode = fieldByName("OrganisationId");
     String roleId = fieldByName("RoleId");
 
-    TTEntity org = entityIndex.get(ORG.ORGANISATION_NAMESPACE + odsCode);
+    TTEntity org = entityIndex.get(Namespace.ORGANISATION + odsCode);
     if (null == org)
       LOG.error("Unknown organisation [{}]", odsCode);
     else {
@@ -329,7 +329,7 @@ public class OdsImporter implements TTImport {
       }
 
       TTNode role = new TTNode()
-        .set(iri(IM.NAMESPACE+"concept"), iri(ODS.ORGANISATION_ROLE_TYPE + "_" + roleId.substring(2)))
+        .set(iri(Namespace.IM+"concept"), iri(ODS.ORGANISATION_ROLE_TYPE + "_" + roleId.substring(2)))
         .set(iri(IM.EFFECTIVE_DATE), literal(fieldByName("OperationalStartDate")))
         .set(iri(IM.END_DATE), literal(fieldByName("OperationalEndDate")))
         .set(iri(IM.HAS_STATUS), "Active".equals(fieldByName("Status")) ? iri(IM.ACTIVE) : iri(IM.INACTIVE));

@@ -3,21 +3,17 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
-
-import java.io.FileReader;
-import java.nio.file.Path;
-import java.util.Properties;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -42,8 +38,8 @@ public class CEGImporter implements TTImport {
       createOrg(document);
       createFolders(document);
       EQDImporter eqdImporter = new EQDImporter();
-      eqdImporter.loadAndConvert(config,manager,queries[0], SCHEME.CEG,dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      eqdImporter.loadAndConvert(config,manager,queries[0], Namespace.CEG, dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       } catch (Exception e) {
         throw new ImportException(e.getMessage(), e);
@@ -58,7 +54,7 @@ public class CEGImporter implements TTImport {
       .setIri(SCHEME.CEG + "Q_CEGQueries")
       .setName("QMUL CEG query library")
       .addType(iri(IM.FOLDER))
-      .set(iri(IM.IS_CONTAINED_IN), iri(IM.NAMESPACE + "Q_Queries"));
+      .set(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "Q_Queries"));
     folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
     document.addEntity(folder);
     mainFolder= folder.getIri();
@@ -66,7 +62,7 @@ public class CEGImporter implements TTImport {
       .setIri(SCHEME.CEG + "CSET_CEGConceptSets")
       .setName("QMUL CEG value set library")
       .addType(iri(IM.FOLDER))
-      .set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "QueryConceptSets"));
+      .set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "QueryConceptSets"));
     folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
     document.addEntity(folder);
     setFolder= folder.getIri();
@@ -76,7 +72,7 @@ public class CEGImporter implements TTImport {
   private void createOrg(TTDocument document) {
     TTEntity owner = new TTEntity()
       .setIri("http://org.endhealth.info/im#QMUL_CEG")
-      .addType(TTIriRef.iri(IM.NAMESPACE + "Organisation"))
+      .addType(TTIriRef.iri(Namespace.IM + "Organisation"))
       .setName("Clinical Effectiveness Group of Queen Mary University of London - CEG")
       .setDescription("The Clinical effectiveness group being a special division of Queen Mary University of London," +
         "deliverying improvements in clinical outcomes for the population of UK");

@@ -1,16 +1,11 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
-import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
@@ -47,25 +42,21 @@ public class CPRDImport implements TTImport {
 
   public void importData(TTImportConfig config) throws ImportException {
     try {
-      document = manager.createDocument();
-      document.addEntity(manager.createScheme(SCHEME.CPRD_MED, "CPRD medIds ",
-        "CPRD clinical non product identifiers (including emis code ids)."));
-
-      importObsCodes(config.getFolder());
-
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+        importObsCodes(config.getFolder());
+        document = manager.createDocument();
+        document.addEntity(manager.createScheme(SCHEME.CPRD_MED, "CPRD medIds ",
+          "CPRD clinical non product identifiers (including emis code ids)."));
         filer.fileDocument(document);
-      }
-      document = manager.createDocument();
-      document.addEntity(manager.createScheme(SCHEME.CPRD_PROD, "CPRD product ids",
-        "internal identifiers to DMD VMPs and AMPs."));
 
-      importDrugs(config.getFolder());
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+        document = manager.createDocument();
+        document.addEntity(manager.createScheme(SCHEME.CPRD_PROD, "CPRD product ids",
+          "internal identifiers to DMD VMPs and AMPs."));
+        importDrugs(config.getFolder());
         filer.fileDocument(document);
       }
     } catch (Exception e) {
-      throw new ImportException(e.getMessage(),e);
+      throw new ImportException(e.getMessage(), e);
     }
   }
 
@@ -89,7 +80,7 @@ public class CPRDImport implements TTImport {
         concept.setScheme(iri(SCHEME.CPRD_PROD));
         concept.setStatus(iri(IM.ACTIVE));
         if (!fields[1].equals("")) {
-          concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + fields[1]));
+          concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + fields[1]));
         }
         document.addEntity(concept);
         line = reader.readLine();
@@ -118,7 +109,7 @@ public class CPRDImport implements TTImport {
         concept.setCode(medId);
         concept.setScheme(iri(SCHEME.CPRD_PROD));
         concept.setStatus(iri(IM.ACTIVE));
-        concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + fields[5]));
+        concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + fields[5]));
         TTNode termCode = new TTNode();
         termCode.set(iri(IM.CODE), TTLiteral.literal(fields[6]));
         concept.addObject(iri(IM.HAS_TERM_CODE), termCode);
