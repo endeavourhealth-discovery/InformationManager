@@ -80,6 +80,7 @@ public class BNFImporter implements TTImport {
               TTEntity map= new TTEntity()
                 .setIri(entry.getValue())
                 .setCrud(iri(IM.ADD_QUADS))
+                .setScheme(Namespace.BNF.asIri())
                 .set(iri(IM.MATCHED_TO),iri(bnfIri));
               document.addEntity(map);
             }
@@ -173,6 +174,7 @@ public class BNFImporter implements TTImport {
     TTEntity entity = new TTEntity()
       .setIri(topFolder)
       .addType(iri(IM.FOLDER))
+      .setScheme(Namespace.IM.asIri())
       .setName("BNF based value set library")
       .setStatus(iri(IM.ACTIVE))
       .setDescription("A library of value sets generated from BNF codes and NHS BNF snomed maps");
@@ -224,7 +226,7 @@ public class BNFImporter implements TTImport {
     String bnfName = fields[3];
     String snomed = fields[4];
     if (snomed.contains(" "))
-      System.err.println("bad snomed");
+      LOG.error("bad snomed [" + snomed + "]");
     if (bnfName.equals("") && (bnfCode.equals("")))
       return;
     if (!bnfCode.equals(""))

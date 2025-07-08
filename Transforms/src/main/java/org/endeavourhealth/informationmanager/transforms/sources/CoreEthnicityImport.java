@@ -208,6 +208,7 @@ public class CoreEthnicityImport implements TTImport {
           .addType(iri(IM.CONCEPT_SET))
           .setName("Value set - " + nhsTerm + " (2001 census ethnic category " + nhs16 + ")")
           .setDescription("NHS Data Dictionary 2001 ethnic category " + nhs16)
+          .setScheme(Namespace.IM.asIri())
           .set(iri(IM.IS_SUBSET_OF), TTIriRef.iri(nhsSet.getIri()));
         nhsDocument.addEntity(nhsSubset);
         nhsCatmap.put(snoNhs, nhsSubset);
@@ -223,14 +224,16 @@ public class CoreEthnicityImport implements TTImport {
       .setIri(Namespace.CEG + "CSET_EthnicCategoryCEG16")
       .addType(iri(IM.CONCEPT_SET))
       .setName("CEG 16+1 Ethnic category (set group)")
-      .setDescription("QMUL-CEG categorisations of ethnic groups");
+      .setDescription("QMUL-CEG categorisations of ethnic groups")
+      .setScheme(Namespace.CEG.asIri());
     cegSet.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(Namespace.IM + "EthnicitySets")));
     document.addEntity(cegSet);
     nhsSet = new TTEntity()
       .setIri(Namespace.IM + "CSET_EthnicCategory2001")
       .addType(iri(IM.CONCEPT_SET))
       .setName("Value set - 2001 census Ethnic category (set group")
-      .setDescription("NHS Data Dictionary 2001 census based categorisations of ethnic groups");
+      .setDescription("NHS Data Dictionary 2001 census based categorisations of ethnic groups")
+      .setScheme(Namespace.IM.asIri());
     nhsSet.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(Namespace.IM + "EthnicitySets")));
     document.addEntity(nhsSet);
   }

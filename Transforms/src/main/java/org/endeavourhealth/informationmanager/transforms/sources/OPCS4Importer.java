@@ -107,6 +107,7 @@ public class OPCS4Importer implements TTImport {
       .setName("Overflow codes (chapter " + "O" + ")")
       .setCode("O")
       .addType(iri(IM.CONCEPT))
+      .setScheme(iri(Namespace.OPCS4))
       .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(opcs.getIri())));
     codeToEntity.put("O", c);
     document.addEntity(c);

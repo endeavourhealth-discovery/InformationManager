@@ -139,6 +139,7 @@ public class CoreImporter implements TTImport {
             .addType(iri(IM.FOLDER))
             .setIri(cohortFolderIri)
             .setName(entity.getName())
+            .setScheme(Namespace.IM.asIri())
             .set(iri(IM.CONTENT_TYPE), iri(IM.QUERY))
             .set(iri(SHACL.ORDER), TTLiteral.literal(entity.get(iri(SHACL.ORDER)).asLiteral().intValue() + 1));
           cohortFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "Q_DefaultCohorts"));
@@ -160,6 +161,7 @@ public class CoreImporter implements TTImport {
                 .addType(iri(IM.QUERY))
                 .setName(entity.getName() + "s")
                 .setDescription("Cohort Query for entities of " + entity.getName() + "s")
+                .setScheme(Namespace.IM.asIri())
                 .set(iri(SHACL.ORDER), TTLiteral.literal(order + 1));
               cohort.addObject(iri(IM.IS_CONTAINED_IN), iri(cohortFolderIri));
               cohort.set(iri(IM.DEFINITION), TTLiteral.literal(new Query()

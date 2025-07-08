@@ -83,6 +83,7 @@ public class CoreQueryImporter implements TTImport {
       .setIri(Namespace.IM + "gmsRegisteredPractice")
       .setDescription("Returns the practice if the patient is registered as a GMS patient on the reference date")
       .setCrud(iri(IM.UPDATE_PREDICATES))
+      .setScheme(Namespace.IM.asIri())
       .addObject(iri(SHACL.PARAMETER), new TTNode()
         .set(iri(RDFS.LABEL), TTLiteral.literal("referenceDate"))
         .set(iri(SHACL.DATATYPE), iri(Namespace.IM + "DateTime")));
@@ -136,6 +137,7 @@ public class CoreQueryImporter implements TTImport {
     TTEntity gms = new TTEntity()
       .setIri(Namespace.IM + "gmsRegistrationAtEvent")
       .setCrud(iri(IM.UPDATE_PREDICATES))
+      .setScheme(Namespace.IM.asIri())
       .addObject(iri(SHACL.PARAMETER), new TTNode()
         .set(iri(RDFS.LABEL), TTLiteral.literal("referenceDate"))
         .set(iri(SHACL.DATATYPE), iri(Namespace.IM + "DateTime")))
@@ -193,6 +195,7 @@ public class CoreQueryImporter implements TTImport {
     TTEntity gms = new TTEntity()
       .setIri(Namespace.IM + "gmsRegistrationStatus")
       .setCrud(iri(IM.UPDATE_PREDICATES))
+      .setScheme(Namespace.IM.asIri())
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(query));
     document.addEntity(gms);
@@ -205,6 +208,7 @@ public class CoreQueryImporter implements TTImport {
     TTEntity address = new TTEntity()
       .setIri(Namespace.IM + propertyName)
       .setCrud(iri(IM.UPDATE_PREDICATES))
+      .setScheme(Namespace.IM.asIri())
       .set(iri(IM.DEFINITION), TTLiteral.literal(
         new Query()
         .setName(value + " address property definition")
@@ -234,6 +238,7 @@ public class CoreQueryImporter implements TTImport {
     TTEntity address = new TTEntity()
       .setIri(Namespace.IM + propertyName)
       .setCrud(iri(IM.UPDATE_PREDICATES))
+      .setScheme(Namespace.IM.asIri())
       .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
         .setName(value + " address property definition")
           .path(p -> p.setIri(Namespace.IM + "address")
@@ -269,6 +274,7 @@ public class CoreQueryImporter implements TTImport {
     TTEntity address = new TTEntity()
       .setIri(Namespace.IM + propertyName)
       .setCrud(iri(IM.UPDATE_PREDICATES))
+      .setScheme(Namespace.IM.asIri())
       .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
         .setName(value + " telephone property definition")
           .path(p -> p.setIri(Namespace.IM + "telephone")
@@ -292,6 +298,7 @@ public class CoreQueryImporter implements TTImport {
     TTEntity age = new TTEntity()
       .setIri(Namespace.IM + "age")
       .setCrud(iri(IM.UPDATE_PREDICATES))
+      .setScheme(Namespace.IM.asIri())
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(new Query()
           .setName("Age function")
@@ -328,6 +335,7 @@ public class CoreQueryImporter implements TTImport {
     TTEntity qry = new TTEntity()
       .setIri(Namespace.IM + "M_AgedOverEighteen")
       .setName("Aged 18 or over (feature)")
+      .setScheme(Namespace.IM.asIri())
       .setDescription("Tests whether a person is 18 or more years of age.")
       .addType(iri(IM.MATCH_CLAUSE))
       .set(iri(IM.RETURN_TYPE), TTIriRef.iri(Namespace.IM + "Patient"))
@@ -642,6 +650,7 @@ public class CoreQueryImporter implements TTImport {
       .setIri(Namespace.IM + "Q_TestQuery")
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring")
       .setDescription("Test for patients either aged between 65 and 70 or with diabetes with the most recent systolic in the last 12 months either home >130 or office >140, not followed by a screening invite, excluding hypertensives")
+      .setScheme(Namespace.IM.asIri())
       .set(iri(IM.DEFINITION), TTLiteral.literal(prof))
       .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "Q_StandardCohorts"));
 
@@ -653,6 +662,7 @@ public class CoreQueryImporter implements TTImport {
       .setIri(Namespace.IM + "DeleteSets")
       .setName("Delete all concept sets in a graph")
       .setDescription("Pass in the graph name as a 'this' argument and it deletes all sets")
+      .setScheme(Namespace.IM.asIri())
       .set(iri(IM.UPDATE_PROCEDURE), TTLiteral.literal(new Update()
         .match(m -> m
           .setGraph(new Node().setParameter("this"))
@@ -666,6 +676,7 @@ public class CoreQueryImporter implements TTImport {
 
     TTEntity qry = new TTEntity()
       .addType(iri(IM.QUERY))
+      .setScheme(Namespace.IM.asIri())
       .set(iri(IM.RETURN_TYPE), TTIriRef.iri(Namespace.IM + "Patient"))
       .set(iri(IM.USAGE_TOTAL), TTLiteral.literal(10000))
       .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "Q_StandardCohorts"))
@@ -1027,6 +1038,7 @@ public class CoreQueryImporter implements TTImport {
       .setName(name)
       .setDescription(comment)
       .addType(iri(IM.QUERY))
+      .setScheme(Namespace.IM.asIri())
       .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "IMFormValidationQueries"));
     document.addEntity(entity);
     return entity;

@@ -177,6 +177,7 @@ public class SnomedImporter implements TTImport {
     //Snomed telephone is a device
     TTEntity telephone = new TTEntity()
       .setIri(Namespace.SNOMED + "359993007")
+      .setScheme(Namespace.SNOMED.asIri())
       .setCrud(iri(IM.ADD_QUADS));
     telephone.addObject(iri(RDFS.SUBCLASS_OF), iri(Namespace.IM + "71000252102"));
     document.addEntity(telephone);
@@ -195,7 +196,8 @@ public class SnomedImporter implements TTImport {
     TTEntity root = new TTEntity()
       .setIri(SNOMED_REFERENCE_SETS)
       .setName("Snomed-CT reference sets")
-      .addType(iri(IM.FOLDER));
+      .addType(iri(IM.FOLDER))
+      .setScheme(Namespace.SNOMED.asIri());
     root.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(Namespace.IM + "QueryConceptSets")));
     document.addEntity(root);
     conceptMap.put(root.getIri(), root);
@@ -557,6 +559,7 @@ public class SnomedImporter implements TTImport {
         document.addEntity(c);
       }
       c.set(iri(IM.IS_CONTAINED_IN), iri(SNOMED_REFERENCE_SETS));
+      c.setScheme(Namespace.SNOMED.asIri());
       c.addObject(iri(IM.HAS_MEMBER), iri(Namespace.SNOMED + fields[5]));
     }
   }

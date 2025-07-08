@@ -96,6 +96,7 @@ public class QOFRefSetImport implements TTImport {
       .setIri(PCDFolder)
       .setName("Primary Care Code clusters")
       .setDescription("PCD portal  code cluster, reference sets , which are a subset of the Snomed-CT reference sets. The content of these are sourced from the UK Snomed-CT releases.")
+      .setScheme(Namespace.SNOMED.asIri())
       .addType(iri(IM.FOLDER));
     putEntityMap(PCDFolder, clusters);
     clusters.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
@@ -131,7 +132,8 @@ public class QOFRefSetImport implements TTImport {
     if (serviceFolder == null) {
       serviceFolder = new TTEntity()
         .setIri(serviceFolderIri)
-        .addType(iri(IM.FOLDER));
+        .addType(iri(IM.FOLDER))
+        .setScheme(Namespace.IM.asIri());
       serviceFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
       serviceFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(PCDFolder));
       putEntityMap(serviceFolderIri, serviceFolder);
@@ -168,6 +170,7 @@ public class QOFRefSetImport implements TTImport {
     if (set == null) {
       set = new TTEntity()
         .setIri(Namespace.SNOMED + referenceSet)
+        .setScheme(Namespace.SNOMED.asIri())
         .setCrud(iri(IM.ADD_QUADS));
       document.addEntity(set);
     }
@@ -183,7 +186,8 @@ public class QOFRefSetImport implements TTImport {
         ruleSetFolder = new TTEntity()
           .setIri(ruleSetFolderIri)
           .setName("Sets for ruleset " + service + " " + ruleSetName)
-          .addType(iri(IM.FOLDER));
+          .addType(iri(IM.FOLDER))
+          .setScheme(Namespace.IM.asIri());
         ruleSetFolder.addObject(iri(IM.IS_CONTAINED_IN), Namespace.IM + "SetServiceFolder_" + service);
         putEntityMap(ruleSetFolderIri, ruleSetFolder);
         document.addEntity(ruleSetFolder);

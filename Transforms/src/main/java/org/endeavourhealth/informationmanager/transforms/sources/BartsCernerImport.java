@@ -132,6 +132,7 @@ public class BartsCernerImport implements TTImport {
     TTEntity unmatchedConcept = new TTEntity()
       .setIri(UNCLASSIFIED)
       .addType(iri(IM.CONCEPT))
+      .setScheme(iri(Namespace.BARTS_CERNER))
       .setName("Unclassified Barts Cerner codes")
       .setDescription("The Cerner codes used in Barts NHS Trust Millennium system"
         + "that have not yet been placed in the Barts event set hierarchy");

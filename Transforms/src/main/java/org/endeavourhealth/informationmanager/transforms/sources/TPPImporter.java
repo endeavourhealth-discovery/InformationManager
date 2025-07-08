@@ -134,11 +134,13 @@ public class TPPImporter implements TTImport {
     TTEntity entity = new TTEntity()
       .setIri(Namespace.TPP + "Y2a0e")
       .setCrud(iri(IM.ADD_QUADS))
+      .setScheme(Namespace.TPP.asIri())
       .set(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + "1156257007"));
     document.addEntity(entity);
     entity = new TTEntity()
       .setIri(Namespace.TPP + "Y29ea")
       .setCrud(iri(IM.ADD_QUADS))
+      .setScheme(Namespace.TPP.asIri())
       .set(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + "1324671000000103"));
     document.addEntity(entity);
   }
@@ -214,6 +216,7 @@ public class TPPImporter implements TTImport {
           tpp = new TTEntity().setIri(Namespace.TPP + code.replace(".", "_"));
           tpp.setCode(code);
           tpp.setName(term);
+          tpp.setScheme(Namespace.TPP.asIri());
           tpp.addType(iri(IM.CONCEPT));
           codeToEntity.put(code, tpp);
           document.addEntity(tpp);
