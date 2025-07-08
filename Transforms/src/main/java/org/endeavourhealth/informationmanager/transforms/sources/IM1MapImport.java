@@ -567,7 +567,6 @@ public class IM1MapImport implements TTImport {
                                 String description) throws IOException {
     TTEntity unassigned = new TTEntity();
 
-    unassigned.setGraph(Graph.IM);
     unassigned.setIri(namespace.toString() + lname);
     unassigned.addType(iri(IM.CONCEPT));
     unassigned.setStatus(iri(IM.UNASSIGNED));
@@ -601,7 +600,6 @@ public class IM1MapImport implements TTImport {
     TTIriRef graph = TTIriRef.iri(newIri.substring(0, newIri.lastIndexOf("#") + 1));
     TTEntity entity = new TTEntity()
       .addType(type)
-      .setGraph(Graph.IM)
       .setIri(newIri)
       .setName(term)
       .setScheme(TTIriRef.iri(newIri.substring(0, newIri.lastIndexOf("#") + 1)));
@@ -613,7 +611,6 @@ public class IM1MapImport implements TTImport {
                                 String description, TTIriRef type) {
     TTEntity entity = new TTEntity()
       .addType(type)
-      .setGraph(Graph.IM)
       .setIri(newIri)
       .setName(term)
       .setScheme(TTIriRef.iri(newIri.substring(0, newIri.lastIndexOf("#") + 1)));
@@ -653,7 +650,6 @@ public class IM1MapImport implements TTImport {
   private void addIM1id(String iri, String oldIri) {
     TTEntity im1 = new TTEntity().setIri(iri).addType(iri(IM.CONCEPT));
     TTIriRef graph = TTIriRef.iri(iri.substring(0, iri.lastIndexOf("#") + 1));
-    im1.setGraph(Graph.IM);
     im1.addObject(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
 
     Integer usedCount = 0;
@@ -841,7 +837,6 @@ public class IM1MapImport implements TTImport {
 
 
     TTEntity entity = new TTEntity()
-      .setGraph(Graph.IM)
       .setIri(newScheme.getIri() + oldIri)
       .addType(iri(IM.CONCEPT))
       .setName(term)
