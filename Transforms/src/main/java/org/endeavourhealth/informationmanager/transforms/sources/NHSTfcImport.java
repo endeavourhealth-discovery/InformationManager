@@ -27,7 +27,7 @@ public class NHSTfcImport implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try {
       document = manager.createDocument();
-      document.addEntity(manager.createScheme(SCHEME.NHS_TFC,
+      document.addEntity(manager.createNamespaceEntity(Namespace.NHS_TFC,
         "NHS Data Dictionary Speciality and Treatment function codes"
         , "NHS Data dictionary concepts that are not snomed"));
       setNHSDD();
@@ -41,11 +41,11 @@ public class NHSTfcImport implements TTImport {
   }
 
   private void setNHSDD() {
-    nhsTfc = TTIriRef.iri(SCHEME.NHS_TFC + "NHSTfc");
+    nhsTfc = TTIriRef.iri(Namespace.NHS_TFC + "NHSTfc");
     TTEntity nhs = new TTEntity()
       .setIri(nhsTfc.getIri())
       .setName("Main Specialty and Treatment Function Codes")
-      .setScheme(iri(SCHEME.NHS_TFC))
+      .setScheme(iri(Namespace.NHS_TFC))
       .setCode("0")
       .addType(iri(IM.CONCEPT))
       .setStatus(iri(IM.ACTIVE));
@@ -67,9 +67,9 @@ public class NHSTfcImport implements TTImport {
         String term = fields[1];
         String snomed = fields[2];
         TTEntity tfc = new TTEntity()
-          .setIri(SCHEME.NHS_TFC + code)
+          .setIri(Namespace.NHS_TFC + code)
           .setName(term)
-          .setScheme(iri(SCHEME.NHS_TFC))
+          .setScheme(iri(Namespace.NHS_TFC))
           .setCode(code)
           .addType(iri(IM.CONCEPT))
           .setStatus(iri(IM.ACTIVE));

@@ -4,7 +4,7 @@ import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.Graph;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
+import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -25,7 +25,7 @@ public class ConfigImporter implements TTImport {
 
     try {
       document = manager.createDocument();
-      document.addEntity(manager.createScheme(SCHEME.CONFIG, "Config", "Config"));
+      document.addEntity(manager.createNamespaceEntity(Namespace.CONFIG, "Config", "Config"));
 
       importConfig(ttImportConfig.getFolder());
 

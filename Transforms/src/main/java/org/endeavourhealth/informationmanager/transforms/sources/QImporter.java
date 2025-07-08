@@ -36,7 +36,7 @@ import static org.endeavourhealth.imapi.vocabulary.VocabUtils.asHashSet;
 public class QImporter implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(QImporter.class);
   private final Client client = ClientBuilder.newClient();
-  private final TTDocument document = new TTDocument(iri(Namespace.QR));
+  private final TTDocument document = new TTDocument();
   private final TTIriRef projectsFolder = TTIriRef.iri(Namespace.QR + "QProjects");
   private final Map<String, TTEntity> idProjectMap = new HashMap<>();
   private final Map<String, TTEntity> idCodeGroupMap = new HashMap<>();
@@ -47,7 +47,7 @@ public class QImporter implements TTImport {
   public void importData(TTImportConfig ttImportConfig) throws ImportException {
     try {
       try (TTManager manager = new TTManager()) {
-        document.addEntity(manager.createScheme(SCHEME.QR,
+        document.addEntity(manager.createNamespaceEntity(Namespace.QR,
           "Q Research scheme and graph"
           , "Q Research scheme and graph"));
         addQFolders();
@@ -78,7 +78,7 @@ public class QImporter implements TTImport {
   }
 
   private void resetDrugs() throws QueryException, TTFilerException, JsonProcessingException {
-    TTDocument drugDocument = new TTDocument(iri(Namespace.QR));
+    TTDocument drugDocument = new TTDocument();
     LOG.info("if drugs then creating as entailed members");
     for (TTEntity entity : document.getEntities()) {
       if (entity.isType(iri(IM.CONCEPT_SET))) {

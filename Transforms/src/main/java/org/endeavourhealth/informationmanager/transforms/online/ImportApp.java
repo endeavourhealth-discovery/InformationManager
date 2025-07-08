@@ -41,7 +41,7 @@ public class ImportApp {
 
     // Mandatory/ordered args
     cfg.setFolder(args[0]);
-    cfg.setImportType(args[1].toLowerCase());
+    String importType = args[1].toLowerCase();
 
     // Optional switch args
     if (args.length >= 3) {
@@ -65,19 +65,19 @@ public class ImportApp {
         }
       }
     }
-    importData(cfg);
+    importData(importType, cfg);
   }
 
-  private static void importData(TTImportConfig cfg) throws Exception {
-    if ("tct".equals(cfg.getImportType())) {
-      cfg.setSkipsearch(true);
-    } else if ("search".equals(cfg.getImportType())) {
-      cfg.setSkiptct(true);
-    } else {
-      IMPORT importType = IMPORT.from(cfg.getImportType());
-      TTImportByType importer = new Importer().validateByType(importType, cfg.getFolder());
-      importer.importByType(importType, cfg);
-    }
+  private static void importData(String importTypeName, TTImportConfig cfg) throws Exception {
+    TTImportByType importer = new Importer();
+
+    ImportType importType = ImportType.from(importTypeName);
+
+    if (importType == null)
+      throw new IllegalArgumentException("Unknown import type [" +  importTypeName + "]");
+
+    importer.validateByType(importType, cfg.getFolder());
+    importer.importByType(importType, cfg);
 
     LOG.info("Finished - {}", new Date());
   }

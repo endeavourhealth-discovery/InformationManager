@@ -565,7 +565,7 @@ public class CoreQueryImporter implements TTImport {
                 .setDescendantsOrSelfOf(true)
               .setName("Systolic blood pressure"))
               .addIs(new Node()
-              .setIri(SCHEME.EMIS + "1994021000006115")
+              .setIri(Namespace.EMIS + "1994021000006115")
               .setDescendantsOrSelfOf(true)
               .setName("Home systolic blood pressure"))
               .setValueLabel("Office or home systolic blood pressure"))
@@ -605,7 +605,7 @@ public class CoreQueryImporter implements TTImport {
             .and(w1 -> w1
               .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
               .addIs(new Node()
-                .setIri(SCHEME.EMIS + "1994021000006115")
+                .setIri(Namespace.EMIS + "1994021000006115")
                 .setDescendantsOrSelfOf(true)
                 .setName("Home systolic blood pressure"))
               .setValueLabel("Home blood pressure"))
@@ -816,7 +816,7 @@ public class CoreQueryImporter implements TTImport {
             .setWhere(new Where()
               .and(w->w
                 .setIri(IM.HAS_SCHEME)
-                .is(is->is.setIri(SCHEME.SNOMED.toString())))
+                .is(is->is.setIri(Namespace.SNOMED.toString())))
               .and(w->w
               .setIri(RDFS.DOMAIN)
               .addIs(new Node().setParameter("this").setAncestorsOf(true))

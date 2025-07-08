@@ -107,7 +107,7 @@ public class CoreImporter implements TTImport {
           if (coreFile.endsWith("CoreOntology-inferred.json")) {
             generateDefaultCohorts(manager);
           }
-          LOG.info("Filing {} from {}", document.getNamespace().getIri(), coreFile);
+          LOG.info("Filing {}", coreFile);
           try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
             try {
               filer.fileDocument(document);

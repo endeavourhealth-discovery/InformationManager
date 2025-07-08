@@ -10,7 +10,6 @@ import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -37,7 +36,7 @@ public class QOFQueryImport implements TTImport {
 	public void importData(TTImportConfig config) throws ImportException {
 		try (TTManager manager = new TTManager()){
 			manager.createDocument();
-			manager.getDocument().addEntity(manager.createScheme(SCHEME.QOF,"QOF Framework", "QOF  library of value sets, queries and profiles"));
+			manager.getDocument().addEntity(manager.createNamespaceEntity(Namespace.QOF,"QOF Framework", "QOF  library of value sets, queries and profiles"));
 			createFolders(manager.getDocument());
 			try {
 				EQDImporter eqdImporter = new EQDImporter();
@@ -133,21 +132,22 @@ public class QOFQueryImport implements TTImport {
 		}
 	}
 	private String getIri(String prefix,String iri,String name){
-		return SCHEME.QOF + prefix + name.split(" ")[0].replaceAll("[^a-zA-Z0-9-_~.]", "")+ getHash(iri);
+		return Namespace.QOF + prefix + name.split(" ")[0].replaceAll("[^a-zA-Z0-9-_~.]", "")+ getHash(iri);
 	}
 
 	private void createIriMap(TTDocument document, Map<String, String> iriMap) throws JsonProcessingException {
 		for (TTEntity entity : document.getEntities()) {
 			if (entity.isType(iri(IM.FOLDER))) {
 				String oldIri= entity.getIri();
-				if (oldIri.substring(oldIri.lastIndexOf("#")+1).startsWith("Q")) {
+        String iriPath = oldIri.substring(oldIri.lastIndexOf("#")+1);
+				if (iriPath.startsWith("Q")) {
 					iriMap.put(oldIri, oldIri);
-				} else if (oldIri.substring(oldIri.lastIndexOf("#")+1).startsWith("CSET_")) {
+				} else if (iriPath.startsWith("CSET_")) {
 					iriMap.put(oldIri,oldIri);
-				} else if (oldIri.substring(oldIri.lastIndexOf("#")+1).startsWith("SetFolder_")) {
+				} else if (iriPath.startsWith("SetFolder_")) {
 					iriMap.put(oldIri,getIri("SetFolder_",entity.getIri(),entity.getName()));
-				} else if (oldIri.substring(oldIri.lastIndexOf("#")+1).startsWith("Folder_")) {
-						iriMap.put(oldIri,getIri("Folder_",entity.getIri(),entity.getName()));;
+				} else if (iriPath.startsWith("Folder_")) {
+						iriMap.put(oldIri,getIri("Folder_",entity.getIri(),entity.getName()));
 				} else {
 					iriMap.put(oldIri,getIri("Folder_",entity.getIri(),entity.getName()));
 				}
@@ -175,7 +175,7 @@ public class QOFQueryImport implements TTImport {
 
 	private void createFolders(TTDocument document) {
 		TTEntity folder = new TTEntity()
-			.setIri(SCHEME.QOF + "Q_QOFQueries")
+			.setIri(Namespace.QOF + "Q_QOFQueries")
 			.setName("QOF  queries")
 			.addType(iri(IM.FOLDER))
 			.set(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "Q_Queries"));
@@ -183,7 +183,7 @@ public class QOFQueryImport implements TTImport {
 		document.addEntity(folder);
 		mainFolder= folder.getIri();
 		folder = new TTEntity()
-			.setIri(SCHEME.QOF+ "CSET_QOFConceptSets")
+			.setIri(Namespace.QOF + "CSET_QOFConceptSets")
 			.setName("QOF Health value set library")
 			.addType(iri(IM.FOLDER))
 			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "QueryConceptSets"));

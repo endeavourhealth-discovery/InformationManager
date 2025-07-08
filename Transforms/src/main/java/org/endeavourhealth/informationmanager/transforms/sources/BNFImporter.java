@@ -69,12 +69,12 @@ public class BNFImporter implements TTImport {
     try {
       try {
         LOG.info("Creating EMIS-bnf maps...");
-        Map<String,String> emisConcepts= importMaps.getCodesToIri(SCHEME.EMIS, Graph.IM);
+        Map<String,String> emisConcepts= importMaps.getCodesToIri(Namespace.EMIS, Graph.IM);
         for (Map.Entry<String,String> entry:emisConcepts.entrySet()){
           String code=entry.getKey();
           if (code.contains("DRGG")){
             String bnfChapter= chapterFormatter(code.split("DRGG")[1]);
-            String bnfIri=SCHEME.BNF+"BNF_"+bnfChapter;
+            String bnfIri=Namespace.BNF+"BNF_"+bnfChapter;
             TTEntity bnfEntity = manager.getEntity(bnfIri);
             if (bnfEntity!=null){
               TTEntity map= new TTEntity()
@@ -292,7 +292,7 @@ public class BNFImporter implements TTImport {
     TTEntity entity = new TTEntity()
       .setIri(Namespace.BNF + "BNF_" + code)
       .addType(iri(type))
-      .setScheme(SCHEME.BNF.asIri())
+      .setScheme(Namespace.BNF.asIri())
       .setName(name);
     if (parent != null) {
       entity.addObject(iri(IM.IS_CONTAINED_IN), iri(parent));

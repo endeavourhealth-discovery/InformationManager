@@ -1,11 +1,12 @@
 package org.endeavourhealth.informationmanager.transforms.models;
 
-import org.endeavourhealth.imapi.vocabulary.IMPORT;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
+import org.endeavourhealth.imapi.vocabulary.ImportType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TTImportConfig {
   private String folder = ".";
-  private String importType = null;
   private boolean secure = false;
   private boolean skiptct = false;
   private boolean skipsearch = false;
@@ -13,11 +14,8 @@ public class TTImportConfig {
   private boolean skiplucene = false;
   private boolean skipBulk = false;
   private String resourceFolder;
-  private SCHEME scheme;
+  private List<ImportType> imports = new ArrayList<>();
   private String singleEntity;
-
-
-
 
   public String getSingleEntity() {
     return singleEntity;
@@ -28,12 +26,17 @@ public class TTImportConfig {
     return this;
   }
 
-  public SCHEME getScheme() {
-    return scheme;
+  public List<ImportType> getImports() {
+    return imports;
   }
 
-  public TTImportConfig setScheme(SCHEME scheme) {
-    this.scheme = scheme;
+  public TTImportConfig setImports(List<ImportType> imports) {
+    this.imports = imports;
+    return this;
+  }
+
+  public TTImportConfig addImport(ImportType importType) {
+    imports.add(importType);
     return this;
   }
 
@@ -70,15 +73,6 @@ public class TTImportConfig {
 
   public TTImportConfig setFolder(String folder) {
     this.folder = folder;
-    return this;
-  }
-
-  public String getImportType() {
-    return importType;
-  }
-
-  public TTImportConfig setImportType(String importType) {
-    this.importType = importType;
     return this;
   }
 

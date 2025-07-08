@@ -36,7 +36,7 @@ public class WinPathKingsImport implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument();
-      document.addEntity(manager.createScheme(SCHEME.KINGS_WINPATH,
+      document.addEntity(manager.createNamespaceEntity(Namespace.KINGS_WINPATH,
         "Kings Winpath pathology code scheme and graph",
         "The Kings pathology Winpath LIMB local code scheme and graph"));
       setTopLevel();
@@ -52,11 +52,11 @@ public class WinPathKingsImport implements TTImport {
 
   private void setTopLevel() {
     TTEntity kings = new TTEntity()
-      .setIri(SCHEME.KINGS_WINPATH + "KingsWinPathCodes")
+      .setIri(Namespace.KINGS_WINPATH + "KingsWinPathCodes")
       .addType(iri(IM.CONCEPT))
       .setName("Kings College Hospital  Winpath codes")
       .setCode("KingsWinPathCodes")
-      .setScheme(iri(SCHEME.KINGS_WINPATH))
+      .setScheme(iri(Namespace.KINGS_WINPATH))
       .setDescription("Local codes for the Winpath pathology system in kings")
       .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies")));
     document.addEntity(kings);
@@ -81,14 +81,14 @@ public class WinPathKingsImport implements TTImport {
         String[] fields = line.split("\t");
         String readCode = fields[2];
         String code = fields[0];
-        String iri = SCHEME.KINGS_WINPATH + (fields[0].replaceAll("[ %,.\"]", ""));
+        String iri = Namespace.KINGS_WINPATH + (fields[0].replaceAll("[ %,.\"]", ""));
         TTEntity entity = new TTEntity()
           .setIri(iri)
           .addType(iri(IM.CONCEPT))
           .setName(fields[1])
           .setDescription("Local winpath Kings trust pathology system entity ")
-          .setScheme(iri(SCHEME.KINGS_WINPATH))
-          .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(SCHEME.KINGS_APEX + "KingsWinPathCodes")))
+          .setScheme(iri(Namespace.KINGS_WINPATH))
+          .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(Namespace.KINGS_APEX + "KingsWinPathCodes")))
           .setCode(code);
         document.addEntity(entity);
         if (readToSnomed.get(readCode) != null) {

@@ -276,7 +276,7 @@ public class EQDImporter {
 				Query qry = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 				if (qry.getAnd() != null && qry.getAnd().get(0).getInstanceOf() != null) {
 					for (Node parent : qry.getAnd().get(0).getInstanceOf()) {
-						if (parent.getIri().equals(SCHEME.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
+						if (parent.getIri().equals(Namespace.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
 							List<Node> parentList = new ArrayList<>();
 							parentList.add(new Node().setIri(Namespace.IM + "Q_RegisteredGMS").setMemberOf(true));
 							qry.getAnd().get(0).setInstanceOf(parentList);

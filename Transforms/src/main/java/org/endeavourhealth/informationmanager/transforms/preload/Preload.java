@@ -16,9 +16,7 @@ import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetMemberGenerator;
 import org.endeavourhealth.imapi.vocabulary.Graph;
-import org.endeavourhealth.imapi.vocabulary.IMPORT;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.ImportType;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
@@ -47,7 +45,7 @@ public class Preload {
       System.exit(-1);
     }
     LOG.info("Configuring...");
-    TTImportConfig cfg = getGraphsToLoad(args);
+    TTImportConfig cfg = getImports(args);
     TTBulkFiler.setConfigTTl(cfg.getFolder());
     TTFilerFactory.setBulk(true);
     String graphdbCommand = null;
@@ -65,26 +63,26 @@ public class Preload {
     importData(cfg, graphdbCommand);
   }
 
-  private static TTImportConfig getGraphsToLoad(String[] args) throws ImportException, IOException {
+  private static TTImportConfig getImports(String[] args) throws ImportException, IOException {
     String folder = null;
-    String graphs = null;
+    String imports = null;
     for (String argument : args) {
       if (argument.startsWith("source=")) {
         folder = (argument.split("=")[1]);
       }
       if (argument.toLowerCase().split("=")[0].equals("graphs")) {
-        graphs = argument.split("=")[1].trim();
+        imports = argument.split("=")[1].trim();
       }
     }
     if (folder == null) throw new ImportException(" no sources folder set");
-    if (graphs == null) graphs = "endeavour.json";
-    TTImportConfig config = new ObjectMapper().readValue(new File(folder + "/PreloadGraphs/" + graphs), TTImportConfig.class);
+    if (imports == null) imports = "endeavour.json";
+    TTImportConfig config = new ObjectMapper().readValue(new File(folder + "/PreloadImports/" + imports), TTImportConfig.class);
     config.setFolder(folder);
     return config;
 
   }
 
-  public static List<IMPORT> canBulk = List.of(IMPORT.CORE, IMPORT.SNOMED, IMPORT.ENCOUNTERS, IMPORT.QUERY, IMPORT.IM1, IMPORT.FHIR, IMPORT.EMIS, IMPORT.TPP, IMPORT.OPCS4, IMPORT.ICD10, IMPORT.VISION, IMPORT.ODS, IMPORT.BARTS_CERNER, IMPORT.NHS_TFC, IMPORT.BNF);
+  public static List<ImportType> canBulk = List.of(ImportType.CORE, ImportType.SNOMED, ImportType.ENCOUNTERS, ImportType.QUERY, ImportType.IM1, ImportType.FHIR, ImportType.EMIS, ImportType.TPP, ImportType.OPCS4, ImportType.ICD10, ImportType.VISION, ImportType.ODS, ImportType.BARTS_CERNER, ImportType.NHS_TFC, ImportType.BNF);
 
   private static void importData(TTImportConfig cfg, String graphdb) throws Exception {
     LOG.info("Validating config...");
@@ -92,15 +90,18 @@ public class Preload {
 
 
     LOG.info("Validating data files...");
-    IMPORT importType = IMPORT.from(cfg.getImportType());
     TTImportByType importer = new Importer();
-    importer.validateByType(importType, cfg.getFolder());
+    for (ImportType i : cfg.getImports()) {
+      importer.validateByType(i, cfg.getFolder());
+    }
 
     LOG.info("Importing files...");
     if (!cfg.isSkipBulk()) {
-        if (canBulk.contains(importType)) {
-          importer.importByType(importType, cfg);
+      for (ImportType i : cfg.getImports()) {
+        if (canBulk.contains(i)) {
+          importer.importByType(i, cfg);
         }
+      }
       LOG.info("Generating closure...");
       TCGenerator closureGenerator = TTFilerFactory.getClosureGenerator();
       closureGenerator.generateClosure(TTBulkFiler.getDataPath(), cfg.isSecure());
@@ -115,9 +116,12 @@ public class Preload {
     LOG.info("Filing into live graph");
     TTFilerFactory.setBulk(false);
     TTFilerFactory.setTransactional(true);
-      if (!canBulk.contains(importType)) {
-        importer.importByType(importType, cfg);
+
+    for (ImportType i : cfg.getImports()) {
+      if (!canBulk.contains(i)) {
+        importer.importByType(i, cfg);
       }
+    }
 
     try (TTImport deltaImporter = new DeltaImporter()) {
       deltaImporter.importData(cfg);

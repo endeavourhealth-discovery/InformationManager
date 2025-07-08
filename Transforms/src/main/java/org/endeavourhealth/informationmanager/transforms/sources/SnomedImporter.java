@@ -127,8 +127,8 @@ public class SnomedImporter implements TTImport {
     try (TTManager dmanager = new TTManager()) {
 
       document = dmanager.createDocument();
-      TTEntity scheme = dmanager.createScheme(
-        SCHEME.SNOMED,
+      TTEntity scheme = dmanager.createNamespaceEntity(
+        Namespace.SNOMED,
         "Snomed-CT code scheme and graph",
         "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions"
       );

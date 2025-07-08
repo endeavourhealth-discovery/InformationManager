@@ -64,7 +64,7 @@ public class FHIRImporter implements TTImport {
 							document.getEntities().addAll(concepts);
 						}
 					}
-					LOG.info("Filing {}", SCHEME.FHIR);
+					LOG.info("Filing {}", Namespace.FHIR);
 					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 						try {
 							filer.fileDocument(document);

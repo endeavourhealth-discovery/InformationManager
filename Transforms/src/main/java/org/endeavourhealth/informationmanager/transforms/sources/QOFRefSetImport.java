@@ -57,7 +57,7 @@ public class QOFRefSetImport implements TTImport {
     try {
       if (!isSnomedImporter) {
         qofMap = new HashMap<>();
-        document = new TTDocument(iri(Namespace.SNOMED));
+        document = new TTDocument();
       }
       processSets(config.getFolder());
       if (!isSnomedImporter) {

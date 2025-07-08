@@ -36,7 +36,7 @@ public class PRSBImport implements TTImport {
     validateFiles(config.getFolder());
     try (TTManager dmanager = new TTManager()) {
       document = dmanager.createDocument();
-      document.addEntity(dmanager.createScheme(SCHEME.PRSB, "PRSB code scheme and graph"
+      document.addEntity(dmanager.createNamespaceEntity(Namespace.PRSB, "PRSB code scheme and graph"
         , "The professional records standards board code scheme and graph"));
       importEntityFiles(config.getFolder());
       //TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());

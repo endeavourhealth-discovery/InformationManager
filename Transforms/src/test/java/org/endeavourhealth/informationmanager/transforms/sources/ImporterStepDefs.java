@@ -5,14 +5,11 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.endeavourhealth.imapi.filer.TTFilerException;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.IMPORT;
+import org.endeavourhealth.imapi.vocabulary.ImportType;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
-
-import java.io.IOException;
 
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,7 +18,7 @@ import static org.mockito.Mockito.verify;
 
 
 public class ImporterStepDefs {
-  private IMPORT importType;
+  private ImportType importType;
   private String folderPath;
   private TTImport mockImporter;
   private TTImportByType service;
@@ -29,7 +26,7 @@ public class ImporterStepDefs {
 
   @Given("I have the import type {string}")
   public void i_have_the_import_type(String importType) {
-    this.importType = IMPORT.from(importType);
+    this.importType = ImportType.from(importType);
   }
 
   @And("the folder path is {string}")
@@ -40,13 +37,13 @@ public class ImporterStepDefs {
   @And("a mock importer is set up for unknown type")
   public void mock_importer_for_unknown_type() {
     mockImporter = mock(TTImport.class);
-    service = new TTImportByTypeMock(IMPORT.SINGLE_FILE, mockImporter);
+    service = new TTImportByTypeMock(mockImporter);
   }
 
   @And("a mock importer is set up")
-  public void a_mock_importer_is_set_up() throws Exception {
+  public void a_mock_importer_is_set_up() {
     mockImporter = mock(TTImport.class);
-    service = new TTImportByTypeMock(importType, mockImporter);
+    service = new TTImportByTypeMock(mockImporter);
   }
 
   @And("the correct importer should be used")
@@ -63,7 +60,7 @@ public class ImporterStepDefs {
   public void importer_throws_exception_during_validateFiles() throws Exception {
     mockImporter = mock(TTImport.class);
     doThrow(new RuntimeException("File issue")).when(mockImporter).validateFiles(anyString());
-    service = new TTImportByTypeMock(importType, mockImporter);
+    service = new TTImportByTypeMock(mockImporter);
   }
 
   @When("I call validateByType")
@@ -94,27 +91,25 @@ public class ImporterStepDefs {
   }
 
   public static class TTImportByTypeMock implements TTImportByType {
-    private final IMPORT matchType;
     private final TTImport importer;
 
-    public TTImportByTypeMock(IMPORT matchType, TTImport importer) {
-      this.matchType = matchType;
+    public TTImportByTypeMock(TTImport importer) {
       this.importer = importer;
     }
 
     @Override
-    public TTImportByType importByType(IMPORT importType, TTImportConfig config) throws Exception {
+    public TTImportByType importByType(ImportType importType, TTImportConfig config) throws Exception {
       return null;
     }
 
     @Override
-    public TTImportByType validateByType(IMPORT importType, String inFolder) throws Exception {
+    public TTImportByType validateByType(ImportType importType, String inFolder) throws Exception {
       TTImport imp = getImporter(importType);
       imp.validateFiles(inFolder);
       return this;
     }
 
-    protected TTImport getImporter(IMPORT importType) throws ImportException {
+    protected TTImport getImporter(ImportType importType) throws ImportException {
       if (importType == null) {
         throw new ImportException("Unrecognised import type");
       }

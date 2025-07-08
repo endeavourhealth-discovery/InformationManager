@@ -47,9 +47,9 @@ public class VisionImport implements TTImport {
     LOG.info("importing vision codes");
     LOG.info("retrieving snomed codes from IM");
     try (TTManager manager = new TTManager()) {
-      snomedCodes = importMaps.getCodes(SCHEME.SNOMED, Graph.IM);
+      snomedCodes = importMaps.getCodes(Namespace.SNOMED, Graph.IM);
       document = manager.createDocument();
-      document.addEntity(manager.createScheme(SCHEME.VISION, "Vision (including Read) codes",
+      document.addEntity(manager.createNamespaceEntity(Namespace.VISION, "Vision (including Read) codes",
         "The Vision local code scheme and graph including Read 2 and Vision local codes"));
 
       importEmis();
@@ -207,10 +207,10 @@ public class VisionImport implements TTImport {
                 String lname = code.replaceAll("[.&/'| ()^]", "_");
                 lname = lname.replace("[", "_").replace("]", "_");
                 readConcept = new TTEntity()
-                  .setIri(SCHEME.VISION + lname)
+                  .setIri(Namespace.VISION + lname)
                   .setCode(code)
                   .setStatus(iri(IM.ACTIVE))
-                  .setScheme(iri(SCHEME.VISION))
+                  .setScheme(iri(Namespace.VISION))
                   .addType(iri(IM.CONCEPT));
                 document.addEntity(readConcept);
                 codeToConcept.put(code, readConcept);
@@ -236,11 +236,11 @@ public class VisionImport implements TTImport {
   private void createHierarchy() {
     LOG.info("Creating child parent hierarchy");
     TTEntity vision = new TTEntity()
-      .setIri(SCHEME.VISION + "VisionCodes")
+      .setIri(Namespace.VISION + "VisionCodes")
       .setName("Vision read 2 and localcodes")
       .addType(iri(IM.CONCEPT))
       .setCode("VisionCodes")
-      .setScheme(iri(SCHEME.VISION))
+      .setScheme(iri(Namespace.VISION))
       .setDescription("Vision and read 2 codes mapped to core");
     vision.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies"));
     document.addEntity(vision);
@@ -256,7 +256,7 @@ public class VisionImport implements TTImport {
           while (parent.length() < 5) {
             parent.append("_");
           }
-          entity.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(SCHEME.VISION.toString() + parent)));
+          entity.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(Namespace.VISION.toString() + parent)));
         }
       }
     }
@@ -283,11 +283,11 @@ public class VisionImport implements TTImport {
         lname = lname.replace("[", "_").replace("]", "_");
         if (!code.startsWith(".") && !Character.isLowerCase(code.charAt(0)) && codeToConcept.get(code) == null) {
           TTEntity c = new TTEntity();
-          c.setIri(SCHEME.VISION + lname);
+          c.setIri(Namespace.VISION + lname);
           c.addType(iri(IM.CONCEPT));
           c.setName(term);
           c.setCode(code);
-          c.setScheme(iri(SCHEME.VISION));
+          c.setScheme(iri(Namespace.VISION));
           document.addEntity(c);
           codeToConcept.put(code, c);
         }

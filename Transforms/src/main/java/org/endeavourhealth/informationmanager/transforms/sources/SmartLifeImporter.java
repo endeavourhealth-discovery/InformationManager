@@ -5,7 +5,6 @@ import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
@@ -31,7 +30,7 @@ public class SmartLifeImporter implements TTImport {
 		this.config=config;
 		try (TTManager manager = new TTManager()){
 			TTDocument document = manager.createDocument();
-			document.addEntity(manager.createScheme(SCHEME.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles"));
+			document.addEntity(manager.createNamespaceEntity(Namespace.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles"));
 			createFolders(document);
 			try {
 				EQDImporter eqdImporter = new EQDImporter();
@@ -54,7 +53,7 @@ public class SmartLifeImporter implements TTImport {
 
 	private void createFolders(TTDocument document) {
 		TTEntity folder = new TTEntity()
-			.setIri(SCHEME.SMARTLIFE + "Q_SmartLifeQueries")
+			.setIri(Namespace.SMARTLIFE + "Q_SmartLifeQueries")
 			.setName("SmartLife queries")
 			.addType(iri(IM.FOLDER))
 			.set(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "Q_Queries"));
@@ -62,7 +61,7 @@ public class SmartLifeImporter implements TTImport {
 		document.addEntity(folder);
 		mainFolder= folder.getIri();
 		folder = new TTEntity()
-			.setIri(SCHEME.SMARTLIFE + "CSET_SmartLifeConceptSets")
+			.setIri(Namespace.SMARTLIFE + "CSET_SmartLifeConceptSets")
 			.setName("Smart Life Health value set library")
 			.addType(iri(IM.FOLDER))
 			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "QueryConceptSets"));

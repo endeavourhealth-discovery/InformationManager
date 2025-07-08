@@ -50,9 +50,9 @@ public class CoreEthnicityImport implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try {
       document = manager.createDocument();
-      document.addEntity(manager.createScheme(SCHEME.CEG, "CEG (QMUL) scheme","CEG library of value sets, queries and profiles"));
+      document.addEntity(manager.createNamespaceEntity(Namespace.CEG, "CEG (QMUL) scheme","CEG library of value sets, queries and profiles"));
       nhsDocument = nhsManager.createDocument();
-      document.addEntity(manager.createScheme(SCHEME.NHSDD_ETHNIC_2001,
+      document.addEntity(manager.createNamespaceEntity(Namespace.NHSDD_ETHNIC_2001,
         "NHS Ethnicity scheme and graph"
         , "NHS Ethnicity scheme and graph"));
       setConceptSetGroups();
@@ -185,11 +185,11 @@ public class CoreEthnicityImport implements TTImport {
     TTEntity cegSubset = cegCatMap.get(cat16);
     if (cegSubset == null) {
       cegSubset = new TTEntity()
-        .setIri(SCHEME.CEG+ "CSET_EthnicCategoryCEG16_" + cat16)
+        .setIri(Namespace.CEG+ "CSET_EthnicCategoryCEG16_" + cat16)
         .addType(iri(IM.CONCEPT_SET))
         .setName("Value set - " + catTerm)
         .setCode(cat16)
-        .setScheme(iri(SCHEME.CEG))
+        .setScheme(iri(Namespace.CEG))
         .setDescription("QMUL CEG 16+ Ethnic category " + cat16)
         .set(iri(IM.IS_SUBSET_OF), TTIriRef.iri(cegSet.getIri()));
       document.addEntity(cegSubset);
@@ -220,7 +220,7 @@ public class CoreEthnicityImport implements TTImport {
 
   private void setConceptSetGroups() {
     cegSet = new TTEntity()
-      .setIri(SCHEME.CEG + "CSET_EthnicCategoryCEG16")
+      .setIri(Namespace.CEG + "CSET_EthnicCategoryCEG16")
       .addType(iri(IM.CONCEPT_SET))
       .setName("CEG 16+1 Ethnic category (set group)")
       .setDescription("QMUL-CEG categorisations of ethnic groups");

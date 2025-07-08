@@ -5,7 +5,6 @@ import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
-import org.endeavourhealth.imapi.vocabulary.SCHEME;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
@@ -34,7 +33,7 @@ public class CEGImporter implements TTImport {
     try (
       TTManager manager = new TTManager()) {
       TTDocument document = manager.createDocument();
-      document.addEntity(manager.createScheme(SCHEME.CEG,"CEG (QMUL) scheme","CEG library of value sets, queries and profiles"));
+      document.addEntity(manager.createNamespaceEntity(Namespace.CEG,"CEG (QMUL) scheme","CEG library of value sets, queries and profiles"));
       createOrg(document);
       createFolders(document);
       EQDImporter eqdImporter = new EQDImporter();
@@ -51,7 +50,7 @@ public class CEGImporter implements TTImport {
 
   private void createFolders(TTDocument document) {
     TTEntity folder = new TTEntity()
-      .setIri(SCHEME.CEG + "Q_CEGQueries")
+      .setIri(Namespace.CEG + "Q_CEGQueries")
       .setName("QMUL CEG query library")
       .addType(iri(IM.FOLDER))
       .set(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "Q_Queries"));
@@ -59,7 +58,7 @@ public class CEGImporter implements TTImport {
     document.addEntity(folder);
     mainFolder= folder.getIri();
     folder = new TTEntity()
-      .setIri(SCHEME.CEG + "CSET_CEGConceptSets")
+      .setIri(Namespace.CEG + "CSET_CEGConceptSets")
       .setName("QMUL CEG value set library")
       .addType(iri(IM.FOLDER))
       .set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "QueryConceptSets"));
@@ -79,16 +78,10 @@ public class CEGImporter implements TTImport {
     document.addEntity(owner);
   }
 
-
-
-
-
-
   @Override
   public void validateFiles(String inFolder) throws TTFilerException {
     ImportUtils.validateFiles(inFolder, queries, duplicates, lookups);
   }
-
 
   @Override
   public void close() throws Exception {
