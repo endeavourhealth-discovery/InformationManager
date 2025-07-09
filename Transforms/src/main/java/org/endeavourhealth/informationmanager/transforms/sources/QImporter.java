@@ -255,7 +255,7 @@ public class QImporter implements TTImport {
     folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
     document.addEntity(folder);
     folder.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "QueryConceptSets"));
-    TTEntity qFolder = new TTEntity()
+   /* TTEntity qFolder = new TTEntity()
       .setIri(IM.NAMESPACE + "Q_PredictionQueries")
       .addType(iri(IM.FOLDER))
       .setName("Predication queries")
@@ -263,6 +263,8 @@ public class QImporter implements TTImport {
     qFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
     document.addEntity(qFolder);
     qFolder.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "Q_Queries"));
+
+    */
   }
 
   @Override

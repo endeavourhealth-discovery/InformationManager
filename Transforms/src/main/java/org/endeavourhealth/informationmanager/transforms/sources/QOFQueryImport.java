@@ -48,6 +48,7 @@ public class QOFQueryImport implements TTImport {
 				EQDImporter eqdImporter = new EQDImporter();
 				EqdToIMQ.gmsPatients.add("71154095-0C58-4193-B58F-21F05EA0BE2F");
 				EqdToIMQ.gmsPatients.add("DA05DBF2-72AB-41A3-968F-E4A061F411A4");
+				EqdToIMQ.gmsPatients.add("591C5738-2F6B-4A6F-A2B3-05FA538A1B3B");
 				eqdImporter.loadAndConvert(config,manager,queries[0],GRAPH.QOF,
 					dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
 			}
@@ -108,6 +109,9 @@ public class QOFQueryImport implements TTImport {
 	}
 
 	private void replaceQueryIris(Query query, Map<String, String> iriMap) {
+		if (iriMap.get(query.getIri())!=null) {
+			query.setIri(iriMap.get(query.getIri()));
+		}
 		if (query.getInstanceOf()!=null) {
 			for (Node instanceOf : query.getInstanceOf()) {
 				if (iriMap.get(instanceOf.getIri()) != null) {
@@ -119,22 +123,20 @@ public class QOFQueryImport implements TTImport {
 	}
 
 
-	private void replaceMatchIris(Match query, Map<String, String> iriMap) {
-		if (iriMap.get(query.getIri())!=null) {
-			query.setIri(iriMap.get(query.getIri()));
-		}
-		if (query.getInstanceOf()!=null){
-			for (Node instanceOf: query.getInstanceOf()){
+	private void replaceMatchIris(Match match, Map<String, String> iriMap) {
+
+		if (match.getInstanceOf()!=null){
+			for (Node instanceOf: match.getInstanceOf()){
 				if (iriMap.get(instanceOf.getIri())!=null) {
 					instanceOf.setIri(iriMap.get(instanceOf.getIri()));
 				}
 			}
 		}
 
-		for (List<Match> matches:Arrays.asList(query.getRule(),query.getAnd(),query.getOr(),query.getNot())){
+		for (List<Match> matches:Arrays.asList(match.getRule(),match.getAnd(),match.getOr(),match.getNot())){
 			if (matches!=null){
-				for (Match match:matches){
-					replaceMatchIris(match,iriMap);
+				for (Match subMatch:matches){
+					replaceMatchIris(subMatch,iriMap);
 				}
 			}
 		}

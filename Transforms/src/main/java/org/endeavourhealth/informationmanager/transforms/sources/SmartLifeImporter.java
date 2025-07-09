@@ -16,7 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
@@ -33,6 +39,12 @@ public class SmartLifeImporter implements TTImport {
 	@Override
 	public void importData(TTImportConfig config) throws ImportException {
 		this.config=config;
+		try {
+			checkAndUnzip(config.getFolder() + "/library/Library.zip");
+		} catch (IOException e) {
+			throw new ImportException("Unable to unzip smartlife library",e);
+		}
+
 		try (TTManager manager = new TTManager()){
 			TTDocument document = manager.createDocument(GRAPH.SMARTLIFE);
 			TTEntity graph = new TTEntity()
@@ -79,6 +91,12 @@ public class SmartLifeImporter implements TTImport {
 		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
 		document.addEntity(folder);
 		setFolder= folder.getIri();
+
+	}
+	private void checkAndUnzip(String file) throws IOException {
+		LOG.info("Checking for library zip items");
+		Path zipFile= Path.of(file);
+		ImportUtils.unzipArchive(zipFile.toString(), zipFile.getParent().toString());
 
 	}
 

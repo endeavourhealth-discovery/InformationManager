@@ -17,6 +17,7 @@ import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -64,6 +65,7 @@ public class CoreQueryImporter implements TTImport {
       searchContainedIn();
       searchAllowableSubclass();
       searchAllowableContainedIn();
+      generateDefaultCohorts(manager);
       output(document, config.getFolder());
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
         filer.fileDocument(document);
@@ -73,9 +75,21 @@ public class CoreQueryImporter implements TTImport {
     }
   }
 
+  private void generateDefaultCohorts(TTManager manager) throws JsonProcessingException {
+    TTEntity gms = manager.getEntity(IM.NAMESPACE + "Q_RegisteredGMS");
+    gms.addObject(TTVariable.iri(IM.IS_CONTAINED_IN), TTVariable.iri(IM.NAMESPACE + "Q_DefaultCohorts"));
+    for (String defaultFolder:List.of("PeopleAndThings","ClinicalInformation","PersonalHealthManagement","ProcessOfCare","Q_Queries")){
+      addToDefaults(defaultFolder,manager);
+    }
+  }
 
-
-
+  private void addToDefaults(String defaultFolder, TTManager manager) {
+    TTEntity folder= new TTEntity()
+      .setIri(IM.NAMESPACE + defaultFolder)
+      .setCrud(iri(IM.ADD_QUADS));
+    folder.addObject(TTVariable.iri(IM.IS_CONTAINED_IN), TTVariable.iri(IM.NAMESPACE + "Q_DefaultCohorts"));
+    manager.getDocument().addEntity(folder);
+  }
 
 
   private void gmsRegisteredPractice() throws JsonProcessingException {
