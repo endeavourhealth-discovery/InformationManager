@@ -8,6 +8,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
+import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
 import org.endeavourhealth.imapi.filer.TCGenerator;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
@@ -109,7 +110,11 @@ public class Preload {
       TTBulkFiler.createRepository();
       startGraph(graphdb);
     }
-    new RangeInheritor().inheritRanges(null, Graph.IM);
+
+    try (IMDB conn = IMDB.getConnection(Graph.IM)) {
+      new RangeInheritor().inheritRanges(conn, Graph.IM);
+    }
+
     LOG.info("expanding value sets");
     new SetMemberGenerator().generateAllSetMembers(Graph.IM);
     new SetBinder().bindSets(Graph.IM);
