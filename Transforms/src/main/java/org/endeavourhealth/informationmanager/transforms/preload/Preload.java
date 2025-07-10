@@ -89,7 +89,6 @@ public class Preload {
     LOG.info("Validating config...");
     validateGraphConfig(cfg.getFolder());
 
-
     LOG.info("Validating data files...");
     TTImportByType importer = new Importer();
     for (ImportType i : cfg.getImports()) {

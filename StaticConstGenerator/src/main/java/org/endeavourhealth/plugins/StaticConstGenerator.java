@@ -113,14 +113,14 @@ public class StaticConstGenerator implements Plugin<Project> {
         
             public static {TYPE} from(String text) {
               if (text == null)
-                return null;
+                throw new IllegalArgumentException("no text specified");
                 
               for ({TYPE} b : {TYPE}.values()) {
                 if (b.value.equals(text)) {
                   return b;
                 }
               }
-              return null;
+              throw new IllegalArgumentException("no enums match text specified");
             }
 
         }

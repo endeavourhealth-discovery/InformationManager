@@ -106,6 +106,12 @@ public class QImporter implements TTImport {
       SetBinder binder = new SetBinder();
       binder.bindSet(entity.getIri(), Graph.IM);
       TTEntity boundSet = new EntityService().getBundle(entity.getIri(), asHashSet(IM.BINDING)).getEntity();
+
+      if (!boundSet.has(IM.BINDING)) {
+        LOG.error("Set has no bindings [{}]", entity.getIri());
+        return false;
+      }
+
       for (TTValue binding : boundSet.get(IM.BINDING).getElements()) {
         if (binding.asNode().get(SHACL.NODE).asIriRef().getIri().contains("Medication"))
           return true;
@@ -139,6 +145,7 @@ public class QImporter implements TTImport {
                 qGroup = new TTEntity()
                   .setIri(Namespace.QR + "QCodeGroup_" + groupId)
                   .setName("Q code group " + codeGroup.get("Name").asText())
+                  .setScheme(Namespace.QR.asIri())
                   .addType(iri(IM.CONCEPT_SET));
                 if (idCodeGroupMap.get(groupId) == null) {
                   idCodeGroupMap.put(groupId, qGroup);
@@ -185,19 +192,11 @@ public class QImporter implements TTImport {
     ArrayNode projects = (ArrayNode) json.get("Results");
     for (Iterator<JsonNode> it = projects.elements(); it.hasNext(); ) {
       JsonNode project = it.next();
-			/*
-			TTEntity qp= new TTEntity()
-				.setIri(Namespace.QR+"QProject_"+ project.get("Id").asText())
-				.addType(IM.FOLDER)
-				.setName(project.get("Name").asText());
-			qp.set(IM.IS_CONTAINED_IN,projectsFolder);
-			document.addEntity(qp);
-
-			 */
       String id = project.get("Id").asText();
       TTEntity qset = new TTEntity()
         .setIri(Namespace.QR + "QPredict_" + project.get("Id").asText())
         .addType(iri(IM.CONCEPT_SET))
+        .setScheme(Namespace.QR.asIri())
         .setName(project.get("Name").asText());
       qset.set(iri(IM.IS_CONTAINED_IN), projectsFolder);
       qset.set(iri(SHACL.ORDER), TTLiteral.literal(1));
@@ -249,6 +248,7 @@ public class QImporter implements TTImport {
     TTEntity folder = new TTEntity()
       .setIri(projectsFolder.getIri())
       .addType(iri(IM.FOLDER))
+      .setScheme(Namespace.IM.asIri())
       .setName("Q Project based code groups")
       .setDescription("Folder containing the Q research  concept groups");
     folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
@@ -257,6 +257,7 @@ public class QImporter implements TTImport {
     TTEntity qFolder = new TTEntity()
       .setIri(Namespace.IM + "Q_PredictionQueries")
       .addType(iri(IM.FOLDER))
+      .setScheme(Namespace.IM.asIri())
       .setName("Predication queries")
       .setDescription("Folder containing queries for prediction algorithms");
     qFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));

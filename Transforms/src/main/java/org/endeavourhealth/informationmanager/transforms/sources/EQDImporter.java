@@ -82,7 +82,7 @@ public class EQDImporter {
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(fileEntry);
-					converter.convertEQD(document, eqd, dataMap,criteriaMaps, Graph.IM);
+					converter.convertEQD(document, eqd, dataMap,criteriaMaps, namespace, Graph.IM);
 				}
 			}
 		}
