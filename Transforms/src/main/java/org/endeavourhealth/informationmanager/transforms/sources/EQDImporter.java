@@ -122,6 +122,7 @@ public class EQDImporter {
 				}
 			}
 		}
+		LOG.info("reports converted. Adding missing folders and creating index");
 		manager.createIndex();
 		if (converter.getSingleEntity()==null) {
 			setRegisteredPatientParent(document);

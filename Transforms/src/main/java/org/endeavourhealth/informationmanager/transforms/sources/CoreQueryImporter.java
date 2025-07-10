@@ -653,7 +653,7 @@ public class CoreQueryImporter implements TTImport {
       .not(q->q
         .setName("not on hypertension register")
         .setDescription("is registered on the hypertensives register")
-        .addInstanceOf(new Node().setIri("http://endhealth.info/qof#Q_HYP001362520395").setMemberOf(true)
+        .addInstanceOf(new Node().setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387").setMemberOf(true)
           .setName("Hypertensives")));
 
     TTEntity qry = new TTEntity().addType(iri(IM.QUERY))

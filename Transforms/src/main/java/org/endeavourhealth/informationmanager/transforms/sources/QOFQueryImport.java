@@ -56,7 +56,6 @@ public class QOFQueryImport implements TTImport {
 				throw new ImportException(ex.getMessage(), ex);
 			}
 
-		 reformIris(manager.getDocument());
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
 				try {
 					filer.fileDocument(manager.getDocument());
@@ -64,120 +63,6 @@ public class QOFQueryImport implements TTImport {
 					throw new ImportException(e.getMessage(),e);
 				}
 			}
-		} catch (JsonProcessingException e) {
-			throw new ImportException(e.getMessage(),e);
-		}
-	}
-
-	private int getHash(String iri){
-		return iri.hashCode();
-	}
-
-	private void reformIris(TTDocument document) throws JsonProcessingException {
-		Map<String, String> iriMap = new HashMap<>();
-		createIriMap(document, iriMap);
-		replaceIris(document,iriMap);
-	}
-
-	private void replaceIris(TTDocument document, Map<String, String> iriMap) throws JsonProcessingException {
-		for (TTEntity entity : document.getEntities()) {
-				String oldIri= entity.getIri();
-				String newIri= iriMap.get(oldIri);
-				if(newIri!=null) {
-					entity.setIri(newIri);
-				}
-				if (entity.get(iri(IM.IS_CONTAINED_IN)) != null){
-					for (TTValue parent: entity.get(iri(IM.IS_CONTAINED_IN)).getElements()){
-						if (iriMap.get(parent.asIriRef().getIri())!=null) {
-							parent.asIriRef().setIri(iriMap.get(parent.asIriRef().getIri()));
-						}
-					}
-				}
-				if (entity.isType(iri(IM.QUERY))) {
-					if (entity.get(iri(IM.IS_SUBSET_OF)) != null){
-						for (TTValue superQuery: entity.get(iri(IM.IS_SUBSET_OF)).getElements()){
-							if (iriMap.get(superQuery.asIriRef().getIri())!=null) {
-								superQuery.asIriRef().setIri(iriMap.get(superQuery.asIriRef().getIri()));
-							}
-						}
-					}
-					Query query= entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-					replaceQueryIris(query,iriMap);
-					entity.set(iri(IM.DEFINITION), TTLiteral.literal(query));
-			}
-		}
-	}
-
-	private void replaceQueryIris(Query query, Map<String, String> iriMap) {
-		if (iriMap.get(query.getIri())!=null) {
-			query.setIri(iriMap.get(query.getIri()));
-		}
-		if (query.getInstanceOf()!=null) {
-			for (Node instanceOf : query.getInstanceOf()) {
-				if (iriMap.get(instanceOf.getIri()) != null) {
-					instanceOf.setIri(iriMap.get(instanceOf.getIri()));
-				}
-			}
-		}
-		replaceMatchIris(query,iriMap);
-	}
-
-
-	private void replaceMatchIris(Match match, Map<String, String> iriMap) {
-
-		if (match.getInstanceOf()!=null){
-			for (Node instanceOf: match.getInstanceOf()){
-				if (iriMap.get(instanceOf.getIri())!=null) {
-					instanceOf.setIri(iriMap.get(instanceOf.getIri()));
-				}
-			}
-		}
-
-		for (List<Match> matches:Arrays.asList(match.getRule(),match.getAnd(),match.getOr(),match.getNot())){
-			if (matches!=null){
-				for (Match subMatch:matches){
-					replaceMatchIris(subMatch,iriMap);
-				}
-			}
-		}
-	}
-	private String getIri(String prefix,String iri,String name){
-		return GRAPH.QOF + prefix + name.split(" ")[0].replaceAll("[^a-zA-Z0-9-_~.]", "")+ getHash(iri);
-	}
-
-	private void createIriMap(TTDocument document, Map<String, String> iriMap) throws JsonProcessingException {
-		for (TTEntity entity : document.getEntities()) {
-			if (entity.isType(iri(IM.FOLDER))) {
-				String oldIri= entity.getIri();
-				if (oldIri.substring(oldIri.lastIndexOf("#")+1).startsWith("Q")) {
-					iriMap.put(oldIri, oldIri);
-				} else if (oldIri.substring(oldIri.lastIndexOf("#")+1).startsWith("CSET_")) {
-					iriMap.put(oldIri,oldIri);
-				} else if (oldIri.substring(oldIri.lastIndexOf("#")+1).startsWith("SetFolder_")) {
-					iriMap.put(oldIri,getIri("SetFolder_",entity.getIri(),entity.getName()));
-				} else if (oldIri.substring(oldIri.lastIndexOf("#")+1).startsWith("Folder_")) {
-						iriMap.put(oldIri,getIri("Folder_",entity.getIri(),entity.getName()));;
-				} else {
-					iriMap.put(oldIri,getIri("Folder_",entity.getIri(),entity.getName()));
-				}
-			} else if (entity.isType(iri(IM.QUERY))) {
-				String oldIri= entity.getIri();
-				String newIri= getIri("Q_",entity.getIri(),entity.getName());
-				iriMap.put(oldIri,newIri );
-
-				Query query= entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-				mapQueryIris(newIri+"_Rule_",query,iriMap);
-				}
-			}
-	}
-
-	private void mapQueryIris(String prefix, Match outer, Map<String, String> iriMap) {
-		if (outer.getRule()==null) return;
-		int clause=0;
-		for (Match match:outer.getRule()){
-			clause++;
-			if (match.getIri()!=null) iriMap.put(match.getIri(),prefix+clause);
-			mapQueryIris(prefix+clause+"_",match,iriMap);
 		}
 	}
 
