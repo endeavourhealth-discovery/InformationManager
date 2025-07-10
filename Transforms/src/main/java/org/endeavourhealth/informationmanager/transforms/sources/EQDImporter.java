@@ -2,13 +2,14 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
+import org.endeavourhealth.imapi.transforms.eqd.*;
 import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
@@ -33,7 +34,32 @@ public class EQDImporter {
 	private Namespace namespace;
 	private final Map<String,TTEntity> folderToEntity= new HashMap<>();
 	private final Set<TTEntity> newFolders= new HashSet<>();
+	private final Map<String,EQDOCCriterion> libraryItems= new HashMap<>();
 
+	public void loadLibraryItems(Path directory) throws JAXBException {
+		File libraryDocument= new File(directory.toAbsolutePath() + "/library/Library.xml");
+		if (!libraryDocument.exists()) return;
+		JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
+		EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
+			.unmarshal(libraryDocument);
+		for (EQDOCReport report:eqd.getReport()){
+			if (report.getPopulation()!=null){
+				EQDOCPopulation pop= report.getPopulation();
+				for (EQDOCCriteriaGroup group:pop.getCriteriaGroup()){
+					if (group.getDefinition()!=null){
+						if (group.getDefinition().getCriteria()!=null){
+							for (EQDOCCriteria criteria:group.getDefinition().getCriteria()){
+								if (criteria.getCriterion()!=null){
+									libraryItems.put(criteria.getCriterion().getId(),criteria.getCriterion());
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
 
 
 	public void loadAndConvert(TTImportConfig config, TTManager manager, String queries, Namespace namespace,
@@ -45,6 +71,7 @@ public class EQDImporter {
 		this.setFolder= setFolder;
 
 		converter.setSingleEntity(singleEntity);
+
 		dataMap= new Properties();
 		if (ImportApp.resourceFolder!=null) {
 			try (FileReader reader = new FileReader((ImportApp.resourceFolder))) {
@@ -67,6 +94,8 @@ public class EQDImporter {
 
 
 		Path directory = ImportUtils.findFileForId(folder, queries);
+		loadLibraryItems(directory);
+		EqdToIMQ.setLibraryItems(libraryItems);
 		importEqds(namespace, directory);
 
 	}
@@ -107,7 +136,7 @@ public class EQDImporter {
 
 	private void addMissingFolders(TTDocument document) {
 		for (TTEntity report : document.getEntities()) {
-			if (report.isType(iri(IM.QUERY))){
+		if (report.isType(iri(IM.QUERY))&&report.get(iri(IM.IS_CONTAINED_IN))!=null){
 				for (TTValue folder: report.get(iri(IM.IS_CONTAINED_IN)).getElements()){
 					TTEntity folderEntity= manager.getEntity(folder.asIriRef().getIri());
 					if (folderEntity==null){

@@ -22,3 +22,5 @@ include(':Feeds')
 include(':Transforms')
 include(':Utils')
 include(':StaticConstGenerator')
+
+include 'QOFExtractor'
