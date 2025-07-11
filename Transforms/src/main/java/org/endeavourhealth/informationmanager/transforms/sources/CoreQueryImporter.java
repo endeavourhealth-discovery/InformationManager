@@ -76,10 +76,10 @@ public class CoreQueryImporter implements TTImport {
   }
 
   private void generateDefaultCohorts(TTManager manager) throws JsonProcessingException {
-    TTEntity gms = manager.getEntity(IM.NAMESPACE + "Q_RegisteredGMS");
-    gms.addObject(TTIriRef.iri(IM.IS_CONTAINED_IN), TTVariable.iri(IM.NAMESPACE + "Q_DefaultCohorts"));
+    TTEntity gms = manager.getEntity(Namespace.IM + "Q_RegisteredGMS");
+    gms.addObject(TTIriRef.iri(IM.IS_CONTAINED_IN), TTVariable.iri(Namespace.IM + "Q_DefaultCohorts"));
     gms.addObject(iri(IM.CONTEXT_ORDER),new TTNode().set(SHACL.ORDER,TTLiteral.literal(1))
-      .set(IM.CONTEXT,TTIriRef.iri(IM.NAMESPACE + "Q_DefaultCohorts")));
+      .set(IM.CONTEXT,TTIriRef.iri(Namespace.IM + "Q_DefaultCohorts")));
     int order=1;
     for (String defaultFolder:List.of("Patient","PeopleAndThings","ClinicalInformation","PersonalHealthManagement","ProcessOfCare","Q_Queries")){
       order++;
@@ -89,10 +89,11 @@ public class CoreQueryImporter implements TTImport {
 
   private void addToDefaults(String defaultEntity, TTManager manager,int order) {
     TTEntity entity =  new TTEntity()
-      .setIri(IM.NAMESPACE + defaultEntity)
+      .setIri(Namespace.IM + defaultEntity)
+      .setScheme(Namespace.IM.asIri())
       .setCrud(iri(IM.ADD_QUADS));
-    entity.addObject(TTVariable.iri(IM.IS_CONTAINED_IN), TTVariable.iri(IM.NAMESPACE + "Q_DefaultCohorts"));
-    entity.addObject(iri(IM.CONTEXT_ORDER),new TTNode().set(SHACL.ORDER,TTLiteral.literal(order)).set(IM.CONTEXT,TTIriRef.iri(IM.NAMESPACE + "Q_DefaultCohorts")));
+    entity.addObject(TTVariable.iri(IM.IS_CONTAINED_IN), TTVariable.iri(Namespace.IM + "Q_DefaultCohorts"));
+    entity.addObject(iri(IM.CONTEXT_ORDER),new TTNode().set(SHACL.ORDER,TTLiteral.literal(order)).set(IM.CONTEXT,TTIriRef.iri(Namespace.IM + "Q_DefaultCohorts")));
     manager.getDocument().addEntity(entity);
   }
 
@@ -325,17 +326,7 @@ public class CoreQueryImporter implements TTImport {
             .setIri(Namespace.IM + "dateOfBirth")
             .setIsNotNull(true)
             .setValueVariable("dateOfBirth"))
-          .function(f -> f
-            .setName(Function.timeDifference)
-            .argument(a -> a
-              .setParameter("firstDateTime")
-              .setValueVariable("dateOfBirth"))
-            .argument(a -> a
-              .setParameter("secondDateTime")
-              .setValueVariable("$referenceDate"))
-            .argument(a -> a
-              .setParameter("units")
-              .setValueVariable("$timeUnits")))));
+    ));
     document.addEntity(age);
   }
 
