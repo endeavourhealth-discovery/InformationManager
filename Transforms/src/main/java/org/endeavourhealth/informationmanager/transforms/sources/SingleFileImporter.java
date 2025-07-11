@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.imq.QueryException;
@@ -36,7 +37,7 @@ public class SingleFileImporter implements TTImport {
       File singleFile= new File(ttImportConfig.getFolder().replaceAll("%", " "));
       manager.loadDocument(singleFile);
       manager.setDocument(generateInferred(manager.getDocument()));
-      TTDocumentFiler filer = TTFilerFactory.getDocumentFiler();
+      TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM);
       filer.fileDocument(manager.getDocument());
       String inferredFile = singleFile.toString().substring(0, singleFile.toString().indexOf(".json")) + INFERRED_SUFFIX;
       manager.saveDocument(new File(inferredFile));

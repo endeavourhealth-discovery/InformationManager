@@ -5,9 +5,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -28,13 +26,13 @@ public class NHSTfcImport implements TTImport {
   @Override
   public void importData(TTImportConfig config) throws ImportException {
     try {
-      document = manager.createDocument(GRAPH.NHS_TFC);
-      document.addEntity(manager.createGraph(GRAPH.NHS_TFC,
+      document = manager.createDocument();
+      document.addEntity(manager.createNamespaceEntity(Namespace.NHS_TFC,
         "NHS Data Dictionary Speciality and Treatment function codes"
         , "NHS Data dictionary concepts that are not snomed"));
       setNHSDD();
       importFunctionCodes(config.getFolder());
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception ex) {
@@ -43,15 +41,15 @@ public class NHSTfcImport implements TTImport {
   }
 
   private void setNHSDD() {
-    nhsTfc = TTIriRef.iri(GRAPH.NHS_TFC + "NHSTfc");
+    nhsTfc = TTIriRef.iri(Namespace.NHS_TFC + "NHSTfc");
     TTEntity nhs = new TTEntity()
       .setIri(nhsTfc.getIri())
       .setName("Main Specialty and Treatment Function Codes")
-      .setScheme(iri(GRAPH.NHS_TFC))
+      .setScheme(iri(Namespace.NHS_TFC))
       .setCode("0")
       .addType(iri(IM.CONCEPT))
       .setStatus(iri(IM.ACTIVE));
-    nhs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies"));
+    nhs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies"));
     document.addEntity(nhs);
   }
 
@@ -69,14 +67,14 @@ public class NHSTfcImport implements TTImport {
         String term = fields[1];
         String snomed = fields[2];
         TTEntity tfc = new TTEntity()
-          .setIri(GRAPH.NHS_TFC + code)
+          .setIri(Namespace.NHS_TFC + code)
           .setName(term)
-          .setScheme(iri(GRAPH.NHS_TFC))
+          .setScheme(iri(Namespace.NHS_TFC))
           .setCode(code)
           .addType(iri(IM.CONCEPT))
           .setStatus(iri(IM.ACTIVE));
         tfc.addObject(iri(IM.IS_CHILD_OF), nhsTfc);
-        tfc.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+        tfc.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomed));
         document.addEntity(tfc);
         line = reader.readLine();
       }

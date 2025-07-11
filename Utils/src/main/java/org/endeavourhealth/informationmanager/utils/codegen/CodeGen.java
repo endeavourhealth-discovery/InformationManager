@@ -1,6 +1,8 @@
 package org.endeavourhealth.informationmanager.utils.codegen;
 
 import org.endeavourhealth.imapi.logic.codegen.CodeGenJava;
+import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.IM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +26,7 @@ public class CodeGen {
          BufferedOutputStream bos = new BufferedOutputStream(fos);
          ZipOutputStream result = new ZipOutputStream(bos)) {
 
-      new CodeGenJava().generate(result);
+      new CodeGenJava().generate(result, Graph.IM);
     }
   }
 }

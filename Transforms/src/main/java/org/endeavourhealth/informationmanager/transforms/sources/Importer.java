@@ -24,12 +24,7 @@ public class Importer implements TTImportByType {
    * @throws Exception if one of the sources is invalid
    */
   @Override
-  public TTImportByType importByType(TTIriRef importType, TTImportConfig config) throws Exception {
-    return importByType(importType.getIri(), config);
-  }
-
-  @Override
-  public TTImportByType importByType(String importType, TTImportConfig config) throws Exception {
+  public TTImportByType importByType(ImportType importType, TTImportConfig config) throws Exception {
     LOG.info("Importing {}", importType);
     try (TTImport importer = getImporter(importType)) {
       importer.validateFiles(config.getFolder());
@@ -38,14 +33,8 @@ public class Importer implements TTImportByType {
     }
   }
 
-
   @Override
-  public TTImportByType validateByType(TTIriRef importType, String inFolder) throws Exception {
-    return validateByType(importType.getIri(), inFolder);
-  }
-
-  @Override
-  public TTImportByType validateByType(String importType, String inFolder) throws Exception {
+  public TTImportByType validateByType(ImportType importType, String inFolder) throws Exception {
     try (TTImport importer = getImporter(importType)) {
       importer.validateFiles(inFolder);
       return this;
@@ -53,33 +42,33 @@ public class Importer implements TTImportByType {
   }
 
 
-  private TTImport getImporter(String importType) throws ImportException {
+  private TTImport getImporter(ImportType importType) throws ImportException {
     return switch (importType) {
-      case IM.NAMESPACE + "SingleFileImporter" -> new SingleFileImporter();
-      case GRAPH.QUERY -> new CoreQueryImporter();
-      case GRAPH.BNF -> new BNFImporter();
-      case GRAPH.DISCOVERY -> new CoreImporter();
-      case GRAPH.BARTS_CERNER -> new BartsCernerImport();
-      case SNOMED.NAMESPACE -> new SnomedImporter();
-      case GRAPH.EMIS -> new EMISImport();
-      case GRAPH.TPP -> new TPPImporter();
-      case GRAPH.OPCS4 -> new OPCS4Importer();
-      case GRAPH.ICD10 -> new ICD10Importer();
-      case GRAPH.ENCOUNTERS -> new EncountersImporter();
-      case GRAPH.VISION -> new VisionImport();
-      case GRAPH.PRSB -> new PRSBImport();
-      case GRAPH.KINGS_APEX -> new ApexKingsImport();
-      case GRAPH.KINGS_WINPATH -> new WinPathKingsImport();
-      case GRAPH.ODS -> new OdsImporter();
-      case GRAPH.IM1 -> new IM1MapImport();
-      case GRAPH.CEG -> new CEGImporter();
-      case GRAPH.SMARTLIFE -> new SmartLifeImporter();
-      case GRAPH.QOF -> new QOFQueryImport();
-      case GRAPH.NHS_TFC -> new NHSTfcImport();
-      case GRAPH.DELTAS -> new DeltaImporter();
-      case QR.NAMESPACE -> new QImporter();
-      case GRAPH.CPRD_MED -> new CPRDImport();
-      case FHIR.GRAPH_FHIR -> new FHIRImporter();
+      case ImportType.SINGLE_FILE -> new SingleFileImporter();
+      case ImportType.QUERY -> new CoreQueryImporter();
+      case ImportType.BNF -> new BNFImporter();
+      case ImportType.CORE -> new CoreImporter();
+      case ImportType.BARTS_CERNER -> new BartsCernerImport();
+      case ImportType.SNOMED -> new SnomedImporter();
+      case ImportType.EMIS -> new EMISImport();
+      case ImportType.TPP -> new TPPImporter();
+      case ImportType.OPCS4 -> new OPCS4Importer();
+      case ImportType.ICD10 -> new ICD10Importer();
+      case ImportType.ENCOUNTERS -> new EncountersImporter();
+      case ImportType.VISION -> new VisionImport();
+      case ImportType.PRSB -> new PRSBImport();
+      case ImportType.KINGS_APEX -> new ApexKingsImport();
+      case ImportType.KINGS_WINPATH -> new WinPathKingsImport();
+      case ImportType.ODS -> new OdsImporter();
+      case ImportType.IM1 -> new IM1MapImport();
+      case ImportType.CEG -> new CEGImporter();
+      case ImportType.SMARTLIFE -> new SmartLifeImporter();
+      case ImportType.QOF -> new QOFQueryImport();
+      case ImportType.NHS_TFC -> new NHSTfcImport();
+      case ImportType.DELTAS -> new DeltaImporter();
+      case ImportType.QR -> new QImporter();
+      case ImportType.CPRD_MED -> new CPRDImport();
+      case ImportType.FHIR -> new FHIRImporter();
       default -> throw new ImportException("Unrecognised import type [" + importType + "]");
     };
   }

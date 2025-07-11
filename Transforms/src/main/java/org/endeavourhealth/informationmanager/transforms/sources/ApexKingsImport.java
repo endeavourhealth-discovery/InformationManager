@@ -6,7 +6,6 @@ import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -29,7 +28,7 @@ public class ApexKingsImport implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(ApexKingsImport.class);
 
   private static final String[] kingsPath = {".*\\\\Kings\\\\KingsPathMap.txt"};
-  private static final String KINGS_APEX_CODES = GRAPH.KINGS_APEX + "KingsApexCodes";
+  private static final String KINGS_APEX_CODES = Namespace.KINGS_APEX + "KingsApexCodes";
   private TTDocument document;
   private Map<String, Set<String>> readToSnomed = new HashMap<>();
   private final Map<String, String> apexToRead = new HashMap<>();
@@ -40,14 +39,14 @@ public class ApexKingsImport implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
 
     try (TTManager manager = new TTManager()) {
-      document = manager.createDocument(GRAPH.KINGS_APEX);
-      document.addEntity(manager.createGraph(GRAPH.KINGS_APEX, "Kings Apex pathology code scheme and graph",
+      document = manager.createDocument();
+      document.addEntity(manager.createNamespaceEntity(Namespace.KINGS_APEX, "Kings Apex pathology code scheme and graph",
         "The Kings Apex LIMB local code scheme and graph"));
 
       importR2Matches();
       setTopLevel();
       importApexKings(config.getFolder());
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception e) {
@@ -61,16 +60,16 @@ public class ApexKingsImport implements TTImport {
       .addType(iri(IM.CONCEPT))
       .setName("Kings College Hospital Apex path codes")
       .setCode("KingsApexCodes")
-      .setScheme(iri(GRAPH.KINGS_APEX))
+      .setScheme(Namespace.KINGS_APEX.asIri())
       .setDescription("Local codes for the Apex pathology system in kings")
-      .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies")));
+      .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies")));
     document.addEntity(kings);
   }
 
 
   private void importR2Matches() throws SQLException, TTFilerException, IOException {
     LOG.info("Retrieving read vision 2 snomed map");
-    readToSnomed = importMaps.importReadToSnomed();
+    readToSnomed = importMaps.importReadToSnomed(Graph.IM);
 
   }
 
@@ -86,20 +85,20 @@ public class ApexKingsImport implements TTImport {
         String[] fields = line.split("\t");
         String readCode = fields[0];
         String code = fields[1];
-        String iri = GRAPH.KINGS_APEX + (fields[1].replaceAll("[ .,\"%]", ""));
+        String iri = Namespace.KINGS_APEX + (fields[1].replaceAll("[ .,\"%]", ""));
         TTEntity entity = new TTEntity()
           .setIri(iri)
-          .addType(iri(IM.CONCEPT))
+          .addType(IM.CONCEPT.asIri())
           .setName(fields[2])
           .setDescription("Local apex Kings trust pathology system entity ")
           .setCode(code)
-          .setScheme(iri(GRAPH.KINGS_APEX))
+          .setScheme(Namespace.KINGS_APEX.asIri())
           .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(KINGS_APEX_CODES)));
         document.addEntity(entity);
         apexToRead.put(code, readCode);
         if (readToSnomed.get(readCode) != null) {
           for (String snomed : readToSnomed.get(readCode)) {
-            entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+            entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomed));
           }
         }
         count.getAndIncrement();

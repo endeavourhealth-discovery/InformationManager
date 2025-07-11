@@ -1,14 +1,12 @@
 package org.endeavourhealth.informationmanager.transforms.models;
 
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.QR;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.ImportType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TTImportConfig {
   private String folder = ".";
-  private String importType = null;
   private boolean secure = false;
   private boolean skiptct = false;
   private boolean skipsearch = false;
@@ -16,11 +14,8 @@ public class TTImportConfig {
   private boolean skiplucene = false;
   private boolean skipBulk = false;
   private String resourceFolder;
-  private List<String> graph = new ArrayList<>();
+  private List<ImportType> imports = new ArrayList<>();
   private String singleEntity;
-
-
-
 
   public String getSingleEntity() {
     return singleEntity;
@@ -31,25 +26,19 @@ public class TTImportConfig {
     return this;
   }
 
-  public List<String> getGraph() {
-    return graph;
+  public List<ImportType> getImports() {
+    return imports;
   }
 
-  public TTImportConfig setGraph(List<String> graph) {
-    this.graph = graph;
+  public TTImportConfig setImports(List<ImportType> imports) {
+    this.imports = imports;
     return this;
   }
-    public TTImportConfig addGraph (String includeGraph){
-      if (this.graph == null) {
-        this.graph = new ArrayList<>();
-      }
-      this.graph.add(includeGraph);
-      return this;
-    }
 
-
-
-
+  public TTImportConfig addImport(ImportType importType) {
+    imports.add(importType);
+    return this;
+  }
 
   public String getResourceFolder() {
     return resourceFolder;
@@ -84,15 +73,6 @@ public class TTImportConfig {
 
   public TTImportConfig setFolder(String folder) {
     this.folder = folder;
-    return this;
-  }
-
-  public String getImportType() {
-    return importType;
-  }
-
-  public TTImportConfig setImportType(String importType) {
-    this.importType = importType;
     return this;
   }
 

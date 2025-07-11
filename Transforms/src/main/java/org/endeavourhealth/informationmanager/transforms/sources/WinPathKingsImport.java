@@ -7,9 +7,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -21,7 +19,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,14 +35,14 @@ public class WinPathKingsImport implements TTImport {
   @Override
   public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager()) {
-      document = manager.createDocument(GRAPH.KINGS_WINPATH);
-      document.addEntity(manager.createGraph(GRAPH.KINGS_WINPATH,
+      document = manager.createDocument();
+      document.addEntity(manager.createNamespaceEntity(Namespace.KINGS_WINPATH,
         "Kings Winpath pathology code scheme and graph",
         "The Kings pathology Winpath LIMB local code scheme and graph"));
       setTopLevel();
       importR2Matches();
       importWinPathKings(config.getFolder());
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception e) {
@@ -55,20 +52,20 @@ public class WinPathKingsImport implements TTImport {
 
   private void setTopLevel() {
     TTEntity kings = new TTEntity()
-      .setIri(GRAPH.KINGS_WINPATH + "KingsWinPathCodes")
+      .setIri(Namespace.KINGS_WINPATH + "KingsWinPathCodes")
       .addType(iri(IM.CONCEPT))
       .setName("Kings College Hospital  Winpath codes")
       .setCode("KingsWinPathCodes")
-      .setScheme(iri(GRAPH.KINGS_WINPATH))
+      .setScheme(iri(Namespace.KINGS_WINPATH))
       .setDescription("Local codes for the Winpath pathology system in kings")
-      .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(IM.NAMESPACE + "CodeBasedTaxonomies")));
+      .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies")));
     document.addEntity(kings);
   }
 
 
   private void importR2Matches() throws TTFilerException, IOException {
     LOG.info("Retrieving read vision 2 snomed map");
-    readToSnomed = importMaps.importReadToSnomed();
+    readToSnomed = importMaps.importReadToSnomed(Graph.IM);
 
   }
 
@@ -84,19 +81,19 @@ public class WinPathKingsImport implements TTImport {
         String[] fields = line.split("\t");
         String readCode = fields[2];
         String code = fields[0];
-        String iri = GRAPH.KINGS_WINPATH + (fields[0].replaceAll("[ %,.\"]", ""));
+        String iri = Namespace.KINGS_WINPATH + (fields[0].replaceAll("[ %,.\"]", ""));
         TTEntity entity = new TTEntity()
           .setIri(iri)
           .addType(iri(IM.CONCEPT))
           .setName(fields[1])
           .setDescription("Local winpath Kings trust pathology system entity ")
-          .setScheme(iri(GRAPH.KINGS_WINPATH))
-          .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(GRAPH.KINGS_APEX + "KingsWinPathCodes")))
+          .setScheme(iri(Namespace.KINGS_WINPATH))
+          .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(Namespace.KINGS_APEX + "KingsWinPathCodes")))
           .setCode(code);
         document.addEntity(entity);
         if (readToSnomed.get(readCode) != null) {
           for (String snomed : readToSnomed.get(readCode)) {
-            entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+            entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomed));
           }
         }
 

@@ -8,6 +8,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
+import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
 import org.endeavourhealth.imapi.filer.TCGenerator;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
@@ -15,8 +16,8 @@ import org.endeavourhealth.imapi.logic.reasoner.DomainResolver;
 import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetMemberGenerator;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
+import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.ImportType;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
@@ -45,7 +46,7 @@ public class Preload {
       System.exit(-1);
     }
     LOG.info("Configuring...");
-    TTImportConfig cfg = getGraphsToLoad(args);
+    TTImportConfig cfg = getImports(args);
     TTBulkFiler.setConfigTTl(cfg.getFolder());
     TTFilerFactory.setBulk(true);
     String graphdbCommand = null;
@@ -63,44 +64,42 @@ public class Preload {
     importData(cfg, graphdbCommand);
   }
 
-  private static TTImportConfig getGraphsToLoad(String[] args) throws ImportException, IOException {
+  private static TTImportConfig getImports(String[] args) throws ImportException, IOException {
     String folder = null;
-    String graphs = null;
+    String imports = null;
     for (String argument : args) {
       if (argument.startsWith("source=")) {
         folder = (argument.split("=")[1]);
       }
       if (argument.toLowerCase().split("=")[0].equals("graphs")) {
-        graphs = argument.split("=")[1].trim();
+        imports = argument.split("=")[1].trim();
       }
     }
     if (folder == null) throw new ImportException(" no sources folder set");
-    if (graphs == null) graphs = "endeavour.json";
-    TTImportConfig config = new ObjectMapper().readValue(new File(folder + "/PreloadGraphs/" + graphs), TTImportConfig.class);
+    if (imports == null) imports = "endeavour.json";
+    TTImportConfig config = new ObjectMapper().readValue(new File(folder + "/PreloadImports/" + imports), TTImportConfig.class);
     config.setFolder(folder);
     return config;
 
   }
 
-
-  public static List<String> canBulk = List.of(GRAPH.DISCOVERY, SNOMED.NAMESPACE, GRAPH.ENCOUNTERS, GRAPH.QUERY, GRAPH.IM1, GRAPH.FHIR, GRAPH.EMIS, GRAPH.TPP, GRAPH.OPCS4, GRAPH.ICD10, GRAPH.VISION, GRAPH.ODS, GRAPH.BARTS_CERNER, GRAPH.NHS_TFC, GRAPH.BNF);
-
+  public static List<ImportType> canBulk = List.of(ImportType.CORE, ImportType.SNOMED, ImportType.ENCOUNTERS, ImportType.QUERY, ImportType.IM1, ImportType.FHIR, ImportType.EMIS, ImportType.TPP, ImportType.OPCS4, ImportType.ICD10, ImportType.VISION, ImportType.ODS, ImportType.BARTS_CERNER, ImportType.NHS_TFC, ImportType.BNF);
 
   private static void importData(TTImportConfig cfg, String graphdb) throws Exception {
     LOG.info("Validating config...");
     validateGraphConfig(cfg.getFolder());
 
-
     LOG.info("Validating data files...");
     TTImportByType importer = new Importer();
-    for (String graph : cfg.getGraph()) {
-      importer.validateByType(graph, cfg.getFolder());
+    for (ImportType i : cfg.getImports()) {
+      importer.validateByType(i, cfg.getFolder());
     }
+
     LOG.info("Importing files...");
     if (!cfg.isSkipBulk()) {
-      for (String graph : cfg.getGraph()) {
-        if (canBulk.contains(graph)) {
-          importer.importByType(graph, cfg);
+      for (ImportType i : cfg.getImports()) {
+        if (canBulk.contains(i)) {
+          importer.importByType(i, cfg);
         }
       }
       LOG.info("Generating closure...");
@@ -110,25 +109,31 @@ public class Preload {
       TTBulkFiler.createRepository();
       startGraph(graphdb);
     }
-    new RangeInheritor().inheritRanges(null);
+
+    try (IMDB conn = IMDB.getConnection(Graph.IM)) {
+      new RangeInheritor().inheritRanges(conn, Graph.IM);
+    }
+
     LOG.info("expanding value sets");
-    new SetMemberGenerator().generateAllSetMembers();
-    new SetBinder().bindSets();
+    new SetMemberGenerator().generateAllSetMembers(Graph.IM);
+    new SetBinder().bindSets(Graph.IM);
     LOG.info("Filing into live graph");
     TTFilerFactory.setBulk(false);
     TTFilerFactory.setTransactional(true);
-    for (String graph : cfg.getGraph()) {
-      if (!canBulk.contains(graph)) {
-        importer.importByType(graph, cfg);
+
+    for (ImportType i : cfg.getImports()) {
+      if (!canBulk.contains(i)) {
+        importer.importByType(i, cfg);
       }
     }
+
     try (TTImport deltaImporter = new DeltaImporter()) {
       deltaImporter.importData(cfg);
     }
     LOG.info("adding missing properties into concept domains");
-    new DomainResolver().updateDomains();
+    new DomainResolver().updateDomains(Graph.IM);
 
-    LOG.info("Finished - " + (new Date()));
+    LOG.info("Finished - {}" ,new Date());
 
     System.exit(0);
   }

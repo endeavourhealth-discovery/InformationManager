@@ -2,10 +2,8 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.SNOMED;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +27,6 @@ public class ComplexMapImporter {
   private TTDocument document;
   private String refset;
   private Set<String> sourceCodes;
-  private String namespace;
   private Map<String, TTEntity> legacyCodeToEntity;
 
 
@@ -51,11 +48,7 @@ public class ComplexMapImporter {
     this.sourceCodes = sourceCodes;
     this.legacyCodeToEntity = legacyCodeToEntity;
     document.setCrud(iri(IM.UPDATE_PREDICATES));
-    if (refset.equals(OPCS4_REFERENCE_SET))
-      namespace = GRAPH.OPCS4;
-    else if (refset.equals(ICD10_REFERENCE_SET))
-      namespace = GRAPH.ICD10;
-    else
+    if (!refset.equals(OPCS4_REFERENCE_SET) && !refset.equals(ICD10_REFERENCE_SET))
       throw new IllegalArgumentException(refset + " reference set is not supported yet");
 
     //imports file and creates snomed to target collection
@@ -79,7 +72,7 @@ public class ComplexMapImporter {
   }
 
   private void setMapsForEntity(String snomed, List<ComplexMap> mapList) throws JsonProcessingException {
-    TTEntity entity = new TTEntity().setIri((SNOMED.NAMESPACE + snomed));  // snomed entity reference
+    TTEntity entity = new TTEntity().setIri((Namespace.SNOMED + snomed)).setScheme(Namespace.SNOMED.asIri());  // snomed entity reference
     document.addEntity(entity);
     for (ComplexMap sourceMap : mapList) {
       TTNode ttComplexMap = new TTNode();
@@ -96,7 +89,7 @@ public class ComplexMapImporter {
       for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
         TTEntity legacy = legacyCodeToEntity.get(sourceTarget.getTarget());
         if (legacy != null) {
-          legacy.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(SNOMED.NAMESPACE + snomed));
+          legacy.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomed));
           addMapTarget(ttTargetGroup, sourceTarget);
         }
       }

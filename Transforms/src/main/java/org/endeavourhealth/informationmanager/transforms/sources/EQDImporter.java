@@ -4,25 +4,20 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import org.apache.commons.io.FilenameUtils;
-import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.*;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.RDFS;
+import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -36,7 +31,7 @@ public class EQDImporter {
 	private String mainFolder;
 	private String setFolder;
 	private final EqdToIMQ converter = new EqdToIMQ();
-	private String namespace;
+	private Namespace namespace;
 	private final Map<String,TTEntity> folderToEntity= new HashMap<>();
 	private final Set<TTEntity> newFolders= new HashSet<>();
 	private final Map<String,EQDOCCriterion> libraryItems= new HashMap<>();
@@ -67,7 +62,7 @@ public class EQDImporter {
 	}
 
 
-	public void loadAndConvert(TTImportConfig config, TTManager manager, String queries, String graph,
+	public void loadAndConvert(TTImportConfig config, TTManager manager, String queries, Namespace namespace,
 													String dataMapFile, String criteriaMapFile,String mainFolder, String setFolder) throws Exception {
 		String folder=config.getFolder();
 		String singleEntity=config.getSingleEntity();
@@ -101,13 +96,11 @@ public class EQDImporter {
 		Path directory = ImportUtils.findFileForId(folder, queries);
 		loadLibraryItems(directory);
 		EqdToIMQ.setLibraryItems(libraryItems);
-		importEqds(graph, directory);
+		importEqds(namespace, directory);
 
 	}
 
-
-
-	public void importEqds(String namespace, Path directory) throws Exception  {
+	public void importEqds(Namespace namespace, Path directory) throws Exception  {
 		this.namespace=namespace;
 		TTDocument document = manager.getDocument();
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
@@ -118,7 +111,7 @@ public class EQDImporter {
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(fileEntry);
-					converter.convertEQD(document, eqd, dataMap,criteriaMaps);
+					converter.convertEQD(document, eqd, dataMap,criteriaMaps, namespace, Graph.IM);
 				}
 			}
 		}
@@ -157,7 +150,7 @@ public class EQDImporter {
 
 	private TTEntity createFieldGroupFolder(TTEntity fieldGroup, Map<String, TTEntity> folderMap, List<TTEntity> toAdd) {
 		TTEntity folder = new TTEntity()
-			.setIri(namespace + UUID.randomUUID())
+			.setIri(namespace.toString() + UUID.randomUUID())
 			.setName("Sets used for " + fieldGroup.getName())
 			.addType(iri(IM.FOLDER));
 		toAdd.add(folder);
@@ -313,9 +306,9 @@ public class EQDImporter {
 				Query qry = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 				if (qry.getAnd() != null && qry.getAnd().get(0).getInstanceOf() != null) {
 					for (Node parent : qry.getAnd().get(0).getInstanceOf()) {
-						if (parent.getIri().equals(GRAPH.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
+						if (parent.getIri().equals(Namespace.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
 							List<Node> parentList = new ArrayList<>();
-							parentList.add(new Node().setIri(IM.NAMESPACE + "Q_RegisteredGMS").setMemberOf(true));
+							parentList.add(new Node().setIri(Namespace.IM + "Q_RegisteredGMS").setMemberOf(true));
 							qry.getAnd().get(0).setInstanceOf(parentList);
 						}
 					}
@@ -332,7 +325,7 @@ public class EQDImporter {
 
 	private TTEntity createReportSetFolder(TTEntity report, Map<String, TTEntity> folderMap,List<TTEntity> toAdd) {
 		TTEntity folder = new TTEntity()
-			.setIri(namespace + UUID.randomUUID())
+			.setIri(namespace.toString() + UUID.randomUUID())
 			.setName("Sets used in " + report.getName())
 			.addType(iri(IM.FOLDER));
 		toAdd.add(folder);
@@ -343,7 +336,7 @@ public class EQDImporter {
 				TTEntity groupFolder = folderMap.get(reportFolder.getIri());
 				if (groupFolder == null) {
 					groupFolder = new TTEntity()
-						.setIri(namespace + UUID.randomUUID())
+						.setIri(namespace.toString() + UUID.randomUUID())
 						.addType(iri(IM.FOLDER))
 						.setName("Sets for " + reportFolder.getName());
 					groupFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(setFolder));
@@ -359,7 +352,7 @@ public class EQDImporter {
 				TTEntity groupFolder = folderMap.get(reportFolder.getIri());
 				if (groupFolder == null) {
 					groupFolder = new TTEntity()
-						.setIri(namespace + UUID.randomUUID())
+						.setIri(namespace.toString() + UUID.randomUUID())
 						.addType(iri(IM.FOLDER))
 						.setName("Sets for " + reportFolder.getName());
 					groupFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(setFolder));

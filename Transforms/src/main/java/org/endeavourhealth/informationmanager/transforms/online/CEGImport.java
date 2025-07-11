@@ -1,6 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.online;
 
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.ImportType;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
@@ -18,7 +18,7 @@ public class CEGImport {
     // Mandatory/ordered args
     cfg.setFolder(args[0]);
     TTImportByType importer = new Importer();
-    importer.validateByType(GRAPH.CEG, cfg.getFolder());
-    importer.importByType(GRAPH.CEG, cfg);
+    importer.validateByType(ImportType.CEG, cfg.getFolder());
+    importer.importByType(ImportType.CEG, cfg);
   }
 }

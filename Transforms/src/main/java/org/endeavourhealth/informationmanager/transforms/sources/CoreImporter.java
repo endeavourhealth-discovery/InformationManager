@@ -6,7 +6,9 @@ import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -103,8 +105,8 @@ public class CoreImporter implements TTImport {
           Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
           manager.loadDocument(path.toFile());
           TTDocument document = manager.getDocument();
-          LOG.info("Filing {} from {}", document.getGraph().getIri(), coreFile);
-          try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler()) {
+          LOG.info("Filing {}", coreFile);
+          try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
             try {
               filer.fileDocument(document);
             } catch (TTFilerException | QueryException e) {
