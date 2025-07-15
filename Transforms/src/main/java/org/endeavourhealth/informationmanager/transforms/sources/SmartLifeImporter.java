@@ -25,7 +25,7 @@ public class SmartLifeImporter implements TTImport {
 	private static final Logger LOG = LoggerFactory.getLogger(CEGImporter.class);
 
 	private static final String[] queries = {".*\\\\Smartlife"};
-	private static final String[] libraries = {".*\\\\Smartlife\\\\Library.zip"};
+	private static final String[] libraries = {".*\\\\Smartlife\\\\Library\\\\Library.zip"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	private String mainFolder;
 	private String setFolder;
@@ -53,7 +53,7 @@ public class SmartLifeImporter implements TTImport {
 			catch (Exception ex) {
 				throw new ImportException(ex.getMessage(), ex);
 			}
-			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.SMARTLIFE)) {
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 				filer.fileDocument(document);
 
 			}
