@@ -717,17 +717,11 @@ public class SnomedImporter implements TTImport {
 
   private void processRelationshipLine(String line) {
     String[] fields = line.split("\t");
-    //  if (fields[4].equals("158743007")) {
-    //   LOG.info(line);
-    //}
     TTEntity c = conceptMap.get(fields[4]);
     if (c != null) {
       int group = Integer.parseInt(fields[6]);
       String relationship = fields[7];
       String target = fields[5];
-      // if (target.equals("900000000000455006"))
-      //  LOG.info(c.getName()+" "+fields[4]+" is a ref set");
-
       if (conceptMap.get(target) == null) {
         System.err.println("Missing target entity in relationship" + target);
       }

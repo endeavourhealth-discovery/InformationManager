@@ -48,7 +48,7 @@ public class OdsImporter implements TTImport {
     try (TTManager manager = new TTManager();
          TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
       TTDocument doc = manager.createDocument();
-      doc.setCrud(iri(IM.UPDATE_ALL));
+      doc.setCrud(iri(IM.REPLACE_ALL_PREDICATES));
       doc.addEntity(manager.createNamespaceEntity(Namespace.ODS, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
 
 
@@ -56,7 +56,7 @@ public class OdsImporter implements TTImport {
       filer.fileDocument(doc);
 
       doc = manager.createDocument();
-      doc.setCrud(iri(IM.UPDATE_ALL));
+      doc.setCrud(iri(IM.REPLACE_ALL_PREDICATES));
       doc.addEntity(manager.createNamespaceEntity(Namespace.ODS, "ODS  code scheme and graph", "Official ODS code scheme and graph"));
       importOrganisationData(config, doc);
       importOrganisationRelationships(config);
