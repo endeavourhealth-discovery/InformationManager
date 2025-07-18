@@ -140,6 +140,7 @@ public class Preload {
 
   public static void validateGraphConfig(String inFolder) {
     ImportUtils.validateFiles(inFolder, new String[]{".*config.ttl"});
+
   }
 
   private static void startGraph(String graphdb) throws IOException, InterruptedException {
