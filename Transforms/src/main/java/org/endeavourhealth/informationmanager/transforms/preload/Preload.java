@@ -31,9 +31,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 public class Preload {
   private static final Logger LOG = LoggerFactory.getLogger(Preload.class);
@@ -59,9 +65,26 @@ public class Preload {
       else if (arg.contains("test=")) ImportApp.setTestDirectory(arg.substring(arg.lastIndexOf("=") + 1));
       else if (arg.toLowerCase().contains("skipbulk")) cfg.setSkipBulk(true);
     }
+    LOG.info("Deleting temp folder.a()..");
+    clearTempFolder(TTBulkFiler.getDataPath());
 
     LOG.info("Starting import...");
     importData(cfg, graphdbCommand);
+  }
+
+  private static void clearTempFolder(String tempUrl) throws IOException {
+    Path path = Paths.get(tempUrl);
+    try (Stream<Path> paths = Files.walk(path)) {
+      paths.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+    } catch (NoSuchFileException e) {
+      LOG.info("No files found in temp folder");
+    }
+    String folderHome = tempUrl.substring(0,tempUrl.lastIndexOf("\\"));
+    String folderName = tempUrl.substring(tempUrl.lastIndexOf("\\") + 1);
+    File newDirectory = new File(folderHome,folderName);
+    if (!newDirectory.exists()) {
+      newDirectory.mkdir();
+    }
   }
 
   private static TTImportConfig getImports(String[] args) throws ImportException, IOException {
