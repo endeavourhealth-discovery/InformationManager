@@ -46,7 +46,6 @@ public class CoreQueryImporter implements TTImport {
       getAllowableProperties();
       getAllowablePropertyAncestors();
       isValidProperty();
-      boundEntities();
       isAllowableRange();
       getSearchAll();
       allowableSubTypes();
@@ -234,6 +233,7 @@ public class CoreQueryImporter implements TTImport {
           .path(p -> p.setIri(Namespace.IM + "address")
             .setVariable("Address")
             .setTypeOf(Namespace.IM + "Address"))
+          .setTypeOf(Namespace.IM + "Address")
           .where(and -> and
             .and(w -> w
               .setNodeRef("Address")
@@ -263,6 +263,7 @@ public class CoreQueryImporter implements TTImport {
         .path(p -> p.setIri(Namespace.IM + "address")
           .setVariable("Address")
           .setTypeOf(Namespace.IM + "Address"))
+          .setTypeOf(Namespace.IM+"Address")
         .where(and -> and
           .and(w -> w
             .setNodeRef("Address")
@@ -299,6 +300,7 @@ public class CoreQueryImporter implements TTImport {
         .path(p -> p.setIri(Namespace.IM + "telephone")
           .setVariable("Telephone")
           .setTypeOf(Namespace.IM + "TelephoneNumber"))
+          .setTypeOf(Namespace.IM+"TelephoneNumber")
         .where(and -> and
           .and(w -> w
             .setNodeRef("Telephone")
@@ -566,6 +568,7 @@ public class CoreQueryImporter implements TTImport {
           .setIri(Namespace.IM + "observation")
           .setVariable("Observation")
           .setTypeOf(Namespace.IM + "Observation"))
+        .setTypeOf(Namespace.IM+"Observation")
         .where(and -> and
           .and(ww -> ww
             .setNodeRef("Observation")
@@ -599,6 +602,7 @@ public class CoreQueryImporter implements TTImport {
           .as("latestBP"))
         .then(m1 -> m1
           .setNodeRef("latestBP")
+          .setTypeOf(Namespace.IM + "Observation")
           .where(w -> w
             .or(whereEither -> whereEither
               .and(w1 -> w1
@@ -632,6 +636,7 @@ public class CoreQueryImporter implements TTImport {
         .path(w -> w.setIri(Namespace.IM + "observation")
           .setVariable("Observation")
           .setTypeOf(Namespace.IM + "Observation"))
+        .setTypeOf(Namespace.IM+"Observation")
         .where(and -> and
           .and(inv -> inv
             .setNodeRef("Observation")
@@ -644,6 +649,7 @@ public class CoreQueryImporter implements TTImport {
             .relativeTo(r -> r.setNodeRef("highBPReading").setIri(Namespace.IM + "effectiveDate")))))
       .not(q -> q
         .setName("not on hypertension register")
+        .setTypeOf(Namespace.IM + "Patient")
         .setDescription("is registered on the hypertensives register")
         .addInstanceOf(new Node().setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387").setMemberOf(true)
           .setName("Hypertensives")));
@@ -762,26 +768,7 @@ public class CoreQueryImporter implements TTImport {
       .set(iri(IM.DEFINITION), TTLiteral.literal(query));
   }
 
-  private void boundEntities() throws JsonProcessingException {
-    TTEntity queryEntity = getQuery("BoundEntities", "Data model bound concepts and sets", "For a known data model type and property. Filters by entities that are bound via the value set ");
-    queryEntity.set(iri(IM.DEFINITION), TTLiteral.literal(
-      new Query()
-        .setName("Data model bound concepts and sets")
-        .setDescription("For a known data model type and property. Filters by entities that are bound via the value set")
-        .path(p -> p
-          .setIri(IM.BINDING.toString())
-          .setVariable("binding"))
-        .where(and -> and
-          .and(w1 -> w1
-            .setNodeRef("binding")
-            .setIri(SHACL.PATH)
-            .is(is -> is.setIri(IM.DATA_MODEL_PROPERTY_CONCEPT.toString())))
-          .and(w1 -> w1
-            .setNodeRef("binding")
-            .setIri(SHACL.NODE)
-            .is(is -> is.setIri(Namespace.IM + "Observation"))))));
 
-  }
 
 
   private void isAllowableRange() throws JsonProcessingException {
