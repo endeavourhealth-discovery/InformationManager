@@ -43,7 +43,9 @@ public class SmartLifeImporter implements TTImport {
 
 		try (TTManager manager = new TTManager()){
 			TTDocument document = manager.createDocument();
-			document.addEntity(manager.createNamespaceEntity(Namespace.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles"));
+			TTEntity namespaceEntity = manager.createNamespaceEntity(Namespace.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles");
+			namespaceEntity.addObject(iri(IM.IS_CONTAINED_IN),iri(IM.CORE_SCHEMES));
+			document.addEntity(namespaceEntity);
 			createFolders(document);
 			try {
 				EQDImporter eqdImporter = new EQDImporter();
