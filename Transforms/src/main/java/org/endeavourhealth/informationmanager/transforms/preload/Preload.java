@@ -80,6 +80,7 @@ public class Preload {
       LOG.info("No files found in temp folder");
     }
     String folderHome = tempUrl.substring(0,tempUrl.lastIndexOf("\\"));
+    if (folderHome.endsWith(":")) folderHome = folderHome+"\\";
     String folderName = tempUrl.substring(tempUrl.lastIndexOf("\\") + 1);
     File newDirectory = new File(folderHome,folderName);
     if (!newDirectory.exists()) {
