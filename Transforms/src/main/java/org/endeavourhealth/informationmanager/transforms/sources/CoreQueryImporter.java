@@ -233,7 +233,6 @@ public class CoreQueryImporter implements TTImport {
           .path(p -> p.setIri(Namespace.IM + "address")
             .setVariable("Address")
             .setTypeOf(Namespace.IM + "Address"))
-          .setTypeOf(Namespace.IM + "Address")
           .where(and -> and
             .and(w -> w
               .setNodeRef("Address")
@@ -263,7 +262,6 @@ public class CoreQueryImporter implements TTImport {
         .path(p -> p.setIri(Namespace.IM + "address")
           .setVariable("Address")
           .setTypeOf(Namespace.IM + "Address"))
-          .setTypeOf(Namespace.IM+"Address")
         .where(and -> and
           .and(w -> w
             .setNodeRef("Address")
@@ -300,7 +298,6 @@ public class CoreQueryImporter implements TTImport {
         .path(p -> p.setIri(Namespace.IM + "telephone")
           .setVariable("Telephone")
           .setTypeOf(Namespace.IM + "TelephoneNumber"))
-          .setTypeOf(Namespace.IM+"TelephoneNumber")
         .where(and -> and
           .and(w -> w
             .setNodeRef("Telephone")
@@ -568,7 +565,6 @@ public class CoreQueryImporter implements TTImport {
           .setIri(Namespace.IM + "observation")
           .setVariable("Observation")
           .setTypeOf(Namespace.IM + "Observation"))
-        .setTypeOf(Namespace.IM+"Observation")
         .where(and -> and
           .and(ww -> ww
             .setNodeRef("Observation")
@@ -636,7 +632,6 @@ public class CoreQueryImporter implements TTImport {
         .path(w -> w.setIri(Namespace.IM + "observation")
           .setVariable("Observation")
           .setTypeOf(Namespace.IM + "Observation"))
-        .setTypeOf(Namespace.IM+"Observation")
         .where(and -> and
           .and(inv -> inv
             .setNodeRef("Observation")
@@ -649,7 +644,6 @@ public class CoreQueryImporter implements TTImport {
             .relativeTo(r -> r.setNodeRef("highBPReading").setIri(Namespace.IM + "effectiveDate")))))
       .not(q -> q
         .setName("not on hypertension register")
-        .setTypeOf(Namespace.IM + "Patient")
         .setDescription("is registered on the hypertensives register")
         .addInstanceOf(new Node().setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387").setMemberOf(true)
           .setName("Hypertensives")));
