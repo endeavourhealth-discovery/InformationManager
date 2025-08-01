@@ -122,31 +122,32 @@ public class CoreQueryImporter implements TTImport {
       .setName("Patient registered as GMS on the reference date")
       .setDescription("Is the patient registered as a GMS patient on the reference date?")
       .setTypeOf(Namespace.IM + "Patient")
-      .path(p -> p
-        .setIri(Namespace.IM + "episodeOfCare")
-        .setTypeOf(Namespace.IM + "EpisodeOfCare")
-        .setVariable("RegistrationEpisode"))
-      .where(w -> w
-        .and(pv -> pv
-          .setNodeRef("RegistrationEpisode")
-          .setIri(Namespace.IM + "gmsPatientType")
-          .addIs(new Node().setIri(IM.GMS_PATIENT.toString()).setName("Regular GMS patient")))
-        .and(pv -> pv
-          .setNodeRef("RegistrationEpisode")
-          .setIri(Namespace.IM + "effectiveDate")
-          .setOperator(Operator.lte)
-          .setRelativeTo(new RelativeTo().setParameter("$referenceDate")))
-        .and(pv -> pv
-          .setNodeRef("RegistrationEpisode")
-          .or(pv1 -> pv1
+      .and(m -> m
+        .path(p -> p
+          .setIri(Namespace.IM + "episodeOfCare")
+          .setTypeOf(Namespace.IM + "EpisodeOfCare")
+          .setVariable("RegistrationEpisode"))
+        .where(w -> w
+          .and(pv -> pv
             .setNodeRef("RegistrationEpisode")
-            .setIri(Namespace.IM + "endDate")
-            .setIsNull(true))
-          .or(pv1 -> pv1
+            .setIri(Namespace.IM + "gmsPatientType")
+            .addIs(new Node().setIri(IM.GMS_PATIENT.toString()).setName("Regular GMS patient")))
+          .and(pv -> pv
             .setNodeRef("RegistrationEpisode")
-            .setIri(Namespace.IM + "endDate")
-            .setOperator(Operator.gt)
-            .setRelativeTo(new RelativeTo().setParameter("$referenceDate")))));
+            .setIri(Namespace.IM + "effectiveDate")
+            .setOperator(Operator.lte)
+            .setRelativeTo(new RelativeTo().setParameter("$referenceDate")))
+          .and(pv -> pv
+            .setNodeRef("RegistrationEpisode")
+            .or(pv1 -> pv1
+              .setNodeRef("RegistrationEpisode")
+              .setIri(Namespace.IM + "endDate")
+              .setIsNull(true))
+            .or(pv1 -> pv1
+              .setNodeRef("RegistrationEpisode")
+              .setIri(Namespace.IM + "endDate")
+              .setOperator(Operator.gt)
+              .setRelativeTo(new RelativeTo().setParameter("$referenceDate"))))));
 
 
   }
@@ -324,7 +325,7 @@ public class CoreQueryImporter implements TTImport {
             .setIri(Namespace.IM + "dateOfBirth")
             .setIsNotNull(true)
             .setValueVariable("dateOfBirth"))
-    ));
+        ));
     document.addEntity(age);
   }
 
@@ -761,8 +762,6 @@ public class CoreQueryImporter implements TTImport {
     getQuery("AllowableChildTypes", "Allowable child types for editor", "used in the editor to select the type of entity being created as a subtype")
       .set(iri(IM.DEFINITION), TTLiteral.literal(query));
   }
-
-
 
 
   private void isAllowableRange() throws JsonProcessingException {
