@@ -131,7 +131,7 @@ public class CoreQueryImporter implements TTImport {
           .and(pv -> pv
             .setNodeRef("RegistrationEpisode")
             .setIri(Namespace.IM + "gmsPatientType")
-            .addIs(new Node().setIri(IM.GMS_PATIENT.toString()).setName("Regular GMS patient")))
+            .addIs(new Node().setIri("http://hl7.org/fhir/registration-type/r").setName("Regular GMS patient")))
           .and(pv -> pv
             .setNodeRef("RegistrationEpisode")
             .setIri(Namespace.IM + "effectiveDate")
