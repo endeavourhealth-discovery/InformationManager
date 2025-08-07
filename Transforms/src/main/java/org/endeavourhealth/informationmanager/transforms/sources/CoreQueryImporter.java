@@ -595,11 +595,12 @@ public class CoreQueryImporter implements TTImport {
             .setDirection(Order.descending))
           .setLimit(1))
         .return_(r -> r
-          .setNodeRef("Observation")
-          .as("latestBP"))
+          .as("latestBP")
+          .property(p -> p
+            .setNodeRef("Observation")
+            .setIri(Namespace.IM + "concept")))
         .then(m1 -> m1
           .setNodeRef("latestBP")
-          .setTypeOf(Namespace.IM + "Observation")
           .where(w -> w
             .or(whereEither -> whereEither
               .and(w1 -> w1
