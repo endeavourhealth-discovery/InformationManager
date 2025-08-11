@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -56,7 +57,7 @@ public class SmartLifeImporter implements TTImport {
 				throw new ImportException(ex.getMessage(), ex);
 			}
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-				filer.fileDocument(document);
+				filer.fileDocument(document, List.of(Graph.IM));
 
 			}
 			catch (Exception ex) {

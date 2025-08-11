@@ -87,13 +87,13 @@ public class IM1MapImport implements TTImport {
       String inFolder = config.getFolder();
       createFHIRMaps(inFolder);
       EMISImport.populateRemaps(remaps);
-      codeToIri = importMaps.getCodeToIri(Graph.IM);
+      codeToIri = importMaps.getCodeToIri(List.of(Graph.IM));
 
       importOld(inFolder);
 
 
       LOG.info("Retrieving all entities and matches...");
-      entities = importMaps.getAllPlusMatches(Graph.IM);
+      entities = importMaps.getAllPlusMatches(List.of(Graph.IM));
 
       try (TTManager manager = new TTManager()) {
         document = manager.createDocument();
@@ -108,12 +108,12 @@ public class IM1MapImport implements TTImport {
         importContext(inFolder);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
           LOG.debug("Filing IM1 document");
-          filer.fileDocument(document);
+          filer.fileDocument(document, List.of(Graph.IM));
         }
 
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
           LOG.debug("Filing stats document");
-          filer.fileDocument(statsDocument);
+          filer.fileDocument(statsDocument, List.of(Graph.IM));
         }
       }
     } catch (Exception e) {
@@ -245,7 +245,7 @@ public class IM1MapImport implements TTImport {
     if (entities.containsKey(Namespace.TPP + lname)) {
       checkEntity(Namespace.TPP, lname, im1Scheme, term, code, oldIri, description);
     } else {
-      TTIriRef core = importMaps.getReferenceFromCoreTerm(term, Graph.IM);
+      TTIriRef core = importMaps.getReferenceFromCoreTerm(term, List.of(Graph.IM));
       if (core != null) {
         addNewEntity(Namespace.TPP + lname, Namespace.TPP, core.getIri(), term, code, im1Scheme, oldIri, description, iri(IM.CONCEPT));
       } else {
@@ -300,7 +300,7 @@ public class IM1MapImport implements TTImport {
     if (entities.containsKey(Namespace.ENCOUNTERS + lname))
       checkEntity(Namespace.ENCOUNTERS, lname, im1Scheme, term, code, oldIri, description);
     else {
-      TTIriRef core = importMaps.getReferenceFromCoreTerm(term, Graph.IM);
+      TTIriRef core = importMaps.getReferenceFromCoreTerm(term, List.of(Graph.IM));
       if (core != null) {
         addIM1id(core.getIri(), oldIri);
       } else {
@@ -339,7 +339,7 @@ public class IM1MapImport implements TTImport {
       if (entities.containsKey(Namespace.IM + lname)) {
         checkEntity(Namespace.IM, lname, im1Scheme, term, code, oldIri, description);
       } else {
-        TTIriRef core = importMaps.getReferenceFromCoreTerm(term, Graph.IM);
+        TTIriRef core = importMaps.getReferenceFromCoreTerm(term, List.of(Graph.IM));
         if (core != null) {
           addIM1id(core.getIri(), oldIri);
         } else {
@@ -368,7 +368,7 @@ public class IM1MapImport implements TTImport {
     if (entities.containsKey(Namespace.BARTS_CERNER + lname)) {
       checkEntity(Namespace.BARTS_CERNER, lname, im1Scheme, term, code, oldIri, description);
     } else {
-      TTIriRef core = importMaps.getReferenceFromCoreTerm(term, Graph.IM);
+      TTIriRef core = importMaps.getReferenceFromCoreTerm(term, List.of(Graph.IM));
       if (core != null) {
         addNewEntity(Namespace.BARTS_CERNER + lname, Namespace.BARTS_CERNER, core.getIri(), term, code, im1Scheme, oldIri, description, iri(IM.CONCEPT));
       } else {
@@ -537,7 +537,7 @@ public class IM1MapImport implements TTImport {
         }
       } else {
         String oldTerm = oldIriTerm.get(lname);
-        TTIriRef core = importMaps.getReferenceFromCoreTerm(oldTerm, Graph.IM);
+        TTIriRef core = importMaps.getReferenceFromCoreTerm(oldTerm, List.of(Graph.IM));
         if (core != null) {
           lname = core.getIri().split("#")[1];
           checkEntity(namespace, lname, im1Scheme, term, code, oldIri, description);
@@ -556,7 +556,7 @@ public class IM1MapImport implements TTImport {
     } else {
       if (oldIri.startsWith("CM_")) {
         String potential = oldIri.substring(oldIri.lastIndexOf("_") + 1);
-        TTIriRef core = importMaps.getReferenceFromCoreTerm(getPhrase(potential), Graph.IM);
+        TTIriRef core = importMaps.getReferenceFromCoreTerm(getPhrase(potential), List.of(Graph.IM));
         if (core != null) {
           addIM1id(core.getIri(), oldIri);
         } else
@@ -857,7 +857,7 @@ public class IM1MapImport implements TTImport {
     oldIriEntity.put(oldIri, entity);
     if (value != null) {
       String coreTerm = getPhrase(oldIri);
-      TTIriRef core = importMaps.getReferenceFromCoreTerm(coreTerm, Graph.IM);
+      TTIriRef core = importMaps.getReferenceFromCoreTerm(coreTerm, List.of(Graph.IM));
       if (core != null)
         entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(core.getIri()));
     }

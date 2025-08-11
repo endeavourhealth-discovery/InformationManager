@@ -19,10 +19,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -47,7 +44,7 @@ public class VisionImport implements TTImport {
     LOG.info("importing vision codes");
     LOG.info("retrieving snomed codes from IM");
     try (TTManager manager = new TTManager()) {
-      snomedCodes = importMaps.getCodes(Namespace.SNOMED, Graph.IM);
+      snomedCodes = importMaps.getCodes(Namespace.SNOMED, List.of(Graph.IM));
       document = manager.createDocument();
       document.addEntity(manager.createNamespaceEntity(Namespace.VISION, "Vision (including Read) codes",
         "The Vision local code scheme and graph including Read 2 and Vision local codes"));
@@ -61,7 +58,7 @@ public class VisionImport implements TTImport {
       addVisionMaps(config.getFolder());
       addMissingMaps();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, List.of(Graph.IM));
       }
 
     } catch (Exception e) {
@@ -181,7 +178,7 @@ public class VisionImport implements TTImport {
 
   private void importEmis() throws IOException {
     LOG.info("Importing EMIS/Read from IM for look up....");
-    emisRead = importMaps.getEMISReadAsVision(Graph.IM);
+    emisRead = importMaps.getEMISReadAsVision(List.of(Graph.IM));
 
   }
 

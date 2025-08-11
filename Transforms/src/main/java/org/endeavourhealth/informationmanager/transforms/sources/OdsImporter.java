@@ -53,7 +53,7 @@ public class OdsImporter implements TTImport {
 
 
       importCodingSystem(config, doc);
-      filer.fileDocument(doc);
+      filer.fileDocument(doc, List.of(Graph.IM));
 
       doc = manager.createDocument();
       doc.setCrud(iri(IM.REPLACE_ALL_PREDICATES));
@@ -61,7 +61,7 @@ public class OdsImporter implements TTImport {
       importOrganisationData(config, doc);
       importOrganisationRelationships(config);
       importOrganisationRoles(config);
-      filer.fileDocument(doc);
+      filer.fileDocument(doc, List.of(Graph.IM));
     } catch (Exception e) {
       throw new ImportException(e.getMessage(),e);
     }

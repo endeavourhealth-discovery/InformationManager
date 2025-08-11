@@ -17,10 +17,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -61,11 +58,11 @@ public class CoreEthnicityImport implements TTImport {
       importEthnicGroups(config.getFolder());
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, List.of(Graph.IM));
       }
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(nhsDocument);
+        filer.fileDocument(nhsDocument, List.of(Graph.IM));
       }
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);
@@ -86,7 +83,7 @@ public class CoreEthnicityImport implements TTImport {
 
 
   private void retrieveEthnicity(boolean secure) throws TTFilerException, IOException {
-    census2001 = importMaps.getDescendants(Namespace.SNOMED + "92381000000106", Graph.IM);
+    census2001 = importMaps.getDescendants(Namespace.SNOMED + "92381000000106", List.of(Graph.IM));
     for (Map.Entry<String, Set<String>> entry : census2001.entrySet()) {
       String snomed = entry.getKey();
       for (String term : entry.getValue()) {

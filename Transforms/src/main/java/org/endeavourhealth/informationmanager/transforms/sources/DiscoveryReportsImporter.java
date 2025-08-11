@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 
 public class DiscoveryReportsImporter implements TTImport {
@@ -37,7 +38,7 @@ public class DiscoveryReportsImporter implements TTImport {
     LOG.info("Importing Reports concepts");
     try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
       TTDocument document = loadFile(config.getFolder());
-      filer.fileDocument(document);
+      filer.fileDocument(document, List.of(Graph.IM));
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);
     }

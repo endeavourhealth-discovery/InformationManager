@@ -24,6 +24,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -88,7 +89,7 @@ public class TPPImporter implements TTImport {
       importTppLocalMaps(config.getFolder());
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, List.of(Graph.IM));
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);
@@ -189,7 +190,7 @@ public class TPPImporter implements TTImport {
 
   private void importEMISMaps() throws TTFilerException, IOException {
     LOG.info("Getting EMIS maps");
-    emisToSnomed = importMaps.importEmisToSnomed(Graph.IM);
+    emisToSnomed = importMaps.importEmisToSnomed(List.of(Graph.IM));
   }
 
   private void importLocals(String folder) throws IOException, CsvValidationException {

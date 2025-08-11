@@ -57,7 +57,7 @@ public class BNFImporter implements TTImport {
       setMembers();
       flattenSets();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, List.of(Graph.IM));
       }
 
     } catch (Exception ex) {
@@ -69,7 +69,7 @@ public class BNFImporter implements TTImport {
     try {
       try {
         LOG.info("Creating EMIS-bnf maps...");
-        Map<String,String> emisConcepts= importMaps.getCodesToIri(Namespace.EMIS, Graph.IM);
+        Map<String,String> emisConcepts= importMaps.getCodesToIri(Namespace.EMIS, List.of(Graph.IM));
         for (Map.Entry<String,String> entry:emisConcepts.entrySet()){
           String code=entry.getKey();
           if (code.contains("DRGG")){

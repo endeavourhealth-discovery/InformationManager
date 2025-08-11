@@ -16,6 +16,7 @@ import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 
+import java.util.List;
 import java.util.Map;
 
 public class CoreVerbImporter implements TTImport {
@@ -28,7 +29,7 @@ public class CoreVerbImporter implements TTImport {
       verbs();
       ownerships();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, List.of(Graph.IM));
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(),e);

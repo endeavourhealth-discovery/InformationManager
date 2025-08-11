@@ -67,7 +67,7 @@ public class CoreQueryImporter implements TTImport {
       generateDefaultCohorts(manager);
       output(document, config.getFolder());
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, List.of(Graph.IM));
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);

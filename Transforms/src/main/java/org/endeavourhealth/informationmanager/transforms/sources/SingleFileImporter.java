@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 public class SingleFileImporter implements TTImport {
   private static final String INFERRED_SUFFIX = "-inferred.json";
@@ -38,7 +39,7 @@ public class SingleFileImporter implements TTImport {
       manager.loadDocument(singleFile);
       manager.setDocument(generateInferred(manager.getDocument()));
       TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM);
-      filer.fileDocument(manager.getDocument());
+      filer.fileDocument(manager.getDocument(), List.of(Graph.IM));
       String inferredFile = singleFile.toString().substring(0, singleFile.toString().indexOf(".json")) + INFERRED_SUFFIX;
       manager.saveDocument(new File(inferredFile));
     } catch (Exception ex) {

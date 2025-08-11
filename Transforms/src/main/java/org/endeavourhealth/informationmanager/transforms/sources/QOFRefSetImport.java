@@ -62,7 +62,7 @@ public class QOFRefSetImport implements TTImport {
       processSets(config.getFolder());
       if (!isSnomedImporter) {
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-          filer.fileDocument(document);
+          filer.fileDocument(document, List.of(Graph.IM));
         }
       }
     } catch (Exception e) {
