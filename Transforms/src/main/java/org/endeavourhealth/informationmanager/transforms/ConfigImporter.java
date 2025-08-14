@@ -12,6 +12,7 @@ import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 public class ConfigImporter implements TTImport {
 
@@ -30,7 +31,7 @@ public class ConfigImporter implements TTImport {
       importConfig(ttImportConfig.getFolder());
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.CONFIG)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, Graph.IM);
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);

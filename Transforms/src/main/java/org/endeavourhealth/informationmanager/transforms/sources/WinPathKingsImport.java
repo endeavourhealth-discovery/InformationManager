@@ -19,6 +19,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,7 +44,7 @@ public class WinPathKingsImport implements TTImport {
       importR2Matches();
       importWinPathKings(config.getFolder());
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, Graph.IM);
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(),e);
@@ -65,7 +66,7 @@ public class WinPathKingsImport implements TTImport {
 
   private void importR2Matches() throws TTFilerException, IOException {
     LOG.info("Retrieving read vision 2 snomed map");
-    readToSnomed = importMaps.importReadToSnomed(Graph.IM);
+    readToSnomed = importMaps.importReadToSnomed(List.of(Graph.IM));
 
   }
 

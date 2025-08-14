@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public class EncountersImporter implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(EncountersImporter.class);
@@ -33,7 +34,7 @@ public class EncountersImporter implements TTImport {
     try(TTManager manager = new TTManager()) {
       TTDocument document = manager.loadDocument(file.toFile());
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, Graph.IM);
       }
     }
   }

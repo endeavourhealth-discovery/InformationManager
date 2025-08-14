@@ -56,17 +56,13 @@ public class BNFImporter implements TTImport {
       setMembers();
       flattenSets();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, Graph.IM);
       }
 
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(),ex);
     }
   }
-
-
-
-
 
   private void setMembers() {
     LOG.info("Assigning instances to set definition match clause");
@@ -294,7 +290,7 @@ public class BNFImporter implements TTImport {
         }
       }
       emisCode="DRGG"+emisCode;
-      String emisIri= importMaps.getIriFromLegacyCode(Namespace.EMIS.toString(),emisCode);
+      String emisIri= importMaps.getIriFromLegacyCode(Namespace.EMIS.toString(),emisCode, List.of(Graph.IM));
       if (emisIri!=null){
         TTEntity emisEntity= new TTEntity()
           .setIri(emisIri)

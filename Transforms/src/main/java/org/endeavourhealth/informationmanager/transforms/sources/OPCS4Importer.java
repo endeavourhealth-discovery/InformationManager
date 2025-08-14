@@ -19,6 +19,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.DataFormatException;
@@ -45,7 +46,7 @@ public class OPCS4Importer implements TTImport {
     LOG.info("Importing OPCS4.....");
     LOG.info("Checking Snomed codes first");
     try {
-      snomedCodes = importMaps.getCodes(Namespace.SNOMED, Graph.IM);
+      snomedCodes = importMaps.getCodes(Namespace.SNOMED, List.of(Graph.IM));
       try (TTManager manager = new TTManager()) {
         document = manager.createDocument();
         document.addEntity(manager.createNamespaceEntity(Namespace.OPCS4, "OPCS4 code scheme and graph", "OPCS4-9 official code scheme and graph"));
@@ -56,8 +57,8 @@ public class OPCS4Importer implements TTImport {
         importMaps(config.getFolder());
         //Important to file after maps set
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-          filer.fileDocument(document);
-          filer.fileDocument(mapDocument);
+          filer.fileDocument(document, Graph.IM);
+          filer.fileDocument(mapDocument, Graph.IM);
         }
       }
     } catch (Exception e) {

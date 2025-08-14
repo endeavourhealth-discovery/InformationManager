@@ -10,6 +10,7 @@ import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class DeltaImporter implements TTImport {
   private static final String[] delta = {".*\\\\Deltas"};
@@ -18,7 +19,7 @@ public class DeltaImporter implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try (TTTransactionFiler filer = new TTTransactionFiler(Graph.IM)) {
       Path file = ImportUtils.findFileForId(config.getFolder(), delta[0]);
-      filer.fileDeltas(file.toString());
+      filer.fileDeltas(file.toString(), Graph.IM);
     } catch(Exception ex) {
       throw new ImportException(ex.getMessage(),ex);
     }

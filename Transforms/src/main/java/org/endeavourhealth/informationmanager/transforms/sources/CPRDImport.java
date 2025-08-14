@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -47,13 +48,13 @@ public class CPRDImport implements TTImport {
         document = manager.createDocument();
         document.addEntity(manager.createNamespaceEntity(Namespace.CPRD_MED, "CPRD medIds ",
           "CPRD clinical non product identifiers (including emis code ids)."));
-        filer.fileDocument(document);
+        filer.fileDocument(document, Graph.IM);
 
         document = manager.createDocument();
         document.addEntity(manager.createNamespaceEntity(Namespace.CPRD_PROD, "CPRD product ids",
           "internal identifiers to DMD VMPs and AMPs."));
         importDrugs(config.getFolder());
-        filer.fileDocument(document);
+        filer.fileDocument(document, Graph.IM);
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);

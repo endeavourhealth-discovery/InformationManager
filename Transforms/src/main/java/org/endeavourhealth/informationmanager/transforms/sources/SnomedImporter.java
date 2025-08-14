@@ -151,7 +151,7 @@ public class SnomedImporter implements TTImport {
       importDrugUsage(config.getFolder());
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, Graph.IM);
       }
 
       document = dmanager.createDocument();
@@ -163,7 +163,7 @@ public class SnomedImporter implements TTImport {
       conceptMap.clear();
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, Graph.IM);
       }
 
     } catch (Exception ex) {
@@ -666,7 +666,7 @@ public class SnomedImporter implements TTImport {
     }
     ECLQueryRequest eclQuery = new ECLQueryRequest();
     eclQuery.setEcl(ecl);
-    eclConverter.getQueryFromECL(eclQuery);
+    eclConverter.getQueryFromECL(eclQuery, List.of(Graph.IM));
     Query expression = eclQuery.getQuery();
     if (expression.getInstanceOf() != null) {
       op.addObject(iri(RDFS.RANGE), iri(expression.getInstanceOf().get(0).getIri()));

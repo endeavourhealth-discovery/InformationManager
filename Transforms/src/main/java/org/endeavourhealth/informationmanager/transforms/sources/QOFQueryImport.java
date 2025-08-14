@@ -52,7 +52,7 @@ public class QOFQueryImport implements TTImport {
 
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 				try {
-					filer.fileDocument(manager.getDocument());
+					filer.fileDocument(manager.getDocument(), Graph.IM);
 				} catch (Exception e) {
 					throw new ImportException(e.getMessage(),e);
 				}

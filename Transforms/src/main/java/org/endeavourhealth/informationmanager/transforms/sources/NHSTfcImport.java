@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -33,7 +34,7 @@ public class NHSTfcImport implements TTImport {
       setNHSDD();
       importFunctionCodes(config.getFolder());
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document);
+        filer.fileDocument(document, Graph.IM);
       }
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(),ex);
