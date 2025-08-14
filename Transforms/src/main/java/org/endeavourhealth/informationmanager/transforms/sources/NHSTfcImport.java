@@ -34,7 +34,7 @@ public class NHSTfcImport implements TTImport {
       setNHSDD();
       importFunctionCodes(config.getFolder());
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, List.of(Graph.IM));
+        filer.fileDocument(document, Graph.IM);
       }
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(),ex);

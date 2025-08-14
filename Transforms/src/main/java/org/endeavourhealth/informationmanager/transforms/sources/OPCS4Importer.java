@@ -57,8 +57,8 @@ public class OPCS4Importer implements TTImport {
         importMaps(config.getFolder());
         //Important to file after maps set
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-          filer.fileDocument(document, List.of(Graph.IM));
-          filer.fileDocument(mapDocument, List.of(Graph.IM));
+          filer.fileDocument(document, Graph.IM);
+          filer.fileDocument(mapDocument, Graph.IM);
         }
       }
     } catch (Exception e) {

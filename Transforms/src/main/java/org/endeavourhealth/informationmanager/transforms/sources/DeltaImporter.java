@@ -19,7 +19,7 @@ public class DeltaImporter implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try (TTTransactionFiler filer = new TTTransactionFiler(Graph.IM)) {
       Path file = ImportUtils.findFileForId(config.getFolder(), delta[0]);
-      filer.fileDeltas(file.toString(), List.of(Graph.IM));
+      filer.fileDeltas(file.toString(), Graph.IM);
     } catch(Exception ex) {
       throw new ImportException(ex.getMessage(),ex);
     }

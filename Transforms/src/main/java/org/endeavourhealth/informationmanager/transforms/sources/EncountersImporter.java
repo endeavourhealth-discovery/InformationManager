@@ -34,7 +34,7 @@ public class EncountersImporter implements TTImport {
     try(TTManager manager = new TTManager()) {
       TTDocument document = manager.loadDocument(file.toFile());
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, List.of(Graph.IM));
+        filer.fileDocument(document, Graph.IM);
       }
     }
   }

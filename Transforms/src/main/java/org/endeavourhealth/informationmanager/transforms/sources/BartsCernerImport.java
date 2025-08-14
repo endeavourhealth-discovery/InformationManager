@@ -59,7 +59,7 @@ public class BartsCernerImport implements TTImport {
       importMaps(config.getFolder());
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, List.of(Graph.IM));
+        filer.fileDocument(document, Graph.IM);
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);

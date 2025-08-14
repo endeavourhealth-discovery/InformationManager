@@ -58,7 +58,7 @@ public class VisionImport implements TTImport {
       addVisionMaps(config.getFolder());
       addMissingMaps();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, List.of(Graph.IM));
+        filer.fileDocument(document, Graph.IM);
       }
 
     } catch (Exception e) {

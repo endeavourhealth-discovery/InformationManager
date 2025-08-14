@@ -41,7 +41,7 @@ public class CEGImporter implements TTImport {
       EQDImporter eqdImporter = new EQDImporter();
       eqdImporter.loadAndConvert(config,manager,queries[0], Namespace.CEG, dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, List.of(Graph.IM));
+        filer.fileDocument(document, Graph.IM);
       } catch (Exception e) {
         throw new ImportException(e.getMessage(), e);
       }

@@ -48,13 +48,13 @@ public class CPRDImport implements TTImport {
         document = manager.createDocument();
         document.addEntity(manager.createNamespaceEntity(Namespace.CPRD_MED, "CPRD medIds ",
           "CPRD clinical non product identifiers (including emis code ids)."));
-        filer.fileDocument(document, List.of(Graph.IM));
+        filer.fileDocument(document, Graph.IM);
 
         document = manager.createDocument();
         document.addEntity(manager.createNamespaceEntity(Namespace.CPRD_PROD, "CPRD product ids",
           "internal identifiers to DMD VMPs and AMPs."));
         importDrugs(config.getFolder());
-        filer.fileDocument(document, List.of(Graph.IM));
+        filer.fileDocument(document, Graph.IM);
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);

@@ -57,7 +57,7 @@ public class SmartLifeImporter implements TTImport {
 				throw new ImportException(ex.getMessage(), ex);
 			}
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-				filer.fileDocument(document, List.of(Graph.IM));
+				filer.fileDocument(document, Graph.IM);
 
 			}
 			catch (Exception ex) {

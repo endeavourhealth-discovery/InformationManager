@@ -108,12 +108,12 @@ public class IM1MapImport implements TTImport {
         importContext(inFolder);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
           LOG.debug("Filing IM1 document");
-          filer.fileDocument(document, List.of(Graph.IM));
+          filer.fileDocument(document, Graph.IM);
         }
 
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
           LOG.debug("Filing stats document");
-          filer.fileDocument(statsDocument, List.of(Graph.IM));
+          filer.fileDocument(statsDocument, Graph.IM);
         }
       }
     } catch (Exception e) {

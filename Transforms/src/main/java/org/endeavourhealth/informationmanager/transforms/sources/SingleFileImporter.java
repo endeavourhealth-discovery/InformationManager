@@ -39,7 +39,7 @@ public class SingleFileImporter implements TTImport {
       manager.loadDocument(singleFile);
       manager.setDocument(generateInferred(manager.getDocument()));
       TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM);
-      filer.fileDocument(manager.getDocument(), List.of(Graph.IM));
+      filer.fileDocument(manager.getDocument(), Graph.IM);
       String inferredFile = singleFile.toString().substring(0, singleFile.toString().indexOf(".json")) + INFERRED_SUFFIX;
       manager.saveDocument(new File(inferredFile));
     } catch (Exception ex) {
