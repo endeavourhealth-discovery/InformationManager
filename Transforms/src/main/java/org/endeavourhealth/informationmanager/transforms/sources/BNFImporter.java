@@ -53,61 +53,16 @@ public class BNFImporter implements TTImport {
       topFolder();
       importMaps(config.getFolder());
       importCodes(config.getFolder());
-      createEMISMaps(document);
       setMembers();
       flattenSets();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, List.of(Graph.IM));
+        filer.fileDocument(document, Graph.IM);
       }
 
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(),ex);
     }
   }
-
-  private void createEMISMaps(TTDocument document) throws ImportException {
-    try {
-      try {
-        LOG.info("Creating EMIS-bnf maps...");
-        Map<String,String> emisConcepts= importMaps.getCodesToIri(Namespace.EMIS, List.of(Graph.IM));
-        for (Map.Entry<String,String> entry:emisConcepts.entrySet()){
-          String code=entry.getKey();
-          if (code.contains("DRGG")){
-            String bnfChapter= chapterFormatter(code.split("DRGG")[1]);
-            String bnfIri=Namespace.BNF+"BNF_"+bnfChapter;
-            TTEntity bnfEntity = manager.getEntity(bnfIri);
-            if (bnfEntity!=null){
-              TTEntity map= new TTEntity()
-                .setIri(entry.getValue())
-                .setCrud(iri(IM.ADD_QUADS))
-                .setScheme(Namespace.BNF.asIri())
-                .set(iri(IM.MATCHED_TO),iri(bnfIri));
-              document.addEntity(map);
-            }
-          }
-        }
-      }
-      catch (Exception ex){
-        LOG.error("Error creating EMIS maps",ex);
-        throw new ImportException(ex.getMessage(),ex);
-      }
-    }
-    catch (Exception ex){
-      throw new ImportException(ex.getMessage(),ex);
-    }
-
-  }
-  public String chapterFormatter(String emisFormat) {
-      String[] parts = emisFormat.split("\\.");
-      StringBuilder result = new StringBuilder();
-      for (String part : parts) {
-        int num = Integer.parseInt(part);
-        result.append(String.format("%02d", num)); // pad with 0s to 2 digits
-      }
-      return result.toString();
-  }
-
-
 
   private void setMembers() {
     LOG.info("Assigning instances to set definition match clause");
@@ -227,15 +182,16 @@ public class BNFImporter implements TTImport {
     String snomed = fields[4];
     if (snomed.contains(" "))
       LOG.error("bad snomed [" + snomed + "]");
-    if (bnfName.equals("") && (bnfCode.equals("")))
-      return;
-    if (!bnfCode.equals(""))
-      bnfCodeToSnomed.computeIfAbsent(bnfCode, s -> new HashSet<>()).add(snomed);
     else {
-      String pseudoCode = "bnf_" + bnfName.replace(" ", "");
-      bnfCodeToSnomed.computeIfAbsent(pseudoCode, s -> new HashSet<>()).add(snomed);
+      if (bnfName.equals("") && (bnfCode.equals("")))
+        return;
+      if (!bnfCode.equals(""))
+        bnfCodeToSnomed.computeIfAbsent(bnfCode, s -> new HashSet<>()).add(snomed);
+      else {
+        String pseudoCode = "bnf_" + bnfName.replace(" ", "");
+        bnfCodeToSnomed.computeIfAbsent(pseudoCode, s -> new HashSet<>()).add(snomed);
+      }
     }
-
 
   }
 
@@ -316,7 +272,32 @@ public class BNFImporter implements TTImport {
 
     document.addEntity(entity);
     codeToEntity.put(code, entity);
+    mapEmisCode(code);
+  }
 
+  private void mapEmisCode(String code) {
+      String emisCode=String.valueOf(Integer.parseInt(code.substring(0, 2)));
+      if (code.length()>2){
+        if (code.length()==3 )emisCode=emisCode+"."+Integer.parseInt(code.substring(2, 3));
+        else emisCode= emisCode+"."+ Integer.parseInt(code.substring(2, 4));
+        if (code.length()>4){
+          if (code.length()==5) emisCode=emisCode+"."+Integer.parseInt(code.substring(4, 5));
+          else emisCode=emisCode+"."+Integer.parseInt(code.substring(4,6));
+          if (code.length()>6){
+            if (code.length()==7) emisCode=emisCode+"."+Integer.parseInt(code.substring(6, 7));
+            else emisCode=emisCode+"."+Integer.parseInt(code.substring(6,8));
+          }
+        }
+      }
+      emisCode="DRGG"+emisCode;
+      String emisIri= importMaps.getIriFromLegacyCode(Namespace.EMIS.toString(),emisCode, List.of(Graph.IM));
+      if (emisIri!=null){
+        TTEntity emisEntity= new TTEntity()
+          .setIri(emisIri)
+          .setCrud(iri(IM.ADD_QUADS));
+        emisEntity.set(IM.MATCHED_TO,iri(Namespace.BNF+"BNF_"+code));
+        document.addEntity(emisEntity);
+      }
   }
 
 
