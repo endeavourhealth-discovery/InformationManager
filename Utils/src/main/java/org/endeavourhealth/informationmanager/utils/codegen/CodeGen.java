@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 
 import java.io.*;
+import java.util.List;
 import java.util.zip.ZipOutputStream;
 
 public class CodeGen {
@@ -26,7 +27,7 @@ public class CodeGen {
          BufferedOutputStream bos = new BufferedOutputStream(fos);
          ZipOutputStream result = new ZipOutputStream(bos)) {
 
-      new CodeGenJava().generate(result, Graph.IM);
+      new CodeGenJava().generate(result, List.of(Graph.IM));
     }
   }
 }
