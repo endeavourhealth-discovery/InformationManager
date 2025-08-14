@@ -107,7 +107,7 @@ public class Preload {
 
   }
 
-  public static List<ImportType> canBulk = List.of(ImportType.CORE, ImportType.SNOMED, ImportType.ENCOUNTERS, ImportType.QUERY, ImportType.IM1, ImportType.FHIR, ImportType.EMIS, ImportType.TPP, ImportType.OPCS4, ImportType.ICD10, ImportType.VISION, ImportType.ODS, ImportType.BARTS_CERNER, ImportType.NHS_TFC, ImportType.BNF);
+  public static List<ImportType> canBulk = List.of(ImportType.CORE, ImportType.SNOMED, ImportType.ENCOUNTERS, ImportType.QUERY, ImportType.IM1, ImportType.FHIR, ImportType.EMIS, ImportType.TPP, ImportType.OPCS4, ImportType.ICD10, ImportType.VISION, ImportType.ODS, ImportType.BARTS_CERNER, ImportType.NHS_TFC);
 
   private static void importData(TTImportConfig cfg, String graphdb) throws Exception {
     LOG.info("Validating config...");
