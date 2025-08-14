@@ -49,7 +49,7 @@ public class SmartLifeImporter implements TTImport {
 			document.addEntity(namespaceEntity);
 			createFolders(document);
 			try {
-				EQDImporter eqdImporter = new EQDImporter();
+				EQDImporter eqdImporter = new EQDImporter(false, List.of(Graph.IM));
 				eqdImporter.loadAndConvert(config,manager,queries[0],Namespace.SMARTLIFE,dataMapFile[0],
 					"criteriaMaps.properties",mainFolder,setFolder);
 			}
@@ -58,6 +58,7 @@ public class SmartLifeImporter implements TTImport {
 			}
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 				filer.fileDocument(document, Graph.IM);
+				filer.fileDocument(document,Graph.IM);
 
 			}
 			catch (Exception ex) {

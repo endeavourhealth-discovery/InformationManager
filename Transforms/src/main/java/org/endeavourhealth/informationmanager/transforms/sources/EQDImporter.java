@@ -30,12 +30,19 @@ public class EQDImporter {
 	private Properties criteriaMaps;
 	private String mainFolder;
 	private String setFolder;
-	private final EqdToIMQ converter = new EqdToIMQ();
+	private  EqdToIMQ converter;
 	private Namespace namespace;
 	private final Map<String,TTEntity> folderToEntity= new HashMap<>();
 	private final Set<TTEntity> newFolders= new HashSet<>();
 	private final Map<String,EQDOCCriterion> libraryItems= new HashMap<>();
+	private boolean versionIndependent;
+	private List<Graph> graphs;
 
+	public EQDImporter(boolean versionIndependent,List<Graph> graphs) {
+		this.versionIndependent=versionIndependent;
+		this.graphs=graphs;
+		converter= new EqdToIMQ(versionIndependent,graphs);
+	}
 	public void loadLibraryItems(Path directory) throws JAXBException {
 		File libraryDocument= new File(directory.toAbsolutePath() + "/library/Library.xml");
 		if (!libraryDocument.exists()) return;
@@ -111,7 +118,7 @@ public class EQDImporter {
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(fileEntry);
-					converter.convertEQD(document, eqd, dataMap,criteriaMaps, namespace, List.of(Graph.IM));
+					converter.convertEQD(document, eqd, dataMap,criteriaMaps, namespace);
 				}
 			}
 		}

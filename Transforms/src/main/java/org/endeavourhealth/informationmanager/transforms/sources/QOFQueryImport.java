@@ -39,7 +39,7 @@ public class QOFQueryImport implements TTImport {
 			manager.getDocument().addEntity(manager.createNamespaceEntity(Namespace.QOF,"QOF Framework", "QOF  library of value sets, queries and profiles"));
 			createFolders(manager.getDocument());
 			try {
-				EQDImporter eqdImporter = new EQDImporter();
+				EQDImporter eqdImporter = new EQDImporter(true,List.of(Graph.IM));
 				EqdToIMQ.gmsPatients.add("71154095-0C58-4193-B58F-21F05EA0BE2F");
 				EqdToIMQ.gmsPatients.add("DA05DBF2-72AB-41A3-968F-E4A061F411A4");
 				EqdToIMQ.gmsPatients.add("591C5738-2F6B-4A6F-A2B3-05FA538A1B3B");
