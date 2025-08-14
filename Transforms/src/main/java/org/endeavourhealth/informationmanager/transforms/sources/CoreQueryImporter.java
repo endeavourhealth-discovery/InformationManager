@@ -65,7 +65,6 @@ public class CoreQueryImporter implements TTImport {
       searchAllowableSubclass();
       searchAllowableContainedIn();
       generateDefaultCohorts(manager);
-      output(document, config.getFolder());
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
@@ -107,10 +106,10 @@ public class CoreQueryImporter implements TTImport {
         .set(iri(RDFS.LABEL), TTLiteral.literal("referenceDate"))
         .set(iri(SHACL.DATATYPE), iri(Namespace.IM + "DateTime")));
     Query query = getGmsIsRegistered();
-    query.orderBy(o -> o.addProperty(new OrderDirection().setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1));
     query.return_(r -> r
-      .setNodeRef("RegistrationEpisode")
+      .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("RegistrationEpisode").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))
       .property(p -> p
+        .setNodeRef("RegistrationEpisode")
         .setIri(Namespace.IM + "provider")));
     query.setName("GMS registered practice");
     gms.set(iri(IM.DEFINITION), TTLiteral.literal(query));
@@ -248,7 +247,8 @@ public class CoreQueryImporter implements TTImport {
               .setNodeRef("Address")
               .setIri(Namespace.IM + "addressUse")
               .is(is -> is.setIri("http://hl7.org/fhir/fhir-address-use/" + value))))
-          .orderBy(ob -> ob.addProperty(new OrderDirection().setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+          .return_(r -> r
+          .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1)))));
     document.addEntity(address);
 
   }
@@ -284,7 +284,8 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("Address")
             .setIri(Namespace.IM + "addressUse")
             .is(is -> is.setIri("http://hl7.org/fhir/fhir-address-use/" + value))))
-        .orderBy(ob -> ob.addProperty(new OrderDirection().setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+          .return_(r -> r
+        .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1)))));
     document.addEntity(address);
 
   }
@@ -308,7 +309,8 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("Telephone")
             .setIri(Namespace.IM + "use")
             .is(is -> is.setIri("http://hl7.org/fhir/contact-point-use/" + value))))
-        .orderBy(o -> o.addProperty(new OrderDirection().setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+          .return_(r -> r
+        .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("Telephone").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1)))));
     document.addEntity(address);
 
   }
@@ -588,14 +590,14 @@ public class CoreQueryImporter implements TTImport {
             .setUnit(iri(IM.MONTHS))
             .relativeTo(r -> r.setParameter("$referenceDate"))
             .setValueLabel("last 12 months")))
-        .setOrderBy(new OrderLimit()
-          .addProperty(new OrderDirection()
-            .setNodeRef("Observation")
-            .setIri(Namespace.IM + "effectiveDate")
-            .setDirection(Order.descending))
-          .setLimit(1))
         .return_(r -> r
           .as("latestBP")
+          .setOrderBy(new OrderLimit()
+            .addProperty(new OrderDirection()
+              .setNodeRef("Observation")
+              .setIri(Namespace.IM + "effectiveDate")
+              .setDirection(Order.descending))
+            .setLimit(1))
           .property(p -> p
             .setNodeRef("Observation")
             .setIri(Namespace.IM + "concept")))
@@ -1034,59 +1036,8 @@ public class CoreQueryImporter implements TTImport {
     // No files to validate
   }
 
-  private void output(TTDocument document, String directory) throws IOException {
 
-    try (FileWriter writer = new FileWriter(directory + "\\DiscoveryCore\\CoreQueries\\CoreQueriesAll.json")) {
-      ObjectMapper objectMapper = new ObjectMapper();
-      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
-      String doc = objectMapper.writerWithDefaultPrettyPrinter()
-        .withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(document);
-      writer.write(doc);
-    }
-    for (TTEntity entity : document.getEntities()) {
-      if (entity.isType(iri(IM.MATCH_CLAUSE))) {
-        Match match = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Match.class);
-        outputMatch(entity.getName(), match, directory);
-      } else {
-        if (entity.get(iri(IM.DEFINITION)) != null) {
-          Query query = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-          outputQuery(query, directory);
-        }
-      }
-    }
 
-  }
-
-  private void outputQuery(Query qry, String directory) throws IOException {
-    String name = qry.getName();
-    if (name.length() > 20)
-      name = name.substring(0, 20);
-    try (FileWriter writer = new FileWriter(directory + "\\DiscoveryCore\\CoreQueries\\" + name + "+.json")) {
-      ObjectMapper objectMapper = new ObjectMapper();
-      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
-      String doc = objectMapper.writerWithDefaultPrettyPrinter()
-        .withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(qry);
-      writer.write(doc);
-    }
-  }
-
-  private void outputMatch(String name, Match qry, String directory) throws IOException {
-    if (name.length() > 20)
-      name = name.substring(0, 20);
-    try (FileWriter writer = new FileWriter(directory + "\\DiscoveryCore\\CoreQueries\\" + name + "+.json")) {
-      ObjectMapper objectMapper = new ObjectMapper();
-      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
-      String doc = objectMapper.writerWithDefaultPrettyPrinter()
-        .withAttribute(TTContext.OUTPUT_CONTEXT, true).writeValueAsString(qry);
-      writer.write(doc);
-    }
-  }
 
   @Override
   public void close() throws Exception {
