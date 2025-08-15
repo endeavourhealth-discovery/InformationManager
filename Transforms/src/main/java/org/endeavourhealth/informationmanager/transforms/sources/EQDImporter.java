@@ -43,7 +43,7 @@ public class EQDImporter {
 		this.graphs=graphs;
 		converter= new EqdToIMQ(versionIndependent,graphs);
 	}
-	
+
 	public void loadLibraryItems(Path directory) throws JAXBException {
 		File libraryDocument= new File(directory.toAbsolutePath() + "/library/Library.xml");
 		if (!libraryDocument.exists()) return;
