@@ -27,7 +27,7 @@ public class CodeGen {
          BufferedOutputStream bos = new BufferedOutputStream(fos);
          ZipOutputStream result = new ZipOutputStream(bos)) {
 
-      new CodeGenJava().generate(result, List.of(Graph.IM));
+      new CodeGenJava().generate(result);
     }
   }
 }

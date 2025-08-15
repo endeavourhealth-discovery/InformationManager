@@ -83,7 +83,7 @@ public class CoreEthnicityImport implements TTImport {
 
 
   private void retrieveEthnicity(boolean secure) throws TTFilerException, IOException {
-    census2001 = importMaps.getDescendants(Namespace.SNOMED + "92381000000106", List.of(Graph.IM));
+    census2001 = importMaps.getDescendants(Namespace.SNOMED + "92381000000106");
     for (Map.Entry<String, Set<String>> entry : census2001.entrySet()) {
       String snomed = entry.getKey();
       for (String term : entry.getValue()) {

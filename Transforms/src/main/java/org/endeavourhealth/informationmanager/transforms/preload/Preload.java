@@ -134,13 +134,13 @@ public class Preload {
       startGraph(graphdb);
     }
 
-    try (IMDB conn = IMDB.getConnection(List.of(Graph.IM))) {
+    try (IMDB conn = IMDB.getConnection()) {
       new RangeInheritor().inheritRanges(conn, Graph.IM);
     }
 
     LOG.info("expanding value sets");
-    new SetMemberGenerator().generateAllSetMembers(List.of(Graph.IM),Graph.IM);
-    new SetBinder().bindSets(List.of(Graph.IM),Graph.IM);
+    new SetMemberGenerator().generateAllSetMembers(Graph.IM);
+    new SetBinder().bindSets(Graph.IM);
     LOG.info("Filing into live graph");
     TTFilerFactory.setBulk(false);
     TTFilerFactory.setTransactional(true);
@@ -155,7 +155,7 @@ public class Preload {
       deltaImporter.importData(cfg);
     }
     LOG.info("adding missing properties into concept domains");
-    new DomainResolver().updateDomains(List.of(Graph.IM),Graph.IM);
+    new DomainResolver().updateDomains(Graph.IM);
 
     LOG.info("Finished - {}" ,new Date());
 

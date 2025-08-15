@@ -66,7 +66,7 @@ public class WinPathKingsImport implements TTImport {
 
   private void importR2Matches() throws TTFilerException, IOException {
     LOG.info("Retrieving read vision 2 snomed map");
-    readToSnomed = importMaps.importReadToSnomed(List.of(Graph.IM));
+    readToSnomed = importMaps.importReadToSnomed();
 
   }
 

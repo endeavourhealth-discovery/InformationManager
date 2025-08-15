@@ -666,7 +666,7 @@ public class SnomedImporter implements TTImport {
     }
     ECLQueryRequest eclQuery = new ECLQueryRequest();
     eclQuery.setEcl(ecl);
-    eclConverter.getQueryFromECL(eclQuery, List.of(Graph.IM));
+    eclConverter.getQueryFromECL(eclQuery);
     Query expression = eclQuery.getQuery();
     if (expression.getInstanceOf() != null) {
       op.addObject(iri(RDFS.RANGE), iri(expression.getInstanceOf().get(0).getIri()));

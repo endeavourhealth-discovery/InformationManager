@@ -45,7 +45,7 @@ public class ICD10Importer implements TTImport {
       validateFiles(config.getFolder());
       LOG.info("Importing ICD10....");
       LOG.info("Getting snomed codes");
-      snomedCodes = importMaps.getCodes(Namespace.SNOMED,List.of(Graph.IM));
+      snomedCodes = importMaps.getCodes(Namespace.SNOMED);
       document = manager.createDocument();
       document.addEntity(manager.createNamespaceEntity(Namespace.ICD10, "ICD10  code scheme and graph", "The ICD10 code scheme and graph including links to core"));
       createTaxonomy();

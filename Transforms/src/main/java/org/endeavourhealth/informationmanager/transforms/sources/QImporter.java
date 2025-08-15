@@ -66,7 +66,7 @@ public class QImporter implements TTImport {
           .setUpdate(new Update().setIri(Namespace.IM + "DeleteSets"));
 
         LOG.info("Deleting q code groups..");
-        new SearchService().updateIM(qr, List.of(Graph.IM), Graph.IM);
+        new SearchService().updateIM(qr, Graph.IM);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
           filer.fileDocument(document, Graph.IM);
         }
@@ -104,8 +104,8 @@ public class QImporter implements TTImport {
   private boolean isMedicationSet(TTEntity entity) {
     if (entity.get(IM.HAS_MEMBER) != null) {
       SetBinder binder = new SetBinder();
-      binder.bindSet(entity.getIri(), List.of(Graph.IM), Graph.IM);
-      TTEntity boundSet = new EntityService().getBundle(entity.getIri(), asHashSet(IM.BINDING), List.of(Graph.IM)).getEntity();
+      binder.bindSet(entity.getIri(), Graph.IM);
+      TTEntity boundSet = new EntityService().getBundle(entity.getIri(), asHashSet(IM.BINDING)).getEntity();
 
       if (!boundSet.has(IM.BINDING)) {
         LOG.error("Set has no bindings [{}]", entity.getIri());
