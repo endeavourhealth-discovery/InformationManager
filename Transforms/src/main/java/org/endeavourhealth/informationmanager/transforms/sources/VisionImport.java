@@ -58,7 +58,7 @@ public class VisionImport implements TTImport {
       addVisionMaps(config.getFolder());
       addMissingMaps();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, Graph.IM);
+        filer.fileDocument(document);
       }
 
     } catch (Exception e) {
@@ -178,7 +178,7 @@ public class VisionImport implements TTImport {
 
   private void importEmis() throws IOException {
     LOG.info("Importing EMIS/Read from IM for look up....");
-    emisRead = importMaps.getEMISReadAsVision(List.of(Graph.IM));
+    emisRead = importMaps.getEMISReadAsVision();
 
   }
 

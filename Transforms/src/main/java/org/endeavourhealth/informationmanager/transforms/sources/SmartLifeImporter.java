@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.utility.ThreadContext;
 import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.endeavourhealth.informationmanager.transforms.ZipUtils;
@@ -12,10 +13,7 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -23,21 +21,20 @@ import java.util.List;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class SmartLifeImporter implements TTImport {
-	private static final Logger LOG = LoggerFactory.getLogger(CEGImporter.class);
-
 	private static final String[] queries = {".*\\\\Smartlife"};
 	private static final String[] libraries = {".*\\\\Smartlife\\\\Library\\\\Library.zip"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	private String mainFolder;
 	private String setFolder;
-	private TTImportConfig config;
 
 	@Override
 	public void importData(TTImportConfig config) throws ImportException {
-		this.config=config;
+    ThreadContext.setUserGraphs(List.of(Graph.IM, Graph.SMARTLIFE));
+    Graph fileGraph = Graph.IM;
+
 		try {
 			Path zip = ImportUtils.findFileForId(config.getFolder(), libraries[0]);
-			File file = ZipUtils.unzipFile(zip.getFileName().toString(), zip.getParent().toString());
+			ZipUtils.unzipFile(zip.getFileName().toString(), zip.getParent().toString());
 		} catch (IOException e) {
 			throw new ImportException("Unable to unzip smartlife library",e);
 		}
@@ -49,17 +46,15 @@ public class SmartLifeImporter implements TTImport {
 			document.addEntity(namespaceEntity);
 			createFolders(document);
 			try {
-				EQDImporter eqdImporter = new EQDImporter(false, List.of(Graph.IM));
+				EQDImporter eqdImporter = new EQDImporter(false);
 				eqdImporter.loadAndConvert(config,manager,queries[0],Namespace.SMARTLIFE,dataMapFile[0],
 					"criteriaMaps.properties",mainFolder,setFolder);
 			}
 			catch (Exception ex) {
 				throw new ImportException(ex.getMessage(), ex);
 			}
-			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-				filer.fileDocument(document, Graph.IM);
-				filer.fileDocument(document,Graph.IM);
-
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(fileGraph)) {
+				filer.fileDocument(document);
 			}
 			catch (Exception ex) {
 				throw new ImportException(ex.getMessage(), ex);
@@ -87,14 +82,6 @@ public class SmartLifeImporter implements TTImport {
 		setFolder= folder.getIri();
 
 	}
-	private void checkAndUnzip(String file) throws IOException {
-		LOG.info("Checking for library zip items");
-		Path zipFile= Path.of(file);
-		ImportUtils.unzipArchive(zipFile.toString(), zipFile.getParent().toString());
-
-	}
-
-
 
 	@Override
 	public void validateFiles(String inFolder) throws TTFilerException {

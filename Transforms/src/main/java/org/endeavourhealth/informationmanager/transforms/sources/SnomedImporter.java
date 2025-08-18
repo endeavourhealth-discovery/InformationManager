@@ -151,7 +151,7 @@ public class SnomedImporter implements TTImport {
       importDrugUsage(config.getFolder());
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, Graph.IM);
+        filer.fileDocument(document);
       }
 
       document = dmanager.createDocument();
@@ -163,7 +163,7 @@ public class SnomedImporter implements TTImport {
       conceptMap.clear();
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, Graph.IM);
+        filer.fileDocument(document);
       }
 
     } catch (Exception ex) {

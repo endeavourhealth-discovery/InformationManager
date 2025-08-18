@@ -68,7 +68,7 @@ public class QImporter implements TTImport {
         LOG.info("Deleting q code groups..");
         new SearchService().updateIM(qr, Graph.IM);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-          filer.fileDocument(document, Graph.IM);
+          filer.fileDocument(document);
         }
         resetDrugs();
       }
@@ -97,7 +97,7 @@ public class QImporter implements TTImport {
       }
     }
     try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-      filer.fileDocument(drugDocument, Graph.IM);
+      filer.fileDocument(drugDocument);
     }
   }
 

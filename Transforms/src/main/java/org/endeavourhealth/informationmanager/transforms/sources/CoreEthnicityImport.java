@@ -58,11 +58,11 @@ public class CoreEthnicityImport implements TTImport {
       importEthnicGroups(config.getFolder());
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, Graph.IM);
+        filer.fileDocument(document);
       }
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(nhsDocument, Graph.IM);
+        filer.fileDocument(nhsDocument);
       }
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);

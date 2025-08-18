@@ -57,10 +57,10 @@ public class ICD10Importer implements TTImport {
       mapDocument = manager.createDocument();
       importMaps(config.getFolder());
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, Graph.IM);
+        filer.fileDocument(document);
       }
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(mapDocument, Graph.IM);
+        filer.fileDocument(mapDocument);
       }
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(),ex);

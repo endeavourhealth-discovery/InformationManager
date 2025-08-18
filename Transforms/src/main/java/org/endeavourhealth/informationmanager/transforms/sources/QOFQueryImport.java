@@ -1,12 +1,8 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.model.imq.Match;
-import org.endeavourhealth.imapi.model.imq.Node;
-import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
@@ -16,16 +12,12 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class QOFQueryImport implements TTImport {
-	private static final Logger LOG = LoggerFactory.getLogger(CEGImporter.class);
-
 	private static final String[] queries = {".*\\\\QOF"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
 	private String mainFolder;
@@ -39,7 +31,7 @@ public class QOFQueryImport implements TTImport {
 			manager.getDocument().addEntity(manager.createNamespaceEntity(Namespace.QOF,"QOF Framework", "QOF  library of value sets, queries and profiles"));
 			createFolders(manager.getDocument());
 			try {
-				EQDImporter eqdImporter = new EQDImporter(true,List.of(Graph.IM));
+				EQDImporter eqdImporter = new EQDImporter(true);
 				EqdToIMQ.gmsPatients.add("71154095-0C58-4193-B58F-21F05EA0BE2F");
 				EqdToIMQ.gmsPatients.add("DA05DBF2-72AB-41A3-968F-E4A061F411A4");
 				EqdToIMQ.gmsPatients.add("591C5738-2F6B-4A6F-A2B3-05FA538A1B3B");
@@ -52,7 +44,7 @@ public class QOFQueryImport implements TTImport {
 
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 				try {
-					filer.fileDocument(manager.getDocument(), Graph.IM);
+					filer.fileDocument(manager.getDocument());
 				} catch (Exception e) {
 					throw new ImportException(e.getMessage(),e);
 				}
@@ -91,7 +83,6 @@ public class QOFQueryImport implements TTImport {
 
 	@Override
 	public void close() throws Exception {
-
 	}
 }
 

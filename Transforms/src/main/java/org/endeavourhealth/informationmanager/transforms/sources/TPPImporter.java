@@ -89,7 +89,7 @@ public class TPPImporter implements TTImport {
       importTppLocalMaps(config.getFolder());
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, Graph.IM);
+        filer.fileDocument(document);
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);
@@ -190,7 +190,7 @@ public class TPPImporter implements TTImport {
 
   private void importEMISMaps() throws TTFilerException, IOException {
     LOG.info("Getting EMIS maps");
-    emisToSnomed = importMaps.importEmisToSnomed(List.of(Graph.IM));
+    emisToSnomed = importMaps.importEmisToSnomed();
   }
 
   private void importLocals(String folder) throws IOException, CsvValidationException {
