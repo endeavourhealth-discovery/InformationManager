@@ -38,10 +38,10 @@ public class CEGImporter implements TTImport {
       document.addEntity(manager.createNamespaceEntity(Namespace.CEG,"CEG (QMUL) scheme","CEG library of value sets, queries and profiles"));
       createOrg(document);
       createFolders(document);
-      EQDImporter eqdImporter = new EQDImporter(false,List.of(Graph.IM));
+      EQDImporter eqdImporter = new EQDImporter(false);
       eqdImporter.loadAndConvert(config,manager,queries[0], Namespace.CEG, dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, Graph.IM);
+        filer.fileDocument(document);
       } catch (Exception e) {
         throw new ImportException(e.getMessage(), e);
       }

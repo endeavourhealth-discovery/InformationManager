@@ -31,7 +31,7 @@ public class ConfigImporter implements TTImport {
       importConfig(ttImportConfig.getFolder());
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.CONFIG)) {
-        filer.fileDocument(document, Graph.IM);
+        filer.fileDocument(document);
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);

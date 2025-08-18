@@ -58,11 +58,11 @@ public class CoreEthnicityImport implements TTImport {
       importEthnicGroups(config.getFolder());
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, Graph.IM);
+        filer.fileDocument(document);
       }
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(nhsDocument, Graph.IM);
+        filer.fileDocument(nhsDocument);
       }
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);
@@ -83,7 +83,7 @@ public class CoreEthnicityImport implements TTImport {
 
 
   private void retrieveEthnicity(boolean secure) throws TTFilerException, IOException {
-    census2001 = importMaps.getDescendants(Namespace.SNOMED + "92381000000106", List.of(Graph.IM));
+    census2001 = importMaps.getDescendants(Namespace.SNOMED + "92381000000106");
     for (Map.Entry<String, Set<String>> entry : census2001.entrySet()) {
       String snomed = entry.getKey();
       for (String term : entry.getValue()) {

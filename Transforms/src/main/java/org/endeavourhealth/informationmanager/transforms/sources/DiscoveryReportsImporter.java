@@ -38,7 +38,7 @@ public class DiscoveryReportsImporter implements TTImport {
     LOG.info("Importing Reports concepts");
     try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
       TTDocument document = loadFile(config.getFolder());
-      filer.fileDocument(document, Graph.IM);
+      filer.fileDocument(document);
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);
     }

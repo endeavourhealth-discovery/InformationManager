@@ -29,7 +29,7 @@ public class CoreVerbImporter implements TTImport {
       verbs();
       ownerships();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
-        filer.fileDocument(document, Graph.IM);
+        filer.fileDocument(document);
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(),e);

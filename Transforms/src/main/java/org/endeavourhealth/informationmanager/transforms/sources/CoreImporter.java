@@ -108,7 +108,7 @@ public class CoreImporter implements TTImport {
           LOG.info("Filing {}", coreFile);
           try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
             try {
-              filer.fileDocument(document, Graph.IM);
+              filer.fileDocument(document);
             } catch (TTFilerException | QueryException e) {
               throw new IOException(e.getMessage());
             }

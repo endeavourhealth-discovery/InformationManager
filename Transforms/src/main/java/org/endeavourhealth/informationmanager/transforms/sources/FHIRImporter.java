@@ -67,7 +67,7 @@ public class FHIRImporter implements TTImport {
 					LOG.info("Filing {}", Namespace.FHIR);
 					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 						try {
-							filer.fileDocument(document, Graph.IM);
+							filer.fileDocument(document);
 						} catch (TTFilerException | QueryException e) {
 							throw new IOException(e.getMessage());
 						}
