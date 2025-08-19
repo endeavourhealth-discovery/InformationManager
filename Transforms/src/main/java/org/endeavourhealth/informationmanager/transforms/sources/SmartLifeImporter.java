@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.utility.ThreadContext;
 import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
@@ -13,6 +14,7 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -24,6 +26,9 @@ public class SmartLifeImporter implements TTImport {
 	private static final String[] queries = {".*\\\\Smartlife"};
 	private static final String[] libraries = {".*\\\\Smartlife\\\\Library\\\\Library.zip"};
 	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
+	private static final String[] dashboards = {
+		".*\\\\Smartlife\\\\Dashboards.json"
+	};
 	private String mainFolder;
 	private String setFolder;
 
@@ -31,6 +36,17 @@ public class SmartLifeImporter implements TTImport {
 	public void importData(TTImportConfig config) throws ImportException {
     ThreadContext.setUserGraphs(List.of(Graph.IM, Graph.SMARTLIFE));
     Graph fileGraph = Graph.IM;
+		for (String dashboard : dashboards) {
+				try (TTManager manager = new TTManager()) {
+					Path path = ImportUtils.findFileForId(config.getFolder(), dashboard);
+					manager.loadDocument(path.toFile());
+					manager.setDocument(generateInferred(manager.getDocument()));
+					TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM);
+					filer.fileDocument(manager.getDocument());
+				}catch (Exception ex) {
+					throw new ImportException(ex.getMessage(), ex);
+				}
+		}
 
 		try {
 			Path zip = ImportUtils.findFileForId(config.getFolder(), libraries[0]);
@@ -62,7 +78,12 @@ public class SmartLifeImporter implements TTImport {
 		}
 	}
 
-
+	private static TTDocument generateInferred(TTDocument document) throws OWLOntologyCreationException {
+		Reasoner reasoner = new Reasoner();
+		TTDocument inferred = reasoner.generateInferred(document);
+		inferred = reasoner.inheritShapeProperties(inferred);
+		return inferred;
+	}
 	private void createFolders(TTDocument document) {
 		TTEntity folder = new TTEntity()
 			.setIri(Namespace.SMARTLIFE + "Q_SmartLifeQueries")
@@ -85,7 +106,7 @@ public class SmartLifeImporter implements TTImport {
 
 	@Override
 	public void validateFiles(String inFolder) throws TTFilerException {
-		ImportUtils.validateFiles(inFolder, queries);
+		ImportUtils.validateFiles(inFolder, queries,dashboards);
 	}
 
 

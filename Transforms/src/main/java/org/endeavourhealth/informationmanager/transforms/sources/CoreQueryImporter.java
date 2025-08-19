@@ -50,7 +50,6 @@ public class CoreQueryImporter implements TTImport {
       getSearchAll();
       allowableSubTypes();
       currentGMS();
-      aged18OrOverAsMatch();
       deleteSets();
       getAncestors();
       getSubsets();
@@ -332,32 +331,6 @@ public class CoreQueryImporter implements TTImport {
   }
 
 
-  private void aged18OrOverAsMatch() throws JsonProcessingException {
-
-    Match aged18OrOver = new Match()
-      .setName("Aged 18 years or over")
-      .setDescription("Aged 18 or more years old")
-      .setWhere(new Where()
-        .setIri(Namespace.IM + "age")
-        .setUnit(iri(IM.YEARS))
-        .setOperator(Operator.gte)
-        .setValue("18"));
-
-    TTEntity qry = new TTEntity()
-      .setIri(Namespace.IM + "M_AgedOverEighteen")
-      .setName("Aged 18 or over (feature)")
-      .setScheme(Namespace.IM.asIri())
-      .setDescription("Tests whether a person is 18 or more years of age.")
-      .addType(iri(IM.MATCH_CLAUSE))
-      .set(iri(IM.RETURN_TYPE), TTIriRef.iri(Namespace.IM + "Patient"))
-      .set(iri(IM.USAGE_TOTAL), TTLiteral.literal(10000))
-      .set(iri(SHACL.ORDER), 3)
-      .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "M_CommonClauses"))
-      .set(iri(IM.DEFINITION), TTLiteral.literal(aged18OrOver));
-
-    document.addEntity(qry);
-  }
-
   private void objectPropertyRangeSuggestions() throws JsonProcessingException {
     TTEntity query = getQuery("ObjectPropertyRangeSuggestions", "Range suggestions for object property", "takes account of the data model shape that the property is part of")
       .set(iri(IM.DEFINITION), TTLiteral.literal(
@@ -542,11 +515,13 @@ public class CoreQueryImporter implements TTImport {
               .from(from -> from
                 .setOperator(Operator.gte)
                 .setValue("65")
-                .setUnit(iri(IM.YEARS)))
+                .argument(a->a.setParameter("units").setValueIri(iri(IM.YEARS))))
               .to(to -> to
                 .setOperator(Operator.lt)
                 .setValue("70")
-                .setUnit(iri(IM.YEARS))))))
+                .argument(a->a
+                  .setParameter("units")
+                  .setValueIri(iri(IM.YEARS)))))))
         .or(m -> m
           .setDescription("has pre-diabetes")
           .addPath(new Path()
