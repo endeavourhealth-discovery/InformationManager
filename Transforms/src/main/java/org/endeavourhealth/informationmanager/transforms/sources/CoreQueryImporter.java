@@ -103,7 +103,7 @@ public class CoreQueryImporter implements TTImport {
       .setCrud(iri(IM.UPDATE_PREDICATES))
       .setScheme(Namespace.IM.asIri())
       .addObject(iri(SHACL.PARAMETER), new TTNode()
-        .set(iri(RDFS.LABEL), TTLiteral.literal("referenceDate"))
+        .set(iri(RDFS.LABEL), TTLiteral.literal("searchDate"))
         .set(iri(SHACL.DATATYPE), iri(Namespace.IM + "DateTime")));
     Query query = getGmsIsRegistered();
     query.return_(r -> r
@@ -135,7 +135,7 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("RegistrationEpisode")
             .setIri(Namespace.IM + "effectiveDate")
             .setOperator(Operator.lte)
-            .setRelativeTo(new RelativeTo().setParameter("$referenceDate")))
+            .setRelativeTo(new RelativeTo().setParameter("$searchDate")))
           .and(pv -> pv
             .setNodeRef("RegistrationEpisode")
             .or(pv1 -> pv1
@@ -146,7 +146,7 @@ public class CoreQueryImporter implements TTImport {
               .setNodeRef("RegistrationEpisode")
               .setIri(Namespace.IM + "endDate")
               .setOperator(Operator.gt)
-              .setRelativeTo(new RelativeTo().setParameter("$referenceDate"))))));
+              .setRelativeTo(new RelativeTo().setParameter("$searchDate"))))));
 
 
   }
@@ -158,7 +158,7 @@ public class CoreQueryImporter implements TTImport {
       .setCrud(iri(IM.UPDATE_PREDICATES))
       .setScheme(Namespace.IM.asIri())
       .addObject(iri(SHACL.PARAMETER), new TTNode()
-        .set(iri(RDFS.LABEL), TTLiteral.literal("referenceDate"))
+        .set(iri(RDFS.LABEL), TTLiteral.literal("searchDate"))
         .set(iri(SHACL.DATATYPE), iri(Namespace.IM + "DateTime")))
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(getGmsQuery()));
@@ -195,7 +195,7 @@ public class CoreQueryImporter implements TTImport {
           .or(w1 -> w1
             .setIri(Namespace.IM + "dateOfDeath")
             .setOperator(Operator.lt)
-            .relativeTo(r -> r.setParameter("referenceDate"))))
+            .relativeTo(r -> r.setParameter("searchDate"))))
         .setThen(Namespace.IM + "CaseloadStatusDead"))
       .when(when -> when
         .where(pv -> pv
@@ -207,7 +207,7 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("currentEpisode")
             .setIri(Namespace.IM + "endDate")
             .setOperator(Operator.gt)
-            .setRelativeTo(new RelativeTo().setParameter("$referenceDate"))))
+            .setRelativeTo(new RelativeTo().setParameter("$searchDate"))))
         .setThen(Namespace.IM + "CaseloadStatusActive"))
       .setElse(Namespace.IM + "CaseloadStatusLeft"));
 
@@ -279,7 +279,7 @@ public class CoreQueryImporter implements TTImport {
               .setNodeRef("Address")
               .setIri(Namespace.IM + "endDate")
               .setOperator(Operator.gt)
-              .relativeTo(r -> r.setParameter("$referenceDate"))))
+              .relativeTo(r -> r.setParameter("$searchDate"))))
           .and(w -> w
             .setNodeRef("Address")
             .setIri(Namespace.IM + "addressUse")
@@ -585,7 +585,7 @@ public class CoreQueryImporter implements TTImport {
             .setOperator(Operator.gte)
             .setValue("-12")
             .setUnit(iri(IM.MONTHS))
-            .relativeTo(r -> r.setParameter("$referenceDate"))
+            .relativeTo(r -> r.setParameter("$searchDate"))
             .setValueLabel("last 12 months")))
         .return_(r -> r
           .as("latestBP")
