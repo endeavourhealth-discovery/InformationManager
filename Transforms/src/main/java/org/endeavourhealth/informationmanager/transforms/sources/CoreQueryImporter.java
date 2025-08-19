@@ -527,7 +527,6 @@ public class CoreQueryImporter implements TTImport {
     Query prof = new Query()
       .setIri(Namespace.IM + "Q_TestQuery")
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring")
-      .setDescription("Test for patients either aged between 65 and 70 or with diabetes with the most recent systolic in the last 12 months either home >130 or office >140, not followed by a screening invite, excluding hypertensives")
       .setTypeOf(Namespace.IM + "Patient")
       .and(m -> m
         .addInstanceOf(new Node()
@@ -535,11 +534,9 @@ public class CoreQueryImporter implements TTImport {
           .setName("Registered for GMS services on reference date")
           .setMemberOf(true)))
       .and(q -> q
-        .setName("Patients 65-70, or diabetes or prediabetes")
-        .setDescription("Patients with an age between 65 and 70, or on the diabetic register, or have prediabetes")
         .or(m -> m
+          .setDescription("aged between 65 and 70")
           .setWhere(new Where()
-            .setName("aged between 65 and 70")
             .setIri(Namespace.IM + "age")
             .range(r -> r
               .from(from -> from
@@ -551,8 +548,8 @@ public class CoreQueryImporter implements TTImport {
                 .setValue("70")
                 .setUnit(iri(IM.YEARS))))))
         .or(m -> m
+          .setDescription("has pre-diabetes")
           .addPath(new Path()
-            .setName("has pre-diabetes")
             .setIri(Namespace.IM + "observation")
             .setVariable("Observation")
             .setTypeOf(Namespace.IM + "Observation"))
@@ -563,7 +560,7 @@ public class CoreQueryImporter implements TTImport {
             .setValueLabel("Prediabetes"))))
       .and(q -> q
         .setName("Have high blood pressure in the last year")
-        .setDescription("Latest systolic within 12 months of the reference date, is either an office systolic >140 or a home systolic >130")
+        .setDescription("Latest systolic within 12 months of the search date")
         .path(p -> p
           .setIri(Namespace.IM + "observation")
           .setVariable("Observation")
@@ -602,6 +599,7 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("Observation")
             .setIri(Namespace.IM + "concept")))
         .then(m1 -> m1
+          .setDescription("is either an office systolic >140 or a home systolic >130")
           .setNodeRef("latestBP")
           .where(w -> w
             .or(whereEither -> whereEither
