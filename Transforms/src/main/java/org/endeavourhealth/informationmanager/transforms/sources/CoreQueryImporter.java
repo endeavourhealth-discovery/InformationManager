@@ -513,6 +513,7 @@ public class CoreQueryImporter implements TTImport {
       .range(r -> r
         .setFrom(fromAge)
         .setTo(toAge));
+    
     Where relativeWhere = new Where();
     relativeWhere.setNodeRef("Observation")
       .setIri(Namespace.IM + "effectiveDate")
