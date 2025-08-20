@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.model.customexceptions.EQDException;
+import org.endeavourhealth.imapi.queryengine.ClauseUtils;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -496,12 +498,34 @@ public class CoreQueryImporter implements TTImport {
   }
 
 
-  private void testQuery() throws IOException {
-    Query prof = new Query()
+  private void testQuery() throws IOException, EQDException {
+    Where ageWhere = new Where();
+    Value fromAge=new Value();
+    fromAge.setOperator(Operator.gte)
+      .setValue("65");
+    Value toAge=new Value();
+    toAge
+      .setOperator(Operator.lt)
+      .setValue("70");
+    ageWhere
+      .setIri(Namespace.IM + "age")
+      .setUnits(iri(IM.YEARS))
+      .range(r -> r
+        .setFrom(fromAge)
+        .setTo(toAge));
+    Where relativeWhere = new Where();
+    relativeWhere.setNodeRef("Observation")
+      .setIri(Namespace.IM + "effectiveDate")
+      .setOperator(Operator.gte)
+      .relativeTo(r -> r.setNodeRef("highBPReading").setIri(Namespace.IM + "effectiveDate"));
+    ClauseUtils.assignFunction(ageWhere);
+    ClauseUtils.assignFunction(relativeWhere);
+    Query query = new Query()
       .setIri(Namespace.IM + "Q_TestQuery")
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring")
-      .setTypeOf(Namespace.IM + "Patient")
-      .and(m -> m
+      .setTypeOf(Namespace.IM + "Patient");
+      query
+        .and(m -> m
         .addInstanceOf(new Node()
           .setIri(Namespace.IM + "Q_RegisteredGMS")
           .setName("Registered for GMS services on reference date")
@@ -509,19 +533,7 @@ public class CoreQueryImporter implements TTImport {
       .and(q -> q
         .or(m -> m
           .setDescription("aged between 65 and 70")
-          .setWhere(new Where()
-            .setIri(Namespace.IM + "age")
-            .range(r -> r
-              .from(from -> from
-                .setOperator(Operator.gte)
-                .setValue("65")
-                .argument(a->a.setParameter("units").setValueIri(iri(IM.YEARS))))
-              .to(to -> to
-                .setOperator(Operator.lt)
-                .setValue("70")
-                .argument(a->a
-                  .setParameter("units")
-                  .setValueIri(iri(IM.YEARS)))))))
+          .setWhere(ageWhere))
         .or(m -> m
           .setDescription("has pre-diabetes")
           .addPath(new Path()
@@ -559,7 +571,7 @@ public class CoreQueryImporter implements TTImport {
             .setIri(Namespace.IM + "effectiveDate")
             .setOperator(Operator.gte)
             .setValue("-12")
-            .setUnit(iri(IM.MONTHS))
+            .setUnits(iri(IM.MONTHS))
             .relativeTo(r -> r.setParameter("$searchDate"))
             .setValueLabel("last 12 months")))
         .return_(r -> r
@@ -614,11 +626,7 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("Observation")
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri("http://snomed.info/sct#310422005").setName("invited for screening").setMemberOf(true)))
-          .and(after -> after
-            .setNodeRef("Observation")
-            .setIri(Namespace.IM + "effectiveDate")
-            .setOperator(Operator.gte)
-            .relativeTo(r -> r.setNodeRef("highBPReading").setIri(Namespace.IM + "effectiveDate")))))
+          .addAnd(relativeWhere)))
       .not(q -> q
         .setName("not on hypertension register")
         .setDescription("is registered on the hypertensives register")
@@ -631,7 +639,7 @@ public class CoreQueryImporter implements TTImport {
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring")
       .setDescription("Test for patients either aged between 65 and 70 or with diabetes with the most recent systolic in the last 12 months either home >130 or office >140, not followed by a screening invite, excluding hypertensives")
       .setScheme(Namespace.IM.asIri())
-      .set(iri(IM.DEFINITION), TTLiteral.literal(prof))
+      .set(iri(IM.DEFINITION), TTLiteral.literal(query))
       .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "Q_StandardCohorts"));
 
     document.addEntity(qry);
