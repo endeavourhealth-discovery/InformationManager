@@ -32,9 +32,7 @@ public class QOFQueryImport implements TTImport {
 			createFolders(manager.getDocument());
 			try {
 				EQDImporter eqdImporter = new EQDImporter(true);
-				EqdToIMQ.gmsPatients.add("71154095-0C58-4193-B58F-21F05EA0BE2F");
-				EqdToIMQ.gmsPatients.add("DA05DBF2-72AB-41A3-968F-E4A061F411A4");
-				EqdToIMQ.gmsPatients.add("591C5738-2F6B-4A6F-A2B3-05FA538A1B3B");
+
 				eqdImporter.loadAndConvert(config,manager,queries[0], Namespace.QOF,
 					dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder);
 			}

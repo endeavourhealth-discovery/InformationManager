@@ -513,7 +513,7 @@ public class CoreQueryImporter implements TTImport {
       .range(r -> r
         .setFrom(fromAge)
         .setTo(toAge));
-    
+
     Where relativeWhere = new Where();
     relativeWhere.setNodeRef("Observation")
       .setIri(Namespace.IM + "effectiveDate")
@@ -527,10 +527,8 @@ public class CoreQueryImporter implements TTImport {
       .setTypeOf(Namespace.IM + "Patient");
       query
         .and(m -> m
-        .addInstanceOf(new Node()
-          .setIri(Namespace.IM + "Q_RegisteredGMS")
-          .setName("Registered for GMS services on reference date")
-          .setMemberOf(true)))
+        .setIsCohort(iri(Namespace.IM + "Q_RegisteredGMS")
+          .setName("Registered for GMS services on reference date")))
       .and(q -> q
         .or(m -> m
           .setDescription("aged between 65 and 70")
