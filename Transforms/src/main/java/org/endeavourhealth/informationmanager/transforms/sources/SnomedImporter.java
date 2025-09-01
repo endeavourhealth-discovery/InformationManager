@@ -605,6 +605,7 @@ public class SnomedImporter implements TTImport {
           }
         }
       }
+      
       if (ACTIVE.equals(fields[2]))
         TTManager.addTermCode(c, term, fields[0], iri(IM.ACTIVE));
       else
