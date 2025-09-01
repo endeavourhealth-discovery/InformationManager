@@ -589,7 +589,8 @@ public class SnomedImporter implements TTImport {
     String[] fields = line.split("\t");
     TTEntity c = conceptMap.get(fields[4]);
     String term = fields[7];
-
+    if (term.equals("Serum non HDL (high density lipoprotein) cholesterol measurement"))
+      System.out.println(term);
     if (c != null) {
       if (term.contains("(attribute)")) {
         c.addType(iri(RDF.PROPERTY));
@@ -602,13 +603,13 @@ public class SnomedImporter implements TTImport {
             term = term.split(" simple reference set")[0];
             term = StringUtils.capitalize(term) + " (NHS GP value set)";
           }
+        }
       }
       if (ACTIVE.equals(fields[2]))
         TTManager.addTermCode(c, term, fields[0], iri(IM.ACTIVE));
       else
         TTManager.addTermCode(c, null, fields[0], iri(IM.INACTIVE));
       }
-    }
   }
 
 
