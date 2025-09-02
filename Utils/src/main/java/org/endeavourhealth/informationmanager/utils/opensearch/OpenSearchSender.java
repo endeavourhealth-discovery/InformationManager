@@ -11,12 +11,10 @@ import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
 import org.endeavourhealth.imapi.model.search.EntityDocument;
 import org.endeavourhealth.imapi.model.search.SearchTermCode;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +50,6 @@ public class OpenSearchSender {
     Set<String> entityIris = new HashSet<>(2_000_000);
     String sql = """
       SELECT ?iri ?name
-      FROM ?g
       WHERE {
         ?iri rdfs:label ?name.
         FILTER(isIri(?iri))
@@ -231,12 +228,10 @@ public class OpenSearchSender {
 
   private String getBatchCoreSql(String inList) {
     return """
-      SELECT ?iri ?name ?status ?statusName ?code ?scheme ?schemeName ?type ?typeName ?usageTotal ?extraType ?extraTypeName ?preferredName ?alternativeCode ?path ?
-      FROM ?g
+      SELECT ?iri ?name ?status ?statusName ?code ?scheme ?schemeName ?type ?typeName ?usageTotal ?extraType ?extraTypeName ?preferredName ?alternativeCode ?path
       WHERE {
         ?iri rdfs:label ?name.
         VALUES  ?iri  {%s}
-        Optional { ?graph rdfs:label ?graphName }
         Optional {
           ?iri rdf:type ?type.
           Optional {?type rdfs:label ?typeName}
@@ -298,7 +293,6 @@ public class OpenSearchSender {
   private String getBatchTermsSql(String inList) {
     return """
       select ?iri ?termCode ?synonym ?termCodeStatus ?keyTerm
-      FROM ?g
       where {
         ?iri im:hasTermCode ?tc.
         VALUES  ?iri  {%s}
@@ -346,7 +340,6 @@ public class OpenSearchSender {
   private String getBatchIsaSql(String inList) {
     return """
       select ?iri ?superType
-      FROM ?g
       where {
         ?iri im:isA ?superType.
         VALUES  ?iri  {%s}
@@ -358,7 +351,6 @@ public class OpenSearchSender {
   private String getSubsumptionSql(String inList) {
     return """
       select distinct ?iri (count(?subType) as ?subsumptions)
-      FROM ?g
       where {
         ?iri ^im:isA ?subType.
         VALUES  ?iri  {%s}
@@ -406,7 +398,6 @@ public class OpenSearchSender {
   private String getSetMembershipSql(String inList) {
     return """
         select ?iri ?set
-        FROM ?g
         where {
           ?set im:hasMember ?iri.
           VALUES  ?iri  {%s}
@@ -417,7 +408,6 @@ public class OpenSearchSender {
   private String getBindingsSql(String inList) {
     return """
       select ?iri ?path ?node
-      FROM ?g
       where {
         {
           ?iri im:binding ?binding.

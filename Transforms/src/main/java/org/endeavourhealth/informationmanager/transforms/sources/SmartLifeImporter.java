@@ -84,6 +84,7 @@ public class SmartLifeImporter implements TTImport {
 		inferred = reasoner.inheritShapeProperties(inferred);
 		return inferred;
 	}
+
 	private void createFolders(TTDocument document) {
 		TTEntity folder = new TTEntity()
 			.setIri(Namespace.SMARTLIFE + "Q_SmartLifeQueries")
