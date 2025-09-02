@@ -589,8 +589,6 @@ public class SnomedImporter implements TTImport {
     String[] fields = line.split("\t");
     TTEntity c = conceptMap.get(fields[4]);
     String term = fields[7];
-    if (term.equals("Serum non HDL (high density lipoprotein) cholesterol measurement"))
-      System.out.println(term);
     if (c != null) {
       if (term.contains("(attribute)")) {
         c.addType(iri(RDF.PROPERTY));

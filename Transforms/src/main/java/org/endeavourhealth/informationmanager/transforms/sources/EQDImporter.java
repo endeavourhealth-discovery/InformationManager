@@ -126,7 +126,6 @@ public class EQDImporter {
 			setRegisteredPatientParent(document);
 			cleanFolders(document);
 			manager.createIndex();
-			addSetsToFolders(document);
 			addMissingFolders(document);
 			removeRedundantFolders(manager);
 			//createReportFolders(document);
@@ -153,23 +152,7 @@ public class EQDImporter {
 		}
 	}
 
-	private TTEntity createFieldGroupFolder(TTEntity fieldGroup, Map<String, TTEntity> folderMap, List<TTEntity> toAdd) {
-		TTEntity folder = new TTEntity()
-			.setIri(namespace.toString() + UUID.randomUUID())
-			.setName("Sets used for " + fieldGroup.getName())
-			.addType(iri(IM.FOLDER));
-		toAdd.add(folder);
-		folderMap.put(fieldGroup.getIri(), folder);
-		for (TTValue r : fieldGroup.get(iri(IM.USED_IN)).getElements()) {
-			TTEntity report = manager.getEntity(r.asIriRef().getIri());
-			TTEntity reportFolder = folderMap.get(report.getIri());
-			if (reportFolder == null) {
-				reportFolder = createReportSetFolder(report,folderMap,toAdd);
-			}
-			folder.addObject(iri(IM.IS_CONTAINED_IN),iri(reportFolder.getIri()));
-		}
-		return folder;
-	}
+
 
 
 
@@ -227,52 +210,6 @@ public class EQDImporter {
 					}
 				}
 			}
-		}
-	}
-
-	private void addSetsToFolders(TTDocument document) {
-		Map<String, TTEntity> folderMap= new HashMap<>();
-		List<TTEntity> newSetFolders= new ArrayList<>();
-		for (TTEntity set : document.getEntities()) {
-			if (set.get(iri(IM.USED_IN))!=null) {
-				for (TTValue used : set.get(iri(IM.USED_IN)).getElements()) {
-					String namespace = used.asIriRef().getIri().substring(0, used.asIriRef().getIri().lastIndexOf("#") + 1);
-					TTEntity report = manager.getEntity(used.asIriRef().getIri());
-					TTEntity reportFolder=null;
-					String reportFolderIri= null;
-					if (report.get(iri(IM.IS_CONTAINED_IN)) == null){
-						if (report.isType(iri(IM.FIELD_GROUP))){
-							reportFolder= createFieldGroupFolder(report,folderMap,newSetFolders);
-							reportFolderIri= reportFolder.getIri();
-						}
-					}
-					else {
-						reportFolderIri = report.get(iri(IM.IS_CONTAINED_IN)).getElements().get(0).asIriRef().getIri();
-						reportFolder = manager.getEntity(reportFolderIri);
-						if (reportFolder == null) {
-							reportFolder = createReportSetFolder(report,folderMap,newSetFolders);
-							reportFolderIri= reportFolder.getIri();
-						}
-					}
-					String setFolderIri = namespace + "SetFolder_" + reportFolderIri.substring(reportFolderIri.lastIndexOf("#") + 1);
-					TTEntity setFolder = folderToEntity.get(setFolderIri);
-					if (setFolder == null) {
-							setFolder = new TTEntity()
-								.setIri(setFolderIri)
-								.setName("Sets used in " + reportFolder.getName())
-								.addType(iri(IM.FOLDER));
-							newSetFolders.add(setFolder);
-							folderToEntity.put(setFolderIri, setFolder);
-							setFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(reportFolderIri));
-							;
-						}
-						set.addObject(iri(IM.IS_CONTAINED_IN), iri(setFolderIri));
-						;
-					}
-			}
-		}
-		if (!newSetFolders.isEmpty()) {
-			document.getEntities().addAll(newSetFolders);
 		}
 	}
 

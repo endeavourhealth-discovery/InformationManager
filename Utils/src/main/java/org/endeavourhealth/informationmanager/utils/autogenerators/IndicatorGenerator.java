@@ -6,6 +6,7 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.reasoner.LogicOptimizer;
+import org.endeavourhealth.imapi.logic.service.ConceptService;
 import org.endeavourhealth.imapi.logic.service.EntityService;
 import org.endeavourhealth.imapi.logic.service.QueryDescriptor;
 import org.endeavourhealth.imapi.logic.service.SearchService;
@@ -215,10 +216,16 @@ public class IndicatorGenerator {
 		String targetName=null;
 		String dateRangeLabel=null;
 		StringBuilder indicatorLabel = new StringBuilder();
+		StringBuilder procedureWheres= new StringBuilder();
+		StringBuilder targetWheres=new StringBuilder();
 		for (Where where : wheres) {
 					if (where.getIri() != null && where.getIri().equals(Namespace.IM + "concept") && where.getIs() != null) {
-						procedureName = getLabel(where.getValueLabel());
+						procedureName= new ConceptService().getShortestTerm(where.getIs().getFirst().getIri());
+						if (procedureName==null) procedureName=where.getValueLabel();
+						procedureName = getLabel(procedureName);
 						indicatorLabel.append(procedureName);
+						procedureWheres.append(om.writeValueAsString(where.getIs()));
+						targetWheres.append(om.writeValueAsString(where.getIs()));
 					}
 					else if (where.getIri() != null && where.getIri().contains("effectiveDate")) {
 						String valueLabel=where.getValueLabel();
@@ -226,27 +233,28 @@ public class IndicatorGenerator {
 						valueLabel= where.getRelativeTo().getQualifier();
 						}
 						dateRangeLabel= where.getQualifier()+" "+valueLabel;
+						procedureWheres.append(dateRangeLabel);
 						indicatorLabel.append(" ").append(dateRangeLabel);
 					}
 					else if (where.getIri() != null && where.getIri().contains("value")) {
 						if (where.getRange()!=null ||(!where.getValue().equals("0"))) {
 							targetName = where.getQualifier() + " " + where.getValueLabel();
-
+							targetWheres.append(targetName);
 						}
 				}
 			}
-			String subindicatorIri = namespace + ("Indicator"+(om.writeValueAsString(wheres).hashCode()));
+			String subindicatorIri = namespace + ("Subindicator"+(om.writeValueAsString(procedureWheres).hashCode()));
 			TTEntity subIndicatorEntity = entities.get(subindicatorIri);
 				if (subIndicatorEntity == null) {
 				subIndicatorEntity = new TTEntity();
 				entities.put(subindicatorIri, subIndicatorEntity);
 				subIndicatorEntity.setIri(subindicatorIri);
-				subIndicatorEntity.setName(indicatorLabel.toString());
+				subIndicatorEntity.setName("Subindicator-"+ indicatorLabel.toString());
 				subIndicatorEntity.addType(iri(IM.INDICATOR));
 				subIndicatorEntity.addObject(iri(IM.IS_CHILD_OF), iri(indicatorIri));
 			}
 			if (procedureName!=null) {
-				String activityIri = namespace + "Procedure" + (om.writeValueAsString(wheres).hashCode());
+				String activityIri = namespace + "Procedure" + (om.writeValueAsString(procedureWheres).hashCode());
 				if (!entities.containsKey(activityIri)) {
 					TTEntity activityEntity = new TTEntity();
 					entities.put(activityIri, activityEntity);
@@ -257,7 +265,7 @@ public class IndicatorGenerator {
 				}
 			}
 			if (targetName!=null){
-				String targetIri= namespace+"Target"+(om.writeValueAsString(wheres).hashCode());
+				String targetIri= namespace+"Target"+(om.writeValueAsString(targetWheres).hashCode());
 				TTEntity targetEntity= entities.get(targetIri);
 				if (targetEntity==null){
 					targetEntity= new TTEntity();
@@ -280,6 +288,7 @@ public class IndicatorGenerator {
 	}
 
 	private String getLabel(String longLabel){
+		if (longLabel.contains(" - ")) return longLabel.split(" - ")[0];
 		String[] words = longLabel.split("\\s+");
 		if (words.length>8) {
 			return String.join(" ", Arrays.copyOfRange(words, 0, 8));
