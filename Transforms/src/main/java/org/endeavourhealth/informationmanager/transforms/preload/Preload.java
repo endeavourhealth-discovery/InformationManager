@@ -12,6 +12,8 @@ import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
 import org.endeavourhealth.imapi.filer.TCGenerator;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.filer.rdf4j.TTBulkFiler;
+import org.endeavourhealth.imapi.filer.rdf4j.TTTransactionFiler;
+import org.endeavourhealth.imapi.logic.exporters.SetMemberExport;
 import org.endeavourhealth.imapi.logic.reasoner.DomainResolver;
 import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
@@ -52,6 +54,7 @@ public class Preload {
       System.exit(-1);
     }
     LOG.info("Configuring...");
+    TTTransactionFiler.disableIm1Deltas();
     TTImportConfig cfg = getImports(args);
     TTBulkFiler.setConfigTTl(cfg.getFolder());
     TTFilerFactory.setBulk(true);
@@ -65,7 +68,7 @@ public class Preload {
       else if (arg.contains("test=")) ImportApp.setTestDirectory(arg.substring(arg.lastIndexOf("=") + 1));
       else if (arg.toLowerCase().contains("skipbulk")) cfg.setSkipBulk(true);
     }
-    LOG.info("Deleting temp folder.a()..");
+    LOG.info("Deleting temp folder..");
     clearTempFolder(TTBulkFiler.getDataPath());
 
     LOG.info("Starting import...");
@@ -157,6 +160,9 @@ public class Preload {
     LOG.info("adding missing properties into concept domains");
     new DomainResolver().updateDomains(Graph.IM);
 
+    LOG.info("Exporting tct/sets...");
+    SetMemberExport.execute(Path.of(cfg.getFolder(), "tct"));
+
     LOG.info("Finished - {}" ,new Date());
 
     System.exit(0);
@@ -164,7 +170,6 @@ public class Preload {
 
   public static void validateGraphConfig(String inFolder) {
     ImportUtils.validateFiles(inFolder, new String[]{".*config.ttl"});
-
   }
 
   private static void startGraph(String graphdb) throws IOException, InterruptedException {
