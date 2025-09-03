@@ -646,6 +646,9 @@ public class OpenSearchSender {
               "code": {
                 "type": "keyword"
               },
+               "alternativeCode": {
+                "type": "keyword"
+              },
               "iri": {
                 "type": "keyword"
               },
