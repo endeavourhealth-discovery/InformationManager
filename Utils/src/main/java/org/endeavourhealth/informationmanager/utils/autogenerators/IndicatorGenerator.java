@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.utils.autogenerators;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.map.HashedMap;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
@@ -70,13 +71,15 @@ public class IndicatorGenerator {
 				configureKpi(folder);
 				generateIndicators(folder.get(iri(IM.HAS_QUERY)).asIriRef().getIri(),folder.getIri());
 			}
-		}
 
+		}
+		String indicatorIri="http://endhealth.info/qof#68e2c3b5-5315-4b72-9d71-1a1e21be51a0";
+		TTEntity queryEntity = getEntityFromIri(indicatorIri);
+		configureIndicator(queryEntity);
 	}
 
 	private void configureKpi(TTEntity kpi) throws IOException, QueryException {
 		System.out.println(kpi.getName());
-
 		TTIriRef queryIri= kpi.get(iri(IM.HAS_QUERY)).asIriRef();
 		TTEntity queryEntity = getEntityFromIri(queryIri.getIri());
 		configureIndicator(queryEntity);
@@ -300,20 +303,24 @@ public class IndicatorGenerator {
 		return entityService.getBundleByPredicateExclusions(iri, null).getEntity();
 	}
 
-	private QueryRequest getActivityName(String iri){
+
+	private List<String> getDependentIndicators(String iri) throws QueryException, OpenSearchException {
 		Query query= new Query()
-			.or(m->m
-				.instanceOf(ins->ins.setParameter("$concept")))
-			.or(m ->m
-				.where(w->w
-				.setIri(IM.HAS_MEMBER.toString())
-					.setInverse(true)
-					.is(is->is
-					.setParameter("$concept"))))
-				.return_(r->r
-					.property(p->p
-						.setIri(RDFS.LABEL.toString())));
-		return createRequest(iri,null,query);
+			.where(p->p
+				.setIri(IM.DEPENDENT_ON.toString())
+				.setInverse(true)
+			.is(is->is
+				.setParameter("$concept")
+			));
+		JsonNode result= searchService.queryIM(createRequest(iri,null,query));
+		if (!result.get("entities").isEmpty()){
+			List<String> dependentIndicators= new ArrayList<>();
+			for (JsonNode entity : result.get("entities")) {
+				dependentIndicators.add(entity.get("iri").asText());
+			}
+			return dependentIndicators;
+		}
+		return null;
 	}
 
 	private QueryRequest isChild(String iri,Set<String> parents){

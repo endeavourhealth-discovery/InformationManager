@@ -16,6 +16,25 @@ public class TTImportConfig {
   private String resourceFolder;
   private List<ImportType> imports = new ArrayList<>();
   private String singleEntity;
+  private String eqdFile;
+  private String mainFolder;
+  public String getMainFolder() {
+    return mainFolder;
+  }
+  public TTImportConfig setMainFolder(String mainFolder) {
+    this.mainFolder = mainFolder;
+    return this;
+  }
+
+
+
+  public String getEqdFile() {
+    return eqdFile;
+  }
+  public TTImportConfig setEqdFile(String eqdFile) {
+    this.eqdFile = eqdFile;
+    return this;
+  }
 
   public String getSingleEntity() {
     return singleEntity;
