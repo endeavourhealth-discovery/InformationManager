@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import org.apache.commons.io.FilenameUtils;
+import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.logic.reasoner.LogicOptimizer;
 import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
@@ -214,7 +215,7 @@ public class EQDImporter {
 	}
 
 
-	private void removeRedundantFolders(TTManager manager) {
+	private void removeRedundantFolders(TTManager manager) throws TTFilerException {
 		manager.createIndex();
 		Map<String,TTEntity> usedFolders= new HashMap<>();
 		for (TTEntity entity : manager.getDocument().getEntities()) {
@@ -223,7 +224,12 @@ public class EQDImporter {
 			} else {
 				if (entity.get(iri(IM.IS_CONTAINED_IN)) != null) {
 					for (TTValue used : entity.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
-						usedFolders.put(used.asIriRef().getIri(), manager.getEntity(used.asIriRef().getIri()));
+						try {
+							TTEntity aFolder = manager.getEntity(used.asIriRef().getIri());
+							if (aFolder != null) usedFolders.put(used.asIriRef().getIri(), aFolder);
+						} catch (Exception e){
+							throw new TTFilerException("Could not find folder " + used.asIriRef().getIri());
+						}
 					}
 				}
 			}

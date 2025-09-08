@@ -41,7 +41,7 @@ public class SmartLifeImporter implements TTImport {
 	@Override
 	public void importData(TTImportConfig config) throws ImportException {
     ThreadContext.setUserGraphs(List.of(Graph.IM, Graph.SMARTLIFE));
-		fileIndicators(config);
+
 
 		try {
 			Path zip = ImportUtils.findFileForId(config.getFolder(), libraries[0]);
@@ -52,6 +52,7 @@ public class SmartLifeImporter implements TTImport {
 
 		try (TTManager manager = new TTManager()){
 			TTDocument document = manager.createDocument();
+			createFolders(document);
 			TTEntity namespaceEntity = manager.createNamespaceEntity(Namespace.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles");
 			namespaceEntity.addObject(iri(IM.IS_CONTAINED_IN),iri(IM.CORE_SCHEMES));
 			document.addEntity(namespaceEntity);
@@ -70,13 +71,15 @@ public class SmartLifeImporter implements TTImport {
 			catch (Exception ex) {
 				throw new ImportException(ex.getMessage(), ex);
 			}
+
 		}
+		//fileIndicators(config);
 	}
 
 	private void fileIndicators(TTImportConfig config) throws ImportException {
 			try (TTManager manager = new TTManager()) {
 				TTDocument document = manager.createDocument();
-				createFolders(document);
+
 				int i = 0;
 				for (String indicator : indicators) {
 				Path file = ImportUtils.findFileForId(config.getFolder(), indicator);

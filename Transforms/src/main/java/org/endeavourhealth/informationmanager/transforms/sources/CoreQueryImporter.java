@@ -526,9 +526,8 @@ public class CoreQueryImporter implements TTImport {
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring")
       .setTypeOf(Namespace.IM + "Patient");
       query
-        .and(m -> m
         .setIsCohort(iri(Namespace.IM + "Q_RegisteredGMS")
-          .setName("Registered for GMS services on reference date")))
+          .setName("Registered for GMS services on reference date"))
       .and(q -> q
         .or(m -> m
           .setDescription("aged between 65 and 70")
@@ -630,7 +629,7 @@ public class CoreQueryImporter implements TTImport {
       .not(q -> q
         .setName("not on hypertension register")
         .setDescription("is registered on the hypertensives register")
-        .addInstanceOf(new Node().setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387").setMemberOf(true)
+        .setIsCohort(iri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
           .setName("Hypertensives")));
 
     TTEntity qry = new TTEntity().addType(iri(IM.QUERY))
@@ -640,6 +639,8 @@ public class CoreQueryImporter implements TTImport {
       .setDescription("Test for patients either aged between 65 and 70 or with diabetes with the most recent systolic in the last 12 months either home >130 or office >140, not followed by a screening invite, excluding hypertensives")
       .setScheme(Namespace.IM.asIri())
       .set(iri(IM.DEFINITION), TTLiteral.literal(query))
+      .addObject(iri(IM.DEPENDENT_ON), TTIriRef.iri(Namespace.IM + "Q_RegisteredGMS"))
+      .addObject(iri(IM.DEPENDENT_ON), TTIriRef.iri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387"))
       .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "Q_StandardCohorts"));
 
     document.addEntity(qry);
