@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.map.HashedMap;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.logic.reasoner.LogicOptimizer;
 import org.endeavourhealth.imapi.logic.service.ConceptService;
 import org.endeavourhealth.imapi.logic.service.EntityService;
@@ -12,14 +11,12 @@ import org.endeavourhealth.imapi.logic.service.QueryDescriptor;
 import org.endeavourhealth.imapi.logic.service.SearchService;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.requests.QueryRequest;
-import org.endeavourhealth.imapi.model.tripletree.TTBundle;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
+import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
+import org.endeavourhealth.imapi.vocabulary.SHACL;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -41,26 +38,34 @@ public class IndicatorGenerator {
 	private final Set<String> unlabelledClauses= new HashSet<>();
 	private final Set<String> unlabelledIndicators= new HashSet<>();
 	private final Map<String,String> queryIriToIndicator = new HashMap<>();
-	private final Map<String,String> indicators = new HashMap<>();
-	private final Map<String,String> matchToActivity= new HashMap<>();
+	private final Map<String,String> indicatorToQueryIri = new HashMap<>();
+	private final List<String> indicators= new ArrayList<>();
+	private final Map<String,Integer> indicatorOrder= new HashMap<>();
+	private TTEntity pathway;
+	private String indicatorFolder;
+	private String pathwayFolder;
+	private TTDocument document;
+	private final Map<String,String> matchLabel= new HashMap<>();
+	private String queryName;
 
 
 
-
-	public void generate(String folder,String mainFolder,String namespace) throws Exception {
+	public void generate(String folder,String mainFolder,String pathwayFolder,String namespace) throws Exception {
 		this.namespace=namespace;
-		importIndicators(folder);
+		this.indicatorFolder =mainFolder;
+		this.pathwayFolder=pathwayFolder;
 		try (TTManager manager = new TTManager() ) {
-			TTDocument document = manager.createDocument();
-			for (Map.Entry<String,String> entry : indicators.entrySet()) {
-				String indicatorLabel = entry.getKey();
-				String queryIri = entry.getValue();
+			document = manager.createDocument();
+			importIndicators(folder);
+			for (String indicatorLabel: indicators) {
+				String queryIri = indicatorToQueryIri.get(indicatorLabel);
 				String indicatorIri = namespace + "Indicator-" + indicatorLabel.hashCode();
 				TTEntity indicator = new TTEntity();
 				indicator.setIri(indicatorIri);
 				indicator.setName(indicatorLabel);
 				indicator.addType(iri(IM.INDICATOR));
 				indicator.set(iri(IM.HAS_QUERY), iri(queryIri));
+				indicator.set(iri(SHACL.ORDER), TTLiteral.literal(indicatorOrder.get(indicatorLabel)));
 				indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
 
 				entities.put(indicatorIri, indicator);
@@ -74,30 +79,30 @@ public class IndicatorGenerator {
 				}
 			}
 		try (FileWriter writer = new FileWriter(folder + "UnlabelledClauses.txt")) {
-			writer.write("Indicator/Activity\t\term");
 			for (String indicatorLabel : unlabelledIndicators) {
-				writer.write("I\t"+indicatorLabel+"\n");
+				writer.write(indicatorLabel+"\n");
 			}
 			for (String clauseLabel : unlabelledClauses) {
-				writer.write("A\t"+clauseLabel+"\n");
+				writer.write(clauseLabel+"\n");
 			}
 		}
 	}
 
 
 
-	private void configureKPI(TTEntity indicator,String queryIri) throws IOException, QueryException {
+	private void configureKPI(TTEntity indicator,String queryIri) throws Exception {
 		System.out.println(indicator.getName());
 		TTEntity queryEntity = getEntityFromIri(queryIri);
 		configureIndicator(indicator,queryEntity,Bool.and);
 
 	}
 
-	private void configureIndicator(TTEntity indicatorEntity, TTEntity queryEntity, Bool operator) throws IOException, QueryException {
+	private void configureIndicator(TTEntity indicatorEntity, TTEntity queryEntity, Bool operator) throws Exception {
 		if (indicatorMap.containsKey(queryEntity.getIri())) {
 			indicatorMap.get(queryEntity.getIri());
 			return;
 		}
+		queryName= queryEntity.getName();
 		String cohortName=queryEntity.getName();
 		System.out.println(cohortName);
 		Query query= queryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
@@ -105,12 +110,22 @@ public class IndicatorGenerator {
 		LogicOptimizer.optimizeQuery(query);
 		boolean or= false;
 		boolean indicator=false;
-		configureMatch(indicatorEntity,query,queryEntity,Bool.and);
+		if (query.getAnd() != null) {
+			int clauseIndex=0;
+			for (Match subMatch : query.getAnd()) {
+				configureMatch(indicatorEntity, subMatch, queryEntity, Bool.and);
+			}
+		}
+		else if (query.getOr() != null) {
+			for (Match subMatch : query.getOr()) {
+				configureMatch(indicatorEntity,subMatch,queryEntity,Bool.or);
+			}
+		}
+
 		indicatorMap.put(queryEntity.getIri(),indicator);
 	}
 
-	private void configureMatch(TTEntity indicatorEntity, Match match,TTEntity queryEntity,Bool operator) throws IOException, QueryException {
-		boolean indicator=false;
+	private void configureMatch(TTEntity indicatorEntity, Match match,TTEntity queryEntity,Bool operator) throws Exception {
 		if (match.getIsCohort() != null) {
 			TTIriRef cohortIri = match.getIsCohort();
 			TTEntity cohortEntity = getEntityFromIri(cohortIri.getIri());
@@ -119,12 +134,9 @@ public class IndicatorGenerator {
 			return;
 		}
 		if (match.getAnd() != null) {
-			int clauseIndex=0;
+
 			for (Match subMatch : match.getAnd()) {
-				clauseIndex++;
-				if (clauseIndex>1 ||subMatch.getIsCohort()!=null) {
 					configureMatch(indicatorEntity, subMatch, queryEntity, Bool.and);
-				}
 			}
 		}
 		else if (match.getOr() != null) {
@@ -133,12 +145,11 @@ public class IndicatorGenerator {
 			}
 		}
 		else {
-			boolean actionNeeded= actionNeeded(match);
-			if (actionNeeded){
-				configureAcivity(indicatorEntity,match,queryEntity.getIri());
-			}
+				configureActivity(match);
 		}
 	}
+
+
 
 	private TTEntity createChildIndicator(String queryIri,String label,TTEntity parentIndicator,Bool operator) throws IOException, QueryException {
 		TTEntity indicator = new TTEntity();
@@ -152,9 +163,9 @@ public class IndicatorGenerator {
 		indicator.addType(iri(IM.INDICATOR));
 		indicator.set(iri(IM.HAS_QUERY), iri(queryIri));
 		if (operator==Bool.and) {
-			parentIndicator.addObject(iri(Namespace.IM+"must"), iri(indicator.getIri()));
+			parentIndicator.addObject(iri(Namespace.IM+"andIndicator"), iri(indicator.getIri()));
 		}
-		else parentIndicator.addObject(iri(Namespace.IM+"alternative"), iri(indicator.getIri()));
+		else parentIndicator.addObject(iri(Namespace.IM+"orIndicator"), iri(indicator.getIri()));
 		entities.put(indicator.getIri(),indicator);
 		return indicator;
 	}
@@ -171,6 +182,16 @@ public class IndicatorGenerator {
 			return actionNeeded(match.getThen());
 		}
 		else return false;
+	}
+
+	private boolean actionWhere(Where where) throws QueryException {
+		if (where.getIri()!=null &&where.getIs()!=null) {
+			Node first= where.getIs().getFirst();
+			if (searchService.askQueryIM(isChild(first.getIri(),Set.of("http://snomed.info/sct#363787002","http://snomed.info/sct#71388002")))){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean actionNeeded(Where where) throws QueryException {
@@ -191,110 +212,180 @@ public class IndicatorGenerator {
 		return false;
 	}
 
-
-	private List<Where> getWheres(Match match) throws QueryException {
-		List<Where> wheres= new ArrayList<>();
-		if (match.getWhere()!=null) {
-			if (match.getWhere().getIri() != null) {
+	private void flattenMatches(Match match,List<Where> wheres) {
+		if (match.getWhere() != null) {
+			if (match.getWhere().getIri()!=null)
 				wheres.add(match.getWhere());
-			}
-			if (match.getWhere().getAnd() != null) {
-				wheres.addAll(match.getWhere().getAnd());
+			else for (Where subWhere : match.getWhere().getAnd()) {
+				if (subWhere.getIri()!=null)
+					wheres.add(subWhere);
 			}
 		}
-		if (match.getThen()!=null){
-			wheres.addAll(getWheres(match.getThen()));
+		if (match.getThen() != null) {
+			flattenMatches(match.getThen(),wheres);
 		}
-		return wheres;
 	}
 
 
 
-	private void configureAcivity(TTEntity indicatorEntity, Match match, String queryIri) throws QueryException, JsonProcessingException {
+	private Map<Integer,List<Where>> getWhereClauses(Match match) throws QueryException {
+		List<Where> wheres = new ArrayList<>();
+		flattenMatches(match, wheres);
+		int clauseIndex=0;
+		Map<Integer, List<Where>> actionClauses = new HashMap<>();
+		for (int whereIndex = 0; whereIndex < wheres.size(); whereIndex++) {
+			Where where = wheres.get(whereIndex);
+			if (actionWhere(where)) {
+				clauseIndex++;
+				actionClauses.put(clauseIndex, new ArrayList<>());
+				actionClauses.get(clauseIndex).add(where);
+				whereIndex= addDateValueClause(wheres, whereIndex, actionClauses.get(clauseIndex));
+			}
+		}
+		return actionClauses;
+	}
 
-		List<Where> wheres = getWheres(match);
-		if (wheres.isEmpty()) return;
-		String procedureName=null;
+	private Integer addDateValueClause(List<Where> wheres, int startIndex, List<Where> clauseWheres) throws QueryException {
+		for (int whereIndex=startIndex+1; whereIndex<wheres.size(); whereIndex++) {
+			Where subWhere = wheres.get(whereIndex);
+			if (subWhere.getIri()!=null && subWhere.getIri().contains("concept")) return whereIndex-1;
+			if (subWhere.getIri() != null && subWhere.getIri().contains("effectiveDate")) {
+				if (subWhere.getRange() == null && subWhere.getValue() == null&&subWhere.getFunction()==null) continue;
+				clauseWheres.add(subWhere);
+			}
+			if (subWhere.getIri() != null && subWhere.getIri().contains("value")) {
+				String value = subWhere.getValue();
+				Range range = subWhere.getRange();
+				if (value != null && range == null && !value.equals("0")) {
+					clauseWheres.add(subWhere);
+					return whereIndex;
+				}
+				else if (range != null) {
+					clauseWheres.add(subWhere);
+					return whereIndex;
+				}
+			}
+		}
+		return wheres.size();
+	}
+
+
+
+	private void configureActivity(Match match) throws Exception {
+		Map<Integer,List<Where>> actionClauses = getWhereClauses(match);
+		if (actionClauses.isEmpty()) return;
+		for (Integer clauseIndex : actionClauses.keySet()) {
 		String targetName=null;
 		String dateRangeLabel=null;
-		StringBuilder indicatorLabel = new StringBuilder();
-		StringBuilder procedureWheres= new StringBuilder();
-		StringBuilder targetWheres=new StringBuilder();
+		String activityLabel=null;
+		Where procedureWhere = null;
+		Where dateWhere=null;
+		List<Where> wheres = actionClauses.get(clauseIndex);
 		for (Where where : wheres) {
 					if (where.getIri() != null && where.getIri().equals(Namespace.IM + "concept") && where.getIs() != null) {
-						procedureName= new ConceptService().getShortestTerm(where.getIs().getFirst().getIri());
-						if (procedureName==null) procedureName=where.getValueLabel();
-						procedureName = getLabel(procedureName);
-						indicatorLabel.append(procedureName);
-						procedureWheres.append(om.writeValueAsString(where.getIs()));
-						targetWheres.append(om.writeValueAsString(where.getIs()));
+						activityLabel= new ConceptService().getShortestTerm(where.getIs().getFirst().getIri());
+						if (activityLabel==null) activityLabel=where.getValueLabel();
+						procedureWhere = where;
 					}
 					else if (where.getIri() != null && where.getIri().contains("effectiveDate")) {
+						dateWhere= where;
 						String valueLabel=where.getValueLabel();
 						if (valueLabel==null){
 						valueLabel= where.getRelativeTo().getQualifier();
 						}
 						dateRangeLabel= where.getQualifier()+" "+valueLabel;
-						procedureWheres.append(dateRangeLabel);
-						indicatorLabel.append(" ").append(dateRangeLabel);
 					}
 					else if (where.getIri() != null && where.getIri().contains("value")) {
 						if (where.getRange()!=null ||(!where.getValue().equals("0"))) {
 							targetName = where.getQualifier() + " " + where.getValueLabel();
-							targetWheres.append(targetName);
 						}
 				}
 			}
-		if (procedureName!=null) {
-			String subIndicatorLabel= matchToActivity.get(procedureWheres);
-			if (subIndicatorLabel==null) {
-				unlabelledClauses.add(procedureWheres.toString());
-				subIndicatorLabel=procedureWheres.toString();
+		if (activityLabel!=null) {
+			String careActivityLabel = matchLabel.get(activityLabel);
+			if (careActivityLabel == null) {
+				unlabelledClauses.add(activityLabel);
+				careActivityLabel = activityLabel;
 			}
-			String subIndicatorIri = namespace + "Procedure" + (om.writeValueAsString(procedureWheres).hashCode());
-			TTEntity subIndicatorEntity=entities.get(subIndicatorIri);
-			if (subIndicatorEntity==null){
-				subIndicatorEntity = new TTEntity();
-				entities.put(subIndicatorIri, subIndicatorEntity);
-				subIndicatorEntity.setIri(subIndicatorIri);
-				subIndicatorEntity.setName(subIndicatorLabel);
-				subIndicatorEntity.addType(iri(IM.INDICATOR));
-				indicatorEntity.addObject(iri(Namespace.IM+"caresubIndicator"), iri(subIndicatorEntity.getIri()));
+			String careActivityIri = namespace + "CareActivity" + (om.writeValueAsString(careActivityLabel).hashCode());
+			TTEntity careActivityEntity = entities.get(careActivityIri);
+			if (careActivityEntity == null) {
+				careActivityEntity = new TTEntity();
+				entities.put(careActivityIri, careActivityEntity);
+				createSchedule(careActivityEntity, procedureWhere, dateWhere);
+				careActivityEntity.setIri(careActivityIri);
+				careActivityEntity.setName(careActivityLabel);
+				careActivityEntity.addType(iri(IM.CARE_ACTIVITY));
+
+				pathway.addObject(iri(Namespace.IM + "careActivity"), iri(careActivityEntity.getIri()));
 			}
-			String activityLabel= matchToActivity.get(procedureWheres);
-				if (activityLabel==null) {
-					unlabelledClauses.add(procedureWheres.toString());
-					activityLabel=procedureWheres.toString();
+			if (targetName != null) {
+				String targetLabel = matchLabel.get(targetName);
+				if (targetLabel == null) {
+					unlabelledClauses.add(targetName);
+					targetLabel = targetName;
 				}
-				String activityIri = namespace + "Procedure" + (om.writeValueAsString(procedureWheres).hashCode());
-				TTEntity activityEntity= entities.get(activityIri);
-				if (activityEntity==null){
-					activityEntity = new TTEntity();
-					entities.put(activityIri, activityEntity);
-					activityEntity.setIri(activityIri);
-					activityEntity.setName(activityLabel);
-					activityEntity.addType(iri(IM.INDICATOR));
+				String targetIri = namespace + "CareTarget" + (targetLabel.hashCode());
+				TTEntity targetEntity = entities.get(targetIri);
+				if (targetEntity == null) {
+					targetEntity = new TTEntity();
+					entities.put(targetIri, targetEntity);
+					targetEntity.setIri(targetIri);
+					targetEntity.setName(targetLabel);
+					targetEntity.addType(iri(IM.CARE_TARGET));
 				}
-				subIndicatorEntity.addObject(iri(Namespace.IM+"careActivity"), iri(activityEntity.getIri()));
-				if (targetName!=null) {
-					String targetLabel= matchToActivity.get(targetWheres.toString());
-					if (targetLabel==null) {
-						unlabelledClauses.add(procedureWheres.toString());
-						targetLabel="Review of treatment";
-					}
-					String targetIri = namespace + "TargetActivity" + (targetLabel.hashCode());
-					TTEntity targetEntity = entities.get(targetIri);
-					if (targetEntity == null) {
-						targetEntity = new TTEntity();
-						entities.put(targetIri, targetEntity);
-						targetEntity.setIri(targetIri);
-						targetEntity.setName(targetLabel);
-						targetEntity.addType(iri(IM.INDICATOR));
-					}
-					subIndicatorEntity.addObject(iri(Namespace.IM+"targetActivity"), iri(subIndicatorEntity.getIri()));
+				careActivityEntity.addObject(iri(Namespace.IM + "careTarget"), iri(targetEntity.getIri()));
+			}
+		}
+
+
+		}
+
+	}
+
+	private void createSchedule(TTEntity careActivityEntity, Where procedureWhere,Where dateWhere) throws Exception {
+		if (procedureWhere == null) return;
+		String procedureIri = procedureWhere.getIs().getFirst().getIri();
+		careActivityEntity.set(Namespace.IM + "procedure", iri(procedureIri));
+		if (dateWhere!=null) {
+			if (dateWhere.getRange() != null) {
+				if (dateWhere.getRange() != null) {
+					Value from = dateWhere.getRange().getFrom();
+					TTNode scheduleNode = createScheduleNode(from);
+					careActivityEntity.set(Namespace.IM + "schedule", scheduleNode);
+				}
+			}
+			if (dateWhere.getValue() != null && dateWhere.getValue().startsWith("-")) {
+				String value = dateWhere.getValue().substring(1);
+				throw new Exception("Negative dates not supported");
 			}
 		}
 	}
+
+	private TTNode createScheduleNode(Value from) {
+		TTNode scheduleNode = new TTNode();
+		TTIriRef units=null;
+		if (from.getUnits()!=null) units=from.getUnits();
+		String value = from.getValue();
+		if (value.equals("15")){
+			value="1";
+			units=iri(Namespace.IM+"Years");
+		}
+		else if (value.equals("27")){
+			value="2";
+			units=iri(Namespace.IM+"Years");
+		}
+		scheduleNode.set(Namespace.IM + "value", TTLiteral.literal(value));
+		if (units!=null) {
+			scheduleNode.set(Namespace.IM + "unit", units);
+		}
+		return scheduleNode;
+
+	}
+
+
+
+
 
 	private String getLabel(String longLabel){
 		if (longLabel.contains("Patients with"))
@@ -356,33 +447,51 @@ public class IndicatorGenerator {
 		TTFilerFactory.setBulk(false);
 		try (BufferedReader reader = new BufferedReader(new FileReader(folder + "Indicator-query.txt"))) {
 			reader.readLine();
+			int order=0;
 			String line = reader.readLine();
 			while (line != null && !line.isEmpty()) {
+				line= line.replace("\"","");
 				String[] fields = line.split("\t");
 				if (fields.length > 1) {
-					String iOrA = fields[0];
-					if (iOrA.equals("I")) {
-						indicators.put(fields[2],fields[3]);
+					String inputType = fields[0];
+					if (inputType.equals("P")){
+						createPathway(fields[2]);
 					}
-					if (iOrA.equals("I")||iOrA.equals("S")) {
+					if (inputType.equals("A")) {
+						matchLabel.put(fields[4],fields[1]);
+					}
+					else if (inputType.equals("I")||inputType.equals("S")) {
 							String indicatorLabel = fields[2];
-							String queryLabel = fields[3];
-							List<TTBundle> entities= entityService.getEntityFromTerm(queryLabel,Set.of(namespace));
+							String queryLabel = fields[3].replace("\"","");
+							List<TTBundle> entities= entityService.getEntityFromTerm(queryLabel,Set.of(namespace,Namespace.QOF.toString()));
 							if (entities.isEmpty())
 								throw new Exception("Indicator not found: " + queryLabel);
 							else {
 								String queryIri = entities.get(0).getEntity().getIri();
+								if (inputType.equals("I")) {
+									indicators.add(fields[2]);
+									order++;
+									indicatorOrder.put(fields[2],order);
+								}
+								indicatorToQueryIri.put(fields[2], queryIri);
 								queryIriToIndicator.put(queryIri, indicatorLabel);
 							}
 					}
-					if (iOrA.equals("A")) {
-						if (!fields[4].equals(""))
-							matchToActivity.put(fields[4], fields[2]);
-					}
+
 				}
 				line = reader.readLine();
 			}
 		}
+	}
+
+	private void createPathway(String field) {
+		pathway = new TTEntity();
+		pathway.setIri(namespace+field.hashCode())
+			.setName(field)
+			.addType(iri(Namespace.IM+"CarePathway"))
+			.setScheme(Namespace.SMARTLIFE.asIri())
+			.addObject(iri(IM.IS_CONTAINED_IN),iri(pathwayFolder));
+		document.addEntity(pathway);
 	}
 
 }

@@ -1,2 +1,1 @@
-rm -f /data/dbbuild/Transforms-1.0-SNAPSHOT.jar
 rm -f /data/dbbuild/Feeds-1.0-SNAPSHOT.jar

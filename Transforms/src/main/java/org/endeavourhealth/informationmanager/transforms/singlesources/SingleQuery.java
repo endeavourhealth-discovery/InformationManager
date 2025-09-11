@@ -1,4 +1,4 @@
-package org.endeavourhealth.informationmanager.utils.singleFilers;
+package org.endeavourhealth.informationmanager.transforms.singlesources;
 
 import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.endeavourhealth.informationmanager.transforms.sources.SingleEqdQueryImport;

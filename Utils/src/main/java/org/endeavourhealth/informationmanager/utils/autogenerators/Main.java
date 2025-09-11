@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class Main {
 		public static void main(String[] argv) throws Exception {
-			new IndicatorGenerator().generate(argv[0],argv[1], argv[2]);
+			new IndicatorGenerator().generate(argv[0],argv[1], argv[2],argv[3]);
 		}
 }
 
