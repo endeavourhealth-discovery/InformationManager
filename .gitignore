@@ -7,3 +7,4 @@ DiscoveryConverter.cfg
 .gradle
 build
 *.xml
+*delta_members.csv
