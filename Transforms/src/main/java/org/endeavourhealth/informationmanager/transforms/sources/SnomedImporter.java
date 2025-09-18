@@ -157,15 +157,11 @@ public class SnomedImporter implements TTImport {
       document = dmanager.createDocument();
       setRefSetRoot();
       importRefsetFiles(config.getFolder());
-      try (QOFRefSetImport qofImporter = new QOFRefSetImport(document, conceptMap)) {
-        qofImporter.importData(config);
-      }
       conceptMap.clear();
 
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
-
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage());
     }

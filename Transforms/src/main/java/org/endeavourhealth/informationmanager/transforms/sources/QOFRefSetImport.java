@@ -4,7 +4,10 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.informationmanager.transforms.XlsxExpander;
+import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -21,73 +24,93 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class QOFRefSetImport implements TTImport {
 
-  public static final String[] pcdClusters = {
-    ".*\\\\QOF\\\\.*\\_PCD_Refset_Content.txt"};
+  private static final String[] qofRefSets = {".*\\\\QOF\\\\Static_Expanded_cluster_lists_Ruleset-level_adhoc_.*\\.zip"};
+  private static final String[] expandedRefSets = {".*\\\\QOF\\\\RefSets.*\\.txt"};
+
 
 
   public static final String PCDFolder = Namespace.IM + "PCDClusters";
   private static final Logger LOG = LoggerFactory.getLogger(QOFRefSetImport.class);
-  private Map<String, TTEntity> conceptMap;
   private Map<String, TTEntity> qofMap;
   private TTDocument document;
-  private boolean isSnomedImporter;
+  private int setCount=0;
 
-  public QOFRefSetImport() {
-    isSnomedImporter = false;
 
-  }
-
-  public QOFRefSetImport(TTDocument document, Map<String, TTEntity> conceptMap) {
-    this.document = document;
-    this.conceptMap = conceptMap;
-    this.isSnomedImporter = true;
-  }
-
-  public Map<String, TTEntity> getConceptMap() {
-    return conceptMap;
-  }
-
-  public QOFRefSetImport setConceptMap(Map<String, TTEntity> conceptMap) {
-    this.conceptMap = conceptMap;
-    return this;
-  }
 
 
   public void importData(TTImportConfig config) throws ImportException {
     try {
-      if (!isSnomedImporter) {
+      Path zip = ImportUtils.findFileForId(config.getFolder(), qofRefSets[0]);
+      ZipUtils.unzipFiles(zip.getFileName().toString(), zip.getParent().toString(),zip.getParent().toString()+"/RefSets/");
+      XlsxExpander excelExpander= new XlsxExpander();
+      excelExpander.exportXlsToTxt(config.getFolder() + "/QOF/RefSets/");
+    } catch (IOException e) {
+      throw new ImportException(e.getMessage());
+    }
+    try (TTManager manager = new TTManager()) {
+      document= manager.createDocument();
         qofMap = new HashMap<>();
         document = new TTDocument();
-      }
       processSets(config.getFolder());
-      if (!isSnomedImporter) {
+      LOG.info("Imported {} qof refsets", setCount);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
           filer.fileDocument(document);
         }
-      }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);
     }
   }
+  private void importExpandedRefsetFiles(String path) throws IOException {
+    int i = 0;
+    LOG.info("Importing expanded refsets");
+    for (String refsetFile :expandedRefSets) {
+      List<Path> paths = ImportUtils.findFilesForId(path, refsetFile);
+      for (Path file :paths) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+          String line = reader.readLine();
+          while (line != null && !line.isEmpty()) {
+            processExpandedRefsetLine(line);
+            i++;
+            line = reader.readLine();
+          }
 
-  private TTEntity getEntityFromIri(String iri) {
-    if (isSnomedImporter)
-      return conceptMap.get(iri);
-    else
-      return qofMap.get(iri);
+        }
+      }
+    }
+    LOG.info("Imported {} refset", i);
+  }
+  private void processExpandedRefsetLine(String line) {
+    String[] fields = line.split("\t");
+    String setIri=Namespace.SNOMED+(fields[6].replace("^",""));
+    TTEntity c = qofMap.get(setIri);
+    if (c==null) {
+      setCount++;
+      LOG.info("Creating refset {}", fields[2]);
+      TTEntity set = new TTEntity()
+        .set(iri(IM.ALTERNATIVE_CODE), TTLiteral.literal(fields[1]))
+        .setIri(setIri)
+        .setName(fields[2])
+        .setScheme(Namespace.SNOMED.asIri())
+        .setCrud(iri(IM.UPDATE_PREDICATES))
+        .setType(new TTArray().add(iri(IM.CONCEPT_SET)));
+      document.addEntity(set);
+      c = new TTEntity()
+        .setIri(setIri)
+          .setCrud((iri(IM.ADD_QUADS)))
+        .addObject(iri(IM.IS_CONTAINED_IN), iri(PCDFolder));
+      TTManager.addTermCode(c, fields[1], fields[1], iri(IM.ACTIVE));
+      document.addEntity(c);
+      qofMap.put(setIri, c);
+    }
+    c.addObject(iri(IM.HAS_MEMBER), iri(Namespace.SNOMED + fields[3]));
   }
 
-  private void putEntityMap(String iri, TTEntity entity) {
-    if (isSnomedImporter)
-      conceptMap.put(iri, entity);
-    else
-      qofMap.put(iri, entity);
-  }
+
 
   @Override
   public void validateFiles(String inFolder) throws TTFilerException {
 
-    ImportUtils.validateFiles(inFolder, pcdClusters);
+    ImportUtils.validateFiles(inFolder, qofRefSets);
 
   }
 
@@ -98,122 +121,19 @@ public class QOFRefSetImport implements TTImport {
       .setDescription("PCD portal  code cluster, reference sets , which are a subset of the Snomed-CT reference sets. The content of these are sourced from the UK Snomed-CT releases.")
       .setScheme(Namespace.SNOMED.asIri())
       .addType(iri(IM.FOLDER));
-    putEntityMap(PCDFolder, clusters);
     clusters.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
     clusters
       .addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "QueryConceptSets"));
     document.addEntity(clusters);
-    for (String clusterFile : pcdClusters) {
-      Path file = ImportUtils.findFilesForId(path, clusterFile).get(0);
-      String qofFile = file.toFile().getName();
-      String version = qofFile.split("_")[0];
-      getEntityFromIri(PCDFolder).setName("Primary care code clusters (" + version + ")");
-      createFoldersForVersion(version);
-      importPcdClusters(file, version);
-    }
-  }
-
-  private void createFoldersForVersion(String version) {
-    Map<String, String> folders = Map.of("CC", "Core Contract (CC)", "ES", "Enhanced Service (ES)"
-      , "INLIQ", "Indicators No Longer In QOF (INLIQ)"
-      , "Other", "Other"
-      , "PLE", "Patient Level Extract (PLE)"
-      , "NCD", "Network Contract DES (NCD)"
-      , "QOF", "Quality and Outcomes Framework (QOF)"
-      , "VI", "Vaccination and Immunisations (VI)");
-    for (Map.Entry<String, String> folder : folders.entrySet()) {
-      createServiceFolder(folder.getKey(), folder.getValue(), version);
-    }
-  }
-
-  private void createServiceFolder(String serviceMnemonic, String serviceName, String version) {
-    String serviceFolderIri = Namespace.IM + "SetServiceFolder_" + serviceMnemonic;
-    TTEntity serviceFolder = getEntityFromIri(serviceFolderIri);
-    if (serviceFolder == null) {
-      serviceFolder = new TTEntity()
-        .setIri(serviceFolderIri)
-        .addType(iri(IM.FOLDER))
-        .setScheme(Namespace.IM.asIri());
-      serviceFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
-      serviceFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(PCDFolder));
-      putEntityMap(serviceFolderIri, serviceFolder);
-      document.addEntity(serviceFolder);
-    }
-    serviceFolder.setName(serviceName + " (" + version + " )");
+    importExpandedRefsetFiles(path);
   }
 
 
-  private void importPcdClusters(Path file, String version) throws IOException {
-    Set<String> clusters = new HashSet<>();
-    LOG.info("Processing qof cluster synonyms in {}", file.getFileName().toString());
-    String qofFile = file.toFile().getName();
-    try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-      reader.readLine(); // NOSONAR - Skip header
-      String line = reader.readLine();
-      while (line != null && !line.isEmpty()) {
-        String[] fields = line.split("\t");
-        String refset = fields[4];
-        String clusterName = fields[1];
-        String clusterCode = fields[0];
-        String services = fields[5];
-        if (!clusters.contains(refset)) {
-          addToReferenceSet(refset, services, clusterName, clusterCode);
-          clusters.add(refset);
-        }
-        line = reader.readLine();
-      }
-    }
-  }
-
-  private void addToReferenceSet(String referenceSet, String services, String clusterTerm, String clusterCode) {
-    TTEntity set = getEntityFromIri(referenceSet);
-    if (set == null) {
-      set = new TTEntity()
-        .setIri(Namespace.SNOMED + referenceSet)
-        .setScheme(Namespace.SNOMED.asIri())
-        .setCrud(iri(IM.ADD_QUADS));
-      document.addEntity(set);
-    }
-    set.setType(new TTArray().add(iri(IM.CONCEPT_SET)));
-    String[] serviceList = services.split("\\|");
-    for (String s : serviceList) {
-      String serviceRuleSet = s.trim();
-      String service = serviceRuleSet.split("\\s+")[0];
-      String ruleSetName = String.join(" ", Arrays.asList(serviceRuleSet.split("\\s+")).subList(1, serviceRuleSet.split("\\s+").length));
-      String ruleSetFolderIri = Namespace.IM + "RuleSetFolder_" + service + ruleSetName.replace(" ", "");
-      TTEntity ruleSetFolder = getEntityFromIri(ruleSetFolderIri);
-      if (ruleSetFolder == null) {
-        ruleSetFolder = new TTEntity()
-          .setIri(ruleSetFolderIri)
-          .setName("Sets for ruleset " + service + " " + ruleSetName)
-          .addType(iri(IM.FOLDER))
-          .setScheme(Namespace.IM.asIri());
-        ruleSetFolder.addObject(iri(IM.IS_CONTAINED_IN), Namespace.IM + "SetServiceFolder_" + service);
-        putEntityMap(ruleSetFolderIri, ruleSetFolder);
-        document.addEntity(ruleSetFolder);
-      }
-      if (!hasTermCode(set, clusterTerm)) {
-        TTNode termCode = new TTNode();
-        set.addObject(iri(IM.HAS_TERM_CODE), termCode);
-        termCode.set(iri(RDFS.LABEL), TTLiteral.literal(clusterTerm));
-        termCode.addObject(iri(IM.KEY_TERM),TTLiteral.literal(clusterCode));
-      }
-      set.setName(clusterTerm);
-      set.addObject(iri(IM.IS_CONTAINED_IN), iri(ruleSetFolderIri));
-    }
-  }
 
 
-  private boolean hasTermCode(TTEntity entity, String term) {
-    if (entity.get(iri(IM.HAS_TERM_CODE)) == null)
-      return false;
-    for (TTValue tc : entity.get(iri(IM.HAS_TERM_CODE)).getElements()) {
-      if (tc.asNode().get(iri(RDFS.LABEL)) != null && tc.asNode().get(iri(RDFS.LABEL)).asLiteral().getValue().equals(term))
-        return true;
-    }
-    return false;
 
-  }
+
+
 
 
   @Override

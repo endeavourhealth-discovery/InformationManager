@@ -20,6 +20,7 @@ gradlePlugin {
 dependencies {
   implementation(libs.jacksonDatabind)
   implementation(libs.gradleApi)
+
 }
 
 publishing {

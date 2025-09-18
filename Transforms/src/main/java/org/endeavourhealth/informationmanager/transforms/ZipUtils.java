@@ -30,4 +30,16 @@ public class ZipUtils {
       return new File(workDir, entry.getFileName());
     }
   }
+  public static void unzipFiles(String sourceZip, String workDir,String outputDirectory) throws IOException {
+    LOG.info("Unzipping {}...", sourceZip);
+    File fileToUnzip = new File(workDir, sourceZip);
+    try (ZipFile zipFile = new ZipFile(fileToUnzip)) {
+
+      List<FileHeader> zipEntries = zipFile.getFileHeaders();
+      for (FileHeader entry : zipEntries) {
+
+        zipFile.extractFile(entry, outputDirectory);
+      }
+    }
+  }
 }

@@ -16,6 +16,7 @@ dependencies {
   implementation(libs.slf4j)
   implementation(libs.wsrs)
   implementation(libs.zip4j)
+    implementation(libs.apache.poi)
 
   testImplementation(libs.junit)
   testImplementation(libs.junitSuite)
