@@ -49,8 +49,8 @@ public class QOFRefSetImport implements TTImport {
     }
     try (TTManager manager = new TTManager()) {
       document= manager.createDocument();
-        qofMap = new HashMap<>();
-        document = new TTDocument();
+      qofMap = new HashMap<>();
+      document = new TTDocument();
       processSets(config.getFolder());
       LOG.info("Imported {} qof refsets", setCount);
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {

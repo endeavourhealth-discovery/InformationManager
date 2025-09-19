@@ -107,9 +107,9 @@ public class CoreQueryImporter implements TTImport {
         .set(iri(RDFS.LABEL), TTLiteral.literal("searchDate"))
         .set(iri(SHACL.DATATYPE), iri(Namespace.IM + "DateTime")));
     Query query = getGmsIsRegistered();
-    query.return_(r -> r
-      .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("RegistrationEpisode").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))
-      .property(p -> p
+    query
+      .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("RegistrationEpisode").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1));
+     query.return_(r ->r.property(p -> p
         .setNodeRef("RegistrationEpisode")
         .setIri(Namespace.IM + "provider")));
     query.setName("GMS registered practice");
@@ -248,8 +248,7 @@ public class CoreQueryImporter implements TTImport {
               .setNodeRef("Address")
               .setIri(Namespace.IM + "addressUse")
               .is(is -> is.setIri("http://hl7.org/fhir/fhir-address-use/" + value))))
-          .return_(r -> r
-          .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1)))));
+          .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
     document.addEntity(address);
 
   }
@@ -285,8 +284,7 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("Address")
             .setIri(Namespace.IM + "addressUse")
             .is(is -> is.setIri("http://hl7.org/fhir/fhir-address-use/" + value))))
-          .return_(r -> r
-        .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1)))));
+        .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
     document.addEntity(address);
 
   }
@@ -310,8 +308,7 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("Telephone")
             .setIri(Namespace.IM + "use")
             .is(is -> is.setIri("http://hl7.org/fhir/contact-point-use/" + value))))
-          .return_(r -> r
-        .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("Telephone").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1)))));
+        .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("Telephone").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
     document.addEntity(address);
 
   }
@@ -572,14 +569,14 @@ public class CoreQueryImporter implements TTImport {
             .setUnits(iri(IM.MONTHS))
             .relativeTo(r -> r.setParameter("$searchDate"))
             .setValueLabel("last 12 months")))
-        .return_(r -> r
-          .as("latestBP")
+        .setKeepAs("latestBP")
           .setOrderBy(new OrderLimit()
             .addProperty(new OrderDirection()
               .setNodeRef("Observation")
               .setIri(Namespace.IM + "effectiveDate")
               .setDirection(Order.descending))
             .setLimit(1))
+        .return_(r->r
           .property(p -> p
             .setNodeRef("Observation")
             .setIri(Namespace.IM + "concept")))
