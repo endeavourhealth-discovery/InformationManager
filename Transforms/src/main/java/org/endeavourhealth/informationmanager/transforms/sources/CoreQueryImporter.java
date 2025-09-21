@@ -609,8 +609,8 @@ public class CoreQueryImporter implements TTImport {
                 .setOperator(Operator.gt)
                 .setValue("130"))))
           .return_(r -> r
-            .setAsDescription("High BP reading")
-            .as("highBPReading"))))
+            .setAsDescription("High BP reading"))
+            .setKeepAs("highBPReading")))
       .not(q -> q
         .setName("Not invited for screening since high BP reading")
         .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
