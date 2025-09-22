@@ -109,9 +109,9 @@ public class CoreQueryImporter implements TTImport {
     Query query = getGmsIsRegistered();
     query
       .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("RegistrationEpisode").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1));
-     query.return_(r ->r.property(p -> p
-        .setNodeRef("RegistrationEpisode")
-        .setIri(Namespace.IM + "provider")));
+    query.return_(r -> r.property(p -> p
+      .setNodeRef("RegistrationEpisode")
+      .setIri(Namespace.IM + "provider")));
     query.setName("GMS registered practice");
     gms.set(iri(IM.DEFINITION), TTLiteral.literal(query));
     document.addEntity(gms);
@@ -497,10 +497,10 @@ public class CoreQueryImporter implements TTImport {
 
   private void testQuery() throws IOException, EQDException {
     Where ageWhere = new Where();
-    Value fromAge=new Value();
+    Value fromAge = new Value();
     fromAge.setOperator(Operator.gte)
       .setValue("65");
-    Value toAge=new Value();
+    Value toAge = new Value();
     toAge
       .setOperator(Operator.lt)
       .setValue("70");
@@ -522,9 +522,9 @@ public class CoreQueryImporter implements TTImport {
       .setIri(Namespace.IM + "Q_TestQuery")
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring")
       .setTypeOf(Namespace.IM + "Patient");
-      query
-        .setIsCohort(iri(Namespace.IM + "Q_RegisteredGMS")
-          .setName("Registered for GMS services on reference date"))
+    query
+      .setIsCohort(iri(Namespace.IM + "Q_RegisteredGMS")
+        .setName("Registered for GMS services on reference date"))
       .and(q -> q
         .or(m -> m
           .setDescription("aged between 65 and 70")
@@ -570,13 +570,13 @@ public class CoreQueryImporter implements TTImport {
             .relativeTo(r -> r.setParameter("$searchDate"))
             .setValueLabel("last 12 months")))
         .setKeepAs("latestBP")
-          .setOrderBy(new OrderLimit()
-            .addProperty(new OrderDirection()
-              .setNodeRef("Observation")
-              .setIri(Namespace.IM + "effectiveDate")
-              .setDirection(Order.descending))
-            .setLimit(1))
-        .return_(r->r
+        .setOrderBy(new OrderLimit()
+          .addProperty(new OrderDirection()
+            .setNodeRef("Observation")
+            .setIri(Namespace.IM + "effectiveDate")
+            .setDirection(Order.descending))
+          .setLimit(1))
+        .return_(r -> r
           .property(p -> p
             .setNodeRef("Observation")
             .setIri(Namespace.IM + "concept")))
@@ -610,7 +610,7 @@ public class CoreQueryImporter implements TTImport {
                 .setValue("130"))))
           .return_(r -> r
             .setAsDescription("High BP reading"))
-            .setKeepAs("highBPReading")))
+          .setKeepAs("highBPReading")))
       .not(q -> q
         .setName("Not invited for screening since high BP reading")
         .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
@@ -1014,8 +1014,6 @@ public class CoreQueryImporter implements TTImport {
   public void validateFiles(String inFolder) throws TTFilerException {
     // No files to validate
   }
-
-
 
 
   @Override
