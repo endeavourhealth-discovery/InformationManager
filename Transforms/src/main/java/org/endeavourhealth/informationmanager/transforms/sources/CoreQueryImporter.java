@@ -669,6 +669,7 @@ public class CoreQueryImporter implements TTImport {
       .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "Q_DefaultCohorts"))
       .set(iri(SHACL.ORDER), TTLiteral.literal(1))
       .setIri(Namespace.IM + "Q_RegisteredGMS")
+      .set(iri(IM.ALTERNATIVE_CODE), TTLiteral.literal("Registered_Patients"))
       .setName("Patients registered for GMS services on the reference date")
       .setDescription("For any gpRegistration period,a gpRegistration start date before the reference date and no end date, or an end date after the reference date.");
 

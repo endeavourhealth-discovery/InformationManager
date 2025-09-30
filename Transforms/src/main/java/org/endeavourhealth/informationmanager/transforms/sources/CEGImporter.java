@@ -21,7 +21,7 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 public class CEGImporter implements TTImport {
 
   private static final String[] queries = {".*\\\\CEGQuery"};
-  private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
+  private static final String[] dataMapFile = {".*\\\\EQD\\\\EqdDataMap.properties"};
   private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
   private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
   private String mainFolder;

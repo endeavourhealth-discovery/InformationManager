@@ -29,13 +29,13 @@ public class EQDImporter {
 	private static final Logger LOG = LoggerFactory.getLogger(EQDImporter.class);
 	private TTManager manager;
 	private Properties dataMap;
-	private Properties criteriaMaps;
 	private String mainFolder;
 	private String setFolder;
-	private  EqdToIMQ converter;
+	private final EqdToIMQ converter;
 	private Namespace namespace;
 	private final Map<String,TTEntity> folderToEntity= new HashMap<>();
 	private final Set<TTEntity> newFolders= new HashSet<>();
+	private Properties uuidLabels;
 	private final Map<String,EQDOCCriterion> libraryItems= new HashMap<>();
 
 	public EQDImporter(boolean versionIndependent) {
@@ -69,12 +69,13 @@ public class EQDImporter {
 
 
 	public void loadAndConvert(TTImportConfig config, TTManager manager, String queries, Namespace namespace,
-													String dataMapFile, String criteriaMapFile,String mainFolder, String setFolder) throws Exception {
+													String dataMapFile, String uuidLabelsFile,String mainFolder, String setFolder) throws Exception {
 		String folder=config.getFolder();
 		String singleEntity=config.getSingleEntity();
 		this.manager= manager;
 		this.mainFolder= mainFolder;
 		this.setFolder= setFolder;
+
 
 		converter.setSingleEntity(singleEntity);
 
@@ -91,9 +92,9 @@ public class EQDImporter {
 			}
 		}
 
-		criteriaMaps= new Properties();
-		try (FileReader reader = new FileReader(folder+"/"+criteriaMapFile)) {
-			criteriaMaps.load(reader);
+		uuidLabels= new Properties();
+		try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, uuidLabelsFile).toFile()))) {
+			uuidLabels.load(reader);
 		}
 		catch(Exception ignored){
 		}
@@ -103,6 +104,7 @@ public class EQDImporter {
 		loadLibraryItems(directory);
 		EqdToIMQ.setLibraryItems(libraryItems);
 		importEqds(namespace, directory);
+
 
 	}
 
@@ -117,7 +119,7 @@ public class EQDImporter {
 					JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 					EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 						.unmarshal(fileEntry);
-					converter.convertEQD(document, eqd, dataMap,criteriaMaps, namespace);
+					converter.convertEQD(document, eqd, dataMap, namespace);
 				}
 			}
 		}
@@ -129,6 +131,7 @@ public class EQDImporter {
 			manager.createIndex();
 			addMissingFolders(document);
 			removeRedundantFolders(manager);
+			setAlternativeCodes(manager.getDocument());
 			//createReportFolders(document);
 			//createSubPopulations(document);
 			//manager.createIndex();
@@ -138,6 +141,15 @@ public class EQDImporter {
 		}
 
 
+	}
+
+	private void setAlternativeCodes(TTDocument document) throws JsonProcessingException {
+		for (TTEntity entity:document.getEntities()) {
+			String uuid= entity.getIri().substring(entity.getIri().lastIndexOf("#")+1);
+			if (uuidLabels.get(uuid)!=null){
+				entity.set(IM.ALTERNATIVE_CODE,TTLiteral.literal((String) uuidLabels.get(uuid)));
+			}
+		}
 	}
 
 	private void addMissingFolders(TTDocument document) {

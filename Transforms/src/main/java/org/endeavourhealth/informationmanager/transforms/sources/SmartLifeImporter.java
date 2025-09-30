@@ -29,7 +29,8 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 public class SmartLifeImporter implements TTImport {
 	private static final String[] queries = {".*\\\\Smartlife"};
 	private static final String[] libraries = {".*\\\\Smartlife\\\\Library\\\\Library.zip"};
-	private static final String[] dataMapFile = {".*\\\\EMIS\\\\EqdDataMap.properties"};
+	private static final String[] dataMapFile = {".*\\\\EQD\\\\EqdDataMap.properties"};
+	private static final String[] uuidLabels = {".*\\\\EQD\\\\uuidLabels.properties"};
 	private static final String[] indicators = {
 		".*\\\\Smartlife\\\\Indicator-query.txt"
 	};
@@ -60,7 +61,7 @@ public class SmartLifeImporter implements TTImport {
 			try {
 				EQDImporter eqdImporter = new EQDImporter(false);
 				eqdImporter.loadAndConvert(config,manager,queries[0],Namespace.SMARTLIFE,dataMapFile[0],
-					"criteriaMaps.properties",mainFolder,setFolder);
+					uuidLabels[0],mainFolder,setFolder);
 			}
 			catch (Exception ex) {
 				throw new ImportException(ex.getMessage(), ex);
@@ -151,7 +152,7 @@ public class SmartLifeImporter implements TTImport {
 
 	@Override
 	public void validateFiles(String inFolder) throws TTFilerException {
-		ImportUtils.validateFiles(inFolder, queries,indicators);
+		ImportUtils.validateFiles(inFolder, queries,indicators,uuidLabels);
 	}
 
 
