@@ -15,7 +15,18 @@ java.targetCompatibility = JavaVersion.VERSION_21
 val ENV = System.getenv("ENV") ?: "dev"
 println("Build environment = [$ENV]")
 if (ENV == "prod") {
-  tasks.build { finalizedBy("sonar") }
+  tasks.build { finalizedBy("safeSonar") }
+}
+
+tasks.register("safeSonar") {
+  //Action block
+  doLast {
+    try {
+      sonar
+    } catch (e: Error) {
+      throw StopActionException(e.toString())
+    }
+  }
 }
 
 sonar {
