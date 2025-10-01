@@ -13,7 +13,6 @@ public class TTImportConfig {
   private boolean skipdelete = false;
   private boolean skiplucene = false;
   private boolean skipBulk = false;
-  private String resourceFolder;
   private List<ImportType> imports = new ArrayList<>();
   private String singleEntity;
   private String eqdFile;
@@ -59,14 +58,6 @@ public class TTImportConfig {
     return this;
   }
 
-  public String getResourceFolder() {
-    return resourceFolder;
-  }
-
-  public TTImportConfig setResourceFolder(String resourceFolder) {
-    this.resourceFolder = resourceFolder;
-    return this;
-  }
 
   public boolean isSkipBulk() {
     return skipBulk;

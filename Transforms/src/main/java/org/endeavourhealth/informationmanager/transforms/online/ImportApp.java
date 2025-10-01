@@ -19,7 +19,6 @@ public class ImportApp {
 
   private static String testDirectory;
 
-  public static String resourceFolder;
 
   public static String getTestDirectory() {
     return testDirectory;
@@ -46,15 +45,12 @@ public class ImportApp {
     // Optional switch args
     if (args.length >= 3) {
       for (int i = 2; i < args.length; i++) {
-        if (args[i].toLowerCase().contains("resources="))
-          cfg.setResourceFolder(args[i].substring(args[i].lastIndexOf("=") + 1));
         switch (args[i].toLowerCase().split("=")[0]) {
           case "secure" -> cfg.setSecure(true);
           case "skiptct" -> cfg.setSkiptct(true);
           case "skipsearch" -> cfg.setSkipsearch(true);
           case "skiplucene" -> cfg.setSkiplucene(true);
           case "privacy" -> TTFilerFactory.setPrivacyLevel(Integer.parseInt(args[i].split("=")[1]));
-          case "resources" -> ImportApp.resourceFolder = args[i].substring(args[i].lastIndexOf("=") + 1);
           case "entity" -> cfg.setSingleEntity(args[i].split("=")[1]);
           default -> {
             if (args[i].contains("test="))

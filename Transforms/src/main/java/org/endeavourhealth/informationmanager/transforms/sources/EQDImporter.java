@@ -80,17 +80,9 @@ public class EQDImporter {
 		converter.setSingleEntity(singleEntity);
 
 		dataMap= new Properties();
-		if (ImportApp.resourceFolder!=null) {
-			try (FileReader reader = new FileReader((ImportApp.resourceFolder))) {
-				dataMap.load(reader);
-			}
-		}
-
-		else{
 			try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, dataMapFile).toFile()))) {
 				dataMap.load(reader);
 			}
-		}
 
 		uuidLabels= new Properties();
 		try (FileReader reader = new FileReader((ImportUtils.findFileForId(folder, uuidLabelsFile).toFile()))) {
