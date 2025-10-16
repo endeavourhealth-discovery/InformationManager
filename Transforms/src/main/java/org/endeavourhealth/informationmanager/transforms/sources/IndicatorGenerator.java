@@ -147,10 +147,10 @@ public class IndicatorGenerator {
 			for (org.endeavourhealth.imapi.model.imq.Path path : match.getPath()) {
 				String typeOf = path.getTypeOf().getIri();
 				if (Set.of(Namespace.IM + "ClinicalEntry", Namespace.IM + "Observation").contains(typeOf)) {
-					setEventGroups("Observation details",datasetQuery, match,path,xpath);
+					addEventGroups("Observation details",datasetQuery, match,path,xpath);
 				}
 				else if (typeOf.contains("Medication")){
-					setEventGroups("Medication details",datasetQuery, match,path,xpath);
+					addEventGroups("Medication details",datasetQuery, match,path,xpath);
 				}
 			}
 		}
@@ -163,8 +163,8 @@ public class IndicatorGenerator {
 		}
 	}
 
-	private void setEventGroups(String columnGroupName, Query datasetQuery, Match match,
-															Path path,String xPath) throws JsonProcessingException {
+	private void addEventGroups(String columnGroupName, Query datasetQuery, Match match,
+															Path path, String xPath) throws JsonProcessingException {
 
 		TTEntity columnEntity= columnGroupNameToEntity.get(columnGroupName);
 		Query columnQuery= columnEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
@@ -343,6 +343,10 @@ public class IndicatorGenerator {
 		Query report= queryEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
 		List<Match> columnGroups= report.getColumnGroup();
 		Return columns= columnGroups.get(columnNumber).getReturn();
+		if (columns.getProperty()!=null)
+			if (columns.getProperty().getFirst().getAs()!=null)
+				if (columns.getProperty().getFirst().getAs().equals("Y-N"))
+					columns.getProperty().removeFirst();
 		Query ColumnGroupQuery= new Query();
 		ColumnGroupQuery.addColumnGroup(new Match().setReturn(columns));
 		TTEntity columnGroupEntity= new TTEntity()
