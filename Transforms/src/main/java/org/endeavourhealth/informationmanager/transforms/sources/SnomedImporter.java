@@ -134,6 +134,9 @@ public class SnomedImporter implements TTImport {
       );
       scheme.addObject(TTIriRef.iri(IM.IS_CONTAINED_IN), TTIriRef.iri(IM.CORE_SCHEMES));
       document.addEntity(scheme);
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+        filer.fileDocument(document);
+      }
 
       importConceptFiles(config.getFolder());
       importDescriptionFiles(config.getFolder());

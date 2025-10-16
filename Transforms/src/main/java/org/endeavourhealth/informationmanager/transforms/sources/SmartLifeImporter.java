@@ -54,7 +54,7 @@ public class SmartLifeImporter implements TTImport {
 		try (TTManager manager = new TTManager()){
 			TTDocument document = manager.createDocument();
 			createFolders(document);
-			TTEntity namespaceEntity = manager.createNamespaceEntity(Namespace.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles");
+			TTEntity namespaceEntity = manager.createNamespaceEntity(Namespace.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles",true,false);
 			namespaceEntity.addObject(iri(IM.IS_CONTAINED_IN),iri(IM.CORE_SCHEMES));
 			document.addEntity(namespaceEntity);
 
@@ -74,55 +74,17 @@ public class SmartLifeImporter implements TTImport {
 			}
 
 		}
-		//fileIndicators(config);
-	}
-
-	private void fileIndicators(TTImportConfig config) throws ImportException {
-			try (TTManager manager = new TTManager()) {
-				TTDocument document = manager.createDocument();
-
-				int i = 0;
-				for (String indicator : indicators) {
-				Path file = ImportUtils.findFileForId(config.getFolder(), indicator);
-					LOG.info("Processing  descriptions in {}", file.getFileName().toString());
-					try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-						reader.readLine();  // NOSONAR - Skip header
-						String line = reader.readLine();
-						while (line != null && !line.isEmpty()) {
-							processIndicatorLine(line,document);
-							i++;
-							line = reader.readLine();
-						}
-					}
-
-				}
-				try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(fileGraph)) {
-					filer.fileDocument(document);
-				}
+		try {
+			new IndicatorGenerator().generate(config.getFolder()+"\\Smartlife",
+				"http://smartlifehealth.info/smh#SmartLifeIndicators",
+				"http://endhealth.info/im#CarePathways", Namespace.SMARTLIFE);
 		} catch (Exception e) {
-				throw new ImportException("Unable to file indicators",e);
-			}
+			throw new ImportException("Unable to generate indicators",e);
+		}
+
 	}
 
-	private void processIndicatorLine(String line,TTDocument document){
-		String[] fields = line.split("\t");
-		String indicatorLabel=fields[0];
-		String queryIri= fields[2];
-		TTEntity indicator = new TTEntity()
-			.setIri(Namespace.SMARTLIFE + (indicatorLabel.replace(" ","")))
-				.setName(indicatorLabel)
-			.addType(iri(IM.INDICATOR))
-			.set(iri(IM.HAS_QUERY), iri(queryIri));
-		indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.SMARTLIFE+"SmartLifeIndicators"));
-		document.addEntity(indicator);
-	}
 
-	private static TTDocument generateInferred(TTDocument document) throws OWLOntologyCreationException {
-		Reasoner reasoner = new Reasoner();
-		TTDocument inferred = reasoner.generateInferred(document);
-		inferred = reasoner.inheritShapeProperties(inferred);
-		return inferred;
-	}
 
 	private void createFolders(TTDocument document) {
 		TTEntity folder = new TTEntity()
@@ -144,7 +106,8 @@ public class SmartLifeImporter implements TTImport {
 			.setIri(Namespace.SMARTLIFE + "SmartLifeIndicators")
 			.setName("Smart Life indicators")
 			.addType(iri(IM.FOLDER))
-			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "Indicators"));
+			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "Indicators"))
+				.addObject(iri(IM.CONTENT_TYPE), iri(IM.INDICATOR));
 		document.addEntity(folder);
 		setFolder= folder.getIri();
 
