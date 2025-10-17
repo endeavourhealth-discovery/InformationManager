@@ -91,6 +91,7 @@ public class SmartLifeImporter implements TTImport {
 			.setIri(Namespace.SMARTLIFE + "Q_SmartLifeQueries")
 			.setName("SmartLife queries")
 			.addType(iri(IM.FOLDER))
+			.setScheme(iri(Namespace.SMARTLIFE))
 			.set(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "Q_Queries"));
 		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
 		document.addEntity(folder);
@@ -99,6 +100,7 @@ public class SmartLifeImporter implements TTImport {
 			.setIri(Namespace.SMARTLIFE + "CSET_SmartLifeConceptSets")
 			.setName("Smart Life Health value set library")
 			.addType(iri(IM.FOLDER))
+			.setScheme(iri(Namespace.SMARTLIFE))
 			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "QueryConceptSets"));
 		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
 		document.addEntity(folder);
@@ -106,6 +108,7 @@ public class SmartLifeImporter implements TTImport {
 			.setIri(Namespace.SMARTLIFE + "SmartLifeIndicators")
 			.setName("Smart Life indicators")
 			.addType(iri(IM.FOLDER))
+			.setScheme(iri(Namespace.SMARTLIFE))
 			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "Indicators"))
 				.addObject(iri(IM.CONTENT_TYPE), iri(IM.INDICATOR));
 		document.addEntity(folder);

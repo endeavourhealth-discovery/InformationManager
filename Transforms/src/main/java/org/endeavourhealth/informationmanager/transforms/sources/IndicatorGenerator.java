@@ -124,8 +124,7 @@ public class IndicatorGenerator {
 		if (indicator.get(iri(IM.DENOMINATOR))!=null) {
 			String cohortIri = indicator.get(IM.DENOMINATOR).asIriRef().getIri();
 			datasetQuery.setIsCohort(iri(cohortIri));
-			TTEntity patientDetails = entityService.getBundle(columnGroupNameToEntity.get("Patient details").getIri()
-				, Set.of(IM.DEFINITION.toString())).getEntity();
+			TTEntity patientDetails = columnGroupNameToEntity.get("Patient details");
 			Query patientColumnQuery = patientDetails.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 			for (Match subMatch : patientColumnQuery.getColumnGroup()) {
 				subMatch.setName("Patient details");
