@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.logic.reasoner.IndicatorGenerator;
 import org.endeavourhealth.imapi.model.customexceptions.EQDException;
 import org.endeavourhealth.imapi.queryengine.ClauseUtils;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -38,6 +39,7 @@ public class CoreQueryImporter implements TTImport {
       telephoneProperty("mobileTelephoneNumber", "mobile");
       telephoneProperty("workTelephoneNumber", "mobile");
 
+
       age();
       gmsRegistration();
       gmsRegistrationStatus();
@@ -66,12 +68,33 @@ public class CoreQueryImporter implements TTImport {
       searchAllowableSubclass();
       searchAllowableContainedIn();
       generateDefaultCohorts(manager);
+      generateDefaultIndicators(manager);
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception e) {
       throw new ImportException(e.getMessage(), e);
     }
+  }
+  private void generateDefaultIndicators(TTManager manager) throws JsonProcessingException {
+    TTEntity defaults= new TTEntity()
+      .setIri(Namespace.IM+"StandardIndicators")
+      .setName("Standard indicators")
+      .addType(iri(IM.FOLDER))
+      .setScheme(iri(Namespace.IM))
+      .addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM+"Indicators"));
+    defaults.set(IM.ORDER,TTLiteral.literal(1));
+    manager.getDocument().addEntity(defaults);
+    IndicatorGenerator generator= new IndicatorGenerator();
+    TTEntity GMSIndicator= generator.createIndicator(Namespace.IM+"GMSIndicator"
+    ,"GMS Registered patients (indicator)"
+        ,"The indicator for GMS registered patients used by most patient indicators"
+    ,Namespace.IM,
+      null,
+     Namespace.IM+"Q_RegisteredGMS",
+      null);
+    GMSIndicator.set(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM+"StandardIndicators"));
+    manager.getDocument().addEntity(GMSIndicator);
   }
 
   private void generateDefaultCohorts(TTManager manager) throws JsonProcessingException {
@@ -659,6 +682,7 @@ public class CoreQueryImporter implements TTImport {
   }
 
   private void currentGMS() throws JsonProcessingException {
+
 
     TTEntity qry = new TTEntity()
       .addType(iri(IM.QUERY))

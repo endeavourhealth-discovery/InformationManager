@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 
-public class IndicatorGenerator {
+public class IndicatorImporter {
 	public ObjectMapper om= new ObjectMapper();
 	private final EntityService entityService = new EntityService();
 	private final QueryDescriptor descriptor = new QueryDescriptor();
@@ -70,7 +70,7 @@ public class IndicatorGenerator {
 				indicator.setName(indicatorLabel);
 				indicator.addType(iri(IM.INDICATOR));
 				indicator.set(iri(IM.DENOMINATOR), iri(cohortIri));
-				indicator.set(iri(IM.ENUMERATOR), iri(indicatorQueryIri));
+				indicator.set(iri(IM.NUMERATOR), iri(indicatorQueryIri));
 				indicator.set(iri(SHACL.ORDER), TTLiteral.literal(indicatorOrder.get(indicatorLabel)));
 				indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
 				document.addEntity(indicator);
@@ -92,7 +92,7 @@ public class IndicatorGenerator {
 				subIndicator.setIri(subIndicatorIri)
 					.setName(subIndicatorLabel)
 					.addType(iri(IM.INDICATOR))
-					.set(iri(IM.ENUMERATOR), iri(subIndicatorQueryIri))
+					.set(iri(IM.NUMERATOR), iri(subIndicatorQueryIri))
 					.set(iri(IM.DENOMINATOR),iri(cohortIri))
 					.set(iri(SHACL.ORDER), TTLiteral.literal(indicatorOrder.get(indicatorLabel)))
 					.addObject(iri(IM.IS_SUBINDICATOR_OF), iri(indicatorIri));
@@ -437,7 +437,7 @@ public class IndicatorGenerator {
 		indicator.setIri(namespace+"Indicator"+indicatorLabel.hashCode());
 		indicator.setName(getLabel(indicatorLabel));
 		indicator.addType(iri(IM.INDICATOR));
-		indicator.set(iri(IM.ENUMERATOR), iri(queryIri));
+		indicator.set(iri(IM.NUMERATOR), iri(queryIri));
 		if (operator==Bool.and) {
 			parentIndicator.addObject(iri(Namespace.IM+"andIndicator"), iri(indicator.getIri()));
 		}

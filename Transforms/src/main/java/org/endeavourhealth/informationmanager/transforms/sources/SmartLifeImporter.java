@@ -3,7 +3,6 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
 import org.endeavourhealth.imapi.utility.ThreadContext;
 import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
@@ -14,12 +13,9 @@ import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -75,7 +71,7 @@ public class SmartLifeImporter implements TTImport {
 
 		}
 		try {
-			new IndicatorGenerator().generate(config.getFolder()+"\\Smartlife",
+			new IndicatorImporter().generate(config.getFolder()+"\\Smartlife",
 				"http://smartlifehealth.info/smh#SmartLifeIndicators",
 				"http://endhealth.info/im#CarePathways", Namespace.SMARTLIFE);
 		} catch (Exception e) {
