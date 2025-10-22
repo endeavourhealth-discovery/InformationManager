@@ -1,3 +1,6 @@
+plugins {
+  id("com.gradleup.shadow") version "9.2.2"
+}
 description = "Transforms"
 version = "1.0-SNAPSHOT"
 
@@ -9,6 +12,7 @@ dependencies {
   implementation(libs.jaxbApi)
   implementation(libs.jaxbRuntime)
   implementation(libs.jsonSimple)
+  implementation(libs.logback)
   implementation(libs.openCsv)
   implementation(libs.owlApiApiBinding)
   implementation(libs.owlApiDistribution)
@@ -16,7 +20,7 @@ dependencies {
   implementation(libs.slf4j)
   implementation(libs.wsrs)
   implementation(libs.zip4j)
-    implementation(libs.apache.poi)
+  implementation(libs.apache.poi)
 
   testImplementation(libs.junit)
   testImplementation(libs.junitSuite)
@@ -27,11 +31,13 @@ dependencies {
   testImplementation(libs.junitRunner)
 }
 
+tasks.shadowJar {
+  isZip64 = true
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  mergeServiceFiles()
+}
 
 tasks.jar {
-  manifest {
-    attributes("Main-Class" to "org.endeavourhealth.informationmanager.transforms.preload.Preload")
-  }
   from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

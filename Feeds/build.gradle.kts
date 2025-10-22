@@ -13,6 +13,7 @@ tasks.jar {
   manifest {
     attributes("Main-Class" to "org.endeavourhealth.informationmanager.trud.TrudUpdater")
   }
-  from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+  isZip64=true
+  from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
