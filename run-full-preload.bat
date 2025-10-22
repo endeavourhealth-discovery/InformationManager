@@ -1,17 +1,23 @@
 @ECHO off
-SET JAVA_HOME="C:\Users\<!!USER!!>\.jdks\corretto-21.0.8"
+REM ========== CHECK/SET THESE CONFIGURATION ENTRIES ==========
+SET JAVA_VERSION=corretto-21.0.8
+SET IMPORT_DATA="Z:\IdeaProjects\Endeavour\InformationManager\ImportData"
 SET TRUD_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SET TRUD_DATA_DIR="Z:\IdeaProjects\Endeavour\InformationManager\ImportData\TRUD"
-SET PRELOAD_SOURCE="Z:\IdeaProjects\Endeavour\InformationManager\ImportData"
-SET PRELOAD_TEMP="Z:\IdeaProjects\Endeavour\InformationManager\ImportData\.tmp"
-SET GRAPHDB_BIN="C:\Users\<!!USER!!>\AppData\Local\GraphD~1\app\bin"
-SET "GRAPHDB_DATA=C:\Users\<!!USER!!>\AppData\Roaming\GraphDB\data\repositories"
-SET "GRAPHDB_START_CMD=C:\Users\<!!USER!!>\AppData\Local\GraphD~1\GraphDB Desktop.exe"
+SET Q_AUTH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+REM ========== SET REMAINING CONFIG BASED ON THE ABOVE ==========
+SET JAVA_HOME="%USERPROFILE%\.jdks\%JAVA_VERSION%"
+SET TRUD_DATA_DIR="%IMPORT_DATA%\TRUD"
+SET PRELOAD_SOURCE="%IMPORT_DATA%\ImportData"
+SET PRELOAD_TEMP="%IMPORT_DATA\.tmp"
+SET GRAPHDB_BIN="%USERPROFILE%\AppData\Local\GraphD~1\app\bin"
+SET "GRAPHDB_DATA=%USERPROFILE%\AppData\Roaming\GraphDB\data\repositories"
+SET "GRAPHDB_START_CMD=%USERPROFILE%\AppData\Local\GraphD~1\GraphDB Desktop.exe"
 SET GRAPH_REPO=im
 SET GRAPH_SERVER=http://localhost:7200/
-SET Q_AUTH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 SET Q_URL=https://api.apiqcodes.org/production
 
+REM ========== COMMAND LINE ARGUMENTS ==========
 SET target=%1
 SET additional=%2
 
