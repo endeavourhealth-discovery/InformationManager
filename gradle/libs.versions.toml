@@ -11,10 +11,11 @@ junit = "5.10.1"
 junitRunner = "1.10.1"
 junitSuite = "1.11.4"
 jsonSimple = "0.4"
+logback = "1.5.20"
 openCsv = "5.9"
 owlApi = "5.5.0"
 rdf4j = "4.3.8"
-slf4j = "2.0.9"
+slf4j = "2.0.17"
 wsrs = "3.1.0"
 zip4j = "2.11.5"
 cucumber = "7.22.0"
@@ -37,6 +38,7 @@ junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref =
 junitRunner = { module = "org.junit.platform:junit-platform-runner", version.ref = "junitRunner" }
 junitSuite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junitSuite" }
 jsonSimple = { module = "org.apache.clerezza.ext:org.json.simple", version.ref = "jsonSimple" }
+logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 openCsv = { module = "com.opencsv:opencsv", version.ref = "openCsv" }
 owlApiApiBinding = { module = "net.sourceforge.owlapi:owlapi-apibinding", version.ref = "owlApi" }
 owlApiDistribution = { module = "net.sourceforge.owlapi:owlapi-distribution", version.ref = "owlApi" }

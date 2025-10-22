@@ -8,7 +8,6 @@ public class Main {
 				"http://smartlifehealth.info/smh#SmartLifeIndicators",
 				"http://endhealth.info/im#CarePathways",
 				Namespace.SMARTLIFE);
-
 		}
 }
 
