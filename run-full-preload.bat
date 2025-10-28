@@ -6,16 +6,15 @@ SET TRUD_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 SET Q_AUTH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 REM ========== SET REMAINING CONFIG BASED ON THE ABOVE ==========
-SET JAVA_HOME="%USERPROFILE%\.jdks\%JAVA_VERSION%"
-SET TRUD_DATA_DIR="%IMPORT_DATA%\TRUD"
-SET PRELOAD_SOURCE="%IMPORT_DATA%\ImportData"
-SET PRELOAD_TEMP="%IMPORT_DATA%\.tmp"
-SET GRAPHDB_BIN="%USERPROFILE%\AppData\Local\GraphD~1\app\bin"
+SET "JAVA_HOME=%USERPROFILE%\.jdks\%JAVA_VERSION%"
+SET "TRUD_DATA_DIR=%IMPORT_DATA%\TRUD"
+SET "PRELOAD_TEMP=%IMPORT_DATA%\.tmp"
+SET "GRAPHDB_BIN=%USERPROFILE%\AppData\Local\GraphD~1\app\bin"
 SET "GRAPHDB_DATA=%USERPROFILE%\AppData\Roaming\GraphDB\data\repositories"
 SET "GRAPHDB_START_CMD=%USERPROFILE%\AppData\Local\GraphD~1\GraphDB Desktop.exe"
-SET GRAPH_REPO=im
-SET GRAPH_SERVER=http://localhost:7200/
-SET Q_URL=https://api.apiqcodes.org/production
+SET "GRAPH_REPO=im"
+SET "GRAPH_SERVER=http://localhost:7200/"
+SET "Q_URL=https://api.apiqcodes.org/production"
 
 REM ========== COMMAND LINE ARGUMENTS ==========
 SET target=%1
@@ -85,7 +84,7 @@ IF "%target%"=="dev" (
   "%JAVA_HOME%/bin/java" -jar Feeds/build/libs/Feeds-1.0-SNAPSHOT.jar %TRUD_API_KEY% "%TRUD_DATA_DIR%"
 
   ECHO Performing Preload
-  "%JAVA_HOME%/bin/java" -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.preload.Preload "source=%PRELOAD_SOURCE%" "preload=%GRAPHDB_BIN%" "temp=%PRELOAD_TEMP%" privacy=0 "cmd=%GRAPHDB_START_CMD%"
+  "%JAVA_HOME%/bin/java" -Xmx14g -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.preload.Preload "source=%IMPORT_DATA%" "preload=%GRAPHDB_BIN%" "temp=%PRELOAD_TEMP%" privacy=0 "cmd=%GRAPHDB_START_CMD%"
 
   ECHO Shutting down graphdb
   timeout 5
@@ -107,7 +106,7 @@ IF "%target%"=="dev" (
   ECHO Connected!
 
   ECHO Filing Smartlife
-  "%JAVA_HOME%/bin/java" -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.online.ImportApp %PRELOAD_SOURCE% smartlifequery skiplucene privacy=3
+  "%JAVA_HOME%/bin/java" -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.online.ImportApp %IMPORT_DATA% smartlifequery skiplucene privacy=3
 
   ECHO Shutting down graphdb
   timeout 5
