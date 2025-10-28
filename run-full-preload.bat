@@ -1,9 +1,9 @@
 @ECHO off
 REM ========== CHECK/SET THESE CONFIGURATION ENTRIES ==========
-SET JAVA_VERSION=corretto-21.0.8
-SET IMPORT_DATA="Z:\IdeaProjects\Endeavour\InformationManager\ImportData"
-SET TRUD_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SET Q_AUTH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SET "JAVA_VERSION=corretto-21.0.8"
+SET "IMPORT_DATA=Z:\IdeaProjects\Endeavour\InformationManager\ImportData"
+SET "TRUD_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+SET "Q_AUTH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 REM ========== SET REMAINING CONFIG BASED ON THE ABOVE ==========
 SET "JAVA_HOME=%USERPROFILE%\.jdks\%JAVA_VERSION%"
