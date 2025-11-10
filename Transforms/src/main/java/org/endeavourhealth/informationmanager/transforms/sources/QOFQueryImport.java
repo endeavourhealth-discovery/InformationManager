@@ -35,7 +35,7 @@ public class QOFQueryImport implements TTImport {
 		}
 		try (TTManager manager = new TTManager()){
 			manager.createDocument();
-			manager.getDocument().addEntity(manager.createNamespaceEntity(Namespace.QOF,"QOF Framework", "QOF  library of value sets, queries and profiles"));
+			manager.getDocument().addEntity(manager.createNamespaceEntity(Namespace.QOF,"QOF Framework", "QOF  library of value sets, queries and profiles",true,true));
 			createFolders(manager.getDocument());
 			try {
 				EQDImporter eqdImporter = new EQDImporter(true);

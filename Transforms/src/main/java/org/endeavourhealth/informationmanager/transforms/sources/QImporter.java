@@ -49,7 +49,7 @@ public class QImporter implements TTImport {
       try (TTManager manager = new TTManager()) {
         document.addEntity(manager.createNamespaceEntity(Namespace.QR,
           "Q Research scheme and graph"
-          , "Q Research scheme and graph"));
+          , "Q Research scheme and graph",true,true));
         addQFolders();
         importQProjects();
         importCodeGroups();

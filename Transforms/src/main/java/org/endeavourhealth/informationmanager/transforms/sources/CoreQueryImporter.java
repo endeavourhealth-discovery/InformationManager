@@ -521,6 +521,7 @@ public class CoreQueryImporter implements TTImport {
   private void testQuery() throws IOException, EQDException {
     Where ageWhere = new Where();
     Value fromAge = new Value();
+    Where bpLast6Months= new Where();
     fromAge.setOperator(Operator.gte)
       .setValue("65");
     Value toAge = new Value();
@@ -533,6 +534,13 @@ public class CoreQueryImporter implements TTImport {
       .range(r -> r
         .setFrom(fromAge)
         .setTo(toAge));
+    bpLast6Months.setNodeRef("Observation")
+      .setIri(Namespace.IM + "effectiveDate")
+      .setOperator(Operator.gte)
+      .setValue("-12")
+      .setUnits(iri(IM.MONTHS))
+      .relativeTo(r -> r.setParameter("$searchDate"))
+      .setValueLabel("last 12 months");
 
     Where relativeWhere = new Where();
     relativeWhere.setNodeRef("Observation")
@@ -541,11 +549,12 @@ public class CoreQueryImporter implements TTImport {
       .relativeTo(r -> r.setNodeRef("highBPReading").setIri(Namespace.IM + "effectiveDate"));
     ClauseUtils.assignFunction(ageWhere);
     ClauseUtils.assignFunction(relativeWhere);
+    ClauseUtils.assignFunction(bpLast6Months);
     Query query = new Query()
       .setIri(Namespace.IM + "Q_TestQuery")
-      .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring")
-      .setTypeOf(Namespace.IM + "Patient");
+      .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring");
     query
+      .return_(r->r.property(p -> p.setIri(Namespace.IM+"patient")))
       .setIsCohort(iri(Namespace.IM + "Q_RegisteredGMS")
         .setName("Registered for GMS services on reference date"))
       .and(q -> q
@@ -554,25 +563,17 @@ public class CoreQueryImporter implements TTImport {
           .setWhere(ageWhere))
         .or(m -> m
           .setDescription("has pre-diabetes")
-          .addPath(new Path()
-            .setIri(Namespace.IM + "observation")
-            .setVariable("Observation")
-            .setTypeOf(Namespace.IM + "Observation"))
+          .setTypeOf(Namespace.IM + "Observation")
           .where(w -> w
-            .setNodeRef("Observation")
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri(Namespace.SNOMED + "714628002").setDescendantsOf(true))
             .setValueLabel("Prediabetes"))))
       .and(q -> q
         .setName("Have high blood pressure in the last year")
         .setDescription("Latest systolic within 12 months of the search date")
-        .path(p -> p
-          .setIri(Namespace.IM + "observation")
-          .setVariable("Observation")
-          .setTypeOf(Namespace.IM + "Observation"))
+        .setTypeOf(Namespace.IM + "Observation")
         .where(and -> and
           .and(ww -> ww
-            .setNodeRef("Observation")
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .setName("concept")
             .addIs(new Node()
@@ -584,15 +585,9 @@ public class CoreQueryImporter implements TTImport {
               .setDescendantsOrSelfOf(true)
               .setName("Home systolic blood pressure"))
             .setValueLabel("Office or home systolic blood pressure"))
-          .and(ww -> ww
-            .setNodeRef("Observation")
-            .setIri(Namespace.IM + "effectiveDate")
-            .setOperator(Operator.gte)
-            .setValue("-12")
-            .setUnits(iri(IM.MONTHS))
-            .relativeTo(r -> r.setParameter("$searchDate"))
-            .setValueLabel("last 12 months")))
-        .setKeepAs("latestBP")
+          .addAnd(bpLast6Months))
+        .setKeepAs("highBPReading")
+        .setAsDescription("Has high BP reading")
         .setOrderBy(new OrderLimit()
           .addProperty(new OrderDirection()
             .setNodeRef("Observation")
@@ -605,7 +600,6 @@ public class CoreQueryImporter implements TTImport {
             .setIri(Namespace.IM + "concept")))
         .then(m1 -> m1
           .setDescription("is either an office systolic >140 or a home systolic >130")
-          .setNodeRef("latestBP")
           .where(w -> w
             .or(whereEither -> whereEither
               .and(w1 -> w1
@@ -630,24 +624,21 @@ public class CoreQueryImporter implements TTImport {
               .and(w1 -> w1
                 .setIri(Namespace.IM + "value")
                 .setOperator(Operator.gt)
-                .setValue("130"))))
-          .return_(r -> r
-            .setAsDescription("High BP reading"))
-          .setKeepAs("highBPReading")))
+                .setValue("130"))))))
+
       .not(q -> q
-        .setName("Not invited for screening since high BP reading")
+        .setKeepAs("InvitedAfterHighBP")
+        .setName("Invited for screening after high BP reading")
         .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
-        .path(w -> w.setIri(Namespace.IM + "observation")
-          .setVariable("Observation")
-          .setTypeOf(Namespace.IM + "Observation"))
+        .setTypeOf(Namespace.IM + "Observation")
         .where(and -> and
           .and(inv -> inv
-            .setNodeRef("Observation")
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri("http://snomed.info/sct#310422005").setName("invited for screening").setMemberOf(true)))
           .addAnd(relativeWhere)))
       .not(q -> q
-        .setName("not on hypertension register")
+        .setKeepAs("OnHypertensionRegister")
+        .setName("on hypertension register")
         .setDescription("is registered on the hypertensives register")
         .setIsCohort(iri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
           .setName("Hypertensives")));
@@ -693,7 +684,7 @@ public class CoreQueryImporter implements TTImport {
       .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "Q_DefaultCohorts"))
       .set(iri(SHACL.ORDER), TTLiteral.literal(1))
       .setIri(Namespace.IM + "Q_RegisteredGMS")
-      .set(iri(IM.ALTERNATIVE_CODE), TTLiteral.literal("Registered_Patients"))
+      .set(iri(IM.ALTERNATIVE_CODE), TTLiteral.literal("RegisteredAsGMS"))
       .setName("Patients registered for GMS services on the reference date")
       .setDescription("For any gpRegistration period,a gpRegistration start date before the reference date and no end date, or an end date after the reference date.");
 
