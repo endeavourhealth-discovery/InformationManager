@@ -14,10 +14,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response;
 
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -96,7 +93,7 @@ public class TrudUpdater {
           ArrayNode releases = (ArrayNode) json.get("releases");
           JsonNode latest = releases.get(0);
           feed.setRemoteVersion(latest.get("releaseDate").asText());
-          feed.setDownload(latest.get("archiveFileUrl").asText());
+          feed.setDownload(latest.get("archiveFileUrl").asText().replace(" ", "%20"));
         }
       }
     }
