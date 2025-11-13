@@ -587,7 +587,7 @@ public class CoreQueryImporter implements TTImport {
             .setValueLabel("Office or home systolic blood pressure"))
           .addAnd(bpLast6Months))
         .setKeepAs("highBPReading")
-        .setAsDescription("Has high BP reading")
+        .setDescription("Has high BP reading")
         .setOrderBy(new OrderLimit()
           .addProperty(new OrderDirection()
             .setNodeRef("Observation")
