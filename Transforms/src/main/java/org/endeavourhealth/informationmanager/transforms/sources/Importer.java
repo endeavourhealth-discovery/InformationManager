@@ -64,6 +64,7 @@ public class Importer implements TTImportByType {
       case ImportType.CEG -> new CEGImporter();
       case ImportType.SMARTLIFE -> new SmartLifeImporter();
       case ImportType.QOF -> new QOFQueryImport();
+      case ImportType.QOFDOC -> new QOFDocImporter();
       case ImportType.NHS_TFC -> new NHSTfcImport();
       case ImportType.DELTAS -> new DeltaImporter();
       case ImportType.QR -> new QImporter();

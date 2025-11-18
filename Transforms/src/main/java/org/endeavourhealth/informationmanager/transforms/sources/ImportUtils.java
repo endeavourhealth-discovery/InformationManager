@@ -77,7 +77,7 @@ public class ImportUtils {
    */
   public static Path findFileForId(String path, String filePattern) throws IOException {
     try (Stream<Path> stream = Files.find(Paths.get(path), 16, (file, attr) -> file.toString().replace("/", "\\").matches(filePattern))) {
-      List<Path> paths = stream.collect(Collectors.toList());
+      List<Path> paths = stream.toList();
 
       if (paths.size() == 1)
         return paths.get(0);
