@@ -13,6 +13,7 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.model.requests.QueryRequest;
+import org.endeavourhealth.imapi.transforms.ECLToIMQ;
 import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
@@ -27,7 +28,11 @@ import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
@@ -42,11 +47,16 @@ public class QImporter implements TTImport {
   private final Map<String, TTEntity> idCodeGroupMap = new HashMap<>();
   private final ObjectMapper om = new ObjectMapper();
   private final Map<String, String> projectVersion = new HashMap<>();
+  private static final String[] sets = {".*\\\\QCodes\\\\Sets.txt"};
+
+
 
   @Override
   public void importData(TTImportConfig ttImportConfig) throws ImportException {
+
     try {
       try (TTManager manager = new TTManager()) {
+        manager.setDocument(document);
         document.addEntity(manager.createNamespaceEntity(Namespace.QR,
           "Q Research scheme and graph"
           , "Q Research scheme and graph",true,true));
@@ -67,13 +77,36 @@ public class QImporter implements TTImport {
 
         LOG.info("Deleting q code groups..");
         new SearchService().updateIM(qr, Graph.IM);
+        processReplacementSets(manager,ttImportConfig.getFolder());
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
           filer.fileDocument(document);
         }
         resetDrugs();
       }
+
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);
+    }
+
+    LOG.info("Finished importing Q data");
+  }
+
+  private void processReplacementSets(TTManager manager,String folder) throws IOException, ImportException {
+    for (String setFile : sets) {
+      Path path = ImportUtils.findFileForId(folder, setFile);
+      LOG.info("Processing concepts in {}", path.getFileName().toString());
+      try (BufferedReader reader = new BufferedReader(new FileReader(path.toFile()))) {
+        String line = reader.readLine();
+        while (line != null && !line.isEmpty()) {
+          String[] fields= line.split("\t");
+          TTEntity set= manager.getEntity(fields[0]);
+          set.getPredicateMap().remove(iri(IM.HAS_MEMBER));
+          ECLToIMQ converter = new ECLToIMQ();
+          Query query = converter.convertECL(fields[2]);
+          set.set(IM.DEFINITION,TTLiteral.literal(new ObjectMapper().writeValueAsString(query)));
+          line=reader.readLine();
+        }
+      }
     }
   }
 
@@ -86,7 +119,7 @@ public class QImporter implements TTImport {
           if (isMedicationSet(entity)) {
             for (TTValue medication : entity.get(iri(IM.HAS_MEMBER)).getElements()) {
               entity.addObject(iri(IM.ENTAILED_MEMBER), new TTNode()
-                .set(iri(IM.INSTANCE_OF), medication)
+                .set(iri(IM.IS), medication)
                 .set(iri(IM.ENTAILMENT), iri(IM.DESCENDANTS_OR_SELF_OF)));
 
             }
@@ -146,6 +179,7 @@ public class QImporter implements TTImport {
                   .setIri(Namespace.QR + "QCodeGroup_" + groupId)
                   .setName("Q code group " + codeGroup.get("Name").asText())
                   .setScheme(Namespace.QR.asIri())
+                  .set(iri(IM.AVOID_REPLACED_BY),TTLiteral.literal(true))
                   .addType(iri(IM.CONCEPT_SET));
                 if (idCodeGroupMap.get(groupId) == null) {
                   idCodeGroupMap.put(groupId, qGroup);
@@ -196,6 +230,7 @@ public class QImporter implements TTImport {
       TTEntity qset = new TTEntity()
         .setIri(Namespace.QR + "QPredict_" + project.get("Id").asText())
         .addType(iri(IM.CONCEPT_SET))
+        .set(iri(IM.AVOID_REPLACED_BY),TTLiteral.literal(true))
         .setScheme(Namespace.QR.asIri())
         .setName(project.get("Name").asText());
       qset.set(iri(IM.IS_CONTAINED_IN), projectsFolder);
@@ -268,7 +303,8 @@ public class QImporter implements TTImport {
   }
 
   @Override
-  public void validateFiles(String s) throws TTFilerException {
+  public void validateFiles(String inFolder) throws TTFilerException {
+    ImportUtils.validateFiles(inFolder,sets);
     boolean missingEnvs = false;
     Iterator var2 = Arrays.asList("Q_AUTH", "Q_URL", "GRAPH_SERVER", "GRAPH_REPO").iterator();
     while (true) {

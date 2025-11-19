@@ -254,12 +254,17 @@ public class EQDImporter {
 
 	private void setRegisteredPatientParent(TTDocument document) throws JsonProcessingException {
 		for (TTEntity entity : document.getEntities()) {
-			if (entity.get(iri(IM.DEFINITION)) != null) {
-				Query qry = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-				if (qry.getAnd() != null && qry.getAnd().get(0).getIsCohort() != null) {
-					TTIriRef parent = qry.getAnd().get(0).getIsCohort();
-					if (parent.getIri().equals(Namespace.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F"))
-							parent.setIri(Namespace.IM + "Q_RegisteredPatient");
+			if (entity.isType(iri(IM.QUERY))) {
+				if (entity.get(iri(IM.DEFINITION)) != null) {
+					Query qry = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
+					if (qry.getIs()!=null) {
+						String parent = qry.getIs().get(0).getIri();
+						if (parent.equals(Namespace.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
+							qry.setIs(new ArrayList<>());
+							qry.addIs(new Node().setIri(Namespace.IM + "Q_RegisteredPatient"));
+							entity.set(iri(IM.DEFINITION), TTLiteral.literal(qry));
+						}
+					}
 				}
 			}
 		}

@@ -1,8 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
@@ -17,10 +15,8 @@ import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
@@ -397,7 +393,7 @@ public class CoreQueryImporter implements TTImport {
           .and(m -> m
             .setName("Data model property")
             .setDescription("A given property ($myProperty) of a given data model ($myDataModel)")
-            .addInstanceOf(new Node()
+            .addIs(new Node()
               .setParameter("myDataModel"))
             .addPath(new Path()
               .setIri(SHACL.PROPERTY.toString())
@@ -456,7 +452,7 @@ public class CoreQueryImporter implements TTImport {
           .and(m -> m
             .setName("Data model property ranges")
             .setDescription("The range (node, class or datatype) of $myProperty on $myDataModel")
-            .addInstanceOf(new Node()
+            .addIs(new Node()
               .setParameter("myDataModel"))
             .addPath(new Path()
               .setIri("http://www.w3.org/ns/shacl#property")
@@ -509,7 +505,7 @@ public class CoreQueryImporter implements TTImport {
         .setActiveOnly(true)
         .setDescription("All super types of an entity (where the entity 'is a' $this)")
         .setVariable("isa")
-        .addInstanceOf(new Node()
+        .addIs(new Node()
           .setParameter("this")
           .setAncestorsOf(true))
         .return_(s -> s.setNodeRef("isa")
@@ -555,7 +551,7 @@ public class CoreQueryImporter implements TTImport {
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring");
     query
       .return_(r->r.property(p -> p.setIri(Namespace.IM+"patient")))
-      .setIsCohort(iri(Namespace.IM + "Q_RegisteredGMS")
+      .is(is->is.setIri(Namespace.IM + "Q_RegisteredGMS")
         .setName("Registered for GMS services on reference date"))
       .and(q -> q
         .or(m -> m
@@ -569,10 +565,11 @@ public class CoreQueryImporter implements TTImport {
             .addIs(new Node().setIri(Namespace.SNOMED + "714628002").setDescendantsOf(true))
             .setValueLabel("Prediabetes"))))
       .and(q -> q
-        .setName("Have high blood pressure in the last year")
-        .setDescription("Latest systolic within 12 months of the search date")
-        .setTypeOf(Namespace.IM + "Observation")
-        .where(and -> and
+          .setDescription("Latest systolic within 12 months of the search date")
+          .setTypeOf(Namespace.IM + "Observation")
+          .setKeepAs("latestBPL12M")
+          .path(p->p.setIri(Namespace.IM+"observation").setVariable("obs").setTypeOf(Namespace.IM+"Observation"))
+         .where(and -> and
           .and(ww -> ww
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .setName("concept")
@@ -586,8 +583,6 @@ public class CoreQueryImporter implements TTImport {
               .setName("Home systolic blood pressure"))
             .setValueLabel("Office or home systolic blood pressure"))
           .addAnd(bpLast6Months))
-        .setKeepAs("highBPReading")
-        .setDescription("Has high BP reading")
         .setOrderBy(new OrderLimit()
           .addProperty(new OrderDirection()
             .setNodeRef("Observation")
@@ -595,12 +590,17 @@ public class CoreQueryImporter implements TTImport {
             .setDirection(Order.descending))
           .setLimit(1))
         .return_(r -> r
-          .property(p -> p
-            .setNodeRef("Observation")
-            .setIri(Namespace.IM + "concept")))
-        .then(m1 -> m1
-          .setDescription("is either an office systolic >140 or a home systolic >130")
-          .where(w -> w
+          .property(p->p
+            .setIri(Namespace.IM+"concept"))))
+      .and(then->then
+        .setName("Have high blood pressure in the last year")
+        .setNodeRef("latestBPL12M")
+        .setKeepAs("HighBPReading")
+        .return_(r->r
+          .property(p ->p
+            .setIri(Namespace.IM+"effectiveDate")))
+        .setDescription("is either an office systolic >140 or a home systolic >130")
+        .where(w -> w
             .or(whereEither -> whereEither
               .and(w1 -> w1
                 .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
@@ -624,12 +624,12 @@ public class CoreQueryImporter implements TTImport {
               .and(w1 -> w1
                 .setIri(Namespace.IM + "value")
                 .setOperator(Operator.gt)
-                .setValue("130"))))))
-
+                .setValue("130")))))
       .not(q -> q
         .setKeepAs("InvitedAfterHighBP")
         .setName("Invited for screening after high BP reading")
         .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
+        .path(p->p.setIri(Namespace.IM+"observation").setVariable("obs").setTypeOf(Namespace.IM+"Observation"))
         .setTypeOf(Namespace.IM + "Observation")
         .where(and -> and
           .and(inv -> inv
@@ -640,7 +640,7 @@ public class CoreQueryImporter implements TTImport {
         .setKeepAs("OnHypertensionRegister")
         .setName("on hypertension register")
         .setDescription("is registered on the hypertensives register")
-        .setIsCohort(iri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
+        .is(is->is.setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
           .setName("Hypertensives")));
 
     TTEntity qry = new TTEntity().addType(iri(IM.QUERY))
@@ -749,6 +749,15 @@ public class CoreQueryImporter implements TTImport {
           .setInverse(true)
           .setIri(IM.CONTENT_TYPE)
           .is(is -> is.setParameter("this"))))
+      .or(m->m
+        .and(m1->m1
+          .where(w->w
+            .setIsNull(true)
+            .setIri(IM.CONTENT_TYPE)))
+        .and(m1->m1
+          .where(w->w
+            .setIri(IM.IS_CONTAINED_IN)
+            .is(is->is.setIri(Namespace.IM+"EntityTypes")))))
       .return_(r -> r
         .property(p -> p
           .setIri(RDFS.LABEL))
@@ -768,7 +777,7 @@ public class CoreQueryImporter implements TTImport {
         new Query()
           .setName("Is an entity an allowable range a particular property")
           .setActiveOnly(true)
-          .instanceOf(ins -> ins
+          .is(ins -> ins
             .setDescendantsOrSelfOf(true)
             .setParameter("ranges"))
           .return_(r -> r
@@ -787,7 +796,7 @@ public class CoreQueryImporter implements TTImport {
           .setName("Is it a valid property")
           .setDescription("is the property 'property' a valid value for the concept(s) 'concepts")
           .setActiveOnly(true)
-          .instanceOf(i -> i.setParameter("property").setAncestorsOrSelfOf(true))
+          .is(i -> i.setParameter("property").setAncestorsOrSelfOf(true))
           .setWhere(new Where()
             .setIri(RDFS.DOMAIN)
             .addIs(new Node().setParameter("concept").setAncestorsOf(true))
@@ -966,7 +975,7 @@ public class CoreQueryImporter implements TTImport {
           .setActiveOnly(true)
           .setDescription("Is a descendant of, or $this")
           .setVariable("isa")
-          .addInstanceOf(new Node()
+          .addIs(new Node()
             .setParameter("this")
             .setDescendantsOrSelfOf(true))
           .return_(s -> s.setNodeRef("isa")

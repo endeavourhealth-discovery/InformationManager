@@ -63,13 +63,15 @@ public class IndicatorImporter {
 				String indicatorIri = namespace + "Indicator-" + indicatorLabel.hashCode();
 				TTEntity indicatorQueryEntity= entityService.getPartialEntities(Set.of(indicatorQueryIri),Set.of(IM.DEFINITION.toString())).get(0);
 				Query indicatorQuery= indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-				String cohortIri= indicatorQuery.getIsCohort().getIri();
+
 				TTEntity indicator = new TTEntity();
 				indicator.setIri(indicatorIri);
 				indicator.setScheme(iri(namespace.toString()));
 				indicator.setName(indicatorLabel);
 				indicator.addType(iri(IM.INDICATOR));
-				indicator.set(iri(IM.DENOMINATOR), iri(cohortIri));
+				for (Node cohort:indicatorQuery.getIs()) {
+					indicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
+				}
 				indicator.set(iri(IM.NUMERATOR), iri(indicatorQueryIri));
 				indicator.set(iri(SHACL.ORDER), TTLiteral.literal(indicatorOrder.get(indicatorLabel)));
 				indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
@@ -85,16 +87,17 @@ public class IndicatorImporter {
 				Query indicatorQuery= indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 				TTEntity subIndicatorQueryEntity= entityService.getPartialEntities(Set.of(subIndicatorQueryIri),Set.of(IM.DEFINITION.toString())).get(0);
 				Query subIndicatorQuery= subIndicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-				String cohortIri= indicatorQuery.getIsCohort().getIri();
 				String subIndicatorIri = namespace + "SubIndicator-" + subIndicatorLabel.hashCode();
 				TTEntity subIndicator = new TTEntity();
 				subIndicator.setScheme(iri(namespace.toString()));
 				subIndicator.setIri(subIndicatorIri)
 					.setName(subIndicatorLabel)
 					.addType(iri(IM.INDICATOR))
-					.set(iri(IM.NUMERATOR), iri(subIndicatorQueryIri))
-					.set(iri(IM.DENOMINATOR),iri(cohortIri))
-					.set(iri(SHACL.ORDER), TTLiteral.literal(indicatorOrder.get(indicatorLabel)))
+					.set(iri(IM.NUMERATOR), iri(subIndicatorQueryIri));
+				for (Node cohort:indicatorQuery.getIs()) {
+					subIndicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
+				}
+				subIndicator.set(iri(SHACL.ORDER), TTLiteral.literal(indicatorOrder.get(indicatorLabel)))
 					.addObject(iri(IM.IS_SUBINDICATOR_OF), iri(indicatorIri));
 				addColumnGroups(subIndicator,subIndicatorQuery);
 				document.addEntity(subIndicator);
@@ -123,7 +126,7 @@ public class IndicatorImporter {
 
 		if (indicator.get(iri(IM.DENOMINATOR))!=null) {
 			String cohortIri = indicator.get(IM.DENOMINATOR).asIriRef().getIri();
-			datasetQuery.setIsCohort(iri(cohortIri));
+			datasetQuery.addIs(Node.iri(cohortIri));
 			TTEntity patientDetails = columnGroupNameToEntity.get("Patient details");
 			Query patientColumnQuery = patientDetails.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 			for (Match subMatch : patientColumnQuery.getColumnGroup()) {
@@ -402,12 +405,13 @@ public class IndicatorImporter {
 	}
 
 	private void configureMatch(TTEntity indicatorEntity, Match match,TTEntity queryEntity,Bool operator) throws Exception {
-		if (match.getIsCohort() != null) {
-			TTIriRef cohortIri = match.getIsCohort();
-			TTEntity cohortEntity = getEntityFromIri(cohortIri.getIri());
-			TTEntity childEntity = createChildIndicator(cohortIri.getIri(),cohortEntity.getName(),indicatorEntity,operator);
-			configureIndicator(childEntity,cohortEntity,operator==Bool.or ?Bool.or: Bool.and);
-			return;
+		if (match.getIs() != null) {
+			for (Node cohort: match.getIs()) {
+				TTEntity cohortEntity = getEntityFromIri(cohort.getIri());
+				TTEntity childEntity = createChildIndicator(cohort.getIri(), cohortEntity.getName(), indicatorEntity, operator);
+				configureIndicator(childEntity, cohortEntity, operator == Bool.or ? Bool.or : Bool.and);
+				return;
+			}
 		}
 		if (match.getAnd() != null) {
 
@@ -451,11 +455,7 @@ public class IndicatorImporter {
 
 	private boolean actionNeeded(Match match) throws QueryException {
 		if (match.getWhere()!=null){
-			boolean actionNeeded= actionNeeded(match.getWhere());
-			if (actionNeeded) return true;
-		}
-		if (match.getThen()!=null){
-			return actionNeeded(match.getThen());
+			return actionNeeded(match.getWhere());
 		}
 		else return false;
 	}
@@ -496,9 +496,6 @@ public class IndicatorImporter {
 				if (subWhere.getIri()!=null)
 					wheres.add(subWhere);
 			}
-		}
-		if (match.getThen() != null) {
-			flattenMatches(match.getThen(),wheres);
 		}
 	}
 

@@ -73,7 +73,7 @@ public class BNFImporter implements TTImport {
         i++;
         for (String snomed:setToSnomed.get(setIri)){
           entity.addObject(iri(IM.ENTAILED_MEMBER),new TTNode()
-            .set(iri(IM.INSTANCE_OF),iri(Namespace.SNOMED+snomed))
+            .set(iri(IM.IS),iri(Namespace.SNOMED+snomed))
             .set(iri(IM.ENTAILMENT),iri(IM.DESCENDANTS_OR_SELF_OF)));
         }
       }
