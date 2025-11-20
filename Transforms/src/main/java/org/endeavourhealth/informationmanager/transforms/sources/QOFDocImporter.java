@@ -1,5 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
@@ -11,8 +12,8 @@ import org.endeavourhealth.imapi.model.qof.QOFExpressionNode;
 import org.endeavourhealth.imapi.model.qof.Rule;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.parser.qofdoc.QOFDocParser;
 import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -23,13 +24,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class QOFDocImporter implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(QOFDocImporter.class);
 
   private static final String specPattern = ".*\\\\QOF\\\\Specs\\\\.*\\.docx";
+
+  private ObjectMapper om = new ObjectMapper();
 
   @Override
   public void importData(TTImportConfig config) throws ImportException {
@@ -67,7 +72,7 @@ public class QOFDocImporter implements TTImport {
     qofDoc.getIndicators().forEach(i -> doc.addEntity(convertRules(i.getName(), i.getDenominator())));
     qofDoc.getIndicators().forEach(i -> doc.addEntity(convertRules(i.getName(), i.getNumerator())));
 
-    return null;
+    return doc;
   }
 
   private TTEntity convertRules(String name, List<Rule> rules) {
@@ -79,11 +84,22 @@ public class QOFDocImporter implements TTImport {
     TTEntity e = new TTEntity();
     e.setName(name);
 
+    String json = null;
+    try {
+      json = om.writerWithDefaultPrettyPrinter().writeValueAsString(q);
+    } catch (JsonProcessingException ex) {
+      throw new RuntimeException(ex);
+    }
+    LOG.info("JSON: \n{}", json);
+
+    // e.set(IM.DEFINITION, q)
+
     return e;
   }
 
   private Match getMatchFromRule(Rule r) {
-    LOG.debug("Processing rule {}", r.getLogic());
+    LOG.info("Processing rule: [{}]", r.getLogicText());
+    LOG.info("Logic: \n{}", r.getLogic().toFormattedString());
     Match m = new Match();
     m.setName(r.getDescription());
     m.setDescription(r.getLogicText());
@@ -106,15 +122,59 @@ public class QOFDocImporter implements TTImport {
   }
 
   private Where getWhereFromLogic(QOFExpressionNode logic) {
-    LOG.info("Converting logic to Where:\n{}", logic.toFormattedString());
-    return null;
+    Where w = new Where();
+
+    if ("AND".equals(logic.getOperator())) {
+      LOG.debug("AND");
+      for (QOFExpressionNode child : logic.getChildren()) {
+        w.addAnd(getWhereFromLogic(child));
+      }
+    } else if ("OR".equals(logic.getOperator())) {
+      LOG.debug("OR");
+      for (QOFExpressionNode child : logic.getChildren()) {
+        w.addOr(getWhereFromLogic(child));
+      }
+    } else {
+      getWhereFromExpression(logic, w);
+    }
+
+    return w;
   }
 
-  private Where getWhereFromExpression(QOFDocParser.ExpressionContext expression) {
-    //if (expression.)
-    return null;
-  }
+  private static void getWhereFromExpression(QOFExpressionNode logic, Where w) {
+    List<String> equalityReplacements = List.of("!=", " on ", " of ", " at ");
 
+    LOG.debug("Expression: {}", logic.getCondition());
+    String[] expParts = splitByOperator(logic.getCondition());
+    LOG.debug("Parts: {}", Arrays.toString(expParts));
+
+    w.setNodeRef(expParts[0]);
+
+    if (!"Unconditional".equals(expParts[0])) {
+      if (expParts[1].isEmpty()) {
+        LOG.error("NO OPERATOR FOUND");
+        throw new RuntimeException("No operator found in expression: " + logic.getCondition());
+      }
+
+      String op = expParts[1];
+      if ("!=".equals(op)) {
+        w.setNot(true);
+      }
+
+      if (equalityReplacements.contains(op))
+        op = "=";
+
+      Optional<Operator> opEnum = Operator.get(op);
+
+      if (opEnum.isEmpty()) {
+        LOG.error("NO OPERATOR FOUND FOR [{}]", op);
+        throw new RuntimeException("No operator found for: " + op);
+      } else {
+        w.setOperator(opEnum.get())
+          .setValue(expParts[2]);
+      }
+    }
+  }
 
   @Override
   public void validateFiles(String inFolder) throws TTFilerException {
@@ -138,6 +198,20 @@ public class QOFDocImporter implements TTImport {
       LOG.error("Error attempting to find any QOF specification documents (*.dox)");
       throw new TTFilerException("Error attempting to find QOF specification documents in " + inFolder + " - check folder name and file extension.  Expected files with pattern: " + specPattern + "  (note the backslashes)  ");
     }
+  }
+
+  private static String[] splitByOperator(String expression) {
+    String[] operators = {" at ", " on ", " of ", "!=", "<=", ">=", "=", "<", ">"};
+    for (String op : operators) {
+      int index = expression.indexOf(op);
+      if (index != -1) {
+        String left = expression.substring(0, index).trim();
+        String right = expression.substring(index + op.length()).trim();
+        return new String[]{left, op, right};
+      }
+    }
+    // If no operator found, return the expression as left, empty operator, empty right
+    return new String[]{expression.trim(), "", ""};
   }
 
   @Override
