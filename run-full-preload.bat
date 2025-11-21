@@ -39,7 +39,7 @@ IF "%target%"=="dev" (
 :IncorrectArgs
   ECHO Incorrect arguments!
   ECHO Usage: %0 dev^|live ^<smartlife^>
-  EXIT /B 1
+  EXIT /B -1
 
 :Preload
   ECHO Proceeding with preload for %target%
@@ -47,44 +47,44 @@ IF "%target%"=="dev" (
 
   ECHO Fetching ImportData
   IF EXIST ../ImportData/ (
-    git -C ../ImportData checkout
-    git -C ../ImportData pull
+    git -C ../ImportData checkout || exit /b %errorlevel%
+    git -C ../ImportData pull || exit /b %errorlevel%
   ) ELSE (
-    git clone https://github.com/endeavourhealth-discovery/ImportData ../ImportData
+    git clone https://github.com/endeavourhealth-discovery/ImportData ../ImportData || exit /b %errorlevel%
   )
 
   ECHO Fetching %target% IMAPI
   IF EXIST ../IMAPI/ (
-    git -C ../IMAPI checkout %branch%
-    git -C ../IMAPI pull origin %branch%
+    git -C ../IMAPI checkout %branch% || exit /b %errorlevel%
+    git -C ../IMAPI pull origin %branch% || exit /b %errorlevel%
   ) ELSE (
-    git clone https://github.com/endeavourhealth-discovery/IMAPI -b %branch% --single-branch ../IMAPI
+    git clone https://github.com/endeavourhealth-discovery/IMAPI -b %branch% --single-branch ../IMAPI || exit /b %errorlevel%
   )
 
   pushd .
-  cd ../IMAPI
-  CALL gradlew assemble
-  CALL gradlew publishToMavenLocal
+  cd ../IMAPI || exit /b %errorlevel%
+  CALL gradlew assemble || exit /b %errorlevel%
+  CALL gradlew publishToMavenLocal || exit /b %errorlevel%
   popd
 
   ECHO Fetching %target% InformationManager
   IF EXIST ../InformationManager/ (
-    git -C ../IMAPI checkout
-    git -C ../IMAPI pull
+    git -C ../IMAPI checkout || exit /b %errorlevel%
+    git -C ../IMAPI pull || exit /b %errorlevel%
   ) ELSE (
-    git clone https://github.com/endeavourhealth-discovery/InformationManager ../InformationManager
+    git clone https://github.com/endeavourhealth-discovery/InformationManager ../InformationManager || exit /b %errorlevel%
   )
 
   pushd .
-  cd ../InformationManager
-  CALL gradlew assemble
+  cd ../InformationManager || exit /b %errorlevel%
+  CALL gradlew assemble || exit /b %errorlevel%
   popd
 
   ECHO Performing TRUD update
-  "%JAVA_HOME%/bin/java" -jar Feeds/build/libs/Feeds-1.0-SNAPSHOT.jar %TRUD_API_KEY% "%TRUD_DATA_DIR%"
+  "%JAVA_HOME%/bin/java" -jar Feeds/build/libs/Feeds-1.0-SNAPSHOT.jar %TRUD_API_KEY% "%TRUD_DATA_DIR%" || exit /b %errorlevel%
 
   ECHO Performing Preload
-  "%JAVA_HOME%/bin/java" -Xmx14g -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.preload.Preload "source=%IMPORT_DATA%" "preload=%GRAPHDB_BIN%" "temp=%PRELOAD_TEMP%" privacy=0 "cmd=%GRAPHDB_START_CMD%"
+  "%JAVA_HOME%/bin/java" -Xmx14g -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.preload.Preload "source=%IMPORT_DATA%" "preload=%GRAPHDB_BIN%" "temp=%PRELOAD_TEMP%" privacy=0 "cmd=%GRAPHDB_START_CMD%" || exit /b %errorlevel%
 
   ECHO Shutting down graphdb
   timeout 5
@@ -93,11 +93,11 @@ IF "%target%"=="dev" (
   ECHO Zipping im (vanilla) repository
   pushd .
   cd /d %GRAPHDB_DATA%
-  tar -a -v -cf im.zip im
+  tar -a -v -cf im.zip im || exit /b %errorlevel%
   popd
 
   ECHO Restarting graphdb
-  start "" "%GRAPHDB_START_CMD%"
+  start "" "%GRAPHDB_START_CMD%" || exit /b %errorlevel%
 
   ECHO Waiting for startup
   :retry
@@ -106,7 +106,7 @@ IF "%target%"=="dev" (
   ECHO Connected!
 
   ECHO Filing Smartlife
-  "%JAVA_HOME%/bin/java" -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.online.ImportApp %IMPORT_DATA% smartlifequery skiplucene privacy=3
+  "%JAVA_HOME%/bin/java" -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.online.ImportApp %IMPORT_DATA% smartlifequery skiplucene privacy=3 || exit /b %errorlevel%
 
   ECHO Shutting down graphdb
   timeout 5
@@ -114,6 +114,6 @@ IF "%target%"=="dev" (
 
   ECHO Zipping im (smartlife) repository
   pushd .
-  cd /d %GRAPHDB_DATA%
-  tar -a -v -cf im-smartlife.zip im
+  cd /d %GRAPHDB_DATA% || exit /b %errorlevel%
+  tar -a -v -cf im-smartlife.zip im || exit /b %errorlevel%
   popd
