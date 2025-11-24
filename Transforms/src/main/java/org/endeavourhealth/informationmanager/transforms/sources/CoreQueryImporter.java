@@ -30,7 +30,7 @@ public class CoreQueryImporter implements TTImport {
       addressProperty("homeAddress", "home");
       addressProperty("workAddress", "work");
       addressProperty("temporaryAddress", "temp");
-      addressEventProperty("placeOfResidenceAtEvent", "home");
+      addressProperty("placeOfResidenceAtEvent", "home");
       telephoneProperty("homeTelephoneNumber", "home");
       telephoneProperty("mobileTelephoneNumber", "mobile");
       telephoneProperty("workTelephoneNumber", "mobile");
@@ -250,19 +250,25 @@ public class CoreQueryImporter implements TTImport {
       .set(iri(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName(value + " address property definition")
-          .path(p -> p.setIri(Namespace.IM + "address")
+          .path(p -> p.setIri(Namespace.IM + propertyName)
             .setVariable("Address")
-            .setTypeOf(Namespace.IM + "Address"))
+            .setTypeOf(Namespace.IM + "AssignedAddress"))
           .where(and -> and
             .and(w -> w
               .setNodeRef("Address")
               .setIri(Namespace.IM + "effectiveDate")
               .setOperator(Operator.lte)
-              .relativeTo(r -> r.setParameter("$now")))
+              .relativeTo(r -> r.setParameter("$indexDate")))
             .and(w -> w
-              .setNodeRef("Address")
-              .setIri(Namespace.IM + "endDate")
-              .setIsNull(true))
+              .or(or->or
+                .setNodeRef("Address")
+                .setIri(Namespace.IM + "endDate")
+                .setIsNull(true))
+              .or(or -> or
+                .setNodeRef("Address")
+                .setIri(Namespace.IM + "endDate")
+                .setOperator(Operator.gt)
+                .relativeTo(r -> r.setParameter("$indexDate"))))
             .and(w -> w
               .setNodeRef("Address")
               .setIri(Namespace.IM + "addressUse")
@@ -270,41 +276,6 @@ public class CoreQueryImporter implements TTImport {
           .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
     document.addEntity(address);
 
-  }
-
-  private void addressEventProperty(String propertyName, String value) throws JsonProcessingException {
-    TTEntity address = new TTEntity()
-      .setIri(Namespace.IM + propertyName)
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(Namespace.IM.asIri())
-      .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
-        .setName(value + " address property definition")
-        .path(p -> p.setIri(Namespace.IM + "address")
-          .setVariable("Address")
-          .setTypeOf(Namespace.IM + "Address"))
-        .where(and -> and
-          .and(w -> w
-            .setNodeRef("Address")
-            .setIri(Namespace.IM + "effectiveDate")
-            .setOperator(Operator.lte)
-            .relativeTo(r -> r.setParameter("$now")))
-          .and(or -> or
-            .setNodeRef("Address")
-            .or(w -> w
-              .setNodeRef("Address")
-              .setIri(Namespace.IM + "endDate")
-              .setIsNull(true))
-            .or(w -> w
-              .setNodeRef("Address")
-              .setIri(Namespace.IM + "endDate")
-              .setOperator(Operator.gt)
-              .relativeTo(r -> r.setParameter("$searchDate"))))
-          .and(w -> w
-            .setNodeRef("Address")
-            .setIri(Namespace.IM + "addressUse")
-            .is(is -> is.setIri("http://hl7.org/fhir/fhir-address-use/" + value))))
-        .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
-    document.addEntity(address);
 
   }
 
@@ -315,7 +286,7 @@ public class CoreQueryImporter implements TTImport {
       .setScheme(Namespace.IM.asIri())
       .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
         .setName(value + " telephone property definition")
-        .path(p -> p.setIri(Namespace.IM + "telephone")
+        .path(p -> p.setIri(Namespace.IM + propertyName)
           .setVariable("Telephone")
           .setTypeOf(Namespace.IM + "TelephoneNumber"))
         .where(and -> and
@@ -552,6 +523,7 @@ public class CoreQueryImporter implements TTImport {
     query
       .return_(r->r.property(p -> p.setIri(Namespace.IM+"patient")))
       .is(is->is.setIri(Namespace.IM + "Q_RegisteredGMS")
+        .setIsCohort(true)
         .setName("Registered for GMS services on reference date"))
       .and(q -> q
         .or(m -> m

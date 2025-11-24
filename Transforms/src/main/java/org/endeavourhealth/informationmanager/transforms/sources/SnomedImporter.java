@@ -438,6 +438,8 @@ public class SnomedImporter implements TTImport {
     if (!conceptMap.containsKey(fields[0])) {
       TTEntity c = new TTEntity();
       c.setIri(SN + fields[0]);
+      if (fields[0].equals("45406011000001107"))
+        System.out.println(fields[0]);
       c.setCode(fields[0]);
       c.setScheme(iri(Namespace.SNOMED));
       if (conceptFile.contains("Refset") || conceptFile.contains("UKPrimaryCare"))

@@ -33,6 +33,7 @@ public class BNFImporter implements TTImport {
   private final Map<String, TTEntity> codeToEntity = new HashMap<>();
   private final Map<String, Set<String>> setToSnomed = new HashMap<>();
   private final ImportMaps importMaps = new ImportMaps();
+  private final Map<String,TTEntity> vmpMap=new HashMap<>();
 
   private final String topFolder = Namespace.BNF + "BNFValueSets";
   private final Map<String, Set<String>> children = new HashMap<>();
@@ -45,12 +46,23 @@ public class BNFImporter implements TTImport {
     ".*\\\\BNFMaps\\\\.*_BNF_Code_Information.csv"
   };
 
+  public static final String[] bnf_amp = {
+    ".*\\\\BNF\\\\.*\\\\f_bnf_vmp.csv"
+  };
+
+  public static final String[] dmd_amp = {
+    ".*\\\\DMD\\\\.*\\\\f_amp_AmpType.csv"
+  };
+
+
   @Override
   public void importData(TTImportConfig config) throws ImportException {
     try {
       manager = new TTManager();
       document = manager.createDocument();
       topFolder();
+      importDMD(config.getFolder());
+      importBNF_AMP(config.getFolder());
       importMaps(config.getFolder());
       importCodes(config.getFolder());
       setMembers();
@@ -63,6 +75,29 @@ public class BNFImporter implements TTImport {
       throw new ImportException(ex.getMessage(),ex);
     }
   }
+
+  private void importBNF_AMP(String folder) {
+  }
+
+  private void importDMD(String path) throws CsvValidationException, IOException {
+    int i = 0;
+    for (String map : dmd_amp) {
+      Path file = ImportUtils.findFilesForId(path, map).get(0);
+      LOG.info("Processing dmd to amp codes in {}", file.getFileName().toString());
+      try (CSVReader reader = new CSVReader(new FileReader(file.toFile()))) {
+        reader.readNext(); // NOSONAR - Skip header
+        String[] fields;
+        while ((fields = reader.readNext()) != null) {
+          i++;
+          if (i%10000==0){
+            LOG.info("Processed {} codes",i);
+          }
+        }
+      }
+    }
+
+  }
+
 
   private void setMembers() {
     LOG.info("Assigning instances to set definition match clause");
@@ -303,7 +338,7 @@ public class BNFImporter implements TTImport {
 
   @Override
   public void validateFiles(String inFolder) throws TTFilerException {
-    ImportUtils.validateFiles(inFolder, bnf_maps, bnf_codes);
+    ImportUtils.validateFiles(inFolder, bnf_maps, bnf_codes,bnf_amp,dmd_amp);
   }
 
   @Override
