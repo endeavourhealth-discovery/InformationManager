@@ -588,6 +588,8 @@ public class SnomedImporter implements TTImport {
   private void processDescriptionLine(String line) {
     String[] fields = line.split("\t");
     TTEntity c = conceptMap.get(fields[4]);
+    if (fields[4].equals("45406011000001107"))
+      System.out.println(fields[4]);
     String term = fields[7];
     if (c != null) {
       if (term.contains("(attribute)")) {
