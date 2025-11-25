@@ -671,7 +671,7 @@ public class IndicatorImporter {
 		else return String.join(" ", Arrays.copyOfRange(words, 0, words.length));
 	}
 
-	private TTEntity getEntityFromIri(String iri) {
+	private TTEntity getEntityFromIri(String iri) throws JsonProcessingException {
 		return entityService.getBundleByPredicateExclusions(iri, null).getEntity();
 	}
 
