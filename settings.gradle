@@ -14,6 +14,9 @@ pluginManagement {
       url = uri('https://artifactory.endhealth.co.uk/repository/maven-snapshots')
     }
   }
+    plugins {
+        id 'org.jetbrains.kotlin.jvm' version '2.2.0'
+    }
 }
 
 rootProject.name = 'InformationManager'

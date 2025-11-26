@@ -1,14 +1,11 @@
 package org.endeavourhealth.informationmanager.utils.codegen;
 
 import org.endeavourhealth.imapi.logic.codegen.CodeGenJava;
-import org.endeavourhealth.imapi.vocabulary.Graph;
-import org.endeavourhealth.imapi.vocabulary.IM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 import java.io.*;
-import java.util.List;
 import java.util.zip.ZipOutputStream;
 
 public class CodeGen {

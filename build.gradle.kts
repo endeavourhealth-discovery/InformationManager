@@ -3,6 +3,7 @@ plugins {
   id("jacoco")
   id("groovy-gradle-plugin")
   alias(libs.plugins.sonar)
+  kotlin("jvm")
 }
 
 repositories {
@@ -45,6 +46,11 @@ sonar {
 subprojects {
   apply(plugin = "java")
   apply(plugin = "jacoco")
+  apply(plugin = "kotlin")
+
+  kotlin {
+    jvmToolchain(21)
+  }
 
   repositories {
     mavenLocal()
