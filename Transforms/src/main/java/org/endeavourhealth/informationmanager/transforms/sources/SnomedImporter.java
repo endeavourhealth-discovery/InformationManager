@@ -438,6 +438,8 @@ public class SnomedImporter implements TTImport {
     if (!conceptMap.containsKey(fields[0])) {
       TTEntity c = new TTEntity();
       c.setIri(SN + fields[0]);
+      if (fields[0].equals("45406011000001107"))
+        System.out.println(fields[0]);
       c.setCode(fields[0]);
       c.setScheme(iri(Namespace.SNOMED));
       if (conceptFile.contains("Refset") || conceptFile.contains("UKPrimaryCare"))
@@ -586,6 +588,8 @@ public class SnomedImporter implements TTImport {
   private void processDescriptionLine(String line) {
     String[] fields = line.split("\t");
     TTEntity c = conceptMap.get(fields[4]);
+    if (fields[4].equals("45406011000001107"))
+      System.out.println(fields[4]);
     String term = fields[7];
     if (c != null) {
       if (term.contains("(attribute)")) {
@@ -665,17 +669,17 @@ public class SnomedImporter implements TTImport {
     eclQuery.setEcl(ecl);
     eclConverter.getQueryFromECL(eclQuery);
     Query expression = eclQuery.getQuery();
-    if (expression.getInstanceOf() != null) {
-      op.addObject(iri(RDFS.RANGE), iri(expression.getInstanceOf().get(0).getIri()));
+    if (expression.getIs() != null) {
+      op.addObject(iri(RDFS.RANGE), iri(expression.getIs().get(0).getIri()));
     }
     if (expression.getOr() != null) {
       for (Match match : expression.getOr()) {
-        if (match.getInstanceOf() != null) {
-          op.addObject(iri(RDFS.RANGE), iri(match.getInstanceOf().get(0).getIri()));
+        if (match.getIs() != null) {
+          op.addObject(iri(RDFS.RANGE), iri(match.getIs().get(0).getIri()));
         } else {
           if (match.getOr() != null) {
             for (Match or : match.getOr()) {
-              op.addObject(iri(RDFS.RANGE), iri(or.getInstanceOf().get(0).getIri()));
+              op.addObject(iri(RDFS.RANGE), iri(or.getIs().get(0).getIri()));
             }
           } else
             throw new EclFormatException("ecl of this kind is not supported for ranges");

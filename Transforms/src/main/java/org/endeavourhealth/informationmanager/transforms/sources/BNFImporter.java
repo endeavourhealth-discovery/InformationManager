@@ -33,6 +33,12 @@ public class BNFImporter implements TTImport {
   private final Map<String, TTEntity> codeToEntity = new HashMap<>();
   private final Map<String, Set<String>> setToSnomed = new HashMap<>();
   private final ImportMaps importMaps = new ImportMaps();
+  private final Map<String,Set<String>> vmpToSnomed= new HashMap<>();
+  private final Map<String, Set<String>> bnfToVmp= new HashMap<>();
+  private final Map<String,Set<String>> vmpToAmp = new HashMap<>();
+  private final Map<String, Set<String>> bnfToSnomed = new HashMap<>();
+  private final Map<String,Set<String>> snomedToBnf = new HashMap<>();
+
 
   private final String topFolder = Namespace.BNF + "BNFValueSets";
   private final Map<String, Set<String>> children = new HashMap<>();
@@ -45,12 +51,26 @@ public class BNFImporter implements TTImport {
     ".*\\\\BNFMaps\\\\.*_BNF_Code_Information.csv"
   };
 
+  public static final String[] bnf_vmp = {
+    ".*\\\\BNF\\\\.*\\\\f_bnf_Vmp.csv"
+  };
+
+  public static final String[] dmd_amp = {
+    ".*\\\\DMD\\\\.*\\\\f_amp_AmpType.csv"
+  };
+  public static final String[] dmd_vmp = {
+    ".*\\\\DMD\\\\.*\\\\f_vmp_VmpType.csv"
+  };
+
+
   @Override
   public void importData(TTImportConfig config) throws ImportException {
     try {
       manager = new TTManager();
       document = manager.createDocument();
       topFolder();
+      importBNFToVmp(config.getFolder());
+      importAmp(config.getFolder());
       importMaps(config.getFolder());
       importCodes(config.getFolder());
       setMembers();
@@ -64,17 +84,79 @@ public class BNFImporter implements TTImport {
     }
   }
 
+
+
+  private void importAmp(String path)  throws IOException {
+    for (String map : dmd_amp) {
+      Path file = ImportUtils.findFilesForId(path, map).get(0);
+      LOG.info("Processing snomed to vmp codes in {}", file.getFileName().toString());
+      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        String line=reader.readLine();
+        while (line!= null) {
+          String[] fields= line.split("\\|");
+          String vmp=Namespace.SNOMED+fields[2];
+          String amp=Namespace.SNOMED+fields[0];
+          vmpToAmp.computeIfAbsent(vmp, set-> new HashSet<>()).add(amp);
+          line=reader.readLine();
+        }
+      }
+    }
+    for (String bnf: bnfToSnomed.keySet()) {
+      Set<String> amps = new HashSet<>();
+      for (String vmp : bnfToSnomed.get(bnf)) {
+        if (vmpToAmp.containsKey(vmp)) {
+          amps.addAll(vmpToAmp.get(vmp));
+        }
+      }
+      bnfToSnomed.get(bnf).addAll(amps);
+    }
+  }
+
+  private void importBNFToVmp(String path) throws IOException {
+    int i = 0;
+    for (String map : bnf_vmp) {
+      Path file = ImportUtils.findFilesForId(path, map).get(0);
+      LOG.info("Processing bnf to amp codes in {}", file.getFileName().toString());
+      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        String line=reader.readLine();
+        while (line != null) {
+          String[] fields= line.split("\\|");
+          if (fields.length>1&&fields[1].length()>5){
+            String bnf=fields[1];
+            String vmp=fields[0];
+            bnf=Namespace.BNF+"BNF_"+bnf;
+            vmp=Namespace.SNOMED+vmp;
+            bnfToSnomed.computeIfAbsent(bnf, set-> new HashSet<>()).add(vmp);
+            snomedToBnf.computeIfAbsent(vmp, set-> new HashSet<>()).add(bnf);
+          }
+          line= reader.readLine();
+        }
+      }
+    }
+  }
+
+
+
   private void setMembers() {
     LOG.info("Assigning instances to set definition match clause");
     int i=0;
+    for (String setIri: setToSnomed.keySet()){
+      String bnf=setIri;
+      if (bnfToSnomed.get(bnf)==null){
+        if (bnf.endsWith("0"))
+          bnf=bnf+"0";
+        else bnf=bnf.substring(0,bnf.length()-1)+"0"+bnf.substring(bnf.length()-1);
+      }
+      if (bnfToSnomed.get(bnf)==null) continue;
+      setToSnomed.get(setIri).addAll(bnfToSnomed.get(bnf));
+    }
     for (TTEntity entity: document.getEntities()){
       String setIri= entity.getIri();
-      if (setToSnomed.get(setIri)!=null){
-        i++;
-        for (String snomed:setToSnomed.get(setIri)){
-          entity.addObject(iri(IM.ENTAILED_MEMBER),new TTNode()
-            .set(iri(IM.INSTANCE_OF),iri(Namespace.SNOMED+snomed))
-            .set(iri(IM.ENTAILMENT),iri(IM.DESCENDANTS_OR_SELF_OF)));
+      if (setToSnomed.get(setIri)!=null) {
+        for (String snomed : setToSnomed.get(setIri)) {
+              entity.addObject(iri(IM.ENTAILED_MEMBER), new TTNode()
+                .set(iri(IM.IS), iri(snomed))
+                .set(iri(IM.ENTAILMENT), iri(IM.DESCENDANTS_OR_SELF_OF)));
         }
       }
     }
@@ -179,7 +261,7 @@ public class BNFImporter implements TTImport {
       return;
     String bnfCode = fields[2];
     String bnfName = fields[3];
-    String snomed = fields[4];
+    String snomed = Namespace.SNOMED+ fields[4];
     if (snomed.contains(" "))
       LOG.error("bad snomed [" + snomed + "]");
     else {
@@ -303,7 +385,7 @@ public class BNFImporter implements TTImport {
 
   @Override
   public void validateFiles(String inFolder) throws TTFilerException {
-    ImportUtils.validateFiles(inFolder, bnf_maps, bnf_codes);
+    ImportUtils.validateFiles(inFolder, bnf_maps, bnf_codes,dmd_amp,bnf_vmp,dmd_vmp);
   }
 
   @Override
