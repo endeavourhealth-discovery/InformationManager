@@ -9,6 +9,10 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.rdf4j.query.TupleQuery;
+import org.eclipse.rdf4j.query.TupleQueryResult;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
@@ -35,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
+import static org.endeavourhealth.imapi.dataaccess.helpers.SparqlHelper.valueList;
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 import static org.endeavourhealth.imapi.vocabulary.VocabUtils.asHashSet;
 
@@ -48,6 +53,7 @@ public class QImporter implements TTImport {
   private final ObjectMapper om = new ObjectMapper();
   private final Map<String, String> projectVersion = new HashMap<>();
   private static final String[] sets = {".*\\\\QCodes\\\\Sets.txt"};
+  private static final String[] bnfMaps = {".*\\\\QCodes\\\\QBNFMaps.txt"};
 
 
 
@@ -81,7 +87,7 @@ public class QImporter implements TTImport {
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
           filer.fileDocument(document);
         }
-        resetDrugs();
+        resetDrugs(ttImportConfig.getFolder());
       }
 
     } catch (Exception ex) {
@@ -89,6 +95,64 @@ public class QImporter implements TTImport {
     }
 
     LOG.info("Finished importing Q data");
+  }
+
+  private void addBNFMapEntries(TTManager manager, String folder) throws IOException {
+    for (String map : bnfMaps) {
+      Path file = ImportUtils.findFilesForId(folder, map).get(0);
+      LOG.info("Processing bnf to amp codes in {}", file.getFileName().toString());
+      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        String line = reader.readLine();
+        while (line != null) {
+          String[] fields = line.split("\t");
+          String qSet = fields[0];
+          String bnfSet = fields[2];
+          TTEntity qSetEntity = manager.getEntity(qSet);
+          Set<String> bnfSetMembers = getExpandedMembers(bnfSet);
+          addBnfMembers(qSetEntity,bnfSetMembers);
+          line = reader.readLine();
+        }
+      }
+    }
+  }
+
+  private void addBnfMembers(TTEntity qSetEntity, Set<String> bnfSetMembers) {
+    Set<String> qMembers= new HashSet<>();
+    for (TTValue member : qSetEntity.get(iri(IM.ENTAILED_MEMBER)).getElements()) {
+      for (TTValue is:member.asNode().get(IM.IS).getElements()) {
+        qMembers.add(is.asIriRef().getIri());
+      }
+    }
+    for (String bnfMember:bnfSetMembers) {
+      if (!qMembers.contains(bnfMember)) {
+        qSetEntity.addObject(iri(IM.ENTAILED_MEMBER), new TTNode()
+          .set(iri(IM.IS), TTIriRef.iri(bnfMember))
+          .set(iri(IM.ENTAILMENT), iri(IM.DESCENDANTS_OR_SELF_OF)));
+      }
+    }
+  }
+
+  private Set<String> getExpandedMembers(String bnfSet) {
+    Set<String> members = new HashSet<>();
+    String spq = """
+      SELECT ?member
+      WHERE {
+        %s
+        ?set im:entailedMember ?entailedMember.
+        ?entailedMember im:is ?member.
+      
+      }
+      """.formatted(valueList("set", Set.of(bnfSet)));
+    try (IMDB conn = IMDB.getConnection()) {
+      TupleQuery qry = conn.prepareTupleSparql(spq);
+      try (TupleQueryResult rs = qry.evaluate()) {
+        while (rs.hasNext()) {
+          BindingSet bs = rs.next();
+          members.add(bs.getValue("member").stringValue());
+        }
+      }
+    }
+    return members;
   }
 
   private void processReplacementSets(TTManager manager,String folder) throws IOException, ImportException {
@@ -110,8 +174,10 @@ public class QImporter implements TTImport {
     }
   }
 
-  private void resetDrugs() throws QueryException, TTFilerException, JsonProcessingException {
+  private void resetDrugs(String folder) throws QueryException, TTFilerException, IOException {
     TTDocument drugDocument = new TTDocument();
+    TTManager manager = new TTManager();
+    manager.setDocument(drugDocument);
     LOG.info("if drugs then creating as entailed members");
     for (TTEntity entity : document.getEntities()) {
       if (entity.isType(iri(IM.CONCEPT_SET))) {
@@ -129,6 +195,7 @@ public class QImporter implements TTImport {
         }
       }
     }
+    addBNFMapEntries(manager,folder);
     try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
       filer.fileDocument(drugDocument);
     }
@@ -304,7 +371,7 @@ public class QImporter implements TTImport {
 
   @Override
   public void validateFiles(String inFolder) throws TTFilerException {
-    ImportUtils.validateFiles(inFolder,sets);
+    ImportUtils.validateFiles(inFolder,sets,bnfMaps);
     boolean missingEnvs = false;
     Iterator var2 = Arrays.asList("Q_AUTH", "Q_URL", "GRAPH_SERVER", "GRAPH_REPO").iterator();
     while (true) {
