@@ -518,6 +518,7 @@ public class CoreQueryImporter implements TTImport {
     ClauseUtils.assignFunction(relativeWhere);
     ClauseUtils.assignFunction(bpLast6Months);
     Query query = new Query()
+      .setTypeOf(Namespace.IM + "Patient")
       .setIri(Namespace.IM + "Q_TestQuery")
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring");
     query
