@@ -522,7 +522,6 @@ public class CoreQueryImporter implements TTImport {
       .setIri(Namespace.IM + "Q_TestQuery")
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring");
     query
-      .return_(r->r.property(p -> p.setIri(Namespace.IM+"patient")))
       .is(is->is.setIri(Namespace.IM + "Q_RegisteredGMS")
         .setIsCohort(true)
         .setName("Registered for GMS services on reference date"))

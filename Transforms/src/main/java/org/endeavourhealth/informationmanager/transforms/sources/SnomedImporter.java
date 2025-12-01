@@ -99,7 +99,7 @@ public class SnomedImporter implements TTImport {
   public static final String ALL_CONTENT = "723596005";
   public static final String ACTIVE = "1";
   public static final String REPLACED_BY = "370124000";
-  public static final String SNOMED_ATTRIBUTE = "sn:106237007";
+  public static final String SNOMED_ATTRIBUTE = Namespace.SNOMED+"106237007";
   public static final String SNOMED_REFERENCE_SETS = Namespace.IM + "SnomedCTReferenceSets";
   private static final Logger LOG = LoggerFactory.getLogger(SnomedImporter.class);
   private final ECLToIMQ eclConverter = new ECLToIMQ();
@@ -109,6 +109,8 @@ public class SnomedImporter implements TTImport {
   private final Map<String, Set<String>> vmp_ingredient = new HashMap<>();
   private final Map<String, String> vmp_route = new HashMap<>();
   private final Map<String, String> vmp_form = new HashMap<>();
+  private final Map<String, Set<String>> subClasses= new HashMap<>();
+  private final Map<String,Set<String>> propertyIsas= new HashMap<>();
 
   //======================PUBLIC METHODS============================
 
@@ -125,7 +127,6 @@ public class SnomedImporter implements TTImport {
     validateFiles(config.getFolder());
     conceptMap = new HashMap<>();
     try (TTManager dmanager = new TTManager()) {
-
       document = dmanager.createDocument();
       TTEntity scheme = dmanager.createNamespaceEntity(
         Namespace.SNOMED,
@@ -144,6 +145,8 @@ public class SnomedImporter implements TTImport {
       importMRCMDomainFiles(config.getFolder());
       // importStatedFiles(config.folder); No longer bothers with OWL axioms;
       importRelationshipFiles(config.getFolder());
+      //createPropertyIsas();
+      //inferAttributes(document);
       importSubstitution(config.getFolder());
       importDmdContents(config.getFolder());
       importVmp(config.getFolder());
@@ -160,7 +163,7 @@ public class SnomedImporter implements TTImport {
       setRefSetRoot();
       importRefsetFiles(config.getFolder());
       conceptMap.clear();
-
+      subClasses.clear();
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }
@@ -169,6 +172,46 @@ public class SnomedImporter implements TTImport {
     }
 
 
+  }
+
+  private void createPropertyIsas() {
+    for (String property:propertyIsas.keySet()){
+      for (String isa:subClasses.get(property)){
+        if (!isa.equals(SNOMED_ATTRIBUTE))
+          addPropertyIsas(property,isa);
+      }
+
+    }
+  }
+
+  private void addPropertyIsas(String property, String isa) {
+    propertyIsas.get(property).add(isa);
+    for (String superProperty:subClasses.get(isa)){
+      if (!superProperty.equals(SNOMED_ATTRIBUTE))
+        addPropertyIsas(superProperty,isa);
+    }
+  }
+
+
+  private void inferAttributes(TTDocument document) {
+    for (TTEntity concept : document.getEntities()) {
+      TTArray roleGroups= concept.get(IM.ROLE_GROUP);
+      if (roleGroups!=null){
+        if (roleGroups.size() == 1) {
+          for (TTValue superValue:concept.get(RDFS.SUBCLASS_OF).getElements()){
+            String superIri= superValue.asIriRef().getIri();
+            TTEntity superClass= conceptMap.get(superIri.substring(superIri.lastIndexOf('#')+1));
+            if (superClass.get(IM.ROLE_GROUP)!=null){
+              if (superClass.get(IM.ROLE_GROUP).getElements().size()>1){
+                for (int i=1;i<superClass.get(IM.ROLE_GROUP).getElements().size();i++){
+                  concept.addObject(iri(IM.ROLE_GROUP),superClass.get(IM.ROLE_GROUP).getElements().get(i));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   private void addSpecials(TTDocument document) {
@@ -438,8 +481,6 @@ public class SnomedImporter implements TTImport {
     if (!conceptMap.containsKey(fields[0])) {
       TTEntity c = new TTEntity();
       c.setIri(SN + fields[0]);
-      if (fields[0].equals("45406011000001107"))
-        System.out.println(fields[0]);
       c.setCode(fields[0]);
       c.setScheme(iri(Namespace.SNOMED));
       if (conceptFile.contains("Refset") || conceptFile.contains("UKPrimaryCare"))
@@ -740,7 +781,7 @@ public class SnomedImporter implements TTImport {
     }
     TTArray isas = entity.get(isa);
     isas.add(iri(SN + parent));
-
+    subClasses.computeIfAbsent(entity.getIri(),k->new HashSet<>()).add(SN+ parent);
   }
 
   private void addRelationship(TTEntity c, Integer group, String relationship, String target) {
@@ -751,6 +792,7 @@ public class SnomedImporter implements TTImport {
     } else {
       TTNode roleGroup = getRoleGroup(c, group);
       roleGroup.addObject(iri(SN + relationship), iri(SN + target));
+      propertyIsas.put(SN+relationship,new HashSet<>());
     }
   }
 
