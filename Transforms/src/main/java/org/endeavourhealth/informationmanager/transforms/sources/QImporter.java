@@ -138,8 +138,11 @@ public class QImporter implements TTImport {
       SELECT ?member
       WHERE {
         %s
+        optional {
         ?set im:entailedMember ?entailedMember.
-        ?entailedMember im:is ?member.
+        ?entailedMember im:is ?member.}
+        optional {
+        ?set im:hasMember ?member.}
       
       }
       """.formatted(valueList("set", Set.of(bnfSet)));
@@ -244,7 +247,7 @@ public class QImporter implements TTImport {
               if (qGroup == null) {
                 qGroup = new TTEntity()
                   .setIri(Namespace.QR + "QCodeGroup_" + groupId)
-                  .setName("Q code group " + codeGroup.get("Name").asText())
+                  .setName("Q code group " + codeGroup.get("Name").asText()+" (draft)")
                   .setScheme(Namespace.QR.asIri())
                   .set(iri(IM.AVOID_REPLACED_BY),TTLiteral.literal(true))
                   .addType(iri(IM.CONCEPT_SET));
