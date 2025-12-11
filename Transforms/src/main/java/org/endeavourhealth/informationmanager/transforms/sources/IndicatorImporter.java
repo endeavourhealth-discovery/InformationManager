@@ -36,89 +36,31 @@ public class IndicatorImporter {
 	private final SearchService searchService = new SearchService();
 	private final Map<String,Boolean> indicatorMap = new HashedMap();
 	private final Map<String, TTEntity> entities = new HashMap<>();
+	private final Map<String,TTEntity> labelToEntity= new HashMap<>();
 	private final Set<String> unlabelledClauses= new HashSet<>();
 	private final Set<String> unlabelledIndicators= new HashSet<>();
-	private final Map<String,String> queryIriToIndicator = new HashMap<>();
-	private final Map<String,String> indicatorToQueryIri = new HashMap<>();
-	private final List<String> indicators= new ArrayList<>();
-	private final Map<String,Integer> indicatorOrder= new HashMap<>();
-	private final Map<String,String> subIndicators= new HashMap<>();
 	private final Map<String,TTEntity> columnGroupNameToEntity= new HashMap<>();
 	private TTEntity pathway;
 	private String pathwayFolder;
+	private String mainFolder;
 	private TTDocument document;
 	private final Map<String,String> matchLabel= new HashMap<>();
 	private Set<String> columnGroups;
 
 
 	public void generate(String folder,String mainFolder,String pathwayFolder,Namespace namespace) throws Exception {
-		this.namespace=namespace;
-		this.pathwayFolder=pathwayFolder;
-		try (TTManager manager = new TTManager() ) {
+		this.namespace = namespace;
+		this.pathwayFolder = pathwayFolder;
+		this.mainFolder = mainFolder;
+		try (TTManager manager = new TTManager()) {
 			document = manager.createDocument();
 			importIndicators(folder);
-			createColumnGroups(folder);
-			for (String indicatorLabel: indicators) {
-				String indicatorQueryIri = indicatorToQueryIri.get(indicatorLabel);
-				String indicatorIri = namespace + "Indicator-" + indicatorLabel.hashCode();
-				TTEntity indicatorQueryEntity= entityService.getPartialEntities(Set.of(indicatorQueryIri),Set.of(IM.DEFINITION.toString())).get(0);
-				Query indicatorQuery= indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-
-				TTEntity indicator = new TTEntity();
-				indicator.setIri(indicatorIri);
-				indicator.setScheme(iri(namespace.toString()));
-				indicator.setName(indicatorLabel);
-				indicator.addType(iri(IM.INDICATOR));
-				for (Node cohort:indicatorQuery.getIs()) {
-					indicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
-				}
-				indicator.set(iri(IM.NUMERATOR), iri(indicatorQueryIri));
-				indicator.set(iri(SHACL.ORDER), TTLiteral.literal(indicatorOrder.get(indicatorLabel)));
-				indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
-				document.addEntity(indicator);
-				//configureKPI(indicator, queryIri);
-			}
-			for (String subIndicatorLabel: subIndicators.keySet()) {
-				String indicatorLabel= subIndicators.get(subIndicatorLabel);
-				String subIndicatorQueryIri= indicatorToQueryIri.get(subIndicatorLabel);
-				String indicatorIri = namespace + "Indicator-" + indicatorLabel.hashCode();
-				String indicatorQueryIri = indicatorToQueryIri.get(indicatorLabel);
-				TTEntity indicatorQueryEntity= entityService.getPartialEntities(Set.of(indicatorQueryIri),Set.of(IM.DEFINITION.toString())).get(0);
-				Query indicatorQuery= indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-				TTEntity subIndicatorQueryEntity= entityService.getPartialEntities(Set.of(subIndicatorQueryIri),Set.of(IM.DEFINITION.toString())).get(0);
-				Query subIndicatorQuery= subIndicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-				String subIndicatorIri = namespace + "SubIndicator-" + subIndicatorLabel.hashCode();
-				TTEntity subIndicator = new TTEntity();
-				subIndicator.setScheme(iri(namespace.toString()));
-				subIndicator.setIri(subIndicatorIri)
-					.setName(subIndicatorLabel)
-					.addType(iri(IM.INDICATOR))
-					.set(iri(IM.NUMERATOR), iri(subIndicatorQueryIri));
-				for (Node cohort:indicatorQuery.getIs()) {
-					subIndicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
-				}
-				subIndicator.set(iri(SHACL.ORDER), TTLiteral.literal(indicatorOrder.get(indicatorLabel)))
-					.addObject(iri(IM.IS_SUBINDICATOR_OF), iri(indicatorIri));
-				addColumnGroups(subIndicator,subIndicatorQuery);
-				document.addEntity(subIndicator);
-				//configureKPI(indicator, queryIri);
-			}
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 				filer.fileDocument(document);
 			}
 		}
-			/*
-			try (FileWriter writer = new FileWriter(folder + "UnlabelledClauses.txt")) {
-				for (String indicatorLabel : unlabelledIndicators) {
-					writer.write(indicatorLabel+"\n");
-				}
-				for (String clauseLabel : unlabelledClauses) {
-					writer.write(clauseLabel+"\n");
-				}
-			}
-
-			 */
 	}
+
 
 	private void addColumnGroups(TTEntity indicator, Query indicatorQuery) throws Exception {
 		columnGroups= new HashSet<>();
@@ -289,46 +231,72 @@ public class IndicatorImporter {
 		TTFilerFactory.setBulk(false);
 		try (BufferedReader reader = new BufferedReader(new FileReader(folder + "/Indicator-query.txt"))) {
 			reader.readLine();
-			int order=0;
 			String line = reader.readLine();
 			while (line != null && !line.isEmpty()) {
-				line= line.replace("\"","");
+				line = line.replace("\"", "");
 				String[] fields = line.split("\t");
 				if (fields.length > 1) {
 					String inputType = fields[0];
-					if (inputType.equals("P")){
+					if (inputType.equals("P")) {
 						//createPathway(fields[2]);
 					}
-					if (inputType.equals("A")) {
-						matchLabel.put(fields[4],fields[1]);
+					if (inputType.equals("F")) {
+						TTEntity indicatorFolder = new TTEntity();
+						String folderIri = namespace + "Folder-" + fields[2].hashCode();
+						indicatorFolder.setIri(folderIri)
+							.setName(fields[2])
+							.addType(iri(IM.FOLDER))
+							.setScheme(iri(namespace))
+							.addObject(iri(IM.IS_CONTAINED_IN), (iri(mainFolder)));
+						document.addEntity(indicatorFolder);
+						entities.put(folderIri, indicatorFolder);
+						labelToEntity.put(fields[2], indicatorFolder);
 					}
-					else if (inputType.equals("I")||inputType.equals("S")) {
-						String indicatorLabel = fields[2];
-						String queryLabel = fields[3].replace("\"","");
-						List<TTBundle> entities= entityService.getEntityFromTerm(queryLabel,Set.of(namespace.toString(),Namespace.QOF.toString()));
-						if (entities.isEmpty())
-							throw new Exception("Indicator not found: " + queryLabel);
-						else {
-							String queryIri = entities.get(0).getEntity().getIri();
-							if (inputType.equals("I")) {
-								indicators.add(fields[2]);
-								order++;
-								indicatorOrder.put(fields[2],order);
-							}
-							else if (inputType.equals("S")) {
-								if (fields.length>5) {
-									subIndicators.put(fields[2], fields[5]);
-									order++;
-									indicatorOrder.put(fields[2], order);
-								}
-							}
-							indicatorToQueryIri.put(fields[2], queryIri);
-							queryIriToIndicator.put(queryIri, indicatorLabel);
-						}
-					} else if (inputType.equals("C")) {
-						createColumnGroupEntity(fields[2],fields[3],Integer.parseInt(fields[4]));
+					else if (inputType.equals("A")) {
+						matchLabel.put(fields[4], fields[1]);
 					}
+					else if (inputType.equals("I") || inputType.equals("S") || inputType.equals("R")) {
 
+						String indicatorLabel = fields[2];
+						String queryLabel = fields[3].replace("\"", "");
+						String parent = fields[5];
+						List<TTBundle> test = entityService.getEntityFromTerm(queryLabel, Set.of(namespace.toString(), Namespace.QOF.toString()));
+						if (test.isEmpty())
+							throw new Exception("Indicator not found: " + queryLabel);
+						String queryIri = test.get(0).getEntity().getIri();
+						String indicatorIri = namespace + "Indicator-" + indicatorLabel.hashCode();
+						TTEntity indicator = new TTEntity();
+						indicator.setIri(indicatorIri);
+						indicator.setScheme(iri(namespace.toString()));
+						indicator.setName(indicatorLabel);
+						indicator.addType(iri(IM.INDICATOR));
+						TTEntity indicatorQueryEntity = entityService.getPartialEntities(Set.of(queryIri), Set.of(IM.DEFINITION.toString())).get(0);
+						Query indicatorQuery = indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
+						if (indicatorQuery.getIs()!=null) {
+							for (Node cohort : indicatorQuery.getIs()) {
+								indicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
+							}
+						}
+						indicator.set(iri(IM.NUMERATOR), iri(queryIri));
+						String orderText = fields[1];
+						if (!orderText.isEmpty()) {
+							Integer order = orderText.contains(".") ? Integer.parseInt(orderText.substring(orderText.lastIndexOf(".") + 1))
+								: Integer.parseInt(orderText);
+							indicator.set(iri(SHACL.ORDER), TTLiteral.literal(order));
+						}
+
+						document.addEntity(indicator);
+						entities.put(indicatorIri, indicator);
+						labelToEntity.put(indicatorLabel, indicator);
+						if (parent.equals("")) {
+							indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
+						} else {
+							TTEntity parentIndicator = labelToEntity.get(parent);
+							if (parentIndicator.isType(iri(IM.FOLDER)))
+								indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(parentIndicator.getIri()));
+							else indicator.addObject(iri(IM.IS_SUBINDICATOR_OF), iri(parentIndicator.getIri()));
+						}
+					}
 				}
 				line = reader.readLine();
 			}
@@ -364,9 +332,7 @@ public class IndicatorImporter {
 
 	}
 
-	private void createColumnGroups(String folder) {
 
-	}
 
 
 	private void configureKPI(TTEntity indicator,String queryIri) throws Exception {
@@ -408,8 +374,8 @@ public class IndicatorImporter {
 		if (match.getIs() != null) {
 			for (Node cohort: match.getIs()) {
 				TTEntity cohortEntity = getEntityFromIri(cohort.getIri());
-				TTEntity childEntity = createChildIndicator(cohort.getIri(), cohortEntity.getName(), indicatorEntity, operator);
-				configureIndicator(childEntity, cohortEntity, operator == Bool.or ? Bool.or : Bool.and);
+				//TTEntity childEntity = createChildIndicator(cohort.getIri(), cohortEntity.getName(), indicatorEntity, operator);
+				//configureIndicator(childEntity, cohortEntity, operator == Bool.or ? Bool.or : Bool.and);
 				return;
 			}
 		}
@@ -431,24 +397,6 @@ public class IndicatorImporter {
 
 
 
-	private TTEntity createChildIndicator(String queryIri,String label,TTEntity parentIndicator,Bool operator) throws IOException, QueryException {
-		TTEntity indicator = new TTEntity();
-		String indicatorLabel=queryIriToIndicator.get(queryIri);
-		if (indicatorLabel==null) {
-			indicatorLabel=getLabel(label);
-			unlabelledIndicators.add(label);
-		}
-		indicator.setIri(namespace+"Indicator"+indicatorLabel.hashCode());
-		indicator.setName(getLabel(indicatorLabel));
-		indicator.addType(iri(IM.INDICATOR));
-		indicator.set(iri(IM.NUMERATOR), iri(queryIri));
-		if (operator==Bool.and) {
-			parentIndicator.addObject(iri(Namespace.IM+"andIndicator"), iri(indicator.getIri()));
-		}
-		else parentIndicator.addObject(iri(Namespace.IM+"orIndicator"), iri(indicator.getIri()));
-		entities.put(indicator.getIri(),indicator);
-		return indicator;
-	}
 
 
 
