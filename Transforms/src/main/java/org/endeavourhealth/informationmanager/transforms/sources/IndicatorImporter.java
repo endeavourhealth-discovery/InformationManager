@@ -247,11 +247,16 @@ public class IndicatorImporter {
 					}
 					if (inputType.equals("F")) {
 						TTEntity indicatorFolder = new TTEntity();
+						String parentFolder = fields.length>3 ?fields[5]:"";
 						String folderIri = namespace + "Folder-" + fields[2].hashCode();
 						indicatorFolder.setIri(folderIri)
 							.setName(fields[2])
 							.addType(iri(IM.FOLDER))
-							.setScheme(iri(namespace))
+							.setScheme(iri(namespace));
+						if (!parentFolder.isEmpty()){
+							indicatorFolder.addObject(iri(IM.IS_CONTAINED_IN), (iri(namespace+"Folder-"+parentFolder.hashCode())));
+						}
+						else indicatorFolder
 							.addObject(iri(IM.IS_CONTAINED_IN), (iri(mainFolder)));
 						document.addEntity(indicatorFolder);
 						entities.put(folderIri, indicatorFolder);
