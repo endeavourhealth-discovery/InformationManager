@@ -64,7 +64,7 @@ public class CoreQueryImporter implements TTImport {
       searchAllowableSubclass();
       searchAllowableContainedIn();
       generateDefaultCohorts(manager);
-      generateDefaultIndicators(manager);
+      //generateDefaultIndicators(manager);
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       }

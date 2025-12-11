@@ -59,6 +59,11 @@ public class IndicatorImporter {
 				filer.fileDocument(document);
 			}
 		}
+		generatePathways();
+	}
+
+	private void generatePathways() {
+
 	}
 
 
