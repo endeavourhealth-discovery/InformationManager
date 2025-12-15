@@ -50,10 +50,15 @@ public class SmartLifeImporter implements TTImport {
 		try (TTManager manager = new TTManager()){
 			TTDocument document = manager.createDocument();
 			createFolders(document);
-			TTEntity namespaceEntity = manager.createNamespaceEntity(Namespace.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles",true,false);
+			List<String> defaultTypes= List.of(IM.QUERY.toString());
+			TTEntity namespaceEntity = manager.createNamespaceEntity(Namespace.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles",defaultTypes,false);
 			namespaceEntity.addObject(iri(IM.IS_CONTAINED_IN),iri(IM.CORE_SCHEMES));
 			document.addEntity(namespaceEntity);
-
+			TTEntity defaultScheme = new TTEntity()
+				.setCrud(iri(IM.ADD_QUADS))
+					.setIri(IM.QUERY.toString())
+						.addObject(iri(IM.DEFAULT_SCHEME),iri(Namespace.SMARTLIFE.toString()));
+			document.addEntity(defaultScheme);
 			try {
 				EQDImporter eqdImporter = new EQDImporter(false);
 				eqdImporter.loadAndConvert(config,manager,queries[0],Namespace.SMARTLIFE,dataMapFile[0],

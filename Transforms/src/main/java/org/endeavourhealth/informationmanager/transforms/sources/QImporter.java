@@ -65,7 +65,7 @@ public class QImporter implements TTImport {
         manager.setDocument(document);
         document.addEntity(manager.createNamespaceEntity(Namespace.QR,
           "Q Research scheme and graph"
-          , "Q Research scheme and graph",true,true));
+          , "Q Research scheme and graph",null,true));
         addQFolders();
         importQProjects();
         importCodeGroups();

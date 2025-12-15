@@ -128,10 +128,11 @@ public class SnomedImporter implements TTImport {
     conceptMap = new HashMap<>();
     try (TTManager dmanager = new TTManager()) {
       document = dmanager.createDocument();
+      List<String> defaultTypes= List.of(IM.CONCEPT.toString(),IM.CONCEPT_SET.toString(),IM.VALUESET.toString());
       TTEntity scheme = dmanager.createNamespaceEntity(
         Namespace.SNOMED,
         "Snomed-CT code scheme and graph",
-        "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions",true,true
+        "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions",defaultTypes,true
       );
       document.addEntity(scheme);
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {

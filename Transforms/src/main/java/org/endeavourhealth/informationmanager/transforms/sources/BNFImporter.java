@@ -303,10 +303,10 @@ public class BNFImporter implements TTImport {
       return;
     }
     if (codeToEntity.get(chapterCode) == null) {
-      setNewEntity(chapterCode, chapterDot + " " + chapter + " (BNF based set)", IM.FOLDER.toString(), topFolder, null);
+      setNewEntity(chapterCode, chapterDot + " " + chapter + " (BNF folder)", IM.FOLDER.toString(), topFolder, null);
     }
     if (codeToEntity.get(sectionCode) == null) {
-      setNewEntity(sectionCode, sectionDot + " " + section + " (BNF based set)", IM.FOLDER.toString(), Namespace.BNF + "BNF_" + chapterCode, null);
+      setNewEntity(sectionCode, sectionDot + " " + section + " (BNF folder)", IM.FOLDER.toString(), Namespace.BNF + "BNF_" + chapterCode, null);
     }
     if (codeToEntity.get(paragraphCode) == null) {
       setNewEntity(paragraphCode, paraDot + " " + paragraph + " (BNF based set)", IM.CONCEPT_SET.toString(), Namespace.BNF + "BNF_" + sectionCode, null);
