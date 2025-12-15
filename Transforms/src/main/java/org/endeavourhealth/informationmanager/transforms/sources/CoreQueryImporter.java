@@ -513,7 +513,7 @@ public class CoreQueryImporter implements TTImport {
     relativeWhere.setNodeRef("Observation")
       .setIri(Namespace.IM + "effectiveDate")
       .setOperator(Operator.gte)
-      .relativeTo(r -> r.setNodeRef("highBPReading").setIri(Namespace.IM + "effectiveDate"));
+      .relativeTo(r -> r.setNodeRef("HighBPReading").setIri(Namespace.IM + "effectiveDate"));
     ClauseUtils.assignFunction(ageWhere);
     ClauseUtils.assignFunction(relativeWhere);
     ClauseUtils.assignFunction(bpLast6Months);
