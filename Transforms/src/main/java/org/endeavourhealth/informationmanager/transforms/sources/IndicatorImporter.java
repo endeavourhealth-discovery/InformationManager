@@ -58,6 +58,7 @@ public class IndicatorImporter {
 			importIndicators(folder);
 			for (TTEntity indicator : document.getEntities()) {
 				if (indicator.isType(iri(IM.INDICATOR))) {
+					
 					TTEntity indicatorQuery= entityService.getPartialEntities(Set.of(indicator.get(iri(IM.NUMERATOR)).asIriRef().getIri()), Set.of(IM.DEFINITION.toString())).get(0);
 					addColumnGroups(indicator,indicatorQuery.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class));
 				}
