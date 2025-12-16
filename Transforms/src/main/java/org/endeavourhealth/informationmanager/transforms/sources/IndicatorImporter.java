@@ -48,13 +48,20 @@ public class IndicatorImporter {
 	private Set<String> columnGroups;
 
 
-	public void generate(String folder,String mainFolder,String pathwayFolder,Namespace namespace) throws Exception {
+
+	public void generate(String folder,String mainFolder,String pathwayFolder,Namespace namespace,TTManager queryManager) throws Exception {
 		this.namespace = namespace;
 		this.pathwayFolder = pathwayFolder;
 		this.mainFolder = mainFolder;
 		try (TTManager manager = new TTManager()) {
 			document = manager.createDocument();
 			importIndicators(folder);
+			for (TTEntity indicator : document.getEntities()) {
+				if (indicator.isType(iri(IM.INDICATOR))) {
+					TTEntity indicatorQuery= entityService.getPartialEntities(Set.of(indicator.get(iri(IM.NUMERATOR)).asIriRef().getIri()), Set.of(IM.DEFINITION.toString())).get(0);
+					addColumnGroups(indicator,indicatorQuery.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class));
+				}
+			}
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 				filer.fileDocument(document);
 			}
@@ -247,14 +254,14 @@ public class IndicatorImporter {
 					}
 					if (inputType.equals("F")) {
 						TTEntity indicatorFolder = new TTEntity();
-						String parentFolder = fields.length>3 ?fields[5]:"";
+						String parentFolder = fields.length > 3 ? fields[5] : "";
 						String folderIri = namespace + "Folder-" + fields[2].hashCode();
 						indicatorFolder.setIri(folderIri)
 							.setName(fields[2])
 							.addType(iri(IM.FOLDER))
 							.setScheme(iri(namespace));
-						if (!parentFolder.isEmpty()){
-							indicatorFolder.addObject(iri(IM.IS_CONTAINED_IN), (iri(namespace+"Folder-"+parentFolder.hashCode())));
+						if (!parentFolder.isEmpty()) {
+							indicatorFolder.addObject(iri(IM.IS_CONTAINED_IN), (iri(namespace + "Folder-" + parentFolder.hashCode())));
 						}
 						else indicatorFolder
 							.addObject(iri(IM.IS_CONTAINED_IN), (iri(mainFolder)));
@@ -282,7 +289,7 @@ public class IndicatorImporter {
 						indicator.addType(iri(IM.INDICATOR));
 						TTEntity indicatorQueryEntity = entityService.getPartialEntities(Set.of(queryIri), Set.of(IM.DEFINITION.toString())).get(0);
 						Query indicatorQuery = indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-						if (indicatorQuery.getIs()!=null) {
+						if (indicatorQuery.getIs() != null) {
 							for (Node cohort : indicatorQuery.getIs()) {
 								indicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
 							}
@@ -300,12 +307,16 @@ public class IndicatorImporter {
 						labelToEntity.put(indicatorLabel, indicator);
 						if (parent.equals("")) {
 							indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
-						} else {
+						}
+						else {
 							TTEntity parentIndicator = labelToEntity.get(parent);
 							if (parentIndicator.isType(iri(IM.FOLDER)))
 								indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(parentIndicator.getIri()));
 							else indicator.addObject(iri(IM.IS_SUBINDICATOR_OF), iri(parentIndicator.getIri()));
 						}
+					}
+					else if (inputType.equals("C")) {
+						createColumnGroupEntity(fields[2], fields[3], Integer.parseInt(fields[4]));
 					}
 				}
 				line = reader.readLine();

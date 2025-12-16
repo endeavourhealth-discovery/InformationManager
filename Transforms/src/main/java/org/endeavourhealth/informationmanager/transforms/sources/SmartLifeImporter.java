@@ -3,6 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.utility.ThreadContext;
 import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
@@ -16,6 +17,7 @@ import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -50,7 +52,7 @@ public class SmartLifeImporter implements TTImport {
 		try (TTManager manager = new TTManager()){
 			TTDocument document = manager.createDocument();
 			createFolders(document);
-			List<String> defaultTypes= List.of(IM.QUERY.toString());
+			List<String> defaultTypes= List.of(IM.QUERY.toString(),IM.CONCEPT_SET.toString(),IM.INDICATOR.toString());
 			TTEntity namespaceEntity = manager.createNamespaceEntity(Namespace.SMARTLIFE, "Smartlife health graph", "Smartlife library of value sets, queries and profiles",defaultTypes,false);
 			namespaceEntity.addObject(iri(IM.IS_CONTAINED_IN),iri(IM.CORE_SCHEMES));
 			document.addEntity(namespaceEntity);
@@ -63,6 +65,11 @@ public class SmartLifeImporter implements TTImport {
 				EQDImporter eqdImporter = new EQDImporter(false);
 				eqdImporter.loadAndConvert(config,manager,queries[0],Namespace.SMARTLIFE,dataMapFile[0],
 					uuidLabels[0],mainFolder,setFolder);
+				try (FileWriter writer= new FileWriter(config.getFolder()+"\\Smartlife\\UnnamedSets.txt")){
+					for (String iri:EqdToIMQ.getUnnamedSets().keySet()){
+						writer.write(iri+"\t"+ String.join(",",EqdToIMQ.getUnnamedSets().get(iri)));
+					}
+				}
 			}
 			catch (Exception ex) {
 				throw new ImportException(ex.getMessage(), ex);
@@ -73,16 +80,14 @@ public class SmartLifeImporter implements TTImport {
 			catch (Exception ex) {
 				throw new ImportException(ex.getMessage(), ex);
 			}
-
-		}
 		try {
 			new IndicatorImporter().generate(config.getFolder()+"\\Smartlife",
 				"http://smartlifehealth.info/smh#SmartLifeIndicators",
-				"http://endhealth.info/im#CarePathways", Namespace.SMARTLIFE);
-		} catch (Exception e) {
+				"http://endhealth.info/im#CarePathways", Namespace.SMARTLIFE,manager);
+				} catch (Exception e) {
 			throw new ImportException("Unable to generate indicators",e);
+			}
 		}
-
 	}
 
 
