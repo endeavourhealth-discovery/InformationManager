@@ -132,8 +132,7 @@ public class SnomedImporter implements TTImport {
       TTEntity scheme = dmanager.createNamespaceEntity(
         Namespace.SNOMED,
         "Snomed-CT code scheme and graph",
-        "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions",defaultTypes,true
-      );
+        "An international or UK Snomed code scheme and graph. This does not include supplier specfic, local, or Discovery namespace extensions");
       document.addEntity(scheme);
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
