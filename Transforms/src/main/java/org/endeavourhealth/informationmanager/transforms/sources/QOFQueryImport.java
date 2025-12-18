@@ -20,6 +20,7 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 public class QOFQueryImport implements TTImport {
 	private static final String[] queries = {".*\\\\QOF"};
 	private static final String[] dataMapFile = {".*\\\\EQD\\\\EqdDataMap.properties"};
+	private static final String[] autoNamedSets = {".*\\\\EQD\\\\AutoNamedSets.txt"};
 	private static final String[] uuidLabels = {".*\\\\EQD\\\\uuidLabels.properties"};
 	private static final String[] qofRefSets = {".*\\\\QOF\\\\Static_Expanded_cluster_lists_Ruleset-level_adhoc_.*\\.zip"};
 	private String mainFolder;
@@ -42,7 +43,7 @@ public class QOFQueryImport implements TTImport {
 				EQDImporter eqdImporter = new EQDImporter(true);
 
 				eqdImporter.loadAndConvert(config,manager,queries[0], Namespace.QOF,
-					dataMapFile[0],uuidLabels[0],mainFolder,setFolder);
+					dataMapFile[0],uuidLabels[0],mainFolder,setFolder,autoNamedSets[0]);
 			}
 			catch (Exception ex) {
 				throw new ImportException(ex.getMessage(), ex);
@@ -83,7 +84,7 @@ public class QOFQueryImport implements TTImport {
 
 	@Override
 	public void validateFiles(String inFolder) throws TTFilerException {
-		ImportUtils.validateFiles(inFolder, queries,qofRefSets);
+		ImportUtils.validateFiles(inFolder, queries,qofRefSets,autoNamedSets);
 	}
 
 

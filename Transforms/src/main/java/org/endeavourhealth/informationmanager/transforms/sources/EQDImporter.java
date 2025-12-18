@@ -18,8 +18,10 @@ import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -69,7 +71,7 @@ public class EQDImporter {
 
 
 	public void loadAndConvert(TTImportConfig config, TTManager manager, String queries, Namespace namespace,
-													String dataMapFile, String uuidLabelsFile,String mainFolder, String setFolder) throws Exception {
+													String dataMapFile, String uuidLabelsFile,String mainFolder, String setFolder,String autoNamedSets) throws Exception {
 		String folder=config.getFolder();
 		String singleEntity=config.getSingleEntity();
 		this.manager= manager;
@@ -95,9 +97,21 @@ public class EQDImporter {
 		Path directory = ImportUtils.findFileForId(folder, queries);
 		loadLibraryItems(directory);
 		EqdToIMQ.setLibraryItems(libraryItems);
+		laodAutoNamedSets(folder,autoNamedSets);
 		importEqds(namespace, directory);
 
 
+	}
+
+	private void laodAutoNamedSets(String folder, String autoNamedSets) throws IOException {
+		try (BufferedReader reader = new BufferedReader( new FileReader((ImportUtils.findFileForId(folder, autoNamedSets).toFile())))) {
+			String line= reader.readLine();
+			 while (line != null && !line.isEmpty()) {
+				 String[] fields=line.split("\t");
+				 EqdToIMQ.getAutoNamedSets().put(fields[0],fields[1]);
+				 line= reader.readLine();
+			}
+		}
 	}
 
 	public void importEqds(Namespace namespace, Path directory) throws Exception  {
