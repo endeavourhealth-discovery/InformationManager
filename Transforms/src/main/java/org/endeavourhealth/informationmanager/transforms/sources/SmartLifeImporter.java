@@ -92,6 +92,7 @@ public class SmartLifeImporter implements TTImport {
 
 
 
+
 	private void createFolders(TTDocument document) {
 		TTEntity folder = new TTEntity()
 			.setIri(Namespace.SMARTLIFE + "Q_SmartLifeQueries")
