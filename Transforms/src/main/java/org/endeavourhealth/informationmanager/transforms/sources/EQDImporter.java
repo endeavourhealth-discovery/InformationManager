@@ -108,7 +108,7 @@ public class EQDImporter {
 			String line= reader.readLine();
 			 while (line != null && !line.isEmpty()) {
 				 String[] fields=line.split("\t");
-				 EqdToIMQ.getAutoNamedSets().put(fields[0],fields[1]);
+				 EqdToIMQ.getAutoNamedSets().put(fields[0],fields[1].replace("\"",""));
 				 line= reader.readLine();
 			}
 		}

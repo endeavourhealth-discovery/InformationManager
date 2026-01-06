@@ -43,22 +43,24 @@ public class IndicatorImporter {
 	private TTEntity pathway;
 	private String pathwayFolder;
 	private String mainFolder;
+	private String datasetFolder;
 	private TTDocument document;
 	private final Map<String,String> matchLabel= new HashMap<>();
 	private Set<String> columnGroups;
 
 
 
-	public void generate(String folder,String mainFolder,String pathwayFolder,Namespace namespace,TTManager queryManager) throws Exception {
+	public void generate(String folder,String mainFolder,String pathwayFolder,String datasetFolder,Namespace namespace) throws Exception {
 		this.namespace = namespace;
 		this.pathwayFolder = pathwayFolder;
 		this.mainFolder = mainFolder;
+		this.datasetFolder = datasetFolder;
 		try (TTManager manager = new TTManager()) {
 			document = manager.createDocument();
 			importIndicators(folder);
-			for (TTEntity indicator : document.getEntities()) {
+			for (int i=0; i <document.getEntities().size(); i++) {
+				TTEntity indicator = document.getEntities().get(i);
 				if (indicator.isType(iri(IM.INDICATOR))) {
-					
 					TTEntity indicatorQuery= entityService.getPartialEntities(Set.of(indicator.get(iri(IM.NUMERATOR)).asIriRef().getIri()), Set.of(IM.DEFINITION.toString())).get(0);
 					addColumnGroups(indicator,indicatorQuery.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class));
 				}
@@ -77,6 +79,13 @@ public class IndicatorImporter {
 
 	private void addColumnGroups(TTEntity indicator, Query indicatorQuery) throws Exception {
 		columnGroups= new HashSet<>();
+		TTEntity dataSetEntity= new TTEntity().setName("Data set for " + indicator.getName());
+		String dataSetIri= namespace+"DataSet-"+indicator.getName().hashCode();
+		dataSetEntity.setIri(dataSetIri)
+			.addType(iri(IM.QUERY));
+		dataSetEntity.setScheme(iri(namespace));
+		dataSetEntity.addObject(iri(IM.IS_CONTAINED_IN),iri(datasetFolder));
+		document.addEntity(dataSetEntity);
 		Query datasetQuery= new Query();
 
 		if (indicator.get(iri(IM.DENOMINATOR))!=null) {
@@ -96,20 +105,19 @@ public class IndicatorImporter {
 				}
 			}
 		}
-		indicator.set(iri(IM.HAS_DATASET),TTLiteral.literal(datasetQuery));
+		dataSetEntity.set(iri(IM.DEFINITION),TTLiteral.literal(datasetQuery));
+		indicator.set(iri(IM.HAS_DATASET),iri(dataSetIri));
 	}
 	private void addColumnGroup(Query datasetQuery,Match match) throws JsonProcessingException {
 		if (match.getPath() != null) {
 			String xpath= new ObjectMapper().writeValueAsString(match.getPath());
-			for (org.endeavourhealth.imapi.model.imq.Path path : match.getPath()) {
-				String typeOf = path.getTypeOf().getIri();
+				String typeOf = match.getPath().getFirst().getTypeOf().getIri();
 				if (Set.of(Namespace.IM + "ClinicalEntry", Namespace.IM + "Observation").contains(typeOf)) {
-					addEventGroups("Observation details",datasetQuery, match,path,xpath);
+					addEventGroups("Observation details",datasetQuery, match,match.getPath().getFirst(),xpath);
 				}
 				else if (typeOf.contains("Medication")){
-					addEventGroups("Medication details",datasetQuery, match,path,xpath);
+					addEventGroups("Medication details",datasetQuery, match,match.getPath().getFirst(),xpath);
 				}
-			}
 		}
 		for (List<Match> matches : Arrays.asList(match.getAnd(),match.getOr())) {
 			if (matches!=null){
@@ -251,7 +259,7 @@ public class IndicatorImporter {
 				if (fields.length > 1) {
 					String inputType = fields[0];
 					if (inputType.equals("P")) {
-						//createPathway(fields[2]);
+						createPathway(fields[1], fields[2],fields[3]);
 					}
 					if (inputType.equals("F")) {
 						TTEntity indicatorFolder = new TTEntity();
@@ -687,10 +695,10 @@ public class IndicatorImporter {
 	}
 
 
-	private void createPathway(String field) {
+	private void createPathway(String order, String name, String register) {
 		pathway = new TTEntity();
-		pathway.setIri(namespace.toString()+field.hashCode())
-			.setName(field)
+		pathway.setIri(namespace.toString()+name.hashCode())
+			.setName(name)
 			.addType(iri(Namespace.IM+"CarePathway"))
 			.setScheme(Namespace.SMARTLIFE.asIri())
 			.addObject(iri(IM.IS_CONTAINED_IN),iri(pathwayFolder));

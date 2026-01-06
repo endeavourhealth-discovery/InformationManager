@@ -39,6 +39,13 @@ public class QOFQueryImport implements TTImport {
 			List<String> defaultTypes= List.of(IM.CONCEPT_SET.toString(),IM.QUERY.toString());
 			manager.getDocument().addEntity(manager.createNamespaceEntity(Namespace.QOF,"QOF Framework", "QOF  library of value sets, queries and profiles"));
 			createFolders(manager.getDocument());
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+				filer.fileDocument(manager.getDocument());
+			}
+			catch (Exception ex) {
+				throw new ImportException(ex.getMessage(), ex);
+			}
+			manager.createDocument();
 			try {
 				EQDImporter eqdImporter = new EQDImporter(true);
 

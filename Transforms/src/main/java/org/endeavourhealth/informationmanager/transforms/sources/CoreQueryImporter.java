@@ -250,9 +250,9 @@ public class CoreQueryImporter implements TTImport {
       .set(iri(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName(value + " address property definition")
-          .path(p -> p.setIri(Namespace.IM + propertyName)
+          .path(p -> p.setIri(Namespace.IM + propertyName).setTypeOf(Namespace.IM + "AssignedAddress")
             .setVariable("Address")
-            .setTypeOf(Namespace.IM + "AssignedAddress"))
+            )
           .where(and -> and
             .and(w -> w
               .setNodeRef("Address")
@@ -286,9 +286,9 @@ public class CoreQueryImporter implements TTImport {
       .setScheme(Namespace.IM.asIri())
       .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
         .setName(value + " telephone property definition")
-        .path(p -> p.setIri(Namespace.IM + propertyName)
+        .path(p -> p.setIri(Namespace.IM + propertyName).setTypeOf(Namespace.IM + "TelephoneNumber")
           .setVariable("Telephone")
-          .setTypeOf(Namespace.IM + "TelephoneNumber"))
+          )
         .where(and -> and
           .and(w -> w
             .setNodeRef("Telephone")
@@ -501,16 +501,15 @@ public class CoreQueryImporter implements TTImport {
       .range(r -> r
         .setFrom(fromAge)
         .setTo(toAge));
-    bpLast6Months.setNodeRef("Observation")
+    bpLast6Months.setNodeRef("obs")
       .setIri(Namespace.IM + "effectiveDate")
       .setOperator(Operator.gte)
       .setValue("-12")
       .setUnits(iri(IM.MONTHS))
-      .relativeTo(r -> r.setParameter("$searchDate"))
-      .setValueLabel("last 12 months");
+      .relativeTo(r -> r.setParameter("$searchDate"));
 
     Where relativeWhere = new Where();
-    relativeWhere.setNodeRef("Observation")
+    relativeWhere.setNodeRef("obs")
       .setIri(Namespace.IM + "effectiveDate")
       .setOperator(Operator.gte)
       .relativeTo(r -> r.setNodeRef("HighBPReading").setIri(Namespace.IM + "effectiveDate"));
@@ -531,18 +530,18 @@ public class CoreQueryImporter implements TTImport {
           .setWhere(ageWhere))
         .or(m -> m
           .setDescription("has pre-diabetes")
-          .setTypeOf(Namespace.IM + "Observation")
+          .path(p->p.setIri(Namespace.IM+"condition").setVariable("con").setTypeOf(Namespace.IM+"Condition"))
           .where(w -> w
+            .setNodeRef("con")
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
-            .addIs(new Node().setIri(Namespace.SNOMED + "714628002").setDescendantsOf(true))
-            .setValueLabel("Prediabetes"))))
+            .addIs(new Node().setIri(Namespace.SNOMED + "714628002").setDescendantsOf(true)))))
       .and(q -> q
           .setDescription("Latest systolic within 12 months of the search date")
-          .setTypeOf(Namespace.IM + "Observation")
           .setKeepAs("latestBPL12M")
           .path(p->p.setIri(Namespace.IM+"observation").setVariable("obs").setTypeOf(Namespace.IM+"Observation"))
          .where(and -> and
           .and(ww -> ww
+            .setNodeRef("obs")
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .setName("concept")
             .addIs(new Node()
@@ -552,12 +551,11 @@ public class CoreQueryImporter implements TTImport {
             .addIs(new Node()
               .setIri(Namespace.EMIS + "1994021000006115")
               .setDescendantsOrSelfOf(true)
-              .setName("Home systolic blood pressure"))
-            .setValueLabel("Office or home systolic blood pressure"))
+              .setName("Home systolic blood pressure")))
           .addAnd(bpLast6Months))
         .setOrderBy(new OrderLimit()
           .addProperty(new OrderDirection()
-            .setNodeRef("Observation")
+            .setNodeRef("obs")
             .setIri(Namespace.IM + "effectiveDate")
             .setDirection(Order.descending))
           .setLimit(1))
@@ -579,8 +577,7 @@ public class CoreQueryImporter implements TTImport {
                 .addIs(new Node()
                   .setIri(Namespace.SNOMED + "271649006")
                   .setDescendantsOrSelfOf(true)
-                  .setName("Systolic blood pressure"))
-                .setValueLabel("Office blood pressure"))
+                  .setName("Systolic blood pressure")))
               .and(w1 -> w1
                 .setIri(Namespace.IM + "value")
                 .setOperator(Operator.gt)
@@ -591,8 +588,7 @@ public class CoreQueryImporter implements TTImport {
                 .addIs(new Node()
                   .setIri(Namespace.EMIS + "1994021000006115")
                   .setDescendantsOrSelfOf(true)
-                  .setName("Home systolic blood pressure"))
-                .setValueLabel("Home blood pressure"))
+                  .setName("Home systolic blood pressure")))
               .and(w1 -> w1
                 .setIri(Namespace.IM + "value")
                 .setOperator(Operator.gt)
@@ -601,15 +597,14 @@ public class CoreQueryImporter implements TTImport {
         .setKeepAs("InvitedAfterHighBP")
         .setName("Invited for screening after high BP reading")
         .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
-        .path(p->p.setIri(Namespace.IM+"observation").setVariable("obs").setTypeOf(Namespace.IM+"Observation"))
-        .setTypeOf(Namespace.IM + "Observation")
+        .path(p->p.setIri(Namespace.IM+"procedure").setVariable("proc").setTypeOf(Namespace.IM+"Procedure"))
         .where(and -> and
           .and(inv -> inv
+            .setNodeRef("proc")
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri("http://snomed.info/sct#310422005").setName("invited for screening").setMemberOf(true)))
           .addAnd(relativeWhere)))
       .not(q -> q
-        .setKeepAs("OnHypertensionRegister")
         .setName("on hypertension register")
         .setDescription("is registered on the hypertensives register")
         .is(is->is.setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
