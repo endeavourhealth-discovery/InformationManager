@@ -561,6 +561,7 @@ public class CoreQueryImporter implements TTImport {
           .setLimit(1))
         .return_(r -> r
           .property(p->p
+            .setNodeRef("obs")
             .setIri(Namespace.IM+"concept"))))
       .and(then->then
         .setName("Have high blood pressure in the last year")
@@ -568,6 +569,7 @@ public class CoreQueryImporter implements TTImport {
         .setKeepAs("HighBPReading")
         .return_(r->r
           .property(p ->p
+            .setNodeRef("obs")
             .setIri(Namespace.IM+"effectiveDate")))
         .setDescription("is either an office systolic >140 or a home systolic >130")
         .where(w -> w
