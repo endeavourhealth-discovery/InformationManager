@@ -138,7 +138,7 @@ public class IndicatorImporter {
 		String valueLabel= addConceptSets(match,conceptSets);
 		if (!columnGroups.contains(valueLabel)) {
 			columnGroups.add(valueLabel);
-			String variable = path.getVariable();
+			String variable = path.getNode();
 			if (!conceptSets.isEmpty()) {
 				Match filterMatch = new Match();
 				filterMatch.setName(valueLabel);
@@ -665,7 +665,7 @@ public class IndicatorImporter {
 			.or(m->m
 				.path(p->p
 					.setIri(IM.HAS_MEMBER.toString())
-					.setVariable("member"))
+					.setNode("member"))
 				.where(w->w
 					.setIri(IM.IS_A.toString())
 					.is(is->is
