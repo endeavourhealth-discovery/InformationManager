@@ -9,3 +9,4 @@ build
 *.xml
 *delta_members.csv
 [0-9]*
+.env
