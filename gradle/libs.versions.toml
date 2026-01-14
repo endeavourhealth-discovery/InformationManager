@@ -1,10 +1,10 @@
 # gradle/libs.versions.toml
 [versions]
+activation = "2.1.2"
 apache = "4.5.14"
 apachePoi = "5.4.0"
 antlr = "4.13.1"
 gradleApi = "8.4"
-jakarta = "4.0.1"
 jackson = "2.16.0"
 jaxb = "4.0.4"
 junit = "5.10.1"
@@ -16,7 +16,7 @@ openCsv = "5.9"
 owlApi = "5.5.0"
 rdf4j = "4.3.8"
 slf4j = "2.0.17"
-wsrs = "3.1.0"
+wsrs = "4.0.0"
 zip4j = "2.11.5"
 cucumber = "7.22.0"
 mockito = "5.14.2"
@@ -31,8 +31,11 @@ apache = { module = "org.apache.httpcomponents:httpclient", version.ref = "apach
 apache-poi = { module = "org.apache.poi:poi-ooxml", version.ref = "apachePoi" }
 gradleApi = { module = "dev.gradleplugins:gradle-api", version.ref = "gradleApi" }
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
-jaxbApi = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref = "jakarta" }
+jakartaActivation = { module = "jakarta.activation:jakarta.activation-api", version.ref = "activation" }
+jaxbApi = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref = "jaxb" }
 jaxbRuntime = { module = "com.sun.xml.bind:jaxb-impl", version.ref = "jaxb" }
+jerseyClient = { module = "org.glassfish.jersey.core:jersey-client", version.ref = "wsrs" }
+jerseyHk2 = { module = "org.glassfish.jersey.inject:jersey-hk2", version.ref = "wsrs" }
 junit = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junitRunner = { module = "org.junit.platform:junit-platform-runner", version.ref = "junitRunner" }
