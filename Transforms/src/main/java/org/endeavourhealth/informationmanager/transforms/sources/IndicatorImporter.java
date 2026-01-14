@@ -133,7 +133,7 @@ public class IndicatorImporter {
 
 		TTEntity columnEntity= columnGroupNameToEntity.get(columnGroupName);
 		Query columnQuery= columnEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-		Return columns= columnQuery.getColumnGroup().get(0).getReturn();
+		List<Return> columns= columnQuery.getColumnGroup().get(0).getReturn();
 		Set<Node> conceptSets= new HashSet<>();
 		String valueLabel= addConceptSets(match,conceptSets);
 		if (!columnGroups.contains(valueLabel)) {
@@ -342,11 +342,10 @@ public class IndicatorImporter {
 		TTEntity queryEntity= entityService.getPartialEntities(Set.of(queryIri),Set.of(IM.DEFINITION.toString())).get(0);
 		Query report= queryEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
 		List<Match> columnGroups= report.getColumnGroup();
-		Return columns= columnGroups.get(columnNumber).getReturn();
-		if (columns.getProperty()!=null)
-			if (columns.getProperty().getFirst().getAs()!=null)
-				if (columns.getProperty().getFirst().getAs().equals("Y-N"))
-					columns.getProperty().removeFirst();
+		List<Return> columns= columnGroups.get(columnNumber).getReturn();
+		if (columns.getFirst().getAs()!=null)
+				if (columns.getFirst().getAs().equals("Y-N"))
+					columns.removeFirst();
 		Query ColumnGroupQuery= new Query();
 		ColumnGroupQuery.addColumnGroup(new Match().setReturn(columns));
 		TTEntity columnGroupEntity= new TTEntity()
