@@ -47,11 +47,19 @@ public class SingleEqdQueryImport {
 		try (TTManager manager = new TTManager()) {
 			TTDocument document = manager.createDocument();
 			try (Stream<Path> paths = Files.walk(startDir)) {
-				paths
-					.filter(Files::isRegularFile)
-					.filter(path -> path.toString().toLowerCase().endsWith(".xml"))
-					.forEach(path -> this.convertEqd(path,dataMap,document));
+				paths.forEach(path -> {
+					try {
+						if (Files.isRegularFile(path) &&
+							path.toString().toLowerCase().endsWith(".xml")) {
+							this.convertEqd(path, dataMap, document);
+						}
+					} catch (Exception e) {
+						System.err.println("Failed on: " + path);
+						e.printStackTrace();
+					}
+				});
 			}
+
 
 			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
 				filer.fileDocument(document);
@@ -70,18 +78,24 @@ public class SingleEqdQueryImport {
 
 	private void convertEqd(Path path, Properties dataMap,TTDocument document){
 		File fileEntry = path.toFile();
+		if (fileEntry.getName().equals("GP Contract Apr 2026 - V50 Release 1.0 [SNOMED CT].xml"))
+			System.out.println(fileEntry.getAbsoluteFile().getName());
 		try {
 			JAXBContext context = JAXBContext.newInstance(EnquiryDocument.class);
 			EnquiryDocument eqd = (EnquiryDocument) context.createUnmarshaller()
 				.unmarshal(fileEntry);
 			converter.convertEQD(document, eqd, dataMap, namespace);
-			if (!document.getEntities().isEmpty()){
+			if (document.getEntities()!=null){
 				document.getEntities().forEach(e->System.out.println(e.getName()));
 				System.out.println("Found "+document.getEntities().get(0).getName()+fileEntry.getName());
 			}
 		} catch (Exception ignored) {
 
 		}
+
+
 	}
+
+
 
 }
