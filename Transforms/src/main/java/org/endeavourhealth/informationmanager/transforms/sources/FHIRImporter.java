@@ -48,7 +48,6 @@ public class FHIRImporter implements TTImport {
 			document = manager.createDocument();
 			FHIRToIM converter = new FHIRToIM();
 			for (String coreFile : fhirResources) {
-				try (TTManager manager = new TTManager()) {
 					Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
 					FHIRDocument fhirDocument = loadDocument(path.toFile());
 					if (fhirDocument.getValueSets() != null) {
@@ -73,7 +72,6 @@ public class FHIRImporter implements TTImport {
 						}
 					}
 				}
-			}
 		}catch (Exception e) {
 			throw new ImportException(e.getMessage(), e);
 		}

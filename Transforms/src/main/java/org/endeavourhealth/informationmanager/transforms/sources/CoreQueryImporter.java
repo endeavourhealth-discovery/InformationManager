@@ -640,6 +640,7 @@ public class CoreQueryImporter implements TTImport {
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri(Namespace.SNOMED + "714628002").setDescendantsOf(true)))))
       .and(q -> q
+        .step(s->s
           .setDescription("Latest systolic within 12 months of the search date")
           .setNode("latestBPL12M")
           .path(p->p.setIri(Namespace.IM+"observation").setNode("obs").setTypeOf(Namespace.IM+"Observation"))
@@ -666,7 +667,7 @@ public class CoreQueryImporter implements TTImport {
           .return_(p->p
             .setNodeRef("obs")
             .setIri(Namespace.IM+"concept")))
-      .and(then->then
+      .step(then->then
         .setName("Have high blood pressure in the last year")
         .setNodeRef("latestBPL12M")
         .setNode("HighBPReading")
@@ -696,18 +697,19 @@ public class CoreQueryImporter implements TTImport {
                 .setIri(Namespace.IM + "value")
                 .setOperator(Operator.gt)
                 .setValue("130")))))
-      .not(q -> q
-        .setNode("InvitedAfterHighBP")
-        .setName("Invited for screening after high BP reading")
-        .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
-        .path(p->p.setIri(Namespace.IM+"procedure").setNode("proc").setTypeOf(Namespace.IM+"Procedure"))
-        .where(and -> and
-          .and(inv -> inv
-            .setNodeRef("proc")
-            .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
-            .addIs(new Node().setIri("http://snomed.info/sct#310422005").setName("invited for screening").setMemberOf(true)))
-          .addAnd(relativeWhere)))
-      .not(q -> q
+        .step(s -> s
+          .setNode("InvitedAfterHighBP")
+          .setName("Invited for screening after high BP reading")
+          .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
+          .path(p->p.setIri(Namespace.IM+"procedure").setNode("proc").setTypeOf(Namespace.IM+"Procedure"))
+          .where(and -> and
+            .and(inv -> inv
+              .setNodeRef("proc")
+              .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
+              .addIs(new Node().setIri("http://snomed.info/sct#310422005").setName("invited for screening").setMemberOf(true)))
+            .addAnd(relativeWhere))))
+      .and(q -> q
+        .setNotExists(true)
         .setName("on hypertension register")
         .setDescription("is registered on the hypertensives register")
         .is(is->is.setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
