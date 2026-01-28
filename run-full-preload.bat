@@ -26,17 +26,11 @@ SET arg2=%3
 
 IF NOT [%~4]==[] GOTO IncorrectArgs
 
-IF "%arg1%"=="smartlife" set sltrue=true
-IF "%arg2%"=="smartlife" set sltrue=true
-IF "%sltrue%" == true (
-   SET smartlife = true
-)
+IF "%arg1%"=="smartlife" SET smartlife=true
+IF "%arg2%"=="smartlife" SET smartlife=true
 
-IF "%arg1%"=="opensearch" set ostrue=true
-IF "%arg2%"=="opensearch" set ostrue=true
-if "%ostrue%"==true (
-   SET opensearch = true
-)
+IF "%arg1%"=="opensearch" SET opensearch=true
+IF "%arg2%"=="opensearch" SET opensearch=true
 
 IF "%target%"=="dev" (
   SET branch=develop
@@ -126,7 +120,7 @@ IF "%target%"=="dev" (
   curl --connect-timeout 1 127.0.0.1:7200 || goto Retry
   ECHO Connected!
 
-  IF "%smartlife%"==true (
+  IF %smartlife%==true (
     ECHO Filing Smartlife
     "%JAVA_HOME%/bin/java" -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.online.ImportApp %IMPORT_DATA% smartlifequery skiplucene privacy=3 || exit /b %errorlevel%
 
@@ -150,7 +144,7 @@ IF "%target%"=="dev" (
     ECHO Connected!
   )
 
-  IF "%opensearch%"==true (
+  IF %opensearch%==true (
     ECHO Running OpenSearch
     "%JAVA_HOME%/bin/java" -cp Utils/build/libs/Utils-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.utils.opensearch.Main || exit /b %errorlevel%
   )
