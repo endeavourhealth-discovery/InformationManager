@@ -102,8 +102,10 @@ IF "%target%"=="dev" (
   popd
 
   ECHO Performing TRUD update
+  "%JAVA_HOME%/bin/java" -jar Feeds/build/libs/Feeds-1.0-SNAPSHOT.jar %TRUD_API_KEY% "%TRUD_DATA_DIR%" || exit /b %errorlevel%
 
   ECHO Performing Preload
+  "%JAVA_HOME%/bin/java" -Xmx14g -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.preload.Preload "source=%IMPORT_DATA%" "preload=%GRAPHDB_BIN%" "temp=%PRELOAD_TEMP%" privacy=0 "cmd=%GRAPHDB_START_CMD%" || exit /b %errorlevel%
 
   ECHO Shutting down graphdb
   timeout 5
