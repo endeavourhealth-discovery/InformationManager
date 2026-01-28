@@ -15,6 +15,7 @@ logback = "1.5.20"
 openCsv = "5.9"
 owlApi = "5.5.0"
 rdf4j = "4.3.8"
+rdf4jSail = "4.3.13"
 slf4j = "2.0.17"
 wsrs = "4.0.0"
 zip4j = "2.11.5"
@@ -46,6 +47,7 @@ openCsv = { module = "com.opencsv:opencsv", version.ref = "openCsv" }
 owlApiApiBinding = { module = "net.sourceforge.owlapi:owlapi-apibinding", version.ref = "owlApi" }
 owlApiDistribution = { module = "net.sourceforge.owlapi:owlapi-distribution", version.ref = "owlApi" }
 rdf4jRepoApi = { module = "org.eclipse.rdf4j:rdf4j-repository-api", version.ref = "rdf4j" }
+rdf4jSail = { module = "org.eclipse.rdf4j:rdf4j-sail", version.ref = "rdf4jSail" }
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 wsrs = { module = "jakarta.ws.rs:jakarta.ws.rs-api", version.ref = "wsrs" }
 zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "zip4j" }

@@ -4,6 +4,9 @@ SET "JAVA_VERSION=corretto-21.0.8"
 SET "IMPORT_DATA=Z:\IdeaProjects\Endeavour\InformationManager\ImportData"
 SET "TRUD_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 SET "Q_AUTH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+SET "OPENSEARCH_AUTH=xxxxxxxxxxxxxxxxxxxxxxxxxx"
+SET "OPENSEARCH_INDEX=xxxxxxxxxxxxxxxxxxxxxxxxx"
+SET "OPENSEARCH_URL=xxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 REM ========== SET REMAINING CONFIG BASED ON THE ABOVE ==========
 SET "JAVA_HOME=%USERPROFILE%\.jdks\%JAVA_VERSION%"
@@ -18,19 +21,28 @@ SET "Q_URL=https://api.apiqcodes.org/production"
 
 REM ========== COMMAND LINE ARGUMENTS ==========
 SET target=%1
-SET additional=%2
+SET arg1=%2
+SET arg2=%3
 
-IF NOT [%~3]==[] GOTO IncorrectArgs
+IF NOT [%~4]==[] GOTO IncorrectArgs
 
-IF NOT "%additional%"=="" (
-  IF NOT "%additional%"=="smartlife" GOTO IncorrectArgs
-)
+IF "%arg1%"=="smartlife" SET smartlife=true
+IF "%arg2%"=="smartlife" SET smartlife=true
+
+IF "%arg1%"=="opensearch" SET opensearch=true
+IF "%arg2%"=="opensearch" SET opensearch=true
 
 IF "%target%"=="dev" (
   SET branch=develop
+  SET OPENSEARCH_INDEX=conceptdev
+  GOTO Preload
+) ELSE IF "%target%"=="uat" (
+  SET branch=uat
+  SET OPENSEARCH_INDEX=conceptuat
   GOTO Preload
 ) ELSE IF "%target%"=="live" (
-  SET branch=main
+  SET branch=live
+  SET OPENSEARCH_INDEX=concept
   GOTO Preload
 ) ELSE (
   GOTO IncorrectArgs
@@ -38,17 +50,18 @@ IF "%target%"=="dev" (
 
 :IncorrectArgs
   ECHO Incorrect arguments!
-  ECHO Usage: %0 dev^|live ^<smartlife^>
+  ECHO Usage: %0 dev^|uat^|live ^<smartlife^> ^<opensearch^>
   EXIT /B -1
 
 :Preload
   ECHO Proceeding with preload for %target%
-  IF NOT "%additional%"=="" ECHO (include Smartlife)
+  IF "%smartlife%"==true ECHO (include Smartlife)
+  IF "%opensearch%"==true ECHO (include OpenSearch)
 
   ECHO Fetching ImportData
   IF EXIST ../ImportData/ (
-    git -C ../ImportData checkout || exit /b %errorlevel%
-    git -C ../ImportData pull || exit /b %errorlevel%
+    git -C ../ImportData checkout %branch% || exit /b %errorlevel%
+    git -C ../ImportData pull origin %branch% || exit /b %errorlevel%
   ) ELSE (
     git clone https://github.com/endeavourhealth-discovery/ImportData ../ImportData || exit /b %errorlevel%
   )
@@ -64,13 +77,14 @@ IF "%target%"=="dev" (
   pushd .
   cd ../IMAPI || exit /b %errorlevel%
   CALL gradlew assemble || exit /b %errorlevel%
+  if errorlevel 1 echo An error occurred & pause & goto :EOF
   CALL gradlew publishToMavenLocal || exit /b %errorlevel%
   popd
 
   ECHO Fetching %target% InformationManager
   IF EXIST ../InformationManager/ (
-    git -C ../IMAPI checkout || exit /b %errorlevel%
-    git -C ../IMAPI pull || exit /b %errorlevel%
+    git -C ../IMAPI checkout %branch% || exit /b %errorlevel%
+    git -C ../IMAPI pull origin %branch% || exit /b %errorlevel%
   ) ELSE (
     git clone https://github.com/endeavourhealth-discovery/InformationManager ../InformationManager || exit /b %errorlevel%
   )
@@ -78,6 +92,7 @@ IF "%target%"=="dev" (
   pushd .
   cd ../InformationManager || exit /b %errorlevel%
   CALL gradlew assemble || exit /b %errorlevel%
+  if errorlevel 1 echo An error occurred & pause & goto :EOF
   popd
 
   ECHO Performing TRUD update
@@ -105,15 +120,31 @@ IF "%target%"=="dev" (
   curl --connect-timeout 1 127.0.0.1:7200 || goto Retry
   ECHO Connected!
 
-  ECHO Filing Smartlife
-  "%JAVA_HOME%/bin/java" -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.online.ImportApp %IMPORT_DATA% smartlifequery skiplucene privacy=3 || exit /b %errorlevel%
+  IF %smartlife%==true (
+    ECHO Filing Smartlife
+    "%JAVA_HOME%/bin/java" -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.online.ImportApp %IMPORT_DATA% smartlifequery skiplucene privacy=3 || exit /b %errorlevel%
 
-  ECHO Shutting down graphdb
-  timeout 5
-  taskkill /f /im "GraphDB Desktop.exe"
+    ECHO Shutting down graphdb
+    timeout 5
+    taskkill /f /im "GraphDB Desktop.exe"
 
-  ECHO Zipping im (smartlife) repository
-  pushd .
-  cd /d %GRAPHDB_DATA% || exit /b %errorlevel%
-  tar -a -v -cf im-smartlife.zip im || exit /b %errorlevel%
-  popd
+    ECHO Zipping im (smartlife) repository
+    pushd .
+    cd /d %GRAPHDB_DATA% || exit /b %errorlevel%
+    tar -a -v -cf im-smartlife.zip im || exit /b %errorlevel%
+    popd
+
+    ECHO Restarting graphdb
+    start "" "%GRAPHDB_START_CMD%" || exit /b %errorlevel%
+
+    ECHO Waiting for startup
+    :retry
+    ECHO Pinging...
+    curl --connect-timeout 1 127.0.0.1:7200 || goto Retry
+    ECHO Connected!
+  )
+
+  IF %opensearch%==true (
+    ECHO Running OpenSearch
+    "%JAVA_HOME%/bin/java" -cp Utils/build/libs/Utils-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.utils.opensearch.Main || exit /b %errorlevel%
+  )
