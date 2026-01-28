@@ -26,11 +26,15 @@ SET arg2=%3
 
 IF NOT [%~4]==[] GOTO IncorrectArgs
 
-IF "%arg1%"=="smartlife" || "%arg2%"=="smartlife" (
+IF "%arg1%"=="smartlife" set sltrue=true
+IF "%arg2%"=="smartlife" set sltrue=true
+IF "%sltrue%" == true (
    SET smartlife = true
 )
 
-IF "%arg1%"=="opensearch" || "%arg2%"=="opensearch" (
+IF "%arg1%"=="opensearch" set ostrue=true
+IF "%arg2%"=="opensearch" set ostrue=true
+if "%ostrue%"==true (
    SET opensearch = true
 )
 
@@ -98,10 +102,8 @@ IF "%target%"=="dev" (
   popd
 
   ECHO Performing TRUD update
-  "%JAVA_HOME%/bin/java" -jar Feeds/build/libs/Feeds-1.0-SNAPSHOT.jar %TRUD_API_KEY% "%TRUD_DATA_DIR%" || exit /b %errorlevel%
 
   ECHO Performing Preload
-  "%JAVA_HOME%/bin/java" -Xmx14g -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.preload.Preload "source=%IMPORT_DATA%" "preload=%GRAPHDB_BIN%" "temp=%PRELOAD_TEMP%" privacy=0 "cmd=%GRAPHDB_START_CMD%" || exit /b %errorlevel%
 
   ECHO Shutting down graphdb
   timeout 5
