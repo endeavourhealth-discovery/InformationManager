@@ -731,13 +731,18 @@ public class CoreQueryImporter implements TTImport {
   private void deleteSets() throws JsonProcessingException {
     TTEntity entity = new TTEntity()
       .setIri(Namespace.IM + "DeleteSets")
-      .setName("Delete all concept sets in a graph")
+      .setName("Delete all concept sets in a scheme")
       .setDescription("Pass in the graph name as a 'this' argument and it deletes all sets")
       .setScheme(Namespace.IM.asIri())
       .set(iri(IM.UPDATE_PROCEDURE), TTLiteral.literal(new Update()
         .match(m -> m
-          .setGraph(new Node().setParameter("this"))
-          .setTypeOf(IM.CONCEPT_SET.toString()))
+          .where(w->w
+            .and(w1->w1
+            .setIri(IM.HAS_SCHEME.toString())
+            .is(is->is.setParameter("this")))
+            .and(w1->w1
+              .setIri(RDF.TYPE.toString())
+              .is(is->is.setIri(IM.CONCEPT_SET.toString())))))
         .addDelete(new Delete())));
 
     document.addEntity(entity);
