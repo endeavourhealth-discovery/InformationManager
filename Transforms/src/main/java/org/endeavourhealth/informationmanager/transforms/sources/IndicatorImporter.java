@@ -342,12 +342,13 @@ public class IndicatorImporter {
 		TTEntity queryEntity= entityService.getPartialEntities(Set.of(queryIri),Set.of(IM.DEFINITION.toString())).get(0);
 		Query report= queryEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
 		List<Match> columnGroups= report.getColumnGroup();
-		List<Return> columns= columnGroups.get(columnNumber).getReturn();
+		Match columnGroup= columnGroups.get(columnNumber);
+		List<Return> columns= columnGroup.getReturn();
 		if (columns.getFirst().getAs()!=null)
 				if (columns.getFirst().getAs().equals("Y-N"))
 					columns.removeFirst();
 		Query ColumnGroupQuery= new Query();
-		ColumnGroupQuery.addColumnGroup(new Match().setReturn(columns));
+		ColumnGroupQuery.addColumnGroup(columnGroup);
 		TTEntity columnGroupEntity= new TTEntity()
 			.setIri(namespace+"ColumnGroup-"+name.hashCode())
 			.setName(name+ " Column group")

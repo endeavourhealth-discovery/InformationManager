@@ -39,8 +39,7 @@ public class CoreQueryImporter implements TTImport {
       medicationAuthorisationSummaryColumnGroup();
       //clinicalColumnGroup();
       //patientColumnGroup();
-
-
+      entityFilter();
       age();
       gmsRegistration();
       gmsRegistrationStatus();
@@ -51,6 +50,7 @@ public class CoreQueryImporter implements TTImport {
       getAllowableProperties();
       getAllowablePropertyAncestors();
       isValidProperty();
+      isValidDescendant();
       isAllowableRange();
       getSearchAll();
       allowableSubTypes();
@@ -61,7 +61,6 @@ public class CoreQueryImporter implements TTImport {
       testQuery();
       objectPropertyRangeSuggestions();
       dataPropertyRangeSuggestions();
-      searchProperties();
       dataModelPropertyRange();
       dataModelPropertyByShape();
       searchFolders();
@@ -863,65 +862,61 @@ public class CoreQueryImporter implements TTImport {
           .setName("Is it a valid property")
           .setDescription("is the property 'property' a valid value for the concept(s) 'concepts")
           .setActiveOnly(true)
-          .is(i -> i.setParameter("property").setAncestorsOrSelfOf(true))
+          .is(i -> i.setParameter("concept").setDescendantsOrSelfOf(true))
+          .path(p->p
+            .setIri(IM.ROLE_GROUP)
+            .setNode("roleGroup"))
           .setWhere(new Where()
-            .setIri(RDFS.DOMAIN)
-            .addIs(new Node().setParameter("concept").setAncestorsOf(true))
+            .setNodeRef("roleGroup")
+            .setParameter("entity")
+            .setNode("value")
+          )));
+  }
+  private void isValidDescendant() throws JsonProcessingException {
+    getFormValidationEntity("IsValidDescendant", "is a valid descendant", "is the concept a valid descendant of some parent")
+      .set(iri(IM.DEFINITION), TTLiteral.literal(
+        new Query()
+          .setName("Is it a valid property")
+          .setDescription("is the property 'property' a valid value for the concept(s) 'concepts")
+          .setActiveOnly(true)
+          .where(w->w
+            .setIri(IM.IS_A.toString())
+          .is(i -> i.setParameter("parent"))
           )));
   }
 
+  private void entityFilter() throws JsonProcessingException {
+    getFormValidationEntity("EntityFilter", "Entity filter", "Parameterised list of entities to filter on a text search")
+      .set(iri(IM.DEFINITION), TTLiteral.literal(
+        new Query()
+          .setName("Entity filter")
+          .where(w->w
+            .setIri(IM.IRI)
+            .is(is->is
+              .setParameter("entities")))));
+
+  }
 
   private void getAllowableProperties() throws JsonProcessingException {
     getFormValidationEntity("AllowableProperties", "Properties that have been used for subtypes of a terminology concept", "Returns a list of properties for a particular term concept")
       .set(iri(IM.DEFINITION), TTLiteral.literal(
         new Query()
-          .setName("Properties that have been used for subtypes of a terminology concept {this}")
-          .setImQuery(QUERY.ALLOWABLE_PROPERTIES.toString())
-          .setActiveOnly(true)
-          .setWhere(new Where()
-              .and(w -> w
-                .setIri(IM.HAS_SCHEME)
-                .is(is -> is.setIri(Namespace.SNOMED.toString()))))
-          .return_(p -> p.setPropertyRef("property").setIri(RDFS.LABEL))
-          .return_(p -> p.setPropertyRef("property").setNodeRef("concept").setIri(RDF.TYPE))
-          .return_(p -> p.setPropertyRef("property").setIri(IM.HAS_SCHEME))
-          .return_(p -> p.setPropertyRef("property").setIri(IM.HAS_TERM_CODE)
-            .return_(p1 -> p1.setIri(RDFS.LABEL)))));
+          .setName("Properties that can be used for a concept {this}")
+          .addIs(new Node().setParameter("this").setAncestorsOf(true))
+          .where(w->w
+            .and(w1->w1
+              .setInverse(true)
+              .setIri(RDFS.DOMAIN.toString())
+              .setNode("property"))
+            .and(w1->w1
+              .setExists(true)
+              .setSubjectVariable("roleGroup")
+              .setPropertyVariable("property")
+              .setNode("value")))
+          .return_(p -> p.setNodeRef("property"))));
   }
 
 
-
-  /*
-  private void getAllowableProperties() throws JsonProcessingException {
-    getFormValidationEntity("AllowableProperties", "Allowable properties for a terminology concept", "Returns a list of properties for a particular term concept, used in value set definitions with RCL")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
-        new Query()
-          .setTypeOf(RDF.PROPERTY.toString())
-          .setName("Allowable Properties for a terminology concept")
-          .setImQuery(true)
-          .setDescription("Allowable Properties for a terminology concept")
-          .setActiveOnly(true)
-          .setName("property that has $this (or supertype) as a domain")
-          .setDescription("property that has $this (or supertype) as a domain")
-          .setNode("concept")
-          .setWhere(new Where()
-            .and(w -> w
-              .setIri(IM.HAS_SCHEME)
-              .is(is -> is.setIri(Namespace.SNOMED.toString())))
-            .and(w -> w
-              .setIri(RDFS.DOMAIN)
-              .addIs(new Node().setParameter("this").setAncestorsOf(true))
-            ))
-          .setEntailment(Entail.descendantsOrSelfOf)
-            .return_(p -> p.setNodeRef("concept").setIri(RDFS.LABEL))
-            .return_(p -> p.setNodeRef("concept").setNodeRef("concept").setIri(RDF.TYPE))
-            .return_(p -> p.setNodeRef("concept").setIri(IM.HAS_SCHEME))
-            .return_(p -> p.setNodeRef("concept").setIri(IM.HAS_TERM_CODE)
-              .return_(p1 -> p1.setIri(RDFS.LABEL)))));
-  }
-
-
-   */
   private void getAllowablePropertyAncestors() throws JsonProcessingException {
     getFormValidationEntity("AllowablePropertyAncestors", "Allowable properties for a terminology concept", "Returns a list of properties for a particular term concept, used in value set definitions with RCL")
       .set(iri(IM.DEFINITION), TTLiteral.literal(
@@ -941,20 +936,6 @@ public class CoreQueryImporter implements TTImport {
           .return_(p -> p.setIri(RDF.TYPE))));
   }
 
-  private void searchProperties() throws JsonProcessingException {
-    getFormValidationEntity("SearchProperties", "Search for properties by name", "Returns a list of properties using a text search to filter the list.")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
-        new Query()
-          .setName("Search for properties by name")
-          .setDescription("Search for properties by name")
-          .setActiveOnly(true)
-          .setName("Properties")
-          .setDescription("Properties")
-          .setNode("concept")
-          .setTypeOf(RDF.PROPERTY.toString())
-            .return_(p -> p.setNodeRef("concept").setIri(IM.CODE))
-            .return_(p -> p.setNodeRef("concept").setIri(RDFS.LABEL))));
-  }
 
   private void getConcepts() throws JsonProcessingException {
     getFormValidationEntity("SearchEntities", "Search for entities of a certain type", "parameter 'this' set to the list of type iris, Normally used with a text search entry to filter the list")
