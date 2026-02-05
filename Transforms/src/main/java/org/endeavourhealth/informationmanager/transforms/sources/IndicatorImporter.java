@@ -298,8 +298,9 @@ public class IndicatorImporter {
 						indicator.addType(iri(IM.INDICATOR));
 						TTEntity indicatorQueryEntity = entityService.getPartialEntities(Set.of(queryIri), Set.of(IM.DEFINITION.toString())).get(0);
 						Query indicatorQuery = indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-						if (indicatorQuery.getIs() != null) {
-							for (Node cohort : indicatorQuery.getIs()) {
+						Match rule= indicatorQuery.getRule().getFirst();
+						if (rule.getIs() != null) {
+							for (Node cohort : rule.getIs()) {
 								indicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
 							}
 						}
