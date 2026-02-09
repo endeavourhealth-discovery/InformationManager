@@ -622,11 +622,12 @@ public class CoreQueryImporter implements TTImport {
     Query query = new Query()
       .setTypeOf(Namespace.IM + "Patient")
       .setIri(Namespace.IM + "Q_TestQuery")
-      .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring");
+      .setName("Patients 65-70, or pre-diabetes that need invitations for blood pressure measuring");
     query
+      .and(q -> q
       .is(is->is.setIri(Namespace.IM + "Q_RegisteredGMS")
         .setIsCohort(true)
-        .setName("Registered for GMS services on reference date"))
+        .setName("Registered for GMS services on reference date")))
       .and(q -> q
         .or(m -> m
           .setDescription("aged between 65 and 70")
@@ -697,7 +698,6 @@ public class CoreQueryImporter implements TTImport {
                 .setOperator(Operator.gt)
                 .setValue("130")))))
         .step(s -> s
-          .setNode("InvitedAfterHighBP")
           .setName("Invited for screening after high BP reading")
           .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
           .path(p->p.setIri(Namespace.IM+"procedure").setNode("proc").setTypeOf(Namespace.IM+"Procedure"))

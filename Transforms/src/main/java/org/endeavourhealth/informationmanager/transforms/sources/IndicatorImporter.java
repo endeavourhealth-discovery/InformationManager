@@ -79,17 +79,17 @@ public class IndicatorImporter {
 
 	private void addColumnGroups(TTEntity indicator, Query indicatorQuery) throws Exception {
 		columnGroups= new HashSet<>();
-		TTEntity dataSetEntity= new TTEntity().setName("Data set for " + indicator.getName());
-		String dataSetIri= namespace+"DataSet-"+indicator.getName().hashCode();
-		dataSetEntity.setIri(dataSetIri)
-			.addType(iri(IM.QUERY));
-		dataSetEntity.setScheme(iri(namespace));
-		dataSetEntity.addObject(iri(IM.IS_CONTAINED_IN),iri(datasetFolder));
-		document.addEntity(dataSetEntity);
-		Query datasetQuery= new Query();
-
 		if (indicator.get(iri(IM.DENOMINATOR))!=null) {
 			String cohortIri = indicator.get(IM.DENOMINATOR).asIriRef().getIri();
+			TTEntity dataSetEntity = new TTEntity().setName("Data set for " + indicator.getName());
+			String dataSetIri = namespace + "DataSet-" + indicator.getName().hashCode();
+			dataSetEntity.setIri(dataSetIri)
+				.addType(iri(IM.QUERY));
+			dataSetEntity.setScheme(iri(namespace));
+			dataSetEntity.addObject(iri(IM.IS_CONTAINED_IN), iri(datasetFolder));
+			document.addEntity(dataSetEntity);
+			Query datasetQuery = new Query();
+			datasetQuery.setTypeOf(Namespace.IM + "Patient");
 			datasetQuery.addIs(Node.iri(cohortIri));
 			TTEntity patientDetails = columnGroupNameToEntity.get("Patient details");
 			Query patientColumnQuery = patientDetails.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
@@ -104,9 +104,10 @@ public class IndicatorImporter {
 					}
 				}
 			}
+			dataSetEntity.set(iri(IM.DEFINITION),TTLiteral.literal(datasetQuery));
+			indicator.set(iri(IM.HAS_DATASET),iri(dataSetIri));
 		}
-		dataSetEntity.set(iri(IM.DEFINITION),TTLiteral.literal(datasetQuery));
-		indicator.set(iri(IM.HAS_DATASET),iri(dataSetIri));
+
 	}
 	private void addColumnGroup(Query datasetQuery,Match match) throws JsonProcessingException {
 		if (match.getPath() != null) {
