@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.map.HashedMap;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
+import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.reasoner.LogicOptimizer;
 import org.endeavourhealth.imapi.logic.service.ConceptService;
@@ -18,6 +19,9 @@ import org.endeavourhealth.imapi.vocabulary.Graph;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.Namespace;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
+import org.endeavourhealth.informationmanager.transforms.models.TTImport;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -40,24 +44,17 @@ public class IndicatorImporter {
 	private final Set<String> unlabelledClauses= new HashSet<>();
 	private final Set<String> unlabelledIndicators= new HashSet<>();
 	private final Map<String,TTEntity> columnGroupNameToEntity= new HashMap<>();
-	private TTEntity pathway;
-	private String pathwayFolder;
 	private String mainFolder;
-	private String datasetFolder;
 	private TTDocument document;
 	private final Map<String,String> matchLabel= new HashMap<>();
-	private Set<String> columnGroups;
 
 
-
-	public void generate(String folder,String mainFolder,String pathwayFolder,String datasetFolder,Namespace namespace) throws Exception {
+	public void generate(String indicatorFile,String mainFolder,Namespace namespace) throws Exception {
 		this.namespace = namespace;
-		this.pathwayFolder = pathwayFolder;
 		this.mainFolder = mainFolder;
-		this.datasetFolder = datasetFolder;
 		try (TTManager manager = new TTManager()) {
 			document = manager.createDocument();
-			importIndicators(folder);
+			importIndicators(indicatorFile);
 			for (int i=0; i <document.getEntities().size(); i++) {
 				TTEntity indicator = document.getEntities().get(i);
 				if (indicator.isType(iri(IM.INDICATOR))) {
@@ -69,16 +66,10 @@ public class IndicatorImporter {
 				filer.fileDocument(document);
 			}
 		}
-		generatePathways();
-	}
-
-	private void generatePathways() {
-
 	}
 
 
 	private void addColumnGroups(TTEntity indicator, Query indicatorQuery) throws Exception {
-		columnGroups= new HashSet<>();
 		if (indicator.get(iri(IM.DENOMINATOR))!=null) {
 			String cohortIri = indicator.get(IM.DENOMINATOR).asIriRef().getIri();
 			TTEntity dataSetEntity = new TTEntity().setName("Data set for " + indicator.getName());
@@ -86,17 +77,14 @@ public class IndicatorImporter {
 			dataSetEntity.setIri(dataSetIri)
 				.addType(iri(IM.QUERY));
 			dataSetEntity.setScheme(iri(namespace));
-			dataSetEntity.addObject(iri(IM.IS_CONTAINED_IN), iri(datasetFolder));
 			document.addEntity(dataSetEntity);
 			Query datasetQuery = new Query();
 			datasetQuery.setTypeOf(Namespace.IM + "Patient");
 			datasetQuery.addIs(Node.iri(cohortIri));
+			dataSetEntity.addObject(iri(IM.DEPENDENT_ON), iri(cohortIri));
 			TTEntity patientDetails = columnGroupNameToEntity.get("Patient details");
-			Query patientColumnQuery = patientDetails.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-			for (Match subMatch : patientColumnQuery.getColumnGroup()) {
-				subMatch.setName("Patient details");
-				datasetQuery.addColumnGroup(subMatch);
-			}
+			Query patientColumnGroup = patientDetails.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
+			datasetQuery.addColumnGroup(patientColumnGroup);
 			for (List<Match> matches : Arrays.asList(indicatorQuery.getAnd(), indicatorQuery.getOr(), indicatorQuery.getRule())) {
 				if (matches != null) {
 					for (Match match : matches) {
@@ -129,39 +117,31 @@ public class IndicatorImporter {
 		}
 	}
 
-	private void addEventGroups(String columnGroupName, Query datasetQuery, Match match,
-															Path path, String xPath) throws JsonProcessingException {
-
-		TTEntity columnEntity= columnGroupNameToEntity.get(columnGroupName);
-		Query columnQuery= columnEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-		List<Return> columns= columnQuery.getColumnGroup().get(0).getReturn();
-		Set<Node> conceptSets= new HashSet<>();
-		String valueLabel= addConceptSets(match,conceptSets);
-		if (!columnGroups.contains(valueLabel)) {
-			columnGroups.add(valueLabel);
-			String variable = path.getNode();
-			if (!conceptSets.isEmpty()) {
-				Match filterMatch = new Match();
-				filterMatch.setName(valueLabel);
-				filterMatch.setReturn(columns);
-				filterMatch.addPath(path);
-				Where conceptWhere = new Where();
-				conceptWhere.setNodeRef(variable);
-				conceptWhere.setIri(Namespace.IM + "concept");
-				conceptWhere.setIs(conceptSets.stream().toList());
-				Where valueWhere = needsValue(match);
-				if (valueWhere != null) {
-					filterMatch.setWhere(new Where().addAnd(conceptWhere));
-					filterMatch.getWhere().addAnd(valueWhere);
-				}
-				else
-					filterMatch.setWhere(conceptWhere);
-				filterMatch.setOrderBy(new OrderLimit().addProperty(new OrderDirection()
-					.setDirection(Order.descending)
-					.setIri(Namespace.IM + "effectiveDate")));
-				datasetQuery.addColumnGroup(filterMatch);
+	private void setNodeRefs(Where where, String nodeRef) {
+		if (where.getAnd()!=null){
+			for (Where subWhere:where.getAnd()){
+				setNodeRefs(subWhere,nodeRef);
+			}
+		} else if (where.getOr()!=null){
+			for (Where subWhere:where.getOr()){
+				setNodeRefs(subWhere,nodeRef);
 			}
 		}
+		else where.setNodeRef(nodeRef);
+	}
+
+	private void addEventGroups(String columnGroupName, Query datasetQuery, Match match, Path path, String xPath) throws JsonProcessingException {
+
+		TTEntity columnEntity= columnGroupNameToEntity.get(columnGroupName);
+		Match columnGroup= columnEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
+		columnGroup.setWhere(match.getWhere());
+		String nodeRef= columnGroup.getPath().getFirst().getNode();
+		setNodeRefs(columnGroup.getWhere(),nodeRef);
+		Set<Node> conceptSets= new HashSet<>();
+		String valueLabel=addConceptSets(match,conceptSets);
+		columnGroup.setName(valueLabel);
+		setOptional(columnGroup);
+		datasetQuery.addColumnGroup(columnGroup);
 	}
 
 	private Where needsValue(Match match) {
@@ -249,9 +229,9 @@ public class IndicatorImporter {
 		return valueLabel;
 	}
 
-	public void importIndicators(String folder) throws Exception {
+	public void importIndicators(String indicatorFile) throws Exception {
 		TTFilerFactory.setBulk(false);
-		try (BufferedReader reader = new BufferedReader(new FileReader(folder + "/Indicator-query.txt"))) {
+		try (BufferedReader reader = new BufferedReader(new FileReader(indicatorFile))) {
 			reader.readLine();
 			String line = reader.readLine();
 			while (line != null && !line.isEmpty()) {
@@ -259,9 +239,6 @@ public class IndicatorImporter {
 				String[] fields = line.split("\t");
 				if (fields.length > 1) {
 					String inputType = fields[0];
-					if (inputType.equals("P")) {
-						createPathway(fields[1], fields[2],fields[3]);
-					}
 					if (inputType.equals("F")) {
 						TTEntity indicatorFolder = new TTEntity();
 						String parentFolder = fields.length > 3 ? fields[5] : "";
@@ -349,22 +326,50 @@ public class IndicatorImporter {
 		if (columns.getFirst().getAs()!=null)
 				if (columns.getFirst().getAs().equals("Y-N"))
 					columns.removeFirst();
-		Query ColumnGroupQuery= new Query();
-		ColumnGroupQuery.addColumnGroup(columnGroup);
+		Query newGroup= new Query();
+		newGroup.setTypeOf(Namespace.IM+"Patient");
+		newGroup.setName(name);
+		newGroup.setPath(columnGroup.getPath());
+		newGroup.setReturn(columnGroup.getReturn());
+		newGroup.setOrderBy(columnGroup.getOrderBy());
 		TTEntity columnGroupEntity= new TTEntity()
 			.setIri(namespace+"ColumnGroup-"+name.hashCode())
 			.setName(name+ " Column group")
 			.addType(iri(IM.QUERY))
 			.setScheme(iri(namespace))
 			.addObject(iri(IM.IS_CONTAINED_IN),iri(Namespace.IM+"ColumnGroups"))
-			.set(iri(IM.DEFINITION),TTLiteral.literal(ColumnGroupQuery));
+			.set(iri(IM.DEFINITION),TTLiteral.literal(newGroup));
 		document.addEntity(columnGroupEntity);
 		columnGroupNameToEntity.put(name,columnGroupEntity);
 
 
 	}
 
+	private void setOptional(Match match) {
+		Set<String> nodeRefs = new HashSet<>();
+		setNodeRefList(match.getWhere(), nodeRefs);
+		setOptionalPaths(match.getPath(), nodeRefs);
+	}
 
+	private void setOptionalPaths(List<Path> paths, Set<String> nodeRefs) {
+		if (paths==null) return;
+		for (Path path:paths) {
+			if (!nodeRefs.contains(path.getNode()))
+					path.setOptional(true);
+			if (path.getPath()!=null) setOptionalPaths(path.getPath(),nodeRefs);
+		}
+	}
+
+	private void setNodeRefList(Where where,Set<String> nodeRefs) {
+		if (where.getNodeRef()!=null) nodeRefs.add(where.getNodeRef());
+		for (List<Where> wheres : Arrays.asList(where.getAnd(),where.getOr())) {
+			if (wheres!=null){
+				for (Where subWhere:wheres){
+					setNodeRefList(subWhere,nodeRefs);
+				}
+			}
+		}
+	}
 
 
 	private void configureKPI(TTEntity indicator,String queryIri) throws Exception {
@@ -570,7 +575,6 @@ public class IndicatorImporter {
 					careActivityEntity.setName(careActivityLabel);
 					careActivityEntity.addType(iri(IM.CARE_ACTIVITY));
 
-					pathway.addObject(iri(Namespace.IM + "careActivity"), iri(careActivityEntity.getIri()));
 				}
 				if (targetName != null) {
 					String targetLabel = matchLabel.get(targetName);
@@ -697,14 +701,6 @@ public class IndicatorImporter {
 	}
 
 
-	private void createPathway(String order, String name, String register) {
-		pathway = new TTEntity();
-		pathway.setIri(namespace.toString()+name.hashCode())
-			.setName(name)
-			.addType(iri(Namespace.IM+"CarePathway"))
-			.setScheme(Namespace.SMARTLIFE.asIri())
-			.addObject(iri(IM.IS_CONTAINED_IN),iri(pathwayFolder));
-		document.addEntity(pathway);
-	}
+
 
 }

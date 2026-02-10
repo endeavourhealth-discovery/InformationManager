@@ -35,10 +35,6 @@ public class CoreQueryImporter implements TTImport {
       telephoneProperty("homeTelephoneNumber", "home");
       telephoneProperty("mobileTelephoneNumber", "mobile");
       telephoneProperty("workTelephoneNumber", "mobile");
-      medicationPrescriptionSummaryColumnGroup();
-      medicationAuthorisationSummaryColumnGroup();
-      //clinicalColumnGroup();
-      //patientColumnGroup();
       entityFilter();
       age();
       gmsRegistration();
@@ -483,93 +479,7 @@ public class CoreQueryImporter implements TTImport {
   }
 
 
-  private void medicationPrescriptionSummaryColumnGroup() throws JsonProcessingException {
-    TTEntity entity = getColumnGroupEntity("CG_MedicationPrescriptionSummary", "Medication summary column group (prescribed)", "A set of fields for displaying medication request information in summary");
-    Query query= new Query();
-    query.return_(r->r
-      .setIri(Namespace.IM+"prescription")
-      .setReturn(getMedicationSummaryReturn()));
-    entity.set(iri(IM.DEFINITION), TTLiteral.literal(query));
-    document.addEntity(entity);
-  }
 
-
-  private void observationSummaryColumnGroup() throws JsonProcessingException {
-    TTEntity entity = getColumnGroupEntity("CG_ObservationSummary", "Observation summary column group ", "A set of fields for displaying summary of observation");
-    Query query= new Query();
-    query.return_(r->r
-      .setIri(Namespace.IM+"prescription")
-      .setReturn(getMedicationSummaryReturn()));
-    entity.set(iri(IM.DEFINITION), TTLiteral.literal(query));
-    document.addEntity(entity);
-  }
-
-  private void medicationAuthorisationSummaryColumnGroup() throws JsonProcessingException {
-    TTEntity entity = getColumnGroupEntity("CG_MedicationAuthorisationSummary", "Medication summary column group (authorised course)", "A set of fields for displaying medication authorisation information in summary");
-    Query query= new Query();
-    query.path(p->p
-      .setIri(Namespace.IM+"medicationAuthorisation")
-      .setNode("meds")
-        .setOptional(true)
-      .setTypeOf(Namespace.IM+"MedicationAuthorisation"))
-      .path(p->p
-        .setOptional(true)
-        .setIri(Namespace.IM+"concept")
-        .setNode("concept"))
-      .path(p->p
-        .setOptional(true)
-        .setIri(Namespace.IM+"quantity")
-        .setNode("quantity")
-        .path(p1->p1
-          .setIri(Namespace.IM+"units")
-          .setNode("units")))
-      .setReturn(getMedicationSummaryReturn());
-    entity.set(iri(IM.DEFINITION), TTLiteral.literal(query));
-    document.addEntity(entity);
-  }
-
-  private List<Return> getMedicationSummaryReturn() {
-    List<Return> returns= new ArrayList<>();
-    returns.add(new Return()
-        .setNodeRef("meds")
-        .as("Date")
-      .setIri(Namespace.IM+"effectiveDate"));
-    returns.add(new Return()
-        .setNodeRef("concept")
-        .setIri(Namespace.IM+"concept"));
-    returns.add(new Return()
-        .as("Name, dosage, quantity, units")
-        .function(f->f
-          .setIri(IM.CONCATENATE.toString())
-          .argument(arg->arg
-            .setValuePath(new Path()
-              .setIri(Namespace.IM+"concept")
-              .setNode("concept")
-              .setTypeOf(IM.CONCEPT.toString())
-              .addPath(new Path()
-                .setNode("concept")
-                .setIri(RDFS.LABEL.toString()))))
-          .argument(arg->arg
-            .setValuePath(new Path().setIri(Namespace.IM+"dosage")))
-          .argument(arg->arg
-            .setValuePath(new Path()
-              .setIri(Namespace.IM+"quantity")
-              .setNode("quant")
-              .setTypeOf(Namespace.IM+"NumericValue")
-              .addPath(new Path().setNode("quant").setIri(Namespace.IM+"value"))))
-          .argument(arg->arg
-            .setValuePath(new Path()
-              .setIri(Namespace.IM+"quantity")
-              .setNode("quant")
-              .setTypeOf(Namespace.IM+"NumericValue")
-              .addPath(new Path()
-                .setNode("quant")
-                .setIri(Namespace.IM+"units")
-                .setNode("units")
-                .setTypeOf(IM.CONCEPT.toString())
-                .addPath(new Path().setNode("units").setIri(RDFS.LABEL.toString())))))));
-    return returns;
-  }
 
   private void getAncestors() throws JsonProcessingException {
     TTEntity query = getFormValidationEntity("GetAncestors", "Get active supertypes of concept", "returns transitive closure of an entity and its supertypes, usually used with a text search filter to narrow results");

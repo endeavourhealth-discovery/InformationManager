@@ -36,7 +36,6 @@ public class SmartLifeImporter implements TTImport {
 	private final Graph fileGraph = Graph.IM;
 	private String mainFolder;
 	private String setFolder;
-	private String indicatorDatasetFolder;
 	private static final Logger LOG = LoggerFactory.getLogger(SnomedImporter.class);
 
 	@Override
@@ -89,9 +88,8 @@ public class SmartLifeImporter implements TTImport {
 				throw new ImportException(ex.getMessage(), ex);
 			}
 		try {
-			new IndicatorImporter().generate(config.getFolder()+"\\Smartlife",
-				"http://smartlifehealth.info/smh#SmartLifeIndicators",
-				"http://endhealth.info/im#CarePathways", indicatorDatasetFolder, Namespace.SMARTLIFE);
+			new IndicatorImporter().generate(config.getFolder()+"\\Smartlife\\Indicator-query.txt",
+				"http://smartlifehealth.info/smh#SmartLifeIndicators", Namespace.SMARTLIFE);
 				} catch (Exception e) {
 			throw new ImportException("Unable to generate indicators",e);
 			}
@@ -111,15 +109,6 @@ public class SmartLifeImporter implements TTImport {
 		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
 		document.addEntity(folder);
 		mainFolder= folder.getIri();
-		folder = new TTEntity()
-			.setIri(Namespace.SMARTLIFE + "SmartLifeIndicatorDatasets")
-			.setName("SmartLife indicator datasets")
-			.addType(iri(IM.FOLDER))
-			.setScheme(iri(Namespace.SMARTLIFE))
-			.set(iri(IM.IS_CONTAINED_IN), iri(Namespace.SMARTLIFE + "Q_SmartLifeQueries"));
-		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
-		document.addEntity(folder);
-		indicatorDatasetFolder= folder.getIri();
 		folder = new TTEntity()
 			.setIri(Namespace.SMARTLIFE + "CSET_SmartLifeConceptSets")
 			.setName("Smart Life Health value set library")
