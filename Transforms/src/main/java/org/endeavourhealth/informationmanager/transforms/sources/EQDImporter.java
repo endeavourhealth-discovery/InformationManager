@@ -101,7 +101,7 @@ public class EQDImporter {
 		loadAutoNamedSets(folder,autoNamedSets);
 		loadAutoNamedClauses(folder,autoNamedClauses);
 		importEqds(namespace, directory);
-		
+
 		//exportBaseMatches(folder);
 
 	}

@@ -1,24 +1,8 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.collections.map.HashedMap;
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.logic.reasoner.LogicOptimizer;
-import org.endeavourhealth.imapi.logic.service.ConceptService;
-import org.endeavourhealth.imapi.logic.service.EntityService;
-import org.endeavourhealth.imapi.logic.service.QueryDescriptor;
-import org.endeavourhealth.imapi.logic.service.SearchService;
 import org.endeavourhealth.imapi.model.imq.*;
-import org.endeavourhealth.imapi.model.requests.QueryRequest;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.Graph;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.Namespace;
-import org.endeavourhealth.imapi.vocabulary.SHACL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +16,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 
 public class ImportUtils {
