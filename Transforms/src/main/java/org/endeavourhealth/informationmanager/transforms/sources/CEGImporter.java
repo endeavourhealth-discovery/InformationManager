@@ -25,6 +25,7 @@ public class CEGImporter implements TTImport {
   private static final String[] duplicates = {".*\\\\CEGQuery\\\\DuplicateOrs.properties"};
   private static final String[] lookups = {".*\\\\Ethnicity\\\\Ethnicity_Lookup_v3.txt"};
   private static final String[] autoNamedSets = {".*\\\\EQD\\\\AutoNamedSets.txt"};
+  private static final String[] autoNamedClauses = {".*\\\\EQD\\\\AutoNamedClauses.txt"};
   private String mainFolder;
   private String setFolder;
   private TTImportConfig config;
@@ -40,7 +41,8 @@ public class CEGImporter implements TTImport {
       createOrg(document);
       createFolders(document);
       EQDImporter eqdImporter = new EQDImporter(false);
-      eqdImporter.loadAndConvert(config,manager,queries[0], Namespace.CEG, dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder,autoNamedSets[0]);
+      eqdImporter.loadAndConvert(config,manager,queries[0], Namespace.CEG, dataMapFile[0],"criteriaMaps.properties",mainFolder,setFolder,autoNamedSets[0],
+        autoNamedClauses[0]);
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
         filer.fileDocument(document);
       } catch (Exception e) {

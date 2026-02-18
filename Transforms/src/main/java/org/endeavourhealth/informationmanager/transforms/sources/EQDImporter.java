@@ -1,14 +1,18 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.logic.reasoner.LogicOptimizer;
+import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
+import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.imapi.queryengine.QuerySummariser;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.*;
@@ -18,10 +22,7 @@ import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -71,7 +72,7 @@ public class EQDImporter {
 
 
 	public void loadAndConvert(TTImportConfig config, TTManager manager, String queries, Namespace namespace,
-													String dataMapFile, String uuidLabelsFile,String mainFolder, String setFolder,String autoNamedSets) throws Exception {
+													String dataMapFile, String uuidLabelsFile,String mainFolder, String setFolder,String autoNamedSets,String autoNamedClauses) throws Exception {
 		String folder=config.getFolder();
 		String singleEntity=config.getSingleEntity();
 		this.manager= manager;
@@ -97,19 +98,44 @@ public class EQDImporter {
 		Path directory = ImportUtils.findFileForId(folder, queries);
 		loadLibraryItems(directory);
 		EqdToIMQ.setLibraryItems(libraryItems);
-		laodAutoNamedSets(folder,autoNamedSets);
+		loadAutoNamedSets(folder,autoNamedSets);
+		loadAutoNamedClauses(folder,autoNamedClauses);
 		importEqds(namespace, directory);
-
+		//exportBaseMatches(folder);
 
 	}
 
-	private void laodAutoNamedSets(String folder, String autoNamedSets) throws IOException {
+	private void exportBaseMatches(String folder) throws Exception {
+		try (FileWriter writer= new FileWriter(folder+"/EQD/unnamedClauses.txt")){
+			if (!EqdToIMQ.getBaseQueries().isEmpty()){
+				for (Map.Entry<String, Match> entry:EqdToIMQ.getBaseQueries().entrySet()){
+					if (EqdToIMQ.getAutoNamedClauses().get(entry.getKey())==null) {
+						String summarised= new QuerySummariser().summariseQuery(entry.getValue()).replace("\n","\\n ");
+						writer.write(entry.getKey() + "\t" + new ObjectMapper().writeValueAsString(entry.getValue())
+							+ "\t" + summarised+ "\n");
+					}
+				}
+			}
+		}
+	}
+
+	private void loadAutoNamedSets(String folder, String autoNamedSets) throws IOException {
 		try (BufferedReader reader = new BufferedReader( new FileReader((ImportUtils.findFileForId(folder, autoNamedSets).toFile())))) {
 			String line= reader.readLine();
 			 while (line != null && !line.isEmpty()) {
 				 String[] fields=line.split("\t");
 				 EqdToIMQ.getAutoNamedSets().put(fields[0],fields[1].replace("\"",""));
 				 line= reader.readLine();
+			}
+		}
+	}
+	private void loadAutoNamedClauses(String folder, String autoNamedClauses) throws IOException {
+		try (BufferedReader reader = new BufferedReader( new FileReader((ImportUtils.findFileForId(folder, autoNamedClauses).toFile())))) {
+			String line= reader.readLine();
+			while (line != null && !line.isEmpty()) {
+				String[] fields=line.split("\t");
+				EqdToIMQ.getAutoNamedClauses().put(fields[0],fields[1].replace("\"",""));
+				line= reader.readLine();
 			}
 		}
 	}

@@ -30,6 +30,7 @@ public class SmartLifeImporter implements TTImport {
 	private static final String[] dataMapFile = {".*\\\\EQD\\\\EqdDataMap.properties"};
 	private static final String[] uuidLabels = {".*\\\\EQD\\\\uuidLabels.properties"};
 	private static final String[] autoNamedSets = {".*\\\\EQD\\\\AutoNamedSets.txt"};
+	private static final String[] autoNamedClauses = {".*\\\\EQD\\\\AutoNamedClauses.txt"};
 	private static final String[] indicators = {
 		".*\\\\Smartlife\\\\Indicator-query.txt"
 	};
@@ -76,7 +77,7 @@ public class SmartLifeImporter implements TTImport {
 			try {
 				EQDImporter eqdImporter = new EQDImporter(false);
 				eqdImporter.loadAndConvert(config,manager,queries[0],Namespace.SMARTLIFE,dataMapFile[0],
-					uuidLabels[0],mainFolder,setFolder,autoNamedSets[0]);
+					uuidLabels[0],mainFolder,setFolder,autoNamedSets[0],autoNamedClauses[0]);
 			}
 			catch (Exception ex) {
 				throw new ImportException(ex.getMessage(), ex);
