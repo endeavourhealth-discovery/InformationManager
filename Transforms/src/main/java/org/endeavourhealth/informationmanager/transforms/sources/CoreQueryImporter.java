@@ -46,6 +46,7 @@ public class CoreQueryImporter implements TTImport {
       getAllowableProperties();
       getAllowablePropertyAncestors();
       isValidProperty();
+      isValidType();
       isValidDescendant();
       isAllowableRange();
       getSearchAll();
@@ -62,6 +63,7 @@ public class CoreQueryImporter implements TTImport {
       searchFolders();
       searchContainedIn();
       searchAllowableSubclass();
+      searchAllowableChildOf();
       searchAllowableContainedIn();
       generateDefaultCohorts(manager);
       //generateDefaultIndicators(manager);
@@ -787,6 +789,19 @@ public class CoreQueryImporter implements TTImport {
             .setNode("value")
           )));
   }
+
+  private void isValidType() throws JsonProcessingException {
+    getFormValidationEntity("IsValidType", "is a valid type", "is the entity a valid type")
+      .set(iri(IM.DEFINITION), TTLiteral.literal(
+        new Query()
+          .setName("Is '$entity' a valid $type")
+          .setDescription("is the type of the selecvted entity a type of allowed types")
+          .setParameter("entity")
+          .setWhere(new Where()
+            .setIri(RDF.TYPE)
+            .is(is -> is.setParameter("type"))
+          )));
+  }
   private void isValidDescendant() throws JsonProcessingException {
     getFormValidationEntity("IsValidDescendant", "is a valid descendant", "is the concept a valid descendant of some parent")
       .set(iri(IM.DEFINITION), TTLiteral.literal(
@@ -920,6 +935,25 @@ public class CoreQueryImporter implements TTImport {
       );
   }
 
+  private void searchAllowableChildOf() throws JsonProcessingException {
+    getFormValidationEntity("SearchAllowableChildOf", "Search for allowable parents of a child query", "parameter 'value' needs to be set to current entity type")
+      .set(iri(IM.DEFINITION), TTLiteral.literal(
+          new Query()
+            .setName("Search for allowable shild of")
+            .setDescription("Search for allowable child of parents")
+            .setActiveOnly(true)
+            .setName("Child of of $value")
+            .setDescription("Same type of  $value")
+            .setWhere(new Where()
+              .setIri(RDF.TYPE)
+              .is(i -> i
+                .setParameter("value")
+              )
+            )
+        )
+      );
+  }
+
   private void searchAllowableContainedIn() throws JsonProcessingException {
     getFormValidationEntity("SearchAllowableContainedIn", "Search for allowable parent folder", "parameter 'value' needs to be set to the current entity type")
       .set(iri(IM.DEFINITION), TTLiteral.literal(
@@ -932,8 +966,12 @@ public class CoreQueryImporter implements TTImport {
           .setTypeOf(IM.FOLDER.toString())
           .setWhere(new Where()
             .or(p -> p
+              .and(p1->p1
               .setIri(IM.CONTENT_TYPE)
               .setIsNull(true))
+              .and(p1->p1
+                .setIri(RDF.TYPE)
+                .is(is->is.setIri(IM.FOLDER.toString()))))
             .or(p -> p
               .setIri(IM.CONTENT_TYPE)
               .is(i -> i.setParameter("value")))
