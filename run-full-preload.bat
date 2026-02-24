@@ -105,22 +105,23 @@ IF "%target%"=="dev" (
   timeout 5
   taskkill /f /im "GraphDB Desktop.exe"
 
-  ECHO Zipping im (vanilla) repository
+  ECHO Zipping IM ^(Vanilla^) repository
   pushd .
   cd /d %GRAPHDB_DATA%
   tar -a -v -cf im.zip im || exit /b %errorlevel%
   popd
 
-  ECHO Restarting graphdb
-  start "" "%GRAPHDB_START_CMD%" || exit /b %errorlevel%
-
-  ECHO Waiting for startup
-  :retry
-  ECHO Pinging...
-  curl --connect-timeout 1 127.0.0.1:7200 || goto Retry
-  ECHO Connected!
-
   IF %smartlife%==true (
+    ECHO Restarting graphdb for SmartLife load
+
+    start "" "%GRAPHDB_START_CMD%" || exit /b %errorlevel%
+
+    ECHO Waiting for startup
+    :sl_retry
+    ECHO Pinging...
+    curl --connect-timeout 1 127.0.0.1:7200 || goto sl_retry
+    ECHO Connected!
+
     ECHO Filing Smartlife
     "%JAVA_HOME%/bin/java" -cp Transforms/build/libs/Transforms-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.transforms.online.ImportApp %IMPORT_DATA% smartlifequery skiplucene privacy=3 || exit /b %errorlevel%
 
@@ -128,23 +129,26 @@ IF "%target%"=="dev" (
     timeout 5
     taskkill /f /im "GraphDB Desktop.exe"
 
-    ECHO Zipping im (smartlife) repository
+    ECHO Zipping IM ^(SmartLife^) repository
     pushd .
     cd /d %GRAPHDB_DATA% || exit /b %errorlevel%
     tar -a -v -cf im-smartlife.zip im || exit /b %errorlevel%
     popd
+  )
 
-    ECHO Restarting graphdb
+  ECHO Checking
+
+  IF %opensearch%==true (
+    ECHO Restarting graphdb for OpenSearch load
+
     start "" "%GRAPHDB_START_CMD%" || exit /b %errorlevel%
 
     ECHO Waiting for startup
-    :retry
+    :os_retry
     ECHO Pinging...
-    curl --connect-timeout 1 127.0.0.1:7200 || goto Retry
+    curl --connect-timeout 1 127.0.0.1:7200 || goto os_retry
     ECHO Connected!
-  )
 
-  IF %opensearch%==true (
     ECHO Running OpenSearch
     "%JAVA_HOME%/bin/java" -cp Utils/build/libs/Utils-1.0-SNAPSHOT-all.jar org.endeavourhealth.informationmanager.utils.opensearch.Main || exit /b %errorlevel%
   )
