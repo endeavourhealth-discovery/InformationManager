@@ -533,7 +533,7 @@ public class OpenSearchSender {
     try (Client client = ClientBuilder.newClient()) {
       WebTarget target = client.target(osUrl).path(index);
       boolean indexExists = false;
-      try (Response response = target.request().head()) {
+      try (Response response = target.request().header("Authorization", "Basic " + osAuth).head()) {
         if (response.getStatus() == 200) {
           System.out.println("Index " + index + " exists.");
           indexExists = true;
