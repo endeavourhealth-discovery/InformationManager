@@ -28,12 +28,12 @@ public class NHSTfcImport implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try {
       document = manager.createDocument();
-      document.addEntity(manager.createNamespaceEntity(Namespace.NHS_TFC,
+      document.addEntity(manager.createNamespaceEntity(NAMESPACE.NHS_TFC,
         "NHS Data Dictionary Speciality and Treatment function codes"
         , "NHS Data dictionary concepts that are not snomed"));
       setNHSDD();
       importFunctionCodes(config.getFolder());
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception ex) {
@@ -42,15 +42,15 @@ public class NHSTfcImport implements TTImport {
   }
 
   private void setNHSDD() {
-    nhsTfc = TTIriRef.iri(Namespace.NHS_TFC + "NHSTfc");
+    nhsTfc = TTIriRef.iri(NAMESPACE.NHS_TFC + "NHSTfc");
     TTEntity nhs = new TTEntity()
       .setIri(nhsTfc.getIri())
       .setName("Main Specialty and Treatment Function Codes")
-      .setScheme(iri(Namespace.NHS_TFC))
+      .setScheme(iri(NAMESPACE.NHS_TFC))
       .setCode("0")
       .addType(iri(IM.CONCEPT))
       .setStatus(iri(IM.ACTIVE));
-    nhs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies"));
+    nhs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "CodeBasedTaxonomies"));
     document.addEntity(nhs);
   }
 
@@ -68,14 +68,14 @@ public class NHSTfcImport implements TTImport {
         String term = fields[1];
         String snomed = fields[2];
         TTEntity tfc = new TTEntity()
-          .setIri(Namespace.NHS_TFC + code)
+          .setIri(NAMESPACE.NHS_TFC + code)
           .setName(term)
-          .setScheme(iri(Namespace.NHS_TFC))
+          .setScheme(iri(NAMESPACE.NHS_TFC))
           .setCode(code)
           .addType(iri(IM.CONCEPT))
           .setStatus(iri(IM.ACTIVE));
         tfc.addObject(iri(IM.IS_CHILD_OF), nhsTfc);
-        tfc.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomed));
+        tfc.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomed));
         document.addEntity(tfc);
         line = reader.readLine();
       }

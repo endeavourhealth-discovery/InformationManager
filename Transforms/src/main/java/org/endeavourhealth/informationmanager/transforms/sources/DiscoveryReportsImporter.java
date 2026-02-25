@@ -3,7 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.imq.QueryException;
 import org.endeavourhealth.imapi.model.tripletree.TTDocument;
@@ -36,7 +36,7 @@ public class DiscoveryReportsImporter implements TTImport {
    */
   public void importData(TTImportConfig config) throws ImportException {
     LOG.info("Importing Reports concepts");
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
       TTDocument document = loadFile(config.getFolder());
       filer.fileDocument(document);
     } catch (Exception e) {

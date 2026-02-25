@@ -3,7 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.Namespace;
+import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +72,7 @@ public class ComplexMapImporter {
   }
 
   private void setMapsForEntity(String snomed, List<ComplexMap> mapList) throws JsonProcessingException {
-    TTEntity entity = new TTEntity().setIri((Namespace.SNOMED + snomed)).setScheme(Namespace.SNOMED.asIri());  // snomed entity reference
+    TTEntity entity = new TTEntity().setIri((NAMESPACE.SNOMED + snomed)).setScheme(NAMESPACE.SNOMED.asIri());  // snomed entity reference
     document.addEntity(entity);
     for (ComplexMap sourceMap : mapList) {
       TTNode ttComplexMap = new TTNode();
@@ -89,7 +89,7 @@ public class ComplexMapImporter {
       for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
         TTEntity legacy = legacyCodeToEntity.get(sourceTarget.getTarget());
         if (legacy != null) {
-          legacy.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomed));
+          legacy.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomed));
           addMapTarget(ttTargetGroup, sourceTarget);
         }
       }

@@ -18,7 +18,7 @@ import org.endeavourhealth.imapi.logic.reasoner.DomainResolver;
 import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetMemberGenerator;
-import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.ImportType;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -138,12 +138,12 @@ public class Preload {
     }
 
     try (IMDB conn = IMDB.getConnection()) {
-      new RangeInheritor().inheritRanges(conn, Graph.IM);
+      new RangeInheritor().inheritRanges(conn, GRAPH.IM);
     }
 
     LOG.info("expanding value sets");
-    new SetMemberGenerator().generateAllSetMembers(Graph.IM);
-    new SetBinder().bindSets(Graph.IM);
+    new SetMemberGenerator().generateAllSetMembers(GRAPH.IM);
+    new SetBinder().bindSets(GRAPH.IM);
     LOG.info("Filing into live graph");
     TTFilerFactory.setBulk(false);
     TTFilerFactory.setTransactional(true);
@@ -158,7 +158,7 @@ public class Preload {
       deltaImporter.importData(cfg);
     }
     LOG.info("adding missing properties into concept domains");
-    new DomainResolver().updateDomains(Graph.IM);
+    new DomainResolver().updateDomains(GRAPH.IM);
 
     LOG.info("Exporting tct/sets...");
     SetMemberExport.execute(Path.of(cfg.getFolder(), "tct"));

@@ -37,13 +37,13 @@ public class WinPathKingsImport implements TTImport {
   public void importData(TTImportConfig config) throws ImportException {
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument();
-      document.addEntity(manager.createNamespaceEntity(Namespace.KINGS_WINPATH,
+      document.addEntity(manager.createNamespaceEntity(NAMESPACE.KINGS_WINPATH,
         "Kings Winpath pathology code scheme and graph",
         "The Kings pathology Winpath LIMB local code scheme and graph"));
       setTopLevel();
       importR2Matches();
       importWinPathKings(config.getFolder());
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception e) {
@@ -53,13 +53,13 @@ public class WinPathKingsImport implements TTImport {
 
   private void setTopLevel() {
     TTEntity kings = new TTEntity()
-      .setIri(Namespace.KINGS_WINPATH + "KingsWinPathCodes")
+      .setIri(NAMESPACE.KINGS_WINPATH + "KingsWinPathCodes")
       .addType(iri(IM.CONCEPT))
       .setName("Kings College Hospital  Winpath codes")
       .setCode("KingsWinPathCodes")
-      .setScheme(iri(Namespace.KINGS_WINPATH))
+      .setScheme(iri(NAMESPACE.KINGS_WINPATH))
       .setDescription("Local codes for the Winpath pathology system in kings")
-      .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies")));
+      .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(NAMESPACE.IM + "CodeBasedTaxonomies")));
     document.addEntity(kings);
   }
 
@@ -82,19 +82,19 @@ public class WinPathKingsImport implements TTImport {
         String[] fields = line.split("\t");
         String readCode = fields[2];
         String code = fields[0];
-        String iri = Namespace.KINGS_WINPATH + (fields[0].replaceAll("[ %,.\"]", ""));
+        String iri = NAMESPACE.KINGS_WINPATH + (fields[0].replaceAll("[ %,.\"]", ""));
         TTEntity entity = new TTEntity()
           .setIri(iri)
           .addType(iri(IM.CONCEPT))
           .setName(fields[1])
           .setDescription("Local winpath Kings trust pathology system entity ")
-          .setScheme(iri(Namespace.KINGS_WINPATH))
-          .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(Namespace.KINGS_APEX + "KingsWinPathCodes")))
+          .setScheme(iri(NAMESPACE.KINGS_WINPATH))
+          .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(NAMESPACE.KINGS_APEX + "KingsWinPathCodes")))
           .setCode(code);
         document.addEntity(entity);
         if (readToSnomed.get(readCode) != null) {
           for (String snomed : readToSnomed.get(readCode)) {
-            entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomed));
+            entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomed));
           }
         }
 

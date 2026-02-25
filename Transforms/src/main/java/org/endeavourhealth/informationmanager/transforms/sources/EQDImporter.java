@@ -35,7 +35,7 @@ public class EQDImporter {
 	private String mainFolder;
 	private String setFolder;
 	private final EqdToIMQ converter;
-	private Namespace namespace;
+	private NAMESPACE namespace;
 	private final Map<String,TTEntity> folderToEntity= new HashMap<>();
 	private final Set<TTEntity> newFolders= new HashSet<>();
 	private Properties uuidLabels;
@@ -71,7 +71,7 @@ public class EQDImporter {
 	}
 
 
-	public void loadAndConvert(TTImportConfig config, TTManager manager, String queries, Namespace namespace,
+	public void loadAndConvert(TTImportConfig config, TTManager manager, String queries, NAMESPACE namespace,
 													String dataMapFile, String uuidLabelsFile,String mainFolder, String setFolder,String autoNamedSets,String autoNamedClauses) throws Exception {
 		String folder=config.getFolder();
 		String singleEntity=config.getSingleEntity();
@@ -140,7 +140,7 @@ public class EQDImporter {
 		}
 	}
 
-	public void importEqds(Namespace namespace, Path directory) throws Exception  {
+	public void importEqds(NAMESPACE namespace, Path directory) throws Exception  {
 		this.namespace=namespace;
 		TTDocument document = manager.getDocument();
 		for (File fileEntry : Objects.requireNonNull(directory.toFile().listFiles())) {
@@ -299,9 +299,9 @@ public class EQDImporter {
 					Query qry = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 					if (qry.getIs()!=null) {
 						String parent = qry.getIs().get(0).getIri();
-						if (parent.equals(Namespace.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
+						if (parent.equals(NAMESPACE.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
 							qry.setIs(new ArrayList<>());
-							qry.addIs(new Node().setIri(Namespace.IM + "Q_RegisteredPatient"));
+							qry.addIs(new Node().setIri(NAMESPACE.IM + "Q_RegisteredPatient"));
 							entity.set(iri(IM.DEFINITION), TTLiteral.literal(qry));
 						}
 					}
