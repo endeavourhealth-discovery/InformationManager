@@ -68,7 +68,7 @@ public class EMISImport implements TTImport {
     try {
       LOG.info("Retrieving filed snomed codes");
       document = manager.createDocument();
-      document.addEntity(manager.createNamespaceEntity(Namespace.EMIS, "EMIS codes",
+      document.addEntity(manager.createNamespaceEntity(NAMESPACE.EMIS, "EMIS codes",
         "The EMIS code scheme including codes directly matched to UK Snomed-CT, and EMIS unmatched local codes."));
 
       checkAndUnzip(config.getFolder());
@@ -86,7 +86,7 @@ public class EMISImport implements TTImport {
       setEmisHierarchy();
       //addExtraMatches();
       supplementary();
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
         filer.fileDocument(document);
       }
     } catch (Exception e) {
@@ -203,7 +203,7 @@ public class EMISImport implements TTImport {
           continue;
 
         TTEntity emisEntity = codeIdToEntity.get(emisCodeId);
-        emisEntity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomedCode));
+        emisEntity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomedCode));
         if (status.equals(IM.ACTIVE))
           activeConcepts.add(emisCodeId);
         if (!descid.equals("")) {
@@ -255,7 +255,7 @@ public class EMISImport implements TTImport {
         if (notFoundValue(emisConcept, iri(IM.HAS_TERM_CODE), iri(IM.CODE), codeId))
           TTManager.addTermCode(emisConcept, term, codeId);
         if (!snomed.equals("NULL")) {
-          emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + snomed));
+          emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomed));
         }
         line = reader.readLine();
       }
@@ -274,7 +274,7 @@ public class EMISImport implements TTImport {
 
   private void addSub(String child, String parent) {
     TTEntity childEntity = oldCodeToEntity.get(child);
-    childEntity.addObject(iri(IM.MATCHED_TO), iri(Namespace.SNOMED + parent));
+    childEntity.addObject(iri(IM.MATCHED_TO), iri(NAMESPACE.SNOMED + parent));
   }
 
   private void allergyMaps(String folder) throws IOException {
@@ -307,7 +307,7 @@ public class EMISImport implements TTImport {
       TTEntity childEntity = codeIdToEntity.get(child);
       if (childEntity.get(iri(IM.MATCHED_TO)) == null) {
         if (alternateParents.get(childEntity.getCode()) != null) {
-          childEntity.addObject(iri(IM.LOCAL_SUBCLASS_OF), TTIriRef.iri(Namespace.SNOMED + alternateParents.get(childEntity.getCode())));
+          childEntity.addObject(iri(IM.LOCAL_SUBCLASS_OF), TTIriRef.iri(NAMESPACE.SNOMED + alternateParents.get(childEntity.getCode())));
         } else {
           Set<String> coreParents = new HashSet<>();
           getCoreParents(child, coreParents);
@@ -344,7 +344,7 @@ public class EMISImport implements TTImport {
       .addType(iri(IM.CONCEPT))
       .setDescription("EMIS orphan codes that have no parent and are not matched to UK Snomed-CT." +
         " Each has a code id and an original text code and an EMIS Snomed concept id but no parent code")
-      .setScheme(iri(Namespace.EMIS));
+      .setScheme(iri(NAMESPACE.EMIS));
     document.addEntity(c);
     document.addEntity(c);
   }
@@ -361,7 +361,7 @@ public class EMISImport implements TTImport {
         String[] fields = line.split("\t");
         count++;
         if (count % 100000 == 0)
-          LOG.info("Imported {} emis codes for " + Namespace.EMIS, count);
+          LOG.info("Imported {} emis codes for " + NAMESPACE.EMIS, count);
 
         EmisCode ec = new EmisCode();
         ec.setCodeId(fields[0]);
@@ -411,11 +411,11 @@ public class EMISImport implements TTImport {
       if (remaps.get(code) != null)
         conceptId = remaps.get(code);
       emisConcept = new TTEntity()
-        .setIri(Namespace.EMIS + codeId)
+        .setIri(NAMESPACE.EMIS + codeId)
         .setCode(ec.conceptId)
         .set(TTIriRef.iri(IM.ALTERNATIVE_CODE), TTLiteral.literal(code))
         .addType(iri(IM.CONCEPT))
-        .setScheme(iri(Namespace.EMIS));
+        .setScheme(iri(NAMESPACE.EMIS));
       emisConcept
         .setName(name);
 
@@ -432,13 +432,13 @@ public class EMISImport implements TTImport {
         emisConcept.setStatus(iri(IM.INACTIVE));
         emisConcept.setName(name + " (emis code id)");
         snomedToEmis.put(conceptId, emisConcept);
-        if (notFound(emisConcept, iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + conceptId)))
-          emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + conceptId));
+        if (notFound(emisConcept, iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + conceptId)))
+          emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + conceptId));
       }
     }
     if (code.equals("EMISNHH2")) {
       emisConcept.set(iri(IM.IS_CONTAINED_IN), new TTArray()
-        .add(iri(Namespace.IM + "CodeBasedTaxonomies")));
+        .add(iri(NAMESPACE.IM + "CodeBasedTaxonomies")));
     } else {
       if (parentId == null && emisConcept.get(iri(IM.MATCHED_TO)) == null) {
         emisConcept.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(EMIS + "EMISOrphanCodes")));

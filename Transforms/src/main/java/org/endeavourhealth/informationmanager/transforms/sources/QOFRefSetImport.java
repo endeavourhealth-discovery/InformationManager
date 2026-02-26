@@ -29,7 +29,7 @@ public class QOFRefSetImport implements TTImport {
 
 
 
-  public static final String PCDFolder = Namespace.IM + "PCDClusters";
+  public static final String PCDFolder = NAMESPACE.IM + "PCDClusters";
   private static final Logger LOG = LoggerFactory.getLogger(QOFRefSetImport.class);
   private Map<String, TTEntity> qofMap;
   private TTDocument document;
@@ -53,7 +53,7 @@ public class QOFRefSetImport implements TTImport {
       document = new TTDocument();
       processSets(config.getFolder());
       LOG.info("Imported {} qof refsets", setCount);
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
           filer.fileDocument(document);
         }
     } catch (Exception e) {
@@ -81,7 +81,7 @@ public class QOFRefSetImport implements TTImport {
   }
   private void processExpandedRefsetLine(String line) {
     String[] fields = line.split("\t");
-    String setIri=Namespace.SNOMED+(fields[6].replace("^",""));
+    String setIri=NAMESPACE.SNOMED+(fields[6].replace("^",""));
     TTEntity c = qofMap.get(setIri);
     if (c==null) {
       setCount++;
@@ -90,7 +90,7 @@ public class QOFRefSetImport implements TTImport {
         .set(iri(IM.ALTERNATIVE_CODE), TTLiteral.literal(fields[1]))
         .setIri(setIri)
         .setName(fields[2])
-        .setScheme(Namespace.SNOMED.asIri())
+        .setScheme(NAMESPACE.SNOMED.asIri())
         .setCrud(iri(IM.UPDATE_PREDICATES))
         .setType(new TTArray().add(iri(IM.CONCEPT_SET)));
       document.addEntity(set);
@@ -102,7 +102,7 @@ public class QOFRefSetImport implements TTImport {
       document.addEntity(c);
       qofMap.put(setIri, c);
     }
-    c.addObject(iri(IM.HAS_MEMBER), iri(Namespace.SNOMED + fields[3]));
+    c.addObject(iri(IM.HAS_MEMBER), iri(NAMESPACE.SNOMED + fields[3]));
   }
 
 
@@ -119,11 +119,11 @@ public class QOFRefSetImport implements TTImport {
       .setIri(PCDFolder)
       .setName("Primary Care Code clusters")
       .setDescription("PCD portal  code cluster, reference sets , which are a subset of the Snomed-CT reference sets. The content of these are sourced from the UK Snomed-CT releases.")
-      .setScheme(Namespace.SNOMED.asIri())
+      .setScheme(NAMESPACE.SNOMED.asIri())
       .addType(iri(IM.FOLDER));
     clusters.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
     clusters
-      .addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "QueryConceptSets"));
+      .addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "QueryConceptSets"));
     document.addEntity(clusters);
     importExpandedRefsetFiles(path);
   }

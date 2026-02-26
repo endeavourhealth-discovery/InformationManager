@@ -32,8 +32,8 @@ public class FHIRImporter implements TTImport {
 	private TTDocument document;
 	private TTManager manager;
 	private static final Logger LOG = LoggerFactory.getLogger(FHIRImporter.class);
-	private String valueSetFolder= Namespace.IM+"VSET_FHIR";
-	private String codeSystemFolder= Namespace.IM+"FHIRCodeSystems";
+	private String valueSetFolder= NAMESPACE.IM+"VSET_FHIR";
+	private String codeSystemFolder= NAMESPACE.IM+"FHIRCodeSystems";
 
 	private static final String[] fhirResources = {
 		".*\\\\FHIR\\\\FHIRValueSets.json",
@@ -63,8 +63,8 @@ public class FHIRImporter implements TTImport {
 							document.getEntities().addAll(concepts);
 						}
 					}
-					LOG.info("Filing {}", Namespace.FHIR);
-					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+					LOG.info("Filing {}", NAMESPACE.FHIR);
+					try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
 						try {
 							filer.fileDocument(document);
 						} catch (TTFilerException | QueryException e) {
@@ -93,7 +93,7 @@ public class FHIRImporter implements TTImport {
 			.setName(" based value set library")
 			.setStatus(iri(IM.ACTIVE))
 			.setDescription("A library of value sets generated from BNF codes and NHS BNF snomed maps");
-		entity.addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "QueryConceptSets"));
+		entity.addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "QueryConceptSets"));
 		document.addEntity(entity);
 	}
 

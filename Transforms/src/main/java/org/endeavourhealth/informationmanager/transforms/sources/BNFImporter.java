@@ -40,7 +40,7 @@ public class BNFImporter implements TTImport {
   private final Map<String,Set<String>> snomedToBnf = new HashMap<>();
 
 
-  private final String topFolder = Namespace.BNF + "BNFValueSets";
+  private final String topFolder = NAMESPACE.BNF + "BNFValueSets";
   private final Map<String, Set<String>> children = new HashMap<>();
 
   public static final String[] bnf_maps = {
@@ -75,7 +75,7 @@ public class BNFImporter implements TTImport {
       importCodes(config.getFolder());
       setMembers();
       flattenSets();
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
         filer.fileDocument(document);
       }
 
@@ -94,8 +94,8 @@ public class BNFImporter implements TTImport {
         String line=reader.readLine();
         while (line!= null) {
           String[] fields= line.split("\\|");
-          String vmp=Namespace.SNOMED+fields[2];
-          String amp=Namespace.SNOMED+fields[0];
+          String vmp=NAMESPACE.SNOMED+fields[2];
+          String amp=NAMESPACE.SNOMED+fields[0];
           vmpToAmp.computeIfAbsent(vmp, set-> new HashSet<>()).add(amp);
           line=reader.readLine();
         }
@@ -124,8 +124,8 @@ public class BNFImporter implements TTImport {
           if (fields.length>1&&fields[1].length()>5){
             String bnf=fields[1];
             String vmp=fields[0];
-            bnf=Namespace.BNF+"BNF_"+bnf;
-            vmp=Namespace.SNOMED+vmp;
+            bnf=NAMESPACE.BNF+"BNF_"+bnf;
+            vmp=NAMESPACE.SNOMED+vmp;
             bnfToSnomed.computeIfAbsent(bnf, set-> new HashSet<>()).add(vmp);
             snomedToBnf.computeIfAbsent(vmp, set-> new HashSet<>()).add(bnf);
           }
@@ -211,11 +211,11 @@ public class BNFImporter implements TTImport {
     TTEntity entity = new TTEntity()
       .setIri(topFolder)
       .addType(iri(IM.FOLDER))
-      .setScheme(Namespace.IM.asIri())
+      .setScheme(NAMESPACE.IM.asIri())
       .setName("BNF based value set library")
       .setStatus(iri(IM.ACTIVE))
       .setDescription("A library of value sets generated from BNF codes and NHS BNF snomed maps");
-    entity.addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "QueryConceptSets"));
+    entity.addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "QueryConceptSets"));
     document.addEntity(entity);
   }
 
@@ -261,7 +261,7 @@ public class BNFImporter implements TTImport {
       return;
     String bnfCode = fields[2];
     String bnfName = fields[3];
-    String snomed = Namespace.SNOMED+ fields[4];
+    String snomed = NAMESPACE.SNOMED+ fields[4];
     if (snomed.contains(" "))
       LOG.error("bad snomed [" + snomed + "]");
     else {
@@ -306,13 +306,13 @@ public class BNFImporter implements TTImport {
       setNewEntity(chapterCode, chapterDot + " " + chapter + " (BNF folder)", IM.FOLDER.toString(), topFolder, null);
     }
     if (codeToEntity.get(sectionCode) == null) {
-      setNewEntity(sectionCode, sectionDot + " " + section + " (BNF folder)", IM.FOLDER.toString(), Namespace.BNF + "BNF_" + chapterCode, null);
+      setNewEntity(sectionCode, sectionDot + " " + section + " (BNF folder)", IM.FOLDER.toString(), NAMESPACE.BNF + "BNF_" + chapterCode, null);
     }
     if (codeToEntity.get(paragraphCode) == null) {
-      setNewEntity(paragraphCode, paraDot + " " + paragraph + " (BNF based set)", IM.CONCEPT_SET.toString(), Namespace.BNF + "BNF_" + sectionCode, null);
+      setNewEntity(paragraphCode, paraDot + " " + paragraph + " (BNF based set)", IM.CONCEPT_SET.toString(), NAMESPACE.BNF + "BNF_" + sectionCode, null);
     }
     if (codeToEntity.get(subparagraphCode) == null) {
-      setNewEntity(subparagraphCode, subParaDot + " " + subparagraph + " (BNF based set)", IM.CONCEPT_SET.toString(), null, Namespace.BNF + "BNF_" + paragraphCode);
+      setNewEntity(subparagraphCode, subParaDot + " " + subparagraph + " (BNF based set)", IM.CONCEPT_SET.toString(), null, NAMESPACE.BNF + "BNF_" + paragraphCode);
     }
     Set<String> snomeds = bnfCodeToSnomed.get(workingCode);
     if (snomeds != null) {
@@ -328,9 +328,9 @@ public class BNFImporter implements TTImport {
 
   private void setNewEntity(String code, String name, String type, String parent, String superset) {
     TTEntity entity = new TTEntity()
-      .setIri(Namespace.BNF + "BNF_" + code)
+      .setIri(NAMESPACE.BNF + "BNF_" + code)
       .addType(iri(type))
-      .setScheme(Namespace.BNF.asIri())
+      .setScheme(NAMESPACE.BNF.asIri())
       .setName(name);
     if (parent != null) {
       entity.addObject(iri(IM.IS_CONTAINED_IN), iri(parent));
@@ -370,12 +370,12 @@ public class BNFImporter implements TTImport {
         }
       }
       emisCode="DRGG"+emisCode;
-      String emisIri= importMaps.getIriFromLegacyCode(Namespace.EMIS.toString(),emisCode);
+      String emisIri= importMaps.getIriFromLegacyCode(NAMESPACE.EMIS.toString(),emisCode);
       if (emisIri!=null){
         TTEntity emisEntity= new TTEntity()
           .setIri(emisIri)
           .setCrud(iri(IM.ADD_QUADS));
-        emisEntity.set(IM.MATCHED_TO,iri(Namespace.BNF+"BNF_"+code));
+        emisEntity.set(IM.MATCHED_TO,iri(NAMESPACE.BNF+"BNF_"+code));
         document.addEntity(emisEntity);
       }
   }

@@ -15,9 +15,9 @@ import org.endeavourhealth.imapi.model.requests.QueryRequest;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.queryengine.QueryDescriptor;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.Namespace;
+import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
 
 
@@ -34,7 +34,7 @@ public class IndicatorImporter {
 	public ObjectMapper om= new ObjectMapper();
 	private final EntityService entityService = new EntityService();
 	private final QueryDescriptor descriptor = new QueryDescriptor();
-	private Namespace namespace;
+	private NAMESPACE namespace;
 	private final SearchService searchService = new SearchService();
 	private final Map<String,Boolean> indicatorMap = new HashedMap();
 	private final Map<String, TTEntity> entities = new HashMap<>();
@@ -47,7 +47,7 @@ public class IndicatorImporter {
 	private final Map<String,String> matchLabel= new HashMap<>();
 
 
-	public void generate(String indicatorFile,String mainFolder,Namespace namespace) throws Exception {
+	public void generate(String indicatorFile,String mainFolder,NAMESPACE namespace) throws Exception {
 		this.namespace = namespace;
 		this.mainFolder = mainFolder;
 		try (TTManager manager = new TTManager()) {
@@ -60,7 +60,7 @@ public class IndicatorImporter {
 					addColumnGroups(indicator,indicatorQuery.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class));
 				}
 			}
-			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
 				filer.fileDocument(document);
 			}
 		}
@@ -77,7 +77,7 @@ public class IndicatorImporter {
 			dataSetEntity.setScheme(iri(namespace));
 			document.addEntity(dataSetEntity);
 			Query datasetQuery = new Query();
-			datasetQuery.setTypeOf(Namespace.IM + "Patient");
+			datasetQuery.setTypeOf(NAMESPACE.IM + "Patient");
 			datasetQuery.addIs(Node.iri(cohortIri));
 			dataSetEntity.addObject(iri(IM.DEPENDENT_ON), iri(cohortIri));
 			TTEntity patientDetails = columnGroupNameToEntity.get("Patient details");
@@ -99,7 +99,7 @@ public class IndicatorImporter {
 		if (match.getPath() != null) {
 			String xpath= new ObjectMapper().writeValueAsString(match.getPath());
 				String typeOf = match.getPath().getFirst().getTypeOf().getIri();
-				if (Set.of(Namespace.IM + "ClinicalEntry", Namespace.IM + "Observation").contains(typeOf)) {
+				if (Set.of(NAMESPACE.IM + "ClinicalEntry", NAMESPACE.IM + "Observation").contains(typeOf)) {
 					addEventGroups("Observation details",datasetQuery, match,match.getPath().getFirst(),xpath);
 				}
 				else if (typeOf.contains("Medication")){
@@ -262,7 +262,7 @@ public class IndicatorImporter {
 						String indicatorLabel = fields[2];
 						String queryLabel = fields[3].replace("\"", "");
 						String parent = fields[5];
-						List<TTBundle> test = entityService.getEntityFromTerm(queryLabel, Set.of(namespace.toString(), Namespace.QOF.toString()));
+						List<TTBundle> test = entityService.getEntityFromTerm(queryLabel, Set.of(namespace.toString(), NAMESPACE.QOF.toString()));
 						if (test.isEmpty())
 							throw new Exception("Indicator not found: " + queryLabel);
 						String queryIri = test.get(0).getEntity().getIri();
@@ -311,7 +311,7 @@ public class IndicatorImporter {
 	}
 
 	private void createColumnGroupEntity(String name, String queryName, Integer columnNumber) throws Exception {
-		List<TTBundle> entities= entityService.getEntityFromTerm(queryName,Set.of(namespace.toString(),Namespace.QOF.toString()));
+		List<TTBundle> entities= entityService.getEntityFromTerm(queryName,Set.of(namespace.toString(),NAMESPACE.QOF.toString()));
 		if (entities.isEmpty()){
 			throw new Exception("Column group query not found");
 		}
@@ -325,7 +325,7 @@ public class IndicatorImporter {
 				if (columns.getFirst().getAs().equals("Y-N"))
 					columns.removeFirst();
 		Query newGroup= new Query();
-		newGroup.setTypeOf(Namespace.IM+"Patient");
+		newGroup.setTypeOf(NAMESPACE.IM+"Patient");
 		newGroup.setName(name);
 		newGroup.setPath(columnGroup.getPath());
 		newGroup.setReturn(columnGroup.getReturn());
@@ -335,7 +335,7 @@ public class IndicatorImporter {
 			.setName(name+ " Column group")
 			.addType(iri(IM.QUERY))
 			.setScheme(iri(namespace))
-			.addObject(iri(IM.IS_CONTAINED_IN),iri(Namespace.IM+"ColumnGroups"))
+			.addObject(iri(IM.IS_CONTAINED_IN),iri(NAMESPACE.IM+"ColumnGroups"))
 			.set(iri(IM.DEFINITION),TTLiteral.literal(newGroup));
 		document.addEntity(columnGroupEntity);
 		columnGroupNameToEntity.put(name,columnGroupEntity);
@@ -538,7 +538,7 @@ public class IndicatorImporter {
 			Where dateWhere=null;
 			List<Where> wheres = actionClauses.get(clauseIndex);
 			for (Where where : wheres) {
-				if (where.getIri() != null && where.getIri().equals(Namespace.IM + "concept") && where.getIs() != null) {
+				if (where.getIri() != null && where.getIri().equals(NAMESPACE.IM + "concept") && where.getIs() != null) {
 					activityLabel= new ConceptService().getShortestTerm(where.getIs().getFirst().getIri());
 					if (activityLabel==null) activityLabel=where.getValueLabel();
 					procedureWhere = where;
@@ -589,7 +589,7 @@ public class IndicatorImporter {
 						targetEntity.setName(targetLabel);
 						targetEntity.addType(iri(IM.CARE_TARGET));
 					}
-					careActivityEntity.addObject(iri(Namespace.IM + "careTarget"), iri(targetEntity.getIri()));
+					careActivityEntity.addObject(iri(NAMESPACE.IM + "careTarget"), iri(targetEntity.getIri()));
 				}
 			}
 
@@ -601,13 +601,13 @@ public class IndicatorImporter {
 	private void createSchedule(TTEntity careActivityEntity, Where procedureWhere,Where dateWhere) throws Exception {
 		if (procedureWhere == null) return;
 		String procedureIri = procedureWhere.getIs().getFirst().getIri();
-		careActivityEntity.set(Namespace.IM + "procedure", iri(procedureIri));
+		careActivityEntity.set(NAMESPACE.IM + "procedure", iri(procedureIri));
 		if (dateWhere!=null) {
 			if (dateWhere.getRange() != null) {
 				if (dateWhere.getRange() != null) {
 					Value from = dateWhere.getRange().getFrom();
 					TTNode scheduleNode = createScheduleNode(from);
-					careActivityEntity.set(Namespace.IM + "schedule", scheduleNode);
+					careActivityEntity.set(NAMESPACE.IM + "schedule", scheduleNode);
 				}
 			}
 			if (dateWhere.getValue() != null && dateWhere.getValue().startsWith("-")) {
@@ -624,15 +624,15 @@ public class IndicatorImporter {
 		String value = from.getValue();
 		if (value.equals("15")){
 			value="1";
-			units=iri(Namespace.IM+"Years");
+			units=iri(NAMESPACE.IM+"Years");
 		}
 		else if (value.equals("27")){
 			value="2";
-			units=iri(Namespace.IM+"Years");
+			units=iri(NAMESPACE.IM+"Years");
 		}
-		scheduleNode.set(Namespace.IM + "value", TTLiteral.literal(value));
+		scheduleNode.set(NAMESPACE.IM + "value", TTLiteral.literal(value));
 		if (units!=null) {
-			scheduleNode.set(Namespace.IM + "unit", units);
+			scheduleNode.set(NAMESPACE.IM + "unit", units);
 		}
 		return scheduleNode;
 

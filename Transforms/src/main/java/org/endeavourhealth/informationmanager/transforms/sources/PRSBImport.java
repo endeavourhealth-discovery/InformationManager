@@ -36,7 +36,7 @@ public class PRSBImport implements TTImport {
     validateFiles(config.getFolder());
     try (TTManager dmanager = new TTManager()) {
       document = dmanager.createDocument();
-      document.addEntity(dmanager.createNamespaceEntity(Namespace.PRSB, "PRSB code scheme and graph"
+      document.addEntity(dmanager.createNamespaceEntity(NAMESPACE.PRSB, "PRSB code scheme and graph"
         , "The professional records standards board code scheme and graph"));
       importEntityFiles(config.getFolder());
       //TTDocumentFiler filer = new TTDocumentFilerJDBC(document.getGraph());
@@ -49,7 +49,7 @@ public class PRSBImport implements TTImport {
 
   private void initializeMaps() {
     axiomMap = new HashMap<>();
-    axiomMap.put("prsb03-dataelement-10868", getAxioms(Namespace.IM + "Patient"));
+    axiomMap.put("prsb03-dataelement-10868", getAxioms(NAMESPACE.IM + "Patient"));
 
   }
 
@@ -91,7 +91,7 @@ public class PRSBImport implements TTImport {
 
   private void parsePRSBModel(JSONObject dataModel) throws DataFormatException {
     TTEntity dm = newEntity(dataModel, iri(SHACL.NODESHAPE));
-    dm.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "DiscoveryOntology"));
+    dm.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "DiscoveryOntology"));
     JSONArray recordTypes = (JSONArray) dataModel.entrySet();
     dataModel.entrySet().forEach(c -> {
       try {
@@ -124,12 +124,12 @@ public class PRSBImport implements TTImport {
     String prsbId = c.get("iddisplay").toString();
     entity.setCode(prsbId);
     String name = getObjectArrayliteral(c, "name", "#text");
-    String iri = (Namespace.PRSB + prsbId);
+    String iri = (NAMESPACE.PRSB + prsbId);
 
     entity.setName(name);
     if (c.get("shortName") != null) {
       String shortName = (String) c.get("shortName");
-      entity.set(TTIriRef.iri(Namespace.IM + "shortName"), TTLiteral.literal((shortName)));
+      entity.set(TTIriRef.iri(NAMESPACE.IM + "shortName"), TTLiteral.literal((shortName)));
     }
     entity.setIri(iri);
     String description = getObjectArrayliteral(c, "desc", "#text");
@@ -137,7 +137,7 @@ public class PRSBImport implements TTImport {
       entity.setDescription(description);
     String background = getObjectArrayliteral(c, "context", "#text");
     if (background != null)
-      entity.set(TTIriRef.iri(Namespace.IM + "backgroundContext"), TTLiteral.literal(background));
+      entity.set(TTIriRef.iri(NAMESPACE.IM + "backgroundContext"), TTLiteral.literal(background));
     if (entity.isType(iri(SHACL.NODESHAPE)))
       return entity;
     return entity;

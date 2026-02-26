@@ -11,9 +11,9 @@ import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.EnquiryDocument;
-import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.Namespace;
+import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 
@@ -30,9 +30,9 @@ public class SingleEqdQueryImport {
 	private Properties dataMap;
 	private Properties uuidLabels;
 	private final EqdToIMQ converter = new EqdToIMQ(false);
-	private Namespace namespace;
+	private NAMESPACE namespace;
 
-	public void importEqd(String folder,String reportId,Namespace namespace) throws Exception {;
+	public void importEqd(String folder,String reportId,NAMESPACE namespace) throws Exception {;
 		Path startDir = Paths.get(folder);
 		if (!Files.isDirectory(startDir)) {
 			System.err.println("The path provided is not a directory.");
@@ -61,7 +61,7 @@ public class SingleEqdQueryImport {
 			}
 
 
-			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+			try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
 				filer.fileDocument(document);
 			}
 		}

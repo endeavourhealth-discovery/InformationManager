@@ -44,9 +44,9 @@ public class VisionImport implements TTImport {
     LOG.info("importing vision codes");
     LOG.info("retrieving snomed codes from IM");
     try (TTManager manager = new TTManager()) {
-      snomedCodes = importMaps.getCodes(Namespace.SNOMED);
+      snomedCodes = importMaps.getCodes(NAMESPACE.SNOMED);
       document = manager.createDocument();
-      document.addEntity(manager.createNamespaceEntity(Namespace.VISION, "Vision (including Read) codes",
+      document.addEntity(manager.createNamespaceEntity(NAMESPACE.VISION, "Vision (including Read) codes",
         "The Vision local code scheme and graph including Read 2 and Vision local codes"));
 
       importEmis();
@@ -57,7 +57,7 @@ public class VisionImport implements TTImport {
       createHierarchy();
       addVisionMaps(config.getFolder());
       addMissingMaps();
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
         filer.fileDocument(document);
       }
 
@@ -204,10 +204,10 @@ public class VisionImport implements TTImport {
                 String lname = code.replaceAll("[.&/'| ()^]", "_");
                 lname = lname.replace("[", "_").replace("]", "_");
                 readConcept = new TTEntity()
-                  .setIri(Namespace.VISION + lname)
+                  .setIri(NAMESPACE.VISION + lname)
                   .setCode(code)
                   .setStatus(iri(IM.ACTIVE))
-                  .setScheme(iri(Namespace.VISION))
+                  .setScheme(iri(NAMESPACE.VISION))
                   .addType(iri(IM.CONCEPT));
                 document.addEntity(readConcept);
                 codeToConcept.put(code, readConcept);
@@ -233,13 +233,13 @@ public class VisionImport implements TTImport {
   private void createHierarchy() {
     LOG.info("Creating child parent hierarchy");
     TTEntity vision = new TTEntity()
-      .setIri(Namespace.VISION + "VisionCodes")
+      .setIri(NAMESPACE.VISION + "VisionCodes")
       .setName("Vision read 2 and localcodes")
       .addType(iri(IM.CONCEPT))
       .setCode("VisionCodes")
-      .setScheme(iri(Namespace.VISION))
+      .setScheme(iri(NAMESPACE.VISION))
       .setDescription("Vision and read 2 codes mapped to core");
-    vision.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "CodeBasedTaxonomies"));
+    vision.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "CodeBasedTaxonomies"));
     document.addEntity(vision);
     for (TTEntity entity : document.getEntities()) {
       String shortCode = entity.getCode();
@@ -253,7 +253,7 @@ public class VisionImport implements TTImport {
           while (parent.length() < 5) {
             parent.append("_");
           }
-          entity.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(Namespace.VISION.toString() + parent)));
+          entity.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(NAMESPACE.VISION.toString() + parent)));
         }
       }
     }
@@ -280,11 +280,11 @@ public class VisionImport implements TTImport {
         lname = lname.replace("[", "_").replace("]", "_");
         if (!code.startsWith(".") && !Character.isLowerCase(code.charAt(0)) && codeToConcept.get(code) == null) {
           TTEntity c = new TTEntity();
-          c.setIri(Namespace.VISION + lname);
+          c.setIri(NAMESPACE.VISION + lname);
           c.addType(iri(IM.CONCEPT));
           c.setName(term);
           c.setCode(code);
-          c.setScheme(iri(Namespace.VISION));
+          c.setScheme(iri(NAMESPACE.VISION));
           document.addEntity(c);
           codeToConcept.put(code, c);
         }
@@ -312,7 +312,7 @@ public class VisionImport implements TTImport {
         TTEntity vision = codeToConcept.get(code);
         if (vision != null) {
           if (isSnomed(snomed)) {
-            vision.addObject(iri(IM.MATCHED_TO), iri(Namespace.SNOMED + snomed));
+            vision.addObject(iri(IM.MATCHED_TO), iri(NAMESPACE.SNOMED + snomed));
           }
         }
         line = reader.readLine();

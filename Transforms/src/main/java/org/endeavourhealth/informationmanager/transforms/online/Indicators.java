@@ -1,6 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.online;
 
-import org.endeavourhealth.imapi.vocabulary.Namespace;
+import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
 import org.endeavourhealth.informationmanager.transforms.sources.IndicatorImporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,14 +14,14 @@ public class Indicators {
 			LOG.error("Supply namespace iri, full path and file name of txt indicator file, indicator folder iri");
 			System.exit(-1);
 		}
-		Namespace namespace = null;
+		NAMESPACE namespace = null;
 		String indicatorFile = null;
 		String indicatorFolder = null;
 		for (String arg : args) {
 			String field= arg.split("=")[0].trim();
 			String value= arg.split("=")[1].trim();
 			if (field.equals("namespace")) {
-				namespace = Namespace.from(value);
+				namespace = NAMESPACE.from(value);
 			}
 			if (field.equals("indicatorFile")) {
 				indicatorFile = value;

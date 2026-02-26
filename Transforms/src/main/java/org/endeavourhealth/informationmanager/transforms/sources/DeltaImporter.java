@@ -2,7 +2,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.rdf4j.TTTransactionFiler;
-import org.endeavourhealth.imapi.vocabulary.Graph;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -17,7 +17,7 @@ public class DeltaImporter implements TTImport {
 
   @Override
   public void importData(TTImportConfig config) throws ImportException {
-    try (TTTransactionFiler filer = new TTTransactionFiler(Graph.IM)) {
+    try (TTTransactionFiler filer = new TTTransactionFiler(GRAPH.IM)) {
       Path file = ImportUtils.findFileForId(config.getFolder(), delta[0]);
       filer.fileDeltas(file.toString());
     } catch(Exception ex) {
