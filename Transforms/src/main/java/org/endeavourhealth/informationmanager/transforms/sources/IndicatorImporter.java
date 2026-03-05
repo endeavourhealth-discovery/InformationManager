@@ -506,7 +506,7 @@ public class IndicatorImporter {
 			Where subWhere = wheres.get(whereIndex);
 			if (subWhere.getIri()!=null && subWhere.getIri().contains("concept")) return whereIndex-1;
 			if (subWhere.getIri() != null && subWhere.getIri().contains("effectiveDate")) {
-				if (subWhere.getRange() == null && subWhere.getValue() == null&&subWhere.getFunction()==null) continue;
+				if (subWhere.getRange() == null && subWhere.getValue() == null&&subWhere.getCompare()==null) continue;
 				clauseWheres.add(subWhere);
 			}
 			if (subWhere.getIri() != null && subWhere.getIri().contains("value")) {
@@ -546,9 +546,6 @@ public class IndicatorImporter {
 				else if (where.getIri() != null && where.getIri().contains("effectiveDate")) {
 					dateWhere= where;
 					String valueLabel=where.getValueLabel();
-					if (valueLabel==null){
-						valueLabel= where.getRelativeTo().getDescription();
-					}
 					dateRangeLabel= where.getQualifier()+" "+valueLabel;
 				}
 				else if (where.getIri() != null && where.getIri().contains("value")) {
