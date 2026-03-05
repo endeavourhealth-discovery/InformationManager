@@ -6,7 +6,6 @@ import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.reasoner.IndicatorGenerator;
 import org.endeavourhealth.imapi.model.customexceptions.EQDException;
-import org.endeavourhealth.imapi.utility.ClauseUtils;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -157,7 +156,11 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("RegistrationEpisode")
             .setIri(Namespace.IM + "effectiveDate")
             .setOperator(Operator.lte)
-            .setRelativeTo(new RelativeTo().setParameter("$searchDate")))
+            .setCompare(new Compare()
+              .setLeft(new ValueSource()
+                .setPath(new Path().setIri(Namespace.IM+"effectiveDate")))
+              .setRight(new ValueSource()
+                .setParameter("$searchDate"))))
           .and(pv -> pv
             .setNodeRef("RegistrationEpisode")
             .or(pv1 -> pv1
@@ -168,9 +171,11 @@ public class CoreQueryImporter implements TTImport {
               .setNodeRef("RegistrationEpisode")
               .setIri(Namespace.IM + "endDate")
               .setOperator(Operator.gt)
-              .setRelativeTo(new RelativeTo().setParameter("$searchDate"))))));
-
-
+              .setCompare(new Compare()
+                .setLeft(new ValueSource()
+                  .setPath(new Path().setIri(Namespace.IM+"endDate")))
+                .setRight(new ValueSource()
+                  .setParameter("$searchDate")))))));
   }
 
 
@@ -215,7 +220,11 @@ public class CoreQueryImporter implements TTImport {
           .or(w1 -> w1
             .setIri(Namespace.IM + "dateOfDeath")
             .setOperator(Operator.lt)
-            .relativeTo(r -> r.setParameter("searchDate"))))
+            .setCompare(new Compare()
+              .setLeft(new ValueSource()
+                .setPath(new Path().setIri(Namespace.IM+"dateOfDeath")))
+              .setRight(new ValueSource()
+                .setParameter("$searchDate")))))
         .setThen(Namespace.IM + "CaseloadStatusDead"))
       .when(when -> when
         .where(pv -> pv
@@ -226,8 +235,12 @@ public class CoreQueryImporter implements TTImport {
           .or(pv1 -> pv1
             .setNodeRef("currentEpisode")
             .setIri(Namespace.IM + "endDate")
-            .setOperator(Operator.gt)
-            .setRelativeTo(new RelativeTo().setParameter("$searchDate"))))
+            .setCompare(new Compare()
+              .setLeft(new ValueSource()
+                .setPath(new Path().setIri(Namespace.IM+"endDate")))
+              .setRight(new ValueSource()
+                .setParameter("$searchDate")))
+            .setOperator(Operator.gt)))
         .setThen(Namespace.IM + "CaseloadStatusActive"))
       .setElse(Namespace.IM + "CaseloadStatusLeft"));
 
@@ -257,8 +270,12 @@ public class CoreQueryImporter implements TTImport {
             .and(w -> w
               .setNodeRef("Address")
               .setIri(Namespace.IM + "effectiveDate")
-              .setOperator(Operator.lte)
-              .relativeTo(r -> r.setParameter("$indexDate")))
+              .setCompare(new Compare()
+                .setLeft(new ValueSource()
+                  .setPath(new Path().setIri(Namespace.IM+"effectiveDate")))
+                .setRight(new ValueSource()
+                  .setParameter("$searchDate")))
+              .setOperator(Operator.lte))
             .and(w -> w
               .or(or->or
                 .setNodeRef("Address")
@@ -268,7 +285,11 @@ public class CoreQueryImporter implements TTImport {
                 .setNodeRef("Address")
                 .setIri(Namespace.IM + "endDate")
                 .setOperator(Operator.gt)
-                .relativeTo(r -> r.setParameter("$indexDate"))))
+                .setCompare(new Compare()
+                  .setLeft(new ValueSource()
+                    .setPath(new Path().setIri(Namespace.IM+"endDate")))
+                  .setRight(new ValueSource()
+                    .setParameter("$searchDate")))))
             .and(w -> w
               .setNodeRef("Address")
               .setIri(Namespace.IM + "addressUse")
@@ -499,52 +520,92 @@ public class CoreQueryImporter implements TTImport {
         .return_(p -> p.setNodeRef("isa").setIri(IM.CODE))));
   }
 
+  private FunctionClause assignTimeDiff(String property,TTIriRef units) {
+    FunctionClause function = new FunctionClause();
+    function.setIri(Namespace.IM+"DateTimeDifference");
+    function.addArgument(new Argument()
+      .setParameter("firstDate")
+      .setValuePath(new Path().setIri(property)));
+    function.addArgument(new Argument()
+      .setParameter("secondDate")
+      .setParameter("$searchDate"));
+    function.addArgument(new Argument()
+      .setParameter("units")
+      .setValueIri(units));
+    return function;
+  }
 
   private void testQuery() throws IOException, EQDException {
     Where ageWhere = new Where();
     Value fromAge = new Value();
     Where bpLast6Months= new Where();
     fromAge.setOperator(Operator.gte)
-      .setValue("65");
+      .setUnits(iri(IM.YEARS))
+      .setValue("65")
+      .compare(d->d
+        .left (l->l
+          .setPath(new Path().setIri(Namespace.IM+"dateOfBirth")))
+        .right(r->r
+              .setParameter("$searchDate"))
+          .setUnits(iri(IM.YEARS)));
     Value toAge = new Value();
     toAge
       .setOperator(Operator.lt)
-      .setValue("70");
+      .setUnits(iri(IM.YEARS))
+      .setValue("70")
+      .compare(d->d
+        .left (l->l
+          .setPath(new Path().setIri(Namespace.IM+"dateOfBirth")))
+        .right(r->r
+          .setParameter("$searchDate"))
+        .setUnits(iri(IM.YEARS)));
     ageWhere
       .setIri(Namespace.IM + "age")
-      .setUnits(iri(IM.YEARS))
       .range(r -> r
         .setFrom(fromAge)
         .setTo(toAge));
     bpLast6Months.setNodeRef("obs")
       .setIri(Namespace.IM + "effectiveDate")
+      .compare(c->c
+        .left(l->l
+          .setPath(new Path().setIri(Namespace.IM + "effectiveDate")))
+        .right(r->r
+          .setParameter("$searchDate"))
+        .setUnits(iri(IM.MONTHS)))
       .setOperator(Operator.gte)
-      .setValue("-12")
-      .setUnits(iri(IM.MONTHS))
-      .relativeTo(r -> r.setParameter("$searchDate"));
-
+      .setValue("-12");
     Where relativeWhere = new Where();
     relativeWhere.setNodeRef("obs")
       .setIri(Namespace.IM + "effectiveDate")
       .setOperator(Operator.gte)
-      .relativeTo(r -> r.setNodeRef("HighBPReading").setIri(Namespace.IM + "effectiveDate"));
-    ClauseUtils.assignFunction(ageWhere);
-    ClauseUtils.assignFunction(relativeWhere);
-    ClauseUtils.assignFunction(bpLast6Months);
+      .compare(c->c
+        .left(l->l
+          .setNodeRef("obs")
+          .setPath(new Path().setIri(Namespace.IM + "effectiveDate")))
+        .right (r->r
+          .setNodeRef("HighBPReading")
+          .setPath(new Path().setIri(Namespace.IM + "effectiveDate"))));
     Query query = new Query()
       .setTypeOf(Namespace.IM + "Patient")
       .setIri(Namespace.IM + "Q_TestQuery")
+      .return_(r->r.setIri(IM.NAMESPACE+"patient"))
       .setName("Patients 65-70, or pre-diabetes that need invitations for blood pressure measuring");
     query
       .and(q -> q
+        .return_(r->r.setIri(IM.NAMESPACE+"patient"))
       .is(is->is.setIri(Namespace.IM + "Q_RegisteredGMS")
         .setIsCohort(true)
         .setName("Registered for GMS services on reference date")))
       .and(q -> q
+        .return_(r->r.setIri(IM.NAMESPACE+"patient"))
         .or(m -> m
+          .return_(r->r.setIri(IM.NAMESPACE+"patient"))
           .setDescription("aged between 65 and 70")
           .setWhere(ageWhere))
         .or(m -> m
+          .setTypeOf(Namespace.IM + "Condition")
+          .setNode("con")
+          .return_(r->r.setNodeRef("con").setIri(IM.NAMESPACE+"patient"))
           .setDescription("has pre-diabetes")
           .path(p->p.setIri(Namespace.IM+"condition").setNode("con").setTypeOf(Namespace.IM+"Condition"))
           .where(w -> w
@@ -555,7 +616,10 @@ public class CoreQueryImporter implements TTImport {
         .step(s->s
           .setDescription("Latest systolic within 12 months of the search date")
           .setNode("latestBPL12M")
-          .path(p->p.setIri(Namespace.IM+"observation").setNode("obs").setTypeOf(Namespace.IM+"Observation"))
+          .path(p->p.setIri(Namespace.IM+"observation").setNode("obs").setTypeOf(Namespace.IM+"Observation")
+            .setNode("obs"))
+          .setTypeOf(Namespace.IM + "Observation")
+          .return_(r->r.setNodeRef("obs").setIri(IM.NAMESPACE+"patient"))
          .where(and -> and
           .and(ww -> ww
             .setNodeRef("obs")
@@ -576,6 +640,7 @@ public class CoreQueryImporter implements TTImport {
             .setIri(Namespace.IM + "effectiveDate")
             .setDirection(Order.descending))
           .setLimit(1))
+          .return_(r->r.setNodeRef("obs").setIri(IM.NAMESPACE+"patient"))
           .return_(p->p
             .setNodeRef("obs")
             .setIri(Namespace.IM+"concept")))
@@ -583,8 +648,10 @@ public class CoreQueryImporter implements TTImport {
         .setName("Have high blood pressure in the last year")
         .setNodeRef("latestBPL12M")
         .setNode("HighBPReading")
+        .return_(r->r.setIri(IM.NAMESPACE+"patient"))
         .return_(r->r
             .setIri(Namespace.IM+"effectiveDate"))
+
         .setDescription("is either an office systolic >140 or a home systolic >130")
         .where(w -> w
             .or(whereEither -> whereEither
@@ -613,6 +680,9 @@ public class CoreQueryImporter implements TTImport {
           .setName("Invited for screening after high BP reading")
           .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
           .path(p->p.setIri(Namespace.IM+"procedure").setNode("proc").setTypeOf(Namespace.IM+"Procedure"))
+          .setTypeOf(Namespace.IM + "Procedure")
+          .setNode("proc")
+          .return_(r->r.setNodeRef("proc").setIri(IM.NAMESPACE+"patient"))
           .where(and -> and
             .and(inv -> inv
               .setNodeRef("proc")
@@ -621,6 +691,7 @@ public class CoreQueryImporter implements TTImport {
             .addAnd(relativeWhere))))
       .and(q -> q
         .setNotExists(true)
+        .return_(r->r.setIri(IM.NAMESPACE+"patient"))
         .setName("on hypertension register")
         .setDescription("is registered on the hypertensives register")
         .is(is->is.setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
