@@ -24,11 +24,14 @@ SET target=%1
 SET arg1=%2
 SET arg2=%3
 
+
 IF NOT [%~4]==[] GOTO IncorrectArgs
 
+SET smartlife=false
 IF "%arg1%"=="smartlife" SET smartlife=true
 IF "%arg2%"=="smartlife" SET smartlife=true
 
+SET opensearch=false
 IF "%arg1%"=="opensearch" SET opensearch=true
 IF "%arg2%"=="opensearch" SET opensearch=true
 
@@ -60,8 +63,8 @@ IF "%target%"=="dev" (
 
   ECHO Fetching ImportData
   IF EXIST ../ImportData/ (
-    git -C ../ImportData checkout %branch% || exit /b %errorlevel%
-    git -C ../ImportData pull origin %branch% || exit /b %errorlevel%
+    git -C ../ImportData checkout main || exit /b %errorlevel%
+    git -C ../ImportData pull origin main || exit /b %errorlevel%
   ) ELSE (
     git clone https://github.com/endeavourhealth-discovery/ImportData ../ImportData || exit /b %errorlevel%
   )
