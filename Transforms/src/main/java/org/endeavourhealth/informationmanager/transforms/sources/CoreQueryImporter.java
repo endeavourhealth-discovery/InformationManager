@@ -128,9 +128,9 @@ public class CoreQueryImporter implements TTImport {
         .set(iri(SHACL.DATATYPE), iri(Namespace.IM + "DateTime")));
     Query query = getGmsIsRegistered();
     query
-      .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("RegistrationEpisode").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1));
+      .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("reg").setIri(Namespace.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1));
     query.return_(p -> p
-      .setNodeRef("RegistrationEpisode")
+      .setNodeRef("reg")
       .setIri(Namespace.IM + "provider"));
     query.setName("GMS registered practice");
     gms.set(iri(IM.DEFINITION), TTLiteral.literal(query));
@@ -163,18 +163,18 @@ public class CoreQueryImporter implements TTImport {
               .setRight(new ValueSource()
                 .setParameter("$searchDate"))))
           .and(pv -> pv
-            .setNodeRef("RegistrationEpisode")
+            .setNodeRef("reg")
             .or(pv1 -> pv1
-              .setNodeRef("RegistrationEpisode")
+              .setNodeRef("reg")
               .setIri(Namespace.IM + "endDate")
               .setIsNull(true))
             .or(pv1 -> pv1
-              .setNodeRef("RegistrationEpisode")
+              .setNodeRef("reg")
               .setIri(Namespace.IM + "endDate")
               .setOperator(Operator.gt)
               .setCompare(new Compare()
                 .setLeft(new ValueSource()
-                  .setNodeRef("RegistrationEpisode")
+                  .setNodeRef("reg")
                   .setIri(Namespace.IM+"endDate"))
                 .setRight(new ValueSource()
                   .setParameter("$searchDate")))))));
