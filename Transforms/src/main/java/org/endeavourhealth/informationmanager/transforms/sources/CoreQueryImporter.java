@@ -146,19 +146,20 @@ public class CoreQueryImporter implements TTImport {
         .path(p -> p
           .setIri(Namespace.IM + "episodeOfCare")
           .setTypeOf(Namespace.IM + "EpisodeOfCare")
-          .setNode("RegistrationEpisode"))
+          .setNode("reg"))
         .where(w -> w
           .and(pv -> pv
-            .setNodeRef("RegistrationEpisode")
-            .setIri(Namespace.IM + "gmsPatientType")
+            .setNodeRef("reg")
+            .setIri(Namespace.IM + "gpPatientType")
             .addIs(new Node().setIri("http://hl7.org/fhir/registration-type/r").setName("Regular GMS patient")))
           .and(pv -> pv
-            .setNodeRef("RegistrationEpisode")
+            .setNodeRef("reg")
             .setIri(Namespace.IM + "effectiveDate")
             .setOperator(Operator.lte)
             .setCompare(new Compare()
               .setLeft(new ValueSource()
-                .setPath(new Path().setIri(Namespace.IM+"effectiveDate")))
+                .setNodeRef("reg")
+                .setIri(Namespace.IM+"effectiveDate"))
               .setRight(new ValueSource()
                 .setParameter("$searchDate"))))
           .and(pv -> pv
@@ -173,7 +174,8 @@ public class CoreQueryImporter implements TTImport {
               .setOperator(Operator.gt)
               .setCompare(new Compare()
                 .setLeft(new ValueSource()
-                  .setPath(new Path().setIri(Namespace.IM+"endDate")))
+                  .setNodeRef("RegistrationEpisode")
+                  .setIri(Namespace.IM+"endDate"))
                 .setRight(new ValueSource()
                   .setParameter("$searchDate")))))));
   }
@@ -222,7 +224,7 @@ public class CoreQueryImporter implements TTImport {
             .setOperator(Operator.lt)
             .setCompare(new Compare()
               .setLeft(new ValueSource()
-                .setPath(new Path().setIri(Namespace.IM+"dateOfDeath")))
+                .setIri(Namespace.IM+"dateOfDeath"))
               .setRight(new ValueSource()
                 .setParameter("$searchDate")))))
         .setThen(Namespace.IM + "CaseloadStatusDead"))
@@ -237,7 +239,8 @@ public class CoreQueryImporter implements TTImport {
             .setIri(Namespace.IM + "endDate")
             .setCompare(new Compare()
               .setLeft(new ValueSource()
-                .setPath(new Path().setIri(Namespace.IM+"endDate")))
+                .setNodeRef("currentEpisode")
+                .setIri(Namespace.IM+"endDate"))
               .setRight(new ValueSource()
                 .setParameter("$searchDate")))
             .setOperator(Operator.gt)))
@@ -272,7 +275,8 @@ public class CoreQueryImporter implements TTImport {
               .setIri(Namespace.IM + "effectiveDate")
               .setCompare(new Compare()
                 .setLeft(new ValueSource()
-                  .setPath(new Path().setIri(Namespace.IM+"effectiveDate")))
+                  .setNodeRef("Address")
+                  .setIri(Namespace.IM+"effectiveDate"))
                 .setRight(new ValueSource()
                   .setParameter("$searchDate")))
               .setOperator(Operator.lte))
@@ -287,7 +291,8 @@ public class CoreQueryImporter implements TTImport {
                 .setOperator(Operator.gt)
                 .setCompare(new Compare()
                   .setLeft(new ValueSource()
-                    .setPath(new Path().setIri(Namespace.IM+"endDate")))
+                    .setNodeRef("Address")
+                    .setIri(Namespace.IM+"endDate"))
                   .setRight(new ValueSource()
                     .setParameter("$searchDate")))))
             .and(w -> w
@@ -544,7 +549,7 @@ public class CoreQueryImporter implements TTImport {
       .setValue("65")
       .compare(d->d
         .left (l->l
-          .setPath(new Path().setIri(Namespace.IM+"dateOfBirth")))
+          .setIri(Namespace.IM+"dateOfBirth"))
         .right(r->r
               .setParameter("$searchDate"))
           .setUnits(iri(IM.YEARS)));
@@ -555,7 +560,7 @@ public class CoreQueryImporter implements TTImport {
       .setValue("70")
       .compare(d->d
         .left (l->l
-          .setPath(new Path().setIri(Namespace.IM+"dateOfBirth")))
+          .setIri(Namespace.IM+"dateOfBirth"))
         .right(r->r
           .setParameter("$searchDate"))
         .setUnits(iri(IM.YEARS)));
@@ -568,7 +573,8 @@ public class CoreQueryImporter implements TTImport {
       .setIri(Namespace.IM + "effectiveDate")
       .compare(c->c
         .left(l->l
-          .setPath(new Path().setIri(Namespace.IM + "effectiveDate")))
+          .setNodeRef("obs")
+          .setIri(Namespace.IM + "effectiveDate"))
         .right(r->r
           .setParameter("$searchDate"))
         .setUnits(iri(IM.MONTHS)))
@@ -580,11 +586,11 @@ public class CoreQueryImporter implements TTImport {
       .setOperator(Operator.gte)
       .compare(c->c
         .left(l->l
-          .setNodeRef("obs")
-          .setPath(new Path().setIri(Namespace.IM + "effectiveDate")))
+            .setNodeRef("obs")
+            .setIri(Namespace.IM + "effectiveDate"))
         .right (r->r
-          .setNodeRef("HighBPReading")
-          .setPath(new Path().setIri(Namespace.IM + "effectiveDate"))));
+            .setNodeRef("HighBPReading")
+            .setIri(Namespace.IM + "effectiveDate")));
     Query query = new Query()
       .setTypeOf(Namespace.IM + "Patient")
       .setIri(Namespace.IM + "Q_TestQuery")
@@ -619,7 +625,6 @@ public class CoreQueryImporter implements TTImport {
           .path(p->p.setIri(Namespace.IM+"observation").setNode("obs").setTypeOf(Namespace.IM+"Observation")
             .setNode("obs"))
           .setTypeOf(Namespace.IM + "Observation")
-          .return_(r->r.setNodeRef("obs").setIri(Namespace.IM+"patient"))
          .where(and -> and
           .and(ww -> ww
             .setNodeRef("obs")
