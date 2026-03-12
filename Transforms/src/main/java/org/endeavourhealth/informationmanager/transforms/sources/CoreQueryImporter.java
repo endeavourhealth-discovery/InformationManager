@@ -648,7 +648,10 @@ public class CoreQueryImporter implements TTImport {
           .return_(r->r.setNodeRef("obs").setIri(Namespace.IM+"patient"))
           .return_(p->p
             .setNodeRef("obs")
-            .setIri(Namespace.IM+"concept")))
+            .setIri(Namespace.IM+"concept"))
+          .return_(p->p
+            .setNodeRef("obs")
+            .setIri(Namespace.IM+"value")))
       .step(then->then
         .setName("Have high blood pressure in the last year")
         .setNodeRef("latestBPL12M")
