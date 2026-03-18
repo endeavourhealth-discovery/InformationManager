@@ -4,15 +4,14 @@ plugins {
 }
 
 group = "org.endeavourhealth.plugins"
-version = "1.4-SNAPSHOT"
-description = "Static Const Generator"
+version = "1.0-SNAPSHOT"
+description = "Typescript const enum to enum"
 
 gradlePlugin {
   plugins {
-    create("StaticConstGenerator") {
-      id = "org.endeavourhealth.plugins.StaticConstGenerator"
-      implementationClass = "org.endeavourhealth.plugins.StaticConstGenerator"
-
+    create("TypescriptConstEnumToEnum") {
+      id = "org.endeavourhealth.typescriptConstEnumToEnum.TypescriptConstEnumToEnum"
+      implementationClass = "org.endeavourhealth.typescriptConstEnumToEnum.TypescriptConstEnumToEnum"
     }
   }
 }

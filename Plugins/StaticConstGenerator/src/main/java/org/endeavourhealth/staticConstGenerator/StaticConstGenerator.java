@@ -1,4 +1,4 @@
-package org.endeavourhealth.plugins;
+package org.endeavourhealth.staticConstGenerator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
