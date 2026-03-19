@@ -415,7 +415,6 @@ public class IndicatorImporter {
 			}
 		}
 		if (match.getAnd() != null) {
-
 			for (Match subMatch : match.getAnd()) {
 				configureMatch(indicatorEntity, subMatch, queryEntity, Bool.and);
 			}

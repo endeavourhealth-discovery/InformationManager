@@ -30,11 +30,14 @@ public class QOFQueryImport implements TTImport {
 
 	@Override
 	public void importData(TTImportConfig config) throws ImportException {
+
 		try (QOFRefSetImport setImporter= new QOFRefSetImport()) {
 			setImporter.importData(config);
 		} catch (Exception e) {
 			throw new ImportException(e.getMessage(),e);
 		}
+
+
 		try (TTManager manager = new TTManager()){
 			manager.createDocument();
 			List<String> defaultTypes= List.of(IM.CONCEPT_SET.toString(),IM.QUERY.toString());
@@ -49,7 +52,6 @@ public class QOFQueryImport implements TTImport {
 			manager.createDocument();
 			try {
 				EQDImporter eqdImporter = new EQDImporter(true);
-
 				eqdImporter.loadAndConvert(config,manager,queries[0], Namespace.QOF,
 					dataMapFile[0],uuidLabels[0],mainFolder,setFolder,autoNamedSets[0],autoNamedClauses[0]);
 			}

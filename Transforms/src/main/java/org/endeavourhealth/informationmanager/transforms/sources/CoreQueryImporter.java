@@ -278,7 +278,7 @@ public class CoreQueryImporter implements TTImport {
                   .setNodeRef("Address")
                   .setIri(Namespace.IM+"effectiveDate"))
                 .setRight(new ValueSource()
-                  .setParameter("$searchDate")))
+                  .setParameter("$eventDate")))
               .setOperator(Operator.lte))
             .and(w -> w
               .or(or->or
@@ -294,7 +294,7 @@ public class CoreQueryImporter implements TTImport {
                     .setNodeRef("Address")
                     .setIri(Namespace.IM+"endDate"))
                   .setRight(new ValueSource()
-                    .setParameter("$searchDate")))))
+                    .setParameter("$eventDate")))))
             .and(w -> w
               .setNodeRef("Address")
               .setIri(Namespace.IM + "addressUse")
@@ -543,7 +543,6 @@ public class CoreQueryImporter implements TTImport {
   private void testQuery() throws IOException, EQDException {
     Where ageWhere = new Where();
     Value fromAge = new Value();
-    Where bpLast6Months= new Where();
     fromAge.setOperator(Operator.gte)
       .setUnits(iri(IM.YEARS))
       .setValue("65")
@@ -569,28 +568,6 @@ public class CoreQueryImporter implements TTImport {
       .range(r -> r
         .setFrom(fromAge)
         .setTo(toAge));
-    bpLast6Months.setNodeRef("obs")
-      .setIri(Namespace.IM + "effectiveDate")
-      .compare(c->c
-        .left(l->l
-          .setNodeRef("obs")
-          .setIri(Namespace.IM + "effectiveDate"))
-        .right(r->r
-          .setParameter("$searchDate"))
-        .setUnits(iri(IM.MONTHS)))
-      .setOperator(Operator.gte)
-      .setValue("-12");
-    Where relativeWhere = new Where();
-    relativeWhere.setNodeRef("obs")
-      .setIri(Namespace.IM + "effectiveDate")
-      .setOperator(Operator.gte)
-      .compare(c->c
-        .left(l->l
-            .setNodeRef("obs")
-            .setIri(Namespace.IM + "effectiveDate"))
-        .right (r->r
-            .setNodeRef("HighBPReading")
-            .setIri(Namespace.IM + "effectiveDate")));
     Query query = new Query()
       .setTypeOf(Namespace.IM + "Patient")
       .setIri(Namespace.IM + "Q_TestQuery")
@@ -603,6 +580,7 @@ public class CoreQueryImporter implements TTImport {
         .setIsCohort(true)
         .setName("Registered for GMS services on reference date")))
       .and(q -> q
+        .setTypeOf(Namespace.IM + "Patient")
         .return_(r->r.setIri(Namespace.IM+"patient"))
         .or(m -> m
           .return_(r->r.setIri(Namespace.IM+"patient"))
@@ -613,21 +591,14 @@ public class CoreQueryImporter implements TTImport {
           .setNode("con")
           .return_(r->r.setNodeRef("con").setIri(Namespace.IM+"patient"))
           .setDescription("has pre-diabetes")
-          .path(p->p.setIri(Namespace.IM+"condition").setNode("con").setTypeOf(Namespace.IM+"Condition"))
           .where(w -> w
-            .setNodeRef("con")
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri(Namespace.SNOMED + "714628002").setDescendantsOf(true)))))
       .and(q -> q
-        .step(s->s
           .setDescription("Latest systolic within 12 months of the search date")
-          .setNode("latestBPL12M")
-          .path(p->p.setIri(Namespace.IM+"observation").setNode("obs").setTypeOf(Namespace.IM+"Observation")
-            .setNode("obs"))
           .setTypeOf(Namespace.IM + "Observation")
          .where(and -> and
           .and(ww -> ww
-            .setNodeRef("obs")
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .setName("concept")
             .addIs(new Node()
@@ -638,68 +609,89 @@ public class CoreQueryImporter implements TTImport {
               .setIri(Namespace.EMIS + "1994021000006115")
               .setDescendantsOrSelfOf(true)
               .setName("Home systolic blood pressure")))
-          .addAnd(bpLast6Months))
+          .and(ww->ww
+            .setIri(Namespace.IM + "effectiveDate")
+            .compare(c->c
+              .left(l->l
+                .setIri(Namespace.IM + "effectiveDate"))
+              .right(r->r
+                .setParameter("$searchDate"))
+              .setUnits(iri(IM.MONTHS)))
+            .setOperator(Operator.gte)
+            .setValue("-12")))
         .setOrderBy(new OrderLimit()
           .addProperty(new OrderDirection()
-            .setNodeRef("obs")
             .setIri(Namespace.IM + "effectiveDate")
             .setDirection(Order.descending))
           .setLimit(1))
-          .return_(r->r.setNodeRef("obs").setIri(Namespace.IM+"patient"))
+        .setNode("latestBPL12M")
+          .return_(r->r.setIri(Namespace.IM+"patient").setAs("patient"))
           .return_(p->p
-            .setNodeRef("obs")
-            .setIri(Namespace.IM+"concept"))
+            .setIri(Namespace.IM+"concept")
+            .setAs("concept"))
           .return_(p->p
-            .setNodeRef("obs")
-            .setIri(Namespace.IM+"value")))
-      .step(then->then
+            .setIri(Namespace.IM+"value")
+            .setAs("value")))
+      .and(q->q
         .setName("Have high blood pressure in the last year")
-        .setNodeRef("latestBPL12M")
-        .setNode("HighBPReading")
-        .return_(r->r.setIri(Namespace.IM+"patient"))
-        .return_(r->r
-            .setIri(Namespace.IM+"effectiveDate"))
-
         .setDescription("is either an office systolic >140 or a home systolic >130")
+        .setNodeRef("latestBPL12M")
         .where(w -> w
             .or(whereEither -> whereEither
               .and(w1 -> w1
-                .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
+                .setNodeRef("latestBPL12M")
+                .setPropertyRef("concept")
                 .addIs(new Node()
                   .setIri(Namespace.SNOMED + "271649006")
                   .setDescendantsOrSelfOf(true)
                   .setName("Systolic blood pressure")))
               .and(w1 -> w1
-                .setIri(Namespace.IM + "value")
+                .setNodeRef("latestBPL12M")
+                .setPropertyRef("value")
                 .setOperator(Operator.gt)
                 .setValue("140")))
             .or(whereOr -> whereOr
               .and(w1 -> w1
-                .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
+                .setNodeRef("latestBPL12M")
+                .setPropertyRef("concept")
                 .addIs(new Node()
                   .setIri(Namespace.EMIS + "1994021000006115")
                   .setDescendantsOrSelfOf(true)
                   .setName("Home systolic blood pressure")))
               .and(w1 -> w1
-                .setIri(Namespace.IM + "value")
+                .setNodeRef("latestBPL12M")
+                .setPropertyRef("value")
                 .setOperator(Operator.gt)
-                .setValue("130")))))
-        .step(s -> s
+                .setValue("130"))))
+        .return_(r->r.setIri(Namespace.IM+"patient"))
+        .return_(r->r
+          .setIri(Namespace.IM+"effectiveDate")
+          .as("date"))
+        .setNode("HighBPReading"))
+      .and(q ->q
           .setName("Invited for screening after high BP reading")
           .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
-          .path(p->p.setIri(Namespace.IM+"procedure").setNode("proc").setTypeOf(Namespace.IM+"Procedure"))
+          .setNodeRef("HighBPReading")
           .setTypeOf(Namespace.IM + "Procedure")
           .setNode("proc")
-          .return_(r->r.setNodeRef("proc").setIri(Namespace.IM+"patient"))
+          .return_(r->r.setIri(Namespace.IM+"patient"))
           .where(and -> and
             .and(inv -> inv
-              .setNodeRef("proc")
               .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
               .addIs(new Node().setIri("http://snomed.info/sct#310422005").setName("invited for screening").setMemberOf(true)))
-            .addAnd(relativeWhere))))
-      .and(q -> q
+            .and(inv->inv
+              .setIri(Namespace.IM + "effectiveDate")
+              .setOperator(Operator.gte)
+              .compare(c->c
+                .left(l->l
+                  .setIri(Namespace.IM + "effectiveDate"))
+                .right (r->r
+                  .setNodeRef("HighBPReading")
+                  .setIri(Namespace.IM + "effectiveDate")))))
         .setNotExists(true)
-        .return_(r->r.setIri(Namespace.IM+"patient"))
+        .return_(r->r
+          .setIri(Namespace.IM+"patient")
+          .setAs("patient"))
         .setName("on hypertension register")
         .setDescription("is registered on the hypertensives register")
         .is(is->is.setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
