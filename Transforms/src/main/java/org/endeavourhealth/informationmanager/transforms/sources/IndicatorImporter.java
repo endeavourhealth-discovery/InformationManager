@@ -96,14 +96,13 @@ public class IndicatorImporter {
 
 	}
 	private void addColumnGroup(Query datasetQuery,Match match) throws JsonProcessingException {
-		if (match.getPath() != null) {
-			String xpath= new ObjectMapper().writeValueAsString(match.getPath());
-				String typeOf = match.getPath().getFirst().getTypeOf().getIri();
+		if (match.getTypeOf() != null) {
+				String typeOf = match.getTypeOf().getIri();
 				if (Set.of(Namespace.IM + "ClinicalEntry", Namespace.IM + "Observation").contains(typeOf)) {
-					addEventGroups("Observation details",datasetQuery, match,match.getPath().getFirst(),xpath);
+					addEventGroups("Observation details",datasetQuery,match);
 				}
 				else if (typeOf.contains("Medication")){
-					addEventGroups("Medication details",datasetQuery, match,match.getPath().getFirst(),xpath);
+					addEventGroups("Medication details",datasetQuery,match);
 				}
 		}
 		for (List<Match> matches : Arrays.asList(match.getAnd(),match.getOr())) {
@@ -128,7 +127,7 @@ public class IndicatorImporter {
 		else where.setNodeRef(nodeRef);
 	}
 
-	private void addEventGroups(String columnGroupName, Query datasetQuery, Match match, Path path, String xPath) throws JsonProcessingException {
+	private void addEventGroups(String columnGroupName, Query datasetQuery, Match match) throws JsonProcessingException {
 
 		TTEntity columnEntity= columnGroupNameToEntity.get(columnGroupName);
 		Match columnGroup= columnEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
@@ -325,7 +324,7 @@ public class IndicatorImporter {
 				if (columns.getFirst().getAs().equals("Y-N"))
 					columns.removeFirst();
 		Query newGroup= new Query();
-		newGroup.setTypeOf(Namespace.IM+"Patient");
+		newGroup.setTypeOf(columnGroup.getTypeOf());
 		newGroup.setName(name);
 		newGroup.setPath(columnGroup.getPath());
 		newGroup.setReturn(columnGroup.getReturn());
