@@ -1,16 +1,17 @@
 plugins {
+  `kotlin-dsl`
   id("java-gradle-plugin")
   id("maven-publish")
 }
 
 group = "org.endeavourhealth.plugins"
-version = "1.0-SNAPSHOT"
+version = "0.3-SNAPSHOT"
 description = "Extract enums from autoGen"
 
 gradlePlugin {
   plugins {
     create("ExtractEnumsFromAutoGen") {
-      id = "org.endeavourhealth.extractEnumsFromAutoGen.ExtractEnumsFromAutoGen"
+      id = "org.endeavourhealth.plugins.extract-enums-from-auto-gen"
       implementationClass = "org.endeavourhealth.extractEnumsFromAutoGen.ExtractEnumsFromAutoGen"
     }
   }

@@ -16,14 +16,15 @@ class TypescriptConstEnumToEnum: Plugin<Project> {
       group = "org.endeavourhealth.plugins"
       description = "Changes typescript const enums to standard enums"
 
-      it.dependsOn("generateTypescript")
+      dependsOn("generateTypeScript")
 
-      it.doLast {
-        if (extension.filePath.isBlank()) {
-          throw GradleException("tsEnumFix.filePath must be set")
+      doLast {
+        val configuredPath = extension.filePath.orNull
+        if (configuredPath.isNullOrBlank()) {
+          throw GradleException("typescriptConstEnumToEnum.filePath must be set")
         }
 
-        val file = File(project.rootDir, extension.filePath)
+        val file = File(project.rootDir, configuredPath)
 
         if (!file.exists()) {
           throw GradleException("Autogen file not found at: ${file.absolutePath}")
