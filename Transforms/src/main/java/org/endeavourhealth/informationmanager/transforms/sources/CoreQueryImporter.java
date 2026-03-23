@@ -571,25 +571,20 @@ public class CoreQueryImporter implements TTImport {
     Query query = new Query()
       .setTypeOf(Namespace.IM + "Patient")
       .setIri(Namespace.IM + "Q_TestQuery")
-      .return_(r->r.setIri(Namespace.IM+"patient"))
       .setName("Patients 65-70, or pre-diabetes that need invitations for blood pressure measuring");
     query
       .and(q -> q
-        .return_(r->r.setIri(Namespace.IM+"patient"))
       .is(is->is.setIri(Namespace.IM + "Q_RegisteredGMS")
         .setIsCohort(true)
         .setName("Registered for GMS services on reference date")))
       .and(q -> q
         .setTypeOf(Namespace.IM + "Patient")
-        .return_(r->r.setIri(Namespace.IM+"patient"))
         .or(m -> m
-          .return_(r->r.setIri(Namespace.IM+"patient"))
           .setDescription("aged between 65 and 70")
           .setWhere(ageWhere))
         .or(m -> m
           .setTypeOf(Namespace.IM + "Condition")
           .setNode("con")
-          .return_(r->r.setNodeRef("con").setIri(Namespace.IM+"patient"))
           .setDescription("has pre-diabetes")
           .where(w -> w
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
@@ -625,56 +620,39 @@ public class CoreQueryImporter implements TTImport {
             .setDirection(Order.descending))
           .setLimit(1))
         .setNode("latestBPL12M")
-          .return_(r->r.setIri(Namespace.IM+"patient").setAs("patient"))
-          .return_(p->p
-            .setIri(Namespace.IM+"concept")
-            .setAs("concept"))
-          .return_(p->p
-            .setIri(Namespace.IM+"value")
-            .setAs("value")))
-      .and(q->q
-        .setName("Have high blood pressure in the last year")
-        .setDescription("is either an office systolic >140 or a home systolic >130")
-        .setNodeRef("latestBPL12M")
-        .where(w -> w
+        .then(then->then
             .or(whereEither -> whereEither
               .and(w1 -> w1
                 .setNodeRef("latestBPL12M")
-                .setPropertyRef("concept")
+                .setIri(Namespace.IM + "concept")
                 .addIs(new Node()
                   .setIri(Namespace.SNOMED + "271649006")
                   .setDescendantsOrSelfOf(true)
                   .setName("Systolic blood pressure")))
               .and(w1 -> w1
                 .setNodeRef("latestBPL12M")
-                .setPropertyRef("value")
+                .setIri(Namespace.IM+"value")
                 .setOperator(Operator.gt)
                 .setValue("140")))
             .or(whereOr -> whereOr
               .and(w1 -> w1
                 .setNodeRef("latestBPL12M")
-                .setPropertyRef("concept")
+                .setIri(Namespace.IM+"concept")
                 .addIs(new Node()
                   .setIri(Namespace.EMIS + "1994021000006115")
                   .setDescendantsOrSelfOf(true)
                   .setName("Home systolic blood pressure")))
               .and(w1 -> w1
                 .setNodeRef("latestBPL12M")
-                .setPropertyRef("value")
+                .setIri(Namespace.IM+"value")
                 .setOperator(Operator.gt)
                 .setValue("130"))))
-        .return_(r->r.setIri(Namespace.IM+"patient"))
-        .return_(r->r
-          .setIri(Namespace.IM+"effectiveDate")
-          .as("date"))
         .setNode("HighBPReading"))
       .and(q ->q
           .setName("Invited for screening after high BP reading")
           .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
           .setNodeRef("HighBPReading")
           .setTypeOf(Namespace.IM + "Procedure")
-          .setNode("proc")
-          .return_(r->r.setIri(Namespace.IM+"patient"))
           .where(and -> and
             .and(inv -> inv
               .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
@@ -689,9 +667,6 @@ public class CoreQueryImporter implements TTImport {
                   .setNodeRef("HighBPReading")
                   .setIri(Namespace.IM + "effectiveDate")))))
         .setNotExists(true)
-        .return_(r->r
-          .setIri(Namespace.IM+"patient")
-          .setAs("patient"))
         .setName("on hypertension register")
         .setDescription("is registered on the hypertensives register")
         .is(is->is.setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")

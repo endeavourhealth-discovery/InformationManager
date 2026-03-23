@@ -92,6 +92,7 @@ public class QOFRefSetImport implements TTImport {
         .setName(fields[2])
         .setScheme(Namespace.SNOMED.asIri())
         .setCrud(iri(IM.UPDATE_PREDICATES))
+        .set(iri(IM.IM_1_DBID),TTLiteral.literal(100000000+setIri.hashCode()))
         .setType(new TTArray().add(iri(IM.CONCEPT_SET)));
       document.addEntity(set);
       c = new TTEntity()
