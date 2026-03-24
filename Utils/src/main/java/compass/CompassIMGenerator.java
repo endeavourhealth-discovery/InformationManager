@@ -43,15 +43,13 @@ public class CompassIMGenerator {
 	}
 
 	private void outputTct(String folder) throws Exception{
-		Map<String,String> concepts= new HashMap<>();
 		try (FileWriter tctWriter = new FileWriter(folder+"tct.txt")) {
 			try (IMDB conn = IMDB.getConnection()){
 				String spq = """
-					select ?parentDbId ?childDbId
+					select ?parent ?child ?childDbId
 					where {
 					?child im:isA ?parent.
 					?child im:im1DbId ?childDbId.
-					?parent im:im1DbId ?parentDbId.
 					}
 					""";
 				TupleQuery qry = conn.prepareTupleSparql(spq);
@@ -59,16 +57,15 @@ public class CompassIMGenerator {
 					while (rs.hasNext()) {
 						BindingSet bs = rs.next();
 						String childDbId = bs.getValue("childDbId").stringValue();
-						String parentDbId = bs.getValue("parentDbId").stringValue();
-						tctWriter.write(parentDbId + "\t" + childDbId + "\t" + (parentDbId.equals(childDbId) ? 1 : 0) + "\n");
+						String parent = bs.getValue("parent").stringValue();
+						String child = bs.getValue("child").stringValue();
+						tctWriter.write(parent + "\t" + childDbId + "\t" + (parent.equals(child) ? 1 : 0) + "\n");
 					}
 				}
 				spq = """
-					select ?set ?member ?setLabel
+					select ?set ?memberDbId
 					where {
 						?set im:hasMember ?member.
-						?set rdfs:label ?setLabel.
-						?set im:im1DbId ?setDbId.
 						?member im:im1DbId ?memberDbId.
 					}
 					""";
@@ -76,17 +73,30 @@ public class CompassIMGenerator {
 				try (TupleQueryResult rs = qry.evaluate()) {
 					while (rs.hasNext()) {
 						BindingSet bs = rs.next();
-						String setDbId = bs.getValue("setDbId").stringValue();
+						String set = bs.getValue("set").stringValue();
 						String memberDbId = bs.getValue("memberDbId").stringValue();
-						tctWriter.write(setDbId + "\t" + memberDbId + "\t" + "0" + "\n");
+						tctWriter.write(set + "\t" + memberDbId + "\t" + "0" + "\n");
 					}
 				}
-			}
-
-		}
-		try (FileWriter conceptWriter = new FileWriter("C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\concept.txt")) {
-			for (Map.Entry<String,String> entry : concepts.entrySet()) {
-				conceptWriter.write(entry.getKey() + "\t" + entry.getValue() + "\n");
+				spq = """
+					select ?subset ?set ?memberDbId
+					where {
+					  ?subset im:isSubsetOf ?set.
+						?subset im:hasMember ?member.
+						?member im:im1DbId ?memberDbId.
+					}
+					""";
+				qry = conn.prepareTupleSparql(spq);
+				try (TupleQueryResult rs = qry.evaluate()) {
+					while (rs.hasNext()) {
+						BindingSet bs = rs.next();
+						String set = bs.getValue("set").stringValue();
+						String subset = bs.getValue("subset").stringValue();
+						String memberDbId = bs.getValue("memberDbId").stringValue();
+						tctWriter.write(set + "\t" + memberDbId + "\t" + "0" + "\n");
+						tctWriter.write(subset + "\t" + memberDbId + "\t" + "0" + "\n");
+					}
+				}
 			}
 		}
 	}

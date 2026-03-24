@@ -105,12 +105,6 @@ public class CoreImporter implements TTImport {
           Path path = ImportUtils.findFileForId(config.getFolder(), coreFile);
           manager.loadDocument(path.toFile());
           TTDocument document = manager.getDocument();
-          for (TTEntity entity : document.getEntities()) {
-            if (entity.isType(iri(IM.CONCEPT_SET))||entity.isType(iri(IM.VALUE_SET))) {
-              Integer dbid= 100000000+(entity.getIri().hashCode());
-              entity.set(iri(IM.IM_1_DBID),TTLiteral.literal(dbid));
-            }
-          }
           LOG.info("Filing {}", coreFile);
           try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
             try {

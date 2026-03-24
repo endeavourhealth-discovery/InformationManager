@@ -251,7 +251,6 @@ public class QImporter implements TTImport {
                   .setScheme(Namespace.QR.asIri())
                   .set(iri(IM.AVOID_REPLACED_BY),TTLiteral.literal(true))
                   .addType(iri(IM.CONCEPT_SET));
-                qGroup.set(iri(IM.IM_1_DBID),TTLiteral.literal(100000000+qGroup.getIri().hashCode()));
                 if (idCodeGroupMap.get(groupId) == null) {
                   idCodeGroupMap.put(groupId, qGroup);
                 }
@@ -304,7 +303,6 @@ public class QImporter implements TTImport {
         .set(iri(IM.AVOID_REPLACED_BY),TTLiteral.literal(true))
         .setScheme(Namespace.QR.asIri())
         .setName(project.get("Name").asText());
-      qset.set(iri(IM.IM_1_DBID),TTLiteral.literal(100000000+qset.getIri().hashCode()));
       qset.set(iri(IM.IS_CONTAINED_IN), projectsFolder);
       qset.set(iri(SHACL.ORDER), TTLiteral.literal(1));
       String version = project.get("Version").asText();
