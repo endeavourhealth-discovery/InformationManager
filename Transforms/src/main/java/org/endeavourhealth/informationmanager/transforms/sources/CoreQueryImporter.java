@@ -584,7 +584,6 @@ public class CoreQueryImporter implements TTImport {
           .setWhere(ageWhere))
         .or(m -> m
           .setTypeOf(Namespace.IM + "Condition")
-          .setNode("con")
           .setDescription("has pre-diabetes")
           .where(w -> w
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
@@ -619,31 +618,26 @@ public class CoreQueryImporter implements TTImport {
             .setIri(Namespace.IM + "effectiveDate")
             .setDirection(Order.descending))
           .setLimit(1))
-        .setNode("latestBPL12M")
         .then(then->then
             .or(whereEither -> whereEither
               .and(w1 -> w1
-                .setNodeRef("latestBPL12M")
                 .setIri(Namespace.IM + "concept")
                 .addIs(new Node()
                   .setIri(Namespace.SNOMED + "271649006")
                   .setDescendantsOrSelfOf(true)
                   .setName("Systolic blood pressure")))
               .and(w1 -> w1
-                .setNodeRef("latestBPL12M")
                 .setIri(Namespace.IM+"value")
                 .setOperator(Operator.gt)
                 .setValue("140")))
             .or(whereOr -> whereOr
               .and(w1 -> w1
-                .setNodeRef("latestBPL12M")
                 .setIri(Namespace.IM+"concept")
                 .addIs(new Node()
                   .setIri(Namespace.EMIS + "1994021000006115")
                   .setDescendantsOrSelfOf(true)
                   .setName("Home systolic blood pressure")))
               .and(w1 -> w1
-                .setNodeRef("latestBPL12M")
                 .setIri(Namespace.IM+"value")
                 .setOperator(Operator.gt)
                 .setValue("130"))))

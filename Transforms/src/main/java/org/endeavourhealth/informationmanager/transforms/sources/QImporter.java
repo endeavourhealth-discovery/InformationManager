@@ -126,6 +126,7 @@ public class QImporter implements TTImport {
     for (String bnfMember:bnfSetMembers) {
       if (!qMembers.contains(bnfMember)) {
         qSetEntity.addObject(iri(IM.ENTAILED_MEMBER), new TTNode()
+            .addObject(iri(IM.USES), TTIriRef.iri(bnfMember))
           .set(iri(IM.IS), TTIriRef.iri(bnfMember))
           .set(iri(IM.ENTAILMENT), iri(IM.DESCENDANTS_OR_SELF_OF)));
       }
@@ -284,6 +285,7 @@ public class QImporter implements TTImport {
           String concept = Namespace.SNOMED + code.get("Code").asText();
           String term = code.get("Text").asText();
           qGroup.addObject(iri(IM.HAS_MEMBER), TTIriRef.iri(concept));
+          qGroup.addObject(iri(IM.USES), TTIriRef.iri(concept));
         }
       } else
         results = false;
