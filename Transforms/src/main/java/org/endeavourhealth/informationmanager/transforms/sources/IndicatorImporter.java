@@ -114,26 +114,13 @@ public class IndicatorImporter {
 		}
 	}
 
-	private void setNodeRefs(Where where, String nodeRef) {
-		if (where.getAnd()!=null){
-			for (Where subWhere:where.getAnd()){
-				setNodeRefs(subWhere,nodeRef);
-			}
-		} else if (where.getOr()!=null){
-			for (Where subWhere:where.getOr()){
-				setNodeRefs(subWhere,nodeRef);
-			}
-		}
-		else where.setNodeRef(nodeRef);
-	}
+
 
 	private void addEventGroups(String columnGroupName, Query datasetQuery, Match match) throws JsonProcessingException {
 
 		TTEntity columnEntity= columnGroupNameToEntity.get(columnGroupName);
 		Match columnGroup= columnEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
 		columnGroup.setWhere(match.getWhere());
-		String nodeRef= columnGroup.getPath().getFirst().getNode();
-		setNodeRefs(columnGroup.getWhere(),nodeRef);
 		Set<Node> conceptSets= new HashSet<>();
 		String valueLabel=addConceptSets(match,conceptSets);
 		columnGroup.setName(valueLabel);
