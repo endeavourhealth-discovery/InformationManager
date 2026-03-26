@@ -659,7 +659,8 @@ public class CoreQueryImporter implements TTImport {
                   .setIri(Namespace.IM + "effectiveDate"))
                 .right (r->r
                   .setNodeRef("HighBPReading")
-                  .setIri(Namespace.IM + "effectiveDate")))))
+                  .setIri(Namespace.IM + "effectiveDate"))))))
+      .and(q -> q
         .setNotExists(true)
         .setName("on hypertension register")
         .setDescription("is registered on the hypertensives register")
