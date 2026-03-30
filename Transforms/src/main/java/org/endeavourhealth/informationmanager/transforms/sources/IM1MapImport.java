@@ -501,11 +501,13 @@ public class IM1MapImport implements TTImport {
     }
     if (concept.getIri() != null) {
       concept.setName(term).setScheme(iri(NAMESPACE.FHIR)).set(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
+      addDbid(concept,oldIri);
       document.addEntity(concept);
     }
     entity.setName(term)
       .setScheme(iri(NAMESPACE.FHIR))
       .set(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
+    addDbid(entity,oldIri);
 
     if (!"NULL".equals(im1Scheme)) {
       entity.set(iri(NAMESPACE.IM1), TTLiteral.literal(im1Scheme));
@@ -580,6 +582,7 @@ public class IM1MapImport implements TTImport {
     unassigned.setScheme(namespace.asIri());
     unassigned.setStatus(iri(IM.UNASSIGNED));
     unassigned.set(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
+    addDbid(unassigned,oldIri);
     unassigned.setName(term);
     if (description != null)
       unassigned.setDescription(description);
@@ -627,8 +630,10 @@ public class IM1MapImport implements TTImport {
     if (description != null) {
       entity.setDescription(description);
     }
-    if (oldIri != null)
+    if (oldIri != null) {
       entity.set(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
+      addDbid(entity,oldIri);
+    }
     if (im1scheme != null)
       entity.set(iri(NAMESPACE.IM1), TTLiteral.literal(im1scheme));
     if (matchedIri != null) {
@@ -654,11 +659,20 @@ public class IM1MapImport implements TTImport {
     return entity;
   }
 
+  private void addDbid(TTEntity entity, String oldIri) {
+    Integer dbid = idToDbid.get(oldIri);
+    if (dbid==null) {
+      LOG.error("Missing dbid for oldIri: " + oldIri);
+    }
+    else entity.set(iri(IM.IM_1_DBID),TTLiteral.literal(dbid));
+  }
+
   private void addIM1id(String iri, String oldIri) {
     TTEntity im1 = new TTEntity()
       .setIri(iri)
       .setCrud(iri(IM.ADD_QUADS));
     im1.addObject(iri(IM.IM_1_ID), TTLiteral.literal(oldIri));
+    addDbid(im1, oldIri);
 
     Integer usedCount = 0;
     if (used.containsKey(oldIri) && im1.get(iri(IM.USAGE_TOTAL)) != null)
@@ -853,6 +867,7 @@ public class IM1MapImport implements TTImport {
       .setCode(value)
       .set(iri(IM.IM_1_ID), TTLiteral.literal(oldIri))
       .setStatus(iri(IM.UNASSIGNED));
+    addDbid(entity,oldIri);
     document.addEntity(entity);
     oldIriEntity.put(oldIri, entity);
     if (value != null) {
