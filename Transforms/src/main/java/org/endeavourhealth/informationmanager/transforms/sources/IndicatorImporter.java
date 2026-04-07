@@ -125,6 +125,13 @@ public class IndicatorImporter {
 		String valueLabel=addConceptSets(match,conceptSets);
 		columnGroup.setName(valueLabel);
 		setOptional(columnGroup);
+		if (columnGroup.getOrderBy()==null) {
+			columnGroup.orderBy(o -> o
+				.addProperty(new OrderDirection()
+					.setDirection(Order.descending)
+					.setIri(Namespace.IM + "effectiveDate"))
+				.setLimit(1));
+		}
 		datasetQuery.addColumnGroup(columnGroup);
 	}
 
