@@ -15,7 +15,7 @@ import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
 import org.endeavourhealth.imapi.model.search.EntityDocument;
 import org.endeavourhealth.imapi.model.search.SearchTermCode;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.Namespace;
+import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -195,7 +195,7 @@ public class OpenSearchSender {
             extraType = iri(rs.getValue("extraType").stringValue());
             extraType.setName(rs.getValue("extraTypeName").stringValue());
             blob.addType(extraType);
-            if (extraType.equals(iri(Namespace.IM + "DataModelEntity"))) {
+            if (extraType.equals(iri(NAMESPACE.IM + "DataModelEntity"))) {
               int usageTotal = 2000000;
               blob.setUsageTotal(usageTotal);
             }
