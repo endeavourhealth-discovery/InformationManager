@@ -34,7 +34,7 @@ public class IndicatorImporter {
   public ObjectMapper om= new ObjectMapper();
   private final EntityService entityService = new EntityService();
   private final QueryDescriptor descriptor = new QueryDescriptor();
-  private Namespace namespace;
+  private NAMESPACE namespace;
   private final SearchService searchService = new SearchService();
   private final Map<String,Boolean> indicatorMap = new HashedMap();
   private final Map<String, TTEntity> entities = new HashMap<>();
@@ -47,7 +47,7 @@ public class IndicatorImporter {
   private final Map<String,String> matchLabel= new HashMap<>();
 
 
-  public void generate(String indicatorFile,String mainFolder,Namespace namespace) throws Exception {
+  public void generate(String indicatorFile,String mainFolder,NAMESPACE namespace) throws Exception {
     this.namespace = namespace;
     this.mainFolder = mainFolder;
     try (TTManager manager = new TTManager()) {
