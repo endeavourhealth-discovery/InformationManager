@@ -1,18 +1,18 @@
 plugins {
+  `kotlin-dsl`
   id("java-gradle-plugin")
   id("maven-publish")
 }
 
 group = "org.endeavourhealth.plugins"
-version = "1.4-SNAPSHOT"
-description = "Static Const Generator"
+version = "0.3-SNAPSHOT"
+description = "Typescript const enum to enum"
 
 gradlePlugin {
   plugins {
-    create("StaticConstGenerator") {
-      id = "org.endeavourhealth.plugins.StaticConstGenerator"
-      implementationClass = "org.endeavourhealth.plugins.StaticConstGenerator"
-
+    create("TypescriptConstEnumToEnum") {
+      id = "org.endeavourhealth.plugins.typescript-const-enum-to-enum"
+      implementationClass = "org.endeavourhealth.typescriptConstEnumToEnum.TypescriptConstEnumToEnum"
     }
   }
 }

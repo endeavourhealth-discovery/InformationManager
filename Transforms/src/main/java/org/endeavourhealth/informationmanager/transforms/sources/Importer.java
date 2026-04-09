@@ -69,6 +69,7 @@ public class Importer implements TTImportByType {
       case ImportType.QR -> new QImporter();
       case ImportType.CPRD_MED -> new CPRDImport();
       case ImportType.FHIR -> new FHIRImporter();
+      case ImportType.SMARTLIFEINDICATOR -> new SmartLifeIndicatorImporter();
       default -> throw new ImportException("Unrecognised import type [" + importType + "]");
     };
   }

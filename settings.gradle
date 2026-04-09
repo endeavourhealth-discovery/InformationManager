@@ -21,6 +21,8 @@ include(':V1-V2Migration')
 include(':Feeds')
 include(':Transforms')
 include(':Utils')
-include(':StaticConstGenerator')
+include(':Plugins:StaticConstGenerator')
+include(':Plugins:TypescriptConstEnumToEnum')
+include(':Plugins:ExtractEnumsFromAutoGen')
 
 include 'QOFExtractor'
