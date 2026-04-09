@@ -34,7 +34,7 @@ public class IndicatorImporter {
   public ObjectMapper om= new ObjectMapper();
   private final EntityService entityService = new EntityService();
   private final QueryDescriptor descriptor = new QueryDescriptor();
-  private NAMESPACE namespace;
+  private Namespace namespace;
   private final SearchService searchService = new SearchService();
   private final Map<String,Boolean> indicatorMap = new HashedMap();
   private final Map<String, TTEntity> entities = new HashMap<>();
@@ -47,7 +47,7 @@ public class IndicatorImporter {
   private final Map<String,String> matchLabel= new HashMap<>();
 
 
-  public void generate(String indicatorFile,String mainFolder,NAMESPACE namespace) throws Exception {
+  public void generate(String indicatorFile,String mainFolder,Namespace namespace) throws Exception {
     this.namespace = namespace;
     this.mainFolder = mainFolder;
     try (TTManager manager = new TTManager()) {
@@ -125,6 +125,13 @@ public class IndicatorImporter {
     String valueLabel=addConceptSets(match,conceptSets);
     columnGroup.setName(valueLabel);
     setOptional(columnGroup);
+    if (columnGroup.getOrderBy()==null) {
+      columnGroup.orderBy(o -> o
+        .addProperty(new OrderDirection()
+          .setDirection(Order.descending)
+          .setIri(NAMESPACE.IM + "effectiveDate"))
+        .setLimit(1));
+    }
     datasetQuery.addColumnGroup(columnGroup);
   }
 
