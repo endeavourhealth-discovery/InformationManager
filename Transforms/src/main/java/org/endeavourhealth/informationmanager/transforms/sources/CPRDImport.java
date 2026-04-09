@@ -43,15 +43,15 @@ public class CPRDImport implements TTImport {
 
   public void importData(TTImportConfig config) throws ImportException {
     try {
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
         importObsCodes(config.getFolder());
         document = manager.createDocument();
-        document.addEntity(manager.createNamespaceEntity(Namespace.CPRD_MED, "CPRD medIds ",
+        document.addEntity(manager.createNamespaceEntity(NAMESPACE.CPRD_MED, "CPRD medIds ",
           "CPRD clinical non product identifiers (including emis code ids)."));
         filer.fileDocument(document);
 
         document = manager.createDocument();
-        document.addEntity(manager.createNamespaceEntity(Namespace.CPRD_PROD, "CPRD product ids",
+        document.addEntity(manager.createNamespaceEntity(NAMESPACE.CPRD_PROD, "CPRD product ids",
           "internal identifiers to DMD VMPs and AMPs."));
         importDrugs(config.getFolder());
         filer.fileDocument(document);
@@ -72,21 +72,21 @@ public class CPRDImport implements TTImport {
         String[] fields = line.split("\t");
         count++;
         if (count % 10000 == 0)
-          LOG.info("Written {} drug concepts for " + Namespace.CPRD_PROD, count);
+          LOG.info("Written {} drug concepts for " + NAMESPACE.CPRD_PROD, count);
         TTEntity concept = new TTEntity();
         String drugId = (fields[0]);
-        concept.setIri(Namespace.CPRD_PROD + "Product_" + drugId);
+        concept.setIri(NAMESPACE.CPRD_PROD + "Product_" + drugId);
         concept.setName(fields[2]);
         concept.setCode(drugId);
-        concept.setScheme(iri(Namespace.CPRD_PROD));
+        concept.setScheme(iri(NAMESPACE.CPRD_PROD));
         concept.setStatus(iri(IM.ACTIVE));
         if (!fields[1].equals("")) {
-          concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + fields[1]));
+          concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + fields[1]));
         }
         document.addEntity(concept);
         line = reader.readLine();
       }
-      LOG.info("Written {} entities for " + Namespace.CPRD_PROD, count);
+      LOG.info("Written {} entities for " + NAMESPACE.CPRD_PROD, count);
     }
 
   }
@@ -102,22 +102,22 @@ public class CPRDImport implements TTImport {
         String[] fields = line.split("\t");
         count++;
         if (count % 10000 == 0)
-          LOG.info("Written {} medical concepts for " + Namespace.CPRD_PROD, count);
+          LOG.info("Written {} medical concepts for " + NAMESPACE.CPRD_PROD, count);
         TTEntity concept = new TTEntity();
         String medId = (fields[0]);
-        concept.setIri(Namespace.CPRD_PROD + "Medical_" + medId);
+        concept.setIri(NAMESPACE.CPRD_PROD + "Medical_" + medId);
         concept.setName(fields[4]);
         concept.setCode(medId);
-        concept.setScheme(iri(Namespace.CPRD_PROD));
+        concept.setScheme(iri(NAMESPACE.CPRD_PROD));
         concept.setStatus(iri(IM.ACTIVE));
-        concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(Namespace.SNOMED + fields[5]));
+        concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + fields[5]));
         TTNode termCode = new TTNode();
         termCode.set(iri(IM.CODE), TTLiteral.literal(fields[6]));
         concept.addObject(iri(IM.HAS_TERM_CODE), termCode);
         document.addEntity(concept);
         line = reader.readLine();
       }
-      LOG.info("Written {} entities for " + Namespace.CPRD_PROD, count);
+      LOG.info("Written {} entities for " + NAMESPACE.CPRD_PROD, count);
     }
 
   }

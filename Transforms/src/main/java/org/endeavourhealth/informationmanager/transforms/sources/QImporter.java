@@ -47,7 +47,7 @@ public class QImporter implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(QImporter.class);
   private final Client client = ClientBuilder.newClient();
   private final TTDocument document = new TTDocument();
-  private final TTIriRef projectsFolder = TTIriRef.iri(Namespace.QR + "QProjects");
+  private final TTIriRef projectsFolder = TTIriRef.iri(NAMESPACE.QR + "QProjects");
   private final Map<String, TTEntity> idProjectMap = new HashMap<>();
   private final Map<String, TTEntity> idCodeGroupMap = new HashMap<>();
   private final ObjectMapper om = new ObjectMapper();
@@ -63,7 +63,7 @@ public class QImporter implements TTImport {
     try {
       try (TTManager manager = new TTManager()) {
         manager.setDocument(document);
-        document.addEntity(manager.createNamespaceEntity(Namespace.QR,
+        document.addEntity(manager.createNamespaceEntity(NAMESPACE.QR,
           "Q Research scheme and graph"
           , "Q Research scheme and graph"));
         addQFolders();
@@ -78,13 +78,13 @@ public class QImporter implements TTImport {
         QueryRequest qr = new QueryRequest()
           .addArgument(new Argument()
             .setParameter("this")
-            .setValueIri(iri(Namespace.QR)))
-          .setUpdate(new Update().setIri(Namespace.IM + "DeleteSets"));
+            .setValueIri(iri(NAMESPACE.QR)))
+          .setUpdate(new Update().setIri(NAMESPACE.IM + "DeleteSets"));
 
         LOG.info("Deleting q code groups..");
-        new SearchService().updateIM(qr, Graph.IM);
+        new SearchService().updateIM(qr, GRAPH.IM);
         processReplacementSets(manager,ttImportConfig.getFolder());
-        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
           filer.fileDocument(document);
         }
         resetDrugs(ttImportConfig.getFolder());
@@ -200,7 +200,7 @@ public class QImporter implements TTImport {
       }
     }
     addBNFMapEntries(manager,folder);
-    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(Graph.IM)) {
+    try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
       filer.fileDocument(drugDocument);
     }
   }
@@ -208,7 +208,7 @@ public class QImporter implements TTImport {
   private boolean isMedicationSet(TTEntity entity) {
     if (entity.get(IM.HAS_MEMBER) != null) {
       SetBinder binder = new SetBinder();
-      binder.bindSet(entity.getIri(), Graph.IM);
+      binder.bindSet(entity.getIri(), GRAPH.IM);
       TTEntity boundSet = new EntityService().getBundle(entity.getIri(), asHashSet(IM.BINDING)).getEntity();
 
       if (!boundSet.has(IM.BINDING)) {
@@ -247,16 +247,16 @@ public class QImporter implements TTImport {
               TTEntity qGroup = idCodeGroupMap.get(groupId);
               if (qGroup == null) {
                 qGroup = new TTEntity()
-                  .setIri(Namespace.QR + "QCodeGroup_" + groupId)
+                  .setIri(NAMESPACE.QR + "QCodeGroup_" + groupId)
                   .setName("Q code group " + codeGroup.get("Name").asText()+" (draft)")
-                  .setScheme(Namespace.QR.asIri())
+                  .setScheme(NAMESPACE.QR.asIri())
                   .set(iri(IM.AVOID_REPLACED_BY),TTLiteral.literal(true))
                   .addType(iri(IM.CONCEPT_SET));
                 if (idCodeGroupMap.get(groupId) == null) {
                   idCodeGroupMap.put(groupId, qGroup);
                 }
                 if (qGroup.getIri().equals("http://apiqcodes.org/qcodes#QPredict_347")) {
-                  qGroup.addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "EthnicitySets"));
+                  qGroup.addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "EthnicitySets"));
                 }
                 qGroup.set(iri(IM.VERSION), TTLiteral.literal(version));
                 importCodes(projectId, qGroup, id);
@@ -282,7 +282,7 @@ public class QImporter implements TTImport {
       if (!codes.isEmpty()) {
         for (Iterator<JsonNode> it = codes.elements(); it.hasNext(); ) {
           JsonNode code = it.next();
-          String concept = Namespace.SNOMED + code.get("Code").asText();
+          String concept = NAMESPACE.SNOMED + code.get("Code").asText();
           String term = code.get("Text").asText();
           qGroup.addObject(iri(IM.HAS_MEMBER), TTIriRef.iri(concept));
           qGroup.addObject(iri(IM.USES), TTIriRef.iri(concept));
@@ -300,17 +300,17 @@ public class QImporter implements TTImport {
       JsonNode project = it.next();
       String id = project.get("Id").asText();
       TTEntity qset = new TTEntity()
-        .setIri(Namespace.QR + "QPredict_" + project.get("Id").asText())
+        .setIri(NAMESPACE.QR + "QPredict_" + project.get("Id").asText())
         .addType(iri(IM.CONCEPT_SET))
         .set(iri(IM.AVOID_REPLACED_BY),TTLiteral.literal(true))
-        .setScheme(Namespace.QR.asIri())
+        .setScheme(NAMESPACE.QR.asIri())
         .setName(project.get("Name").asText());
       qset.set(iri(IM.IS_CONTAINED_IN), projectsFolder);
       qset.set(iri(SHACL.ORDER), TTLiteral.literal(1));
       String version = project.get("Version").asText();
       qset.set(iri(IM.VERSION), TTLiteral.literal(version));
       if (qset.getIri().equals("http://apiqcodes.org/qcodes#QPredict_347")) {
-        qset.addObject(iri(IM.IS_CONTAINED_IN), iri(Namespace.IM + "EthnicitySets"));
+        qset.addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "EthnicitySets"));
       }
       if (idProjectMap.get(id) == null) {
         idProjectMap.put(id, qset);
@@ -355,21 +355,21 @@ public class QImporter implements TTImport {
     TTEntity folder = new TTEntity()
       .setIri(projectsFolder.getIri())
       .addType(iri(IM.FOLDER))
-      .setScheme(Namespace.IM.asIri())
+      .setScheme(NAMESPACE.IM.asIri())
       .setName("Q Project based code groups")
       .setDescription("Folder containing the Q research  concept groups");
     folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
     document.addEntity(folder);
-    folder.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "QueryConceptSets"));
+    folder.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "QueryConceptSets"));
    /* TTEntity qFolder = new TTEntity()
-      .setIri(Namespace.IM + "Q_PredictionQueries")
+      .setIri(NAMESPACE.IM + "Q_PredictionQueries")
       .addType(iri(IM.FOLDER))
-      .setScheme(Namespace.IM.asIri())
+      .setScheme(NAMESPACE.IM.asIri())
       .setName("Predication queries")
       .setDescription("Folder containing queries for prediction algorithms");
     qFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
     document.addEntity(qFolder);
-    qFolder.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(Namespace.IM + "Q_Queries"));
+    qFolder.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "Q_Queries"));
 
     */
   }

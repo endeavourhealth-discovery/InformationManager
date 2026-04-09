@@ -1,4 +1,4 @@
-package org.endeavourhealth.plugins;
+package org.endeavourhealth.staticConstGenerator;
 
 import org.gradle.api.provider.Property;
 

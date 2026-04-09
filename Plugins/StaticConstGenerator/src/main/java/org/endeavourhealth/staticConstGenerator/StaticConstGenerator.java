@@ -1,4 +1,4 @@
-package org.endeavourhealth.plugins;
+package org.endeavourhealth.staticConstGenerator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,24 +21,23 @@ public class StaticConstGenerator implements Plugin<Project> {
     VocabGeneratorExtension extension = project.getExtensions().create("staticConstGenerator", VocabGeneratorExtension.class);
     extension.getInputJson().convention("./vocab.json");
     extension.getJavaOutputFolder().convention("./");
-    extension.getTypeScriptOutputFolder().convention("./");
     project.getTasks().register("staticConstGenerator", t -> t
-      .doLast(s -> execute(
-        project.getProjectDir().getAbsolutePath(),
-        extension.getInputJson().get(),
-        extension.getJavaOutputFolder().get(),
-        extension.getTypeScriptOutputFolder().get())
+      .doLast(
+        s -> execute(
+          project.getProjectDir().getAbsolutePath(),
+          extension.getInputJson().get(),
+          extension.getJavaOutputFolder().get()
+        )
       )
     );
   }
 
-  public void execute(String baseDir, String jsonIn, String javaOut, String tsOut) {
+  public void execute(String baseDir, String jsonIn, String javaOut) {
     if (!baseDir.endsWith("/"))
       baseDir += "/";
 
     jsonIn = baseDir + jsonIn;
     javaOut = baseDir + javaOut;
-    tsOut = baseDir + tsOut;
 
     try (InputStream in = new FileInputStream(jsonIn)) {
 
@@ -48,7 +47,6 @@ public class StaticConstGenerator implements Plugin<Project> {
 
       for (VocabDef def : defs) {
         generateJava(javaOut, def);
-        generateTypeScript(tsOut, def);
       }
     } catch (Exception e) {
       throw new RuntimeException(e);

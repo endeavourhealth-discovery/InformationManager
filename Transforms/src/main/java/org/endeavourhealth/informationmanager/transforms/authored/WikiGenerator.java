@@ -26,11 +26,11 @@ public class WikiGenerator {
   public String generateDocs(String importFolder) throws DataFormatException, IOException {
     this.importFolder = importFolder;
     StringBuilder documentation = new StringBuilder();
-    veto.add(Namespace.IM + "Organisation");
-    veto.add(Namespace.IM + "ComputerSystem");
+    veto.add(NAMESPACE.IM + "Organisation");
+    veto.add(NAMESPACE.IM + "ComputerSystem");
     List<String> folders = List.of("BasicShapes", "DataModelShapes", "ConceptShapes", "QueryShapes", "TransformMapShapes", "TransactionalShapes");
     for (String folder : folders) {
-      String folderIri = Namespace.IM + folder;
+      String folderIri = NAMESPACE.IM + folder;
       TTEntity heading = getEntity(folderIri);
       documentation.append("== ").append(heading.getName()).append(" ==\n");
       String description = convertHtml(heading.getDescription());
@@ -261,7 +261,7 @@ public class WikiGenerator {
       return "any valid json value characters with json escapes";
     } else if (iri.getIri().equals(XSD.INTEGER.toString())) {
       return "whole number";
-    } else if (iri.getIri().equals((Namespace.IM + "DateTime"))) {
+    } else if (iri.getIri().equals((NAMESPACE.IM + "DateTime"))) {
       return "im date time format";
     } else if (iri.getIri().equals(XSD.BOOLEAN.toString())) {
       return "boolean true or false";

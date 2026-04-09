@@ -1,4 +1,4 @@
-package org.endeavourhealth.plugins;
+package org.endeavourhealth.staticCOnstGenerator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
