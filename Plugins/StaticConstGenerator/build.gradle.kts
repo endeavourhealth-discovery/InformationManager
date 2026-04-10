@@ -10,7 +10,7 @@ description = "Static Const Generator"
 gradlePlugin {
   plugins {
     create("StaticConstGenerator") {
-      id = "org.endeavourhealth.staticConstGenerator.StaticConstGenerator"
+      id = "org.endeavourhealth.plugins.static-const-generator"
       implementationClass = "org.endeavourhealth.staticConstGenerator.StaticConstGenerator"
 
     }

@@ -21,14 +21,16 @@ public class StaticConstGenerator implements Plugin<Project> {
     VocabGeneratorExtension extension = project.getExtensions().create("staticConstGenerator", VocabGeneratorExtension.class);
     extension.getInputJson().convention("./vocab.json");
     extension.getJavaOutputFolder().convention("./");
-    project.getTasks().register("staticConstGenerator", t -> t
-      .doLast(
-        s -> execute(
-          project.getProjectDir().getAbsolutePath(),
-          extension.getInputJson().get(),
-          extension.getJavaOutputFolder().get()
-        )
-      )
+    project.getTasks().register("staticConstGenerator", t -> {
+        t.setGroup("org.endeavourhealth.plugins");
+        t.doLast(
+          s -> execute(
+            project.getProjectDir().getAbsolutePath(),
+            extension.getInputJson().get(),
+            extension.getJavaOutputFolder().get()
+          )
+        );
+      }
     );
   }
 
