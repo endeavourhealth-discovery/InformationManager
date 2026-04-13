@@ -762,7 +762,6 @@ public class CoreQueryImporter implements TTImport {
           .return_(p -> p.setIri(IM.USAGE_TOTAL))
       ));
   }
-
   private void allowableSubTypes() throws JsonProcessingException {
     Query query = new Query()
       .setName("Allowable subtypes for a particular entity")
@@ -780,6 +779,7 @@ public class CoreQueryImporter implements TTImport {
       .or(m->m
         .and(m1->m1
           .where(w->w
+            .setSubjectParameter("this")
             .setIsNull(true)
             .setIri(IM.CONTENT_TYPE)))
         .and(m1->m1
@@ -795,7 +795,6 @@ public class CoreQueryImporter implements TTImport {
     getFormValidationEntity("AllowableChildTypes", "Allowable child types for editor", "used in the editor to select the type of entity being created as a subtype")
       .set(iri(IM.DEFINITION), TTLiteral.literal(query));
   }
-
 
   private void isAllowableRange() throws JsonProcessingException {
     getFormValidationEntity("IsAllowableRange", "Is an entity an allowable range a particular property", "uses inverse range property to check the ranges of the property as authored. Should be used with another ")
