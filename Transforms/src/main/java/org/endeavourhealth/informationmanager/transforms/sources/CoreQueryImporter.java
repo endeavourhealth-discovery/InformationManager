@@ -34,6 +34,8 @@ public class CoreQueryImporter implements TTImport {
       telephoneProperty("homeTelephoneNumber", "home");
       telephoneProperty("mobileTelephoneNumber", "mobile");
       telephoneProperty("workTelephoneNumber", "mobile");
+      mainLanguage();
+      ethnicity();
       entityFilter();
       age();
       gmsRegistration();
@@ -254,6 +256,41 @@ public class CoreQueryImporter implements TTImport {
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(query));
     document.addEntity(gms);
+
+  }
+
+
+  private void ethnicity() throws JsonProcessingException {
+    TTEntity ethnicity = new TTEntity()
+      .setIri(NAMESPACE.IM + "ethnicity")
+      .setCrud(iri(IM.ADD_QUADS))
+      .setScheme(NAMESPACE.IM.asIri())
+      .set(iri(IM.DEFINITION), TTLiteral.literal(
+        new Query()
+          .setName("Ethnicity definition")
+          .setTypeOf(NAMESPACE.IM + "Observation")
+          .where(ob->ob
+            .setIri(NAMESPACE.IM + "concept")
+            .is(is -> is.setIri(NAMESPACE.IM + "im:VSET_Ethnicity").setMemberOf(true)))
+          .orderBy(ob -> ob.addProperty(new OrderDirection().setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+    document.addEntity(ethnicity);
+
+  }
+
+  private void mainLanguage() throws JsonProcessingException {
+    TTEntity ethnicity = new TTEntity()
+      .setIri(NAMESPACE.IM + "mainSpokenLanguage")
+      .setCrud(iri(IM.ADD_QUADS))
+      .setScheme(NAMESPACE.IM.asIri())
+      .set(iri(IM.DEFINITION), TTLiteral.literal(
+        new Query()
+          .setName("Main language definition")
+          .setTypeOf(NAMESPACE.IM + "Observation")
+          .where(ob->ob
+            .setIri(NAMESPACE.IM + "concept")
+            .is(is -> is.setIri(NAMESPACE.SNOMED+ "370157003").setDescendantsOrSelfOf(true)))
+          .orderBy(ob -> ob.addProperty(new OrderDirection().setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+    document.addEntity(ethnicity);
 
   }
 
@@ -589,7 +626,7 @@ public class CoreQueryImporter implements TTImport {
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri(NAMESPACE.SNOMED + "714628002").setDescendantsOf(true)))))
       .and(q -> q
-        .setDescription("Latest systolic within 12 months of the search date")
+        .setDescription("Latest systolic within 12 months of the search date is high")
         .setTypeOf(NAMESPACE.IM + "Observation")
         .where(and -> and
           .and(ww -> ww
@@ -644,7 +681,8 @@ public class CoreQueryImporter implements TTImport {
         .setNode("HighBPReading"))
       .and(q ->q
         .setName("Invited for screening after high BP reading")
-        .setDescription("invited for screening with an effective date after then effective date of the high BP reading")
+        .setNotExists(true)
+        .setDescription("Already invited for screening with an effective date after the effective date of the high BP reading")
         .setNodeRef("HighBPReading")
         .setTypeOf(NAMESPACE.IM + "Procedure")
         .where(and -> and
