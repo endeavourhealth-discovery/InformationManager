@@ -19,6 +19,8 @@ import org.endeavourhealth.imapi.vocabulary.GRAPH;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
 import org.endeavourhealth.imapi.vocabulary.SHACL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import java.io.BufferedReader;
@@ -32,6 +34,7 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class IndicatorImporter {
   public ObjectMapper om= new ObjectMapper();
+  private static final Logger LOG = LoggerFactory.getLogger(IndicatorImporter.class);
   private final EntityService entityService = new EntityService();
   private final QueryDescriptor descriptor = new QueryDescriptor();
   private NAMESPACE namespace;
@@ -256,8 +259,11 @@ public class IndicatorImporter {
             String queryLabel = fields[3].replace("\"", "");
             String parent = fields[5];
             List<TTBundle> test = entityService.getEntityFromTerm(queryLabel, Set.of(namespace.toString(), NAMESPACE.QOF.toString()));
-            if (test.isEmpty())
-              throw new Exception("Indicator not found: " + queryLabel);
+            if (test.isEmpty()) {
+							LOG.error("Indicator not found: {}", queryLabel);
+              line=reader.readLine();
+              continue;
+            }
             String queryIri = test.get(0).getEntity().getIri();
             String indicatorIri = namespace + "Indicator-" + indicatorLabel.hashCode();
             TTEntity indicator = new TTEntity();
