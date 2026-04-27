@@ -145,38 +145,28 @@ public class CoreQueryImporter implements TTImport {
       .setDescription("Is the patient registered as a GMS patient on the reference date?")
       .setTypeOf(NAMESPACE.IM + "Patient")
       .and(m -> m
-        .path(p -> p
-          .setIri(NAMESPACE.IM + "episodeOfCare")
-          .setTypeOf(NAMESPACE.IM + "EpisodeOfCare")
-          .setNode("reg"))
+        .setTypeOf(NAMESPACE.IM + "EpisodeOfCare")
         .where(w -> w
           .and(pv -> pv
-            .setNodeRef("reg")
             .setIri(NAMESPACE.IM + "gpPatientType")
             .addIs(new Node().setIri("http://hl7.org/fhir/registration-type/r").setName("Regular GMS patient")))
           .and(pv -> pv
-            .setNodeRef("reg")
             .setIri(NAMESPACE.IM + "effectiveDate")
             .setOperator(Operator.lte)
             .setCompare(new Compare()
               .setLeft(new ValueSource()
-                .setNodeRef("reg")
                 .setIri(NAMESPACE.IM+"effectiveDate"))
               .setRight(new ValueSource()
                 .setParameter("$searchDate"))))
           .and(pv -> pv
-            .setNodeRef("reg")
             .or(pv1 -> pv1
-              .setNodeRef("reg")
               .setIri(NAMESPACE.IM + "endDate")
               .setIsNull(true))
             .or(pv1 -> pv1
-              .setNodeRef("reg")
               .setIri(NAMESPACE.IM + "endDate")
               .setOperator(Operator.gt)
               .setCompare(new Compare()
                 .setLeft(new ValueSource()
-                  .setNodeRef("reg")
                   .setIri(NAMESPACE.IM+"endDate"))
                 .setRight(new ValueSource()
                   .setParameter("$searchDate")))))));
