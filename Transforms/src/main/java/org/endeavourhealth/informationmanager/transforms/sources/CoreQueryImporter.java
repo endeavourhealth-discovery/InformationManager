@@ -38,6 +38,8 @@ public class CoreQueryImporter implements TTImport {
       ethnicity();
       entityFilter();
       age();
+      ageAtEvent();
+      placeOfResidenceAtEvent();
       gmsRegistration();
       gmsRegistrationStatus();
       gmsRegisteredPractice();
@@ -293,7 +295,7 @@ public class CoreQueryImporter implements TTImport {
       .set(iri(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName(value + " address property definition")
-          .path(p -> p.setIri(NAMESPACE.IM + propertyName).setTypeOf(NAMESPACE.IM + "AssignedAddress")
+          .path(p -> p.setIri(NAMESPACE.IM + "address").setTypeOf(NAMESPACE.IM + "AssignedAddress")
             .setNode("Address")
           )
           .where(and -> and
@@ -327,6 +329,10 @@ public class CoreQueryImporter implements TTImport {
               .setIri(NAMESPACE.IM + "addressUse")
               .is(is -> is.setIri("http://hl7.org/fhir/fhir-address-use/" + value))))
           .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+    TTNode parameter = new TTNode();
+    parameter.set(iri(RDFS.LABEL), TTLiteral.literal("eventDate"));
+    parameter.set(iri(SHACL.DATATYPE), iri(NAMESPACE.IM + "DateTime"));
+    address.addObject(iri(SHACL.PARAMETER), parameter);
     document.addEntity(address);
 
 
@@ -359,26 +365,93 @@ public class CoreQueryImporter implements TTImport {
   private void age() throws JsonProcessingException {
     Query ageQuery = new Query();
     ageQuery.setName("Age function");
-    FunctionClause functionClause = new FunctionClause();
-    functionClause.setIri(NAMESPACE.IM+"TimeDifference");
-    functionClause.addArgument(new Argument()
-      .setParameter("firstDate")
-      .setValueIri(iri(NAMESPACE.IM+"dateOfBirth")));
-    functionClause.addArgument(new Argument()
-      .setParameter("secondDate")
-      .setValueParameter("$indexDate"));
-    functionClause.addArgument(new Argument()
-      .setParameter("unit")
-      .setValueParameter("$ageUnits"));
-    ageQuery.setFunction(functionClause);
+    ageQuery.where(w->w
+      .compare(c->c
+        .left(l->l
+          .setIri(NAMESPACE.IM + "dateOfBirth"))
+        .right(r->r
+          .setParameter("$searchDate"))));
     TTEntity age = new TTEntity()
       .setIri(NAMESPACE.IM + "age")
       .setCrud(iri(IM.UPDATE_PREDICATES))
       .setScheme(NAMESPACE.IM.asIri())
       .set(iri(IM.DEFINITION),
         TTLiteral.literal(ageQuery));
+    TTNode parameter = new TTNode();
+    parameter.set(iri(RDFS.LABEL), TTLiteral.literal("searchDate"));
+    parameter.set(iri(SHACL.DATATYPE), iri(NAMESPACE.IM + "DateTime"));
+    age.addObject(iri(SHACL.PARAMETER), parameter);
     document.addEntity(age);
   }
+  private void ageAtEvent() throws JsonProcessingException {
+    Query ageQuery = new Query();
+    ageQuery.setName("Age at event function")
+    .path(p->p
+      .setIri(NAMESPACE.IM + "patient")
+        .setNode("pat")
+          .setTypeOf(NAMESPACE.IM.toString() + "Patient"))
+    .where(w->w
+      .compare(c->c
+        .left(l->l
+          .setIri(NAMESPACE.IM + "dateOfBirth"))
+        .right(r->r
+          .setIri(NAMESPACE.IM + "effectiveDate"))));
+    TTEntity age = new TTEntity()
+      .setIri(NAMESPACE.IM + "ageAtEvent")
+      .setCrud(iri(IM.UPDATE_PREDICATES))
+      .setScheme(NAMESPACE.IM.asIri())
+      .set(iri(IM.DEFINITION),
+        TTLiteral.literal(ageQuery));
+    document.addEntity(age);
+  }
+
+  private void placeOfResidenceAtEvent() throws JsonProcessingException {
+    TTEntity entity = new TTEntity()
+      .setIri(NAMESPACE.IM + "placeOfResidenceAtEvent")
+      .setCrud(iri(IM.UPDATE_PREDICATES))
+      .setScheme(NAMESPACE.IM.asIri())
+      .set(iri(IM.DEFINITION), TTLiteral.literal(
+        new Query()
+          .setName("place of residence at event")
+          .path(p -> p.setIri(NAMESPACE.IM + "address").setTypeOf(NAMESPACE.IM + "AssignedAddress")
+            .setNode("Address")
+          )
+          .where(and -> and
+            .and(w -> w
+              .setNodeRef("Address")
+              .setIri(NAMESPACE.IM + "effectiveDate")
+              .setCompare(new Compare()
+                .setLeft(new ValueSource()
+                  .setNodeRef("Address")
+                  .setIri(NAMESPACE.IM+"effectiveDate"))
+                .setRight(new ValueSource()
+                  .setIri(NAMESPACE.IM.toString()+"effectiveDate")))
+              .setOperator(Operator.lte))
+            .and(w -> w
+              .or(or->or
+                .setNodeRef("Address")
+                .setIri(NAMESPACE.IM + "endDate")
+                .setIsNull(true))
+              .or(or -> or
+                .setNodeRef("Address")
+                .setIri(NAMESPACE.IM + "endDate")
+                .setOperator(Operator.gt)
+                .setCompare(new Compare()
+                  .setLeft(new ValueSource()
+                    .setNodeRef("Address")
+                    .setIri(NAMESPACE.IM+"endDate"))
+                  .setRight(new ValueSource()
+                    .setIri(NAMESPACE.IM.toString()+"effectiveDate")))))
+            .and(w -> w
+              .setNodeRef("Address")
+              .setIri(NAMESPACE.IM + "addressUse")
+              .is(is -> is.setIri("http://hl7.org/fhir/fhir-address-use/home" ))))
+          .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+    document.addEntity(entity);
+
+  }
+
+
 
 
   private void objectPropertyRangeSuggestions() throws JsonProcessingException {
@@ -572,29 +645,15 @@ public class CoreQueryImporter implements TTImport {
     Value fromAge = new Value();
     fromAge.setOperator(Operator.gte)
       .setUnits(iri(IM.YEARS))
-      .setValue("65")
-      .compare(d->d
-        .left (l->l
-          .setIri(NAMESPACE.IM+"dateOfBirth"))
-        .right(r->r
-          .setParameter("$searchDate"))
-        .setUnits(iri(IM.YEARS)));
+      .setValue("65");
     Value toAge = new Value();
     toAge
       .setOperator(Operator.lt)
       .setUnits(iri(IM.YEARS))
-      .setValue("70")
-      .compare(d->d
-        .left (l->l
-          .setIri(NAMESPACE.IM+"dateOfBirth"))
-        .right(r->r
-          .setParameter("$searchDate"))
-        .setUnits(iri(IM.YEARS)));
+      .setValue("70");
     ageWhere
       .setIri(NAMESPACE.IM + "age")
-      .range(r -> r
-        .setFrom(fromAge)
-        .setTo(toAge));
+      .setRange(new Range().setFrom(fromAge).setTo(toAge));
     Query query = new Query()
       .setTypeOf(NAMESPACE.IM + "Patient")
       .setIri(NAMESPACE.IM + "Q_TestQuery")
@@ -631,7 +690,6 @@ public class CoreQueryImporter implements TTImport {
               .setDescendantsOrSelfOf(true)
               .setName("Home systolic blood pressure")))
           .and(ww->ww
-            .setIri(NAMESPACE.IM + "effectiveDate")
             .compare(c->c
               .left(l->l
                 .setIri(NAMESPACE.IM + "effectiveDate"))
@@ -680,7 +738,6 @@ public class CoreQueryImporter implements TTImport {
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri("http://snomed.info/sct#310422005").setName("invited for screening").setMemberOf(true)))
           .and(inv->inv
-            .setIri(NAMESPACE.IM + "effectiveDate")
             .setOperator(Operator.gte)
             .compare(c->c
               .left(l->l

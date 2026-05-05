@@ -123,7 +123,9 @@ public class IndicatorImporter {
 
     TTEntity columnEntity= columnGroupNameToEntity.get(columnGroupName);
     Match columnGroup= columnEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-    columnGroup.setWhere(match.getWhere());
+    Where where= match.getWhere();
+    removeWhere(where);
+    columnGroup.setWhere(where);
     Set<Node> conceptSets= new HashSet<>();
     String valueLabel=addConceptSets(match,conceptSets);
     columnGroup.setName(valueLabel);
@@ -136,6 +138,31 @@ public class IndicatorImporter {
         .setLimit(1));
     }
     datasetQuery.addColumnGroup(columnGroup);
+  }
+
+  private boolean removeWhere(Where where){
+    for (List<Where> wheres : Arrays.asList(where.getAnd(),where.getOr())) {
+      if (wheres!=null){
+        for (int i=0; i<wheres.size();i++){
+          if (removeWhere(wheres.get(i))){
+            wheres.remove(i);
+            i--;
+          }
+        }
+      }
+    }
+    if (where.getIri()==null && where.getCompare()!=null) {
+      if (where.getCompare().getRight().getIri()!=null ||where.getCompare().getRight().getPropertyRef()!=null){
+        return true;
+      }
+    }
+    if (where.getRange()!=null){
+      return true;
+    }
+    if (where.getOperator()!=null && where.getValue()!=null &&!where.getValue().equals("0")){
+      return true;
+    }
+    return false;
   }
 
   private Where needsValue(Match match) {
