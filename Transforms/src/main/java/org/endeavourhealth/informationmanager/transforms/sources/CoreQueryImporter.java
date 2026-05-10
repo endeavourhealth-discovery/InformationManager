@@ -726,7 +726,10 @@ public class CoreQueryImporter implements TTImport {
               .setIri(NAMESPACE.IM+"value")
               .setOperator(Operator.gt)
               .setValue("130"))))
-        .setNode("HighBPReading"))
+        .setNode("HighBPReading")
+        .return_(r->r
+          .as("date")
+          .setIri(NAMESPACE.IM + "effectiveDate")))
       .and(q ->q
         .setName("Invited for screening after high BP reading")
         .setNotExists(true)
@@ -744,7 +747,7 @@ public class CoreQueryImporter implements TTImport {
                 .setIri(NAMESPACE.IM + "effectiveDate"))
               .right (r->r
                 .setNodeRef("HighBPReading")
-                .setIri(NAMESPACE.IM + "effectiveDate"))))))
+                .setIri(NAMESPACE.IM + "effectiveDate").setPropertyRef("date"))))))
       .and(q -> q
         .setNotExists(true)
         .setName("on hypertension register")
