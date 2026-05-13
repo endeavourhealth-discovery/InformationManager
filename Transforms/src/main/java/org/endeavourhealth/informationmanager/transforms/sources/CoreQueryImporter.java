@@ -664,8 +664,8 @@ public class CoreQueryImporter implements TTImport {
           .setIsCohort(true)
           .setName("Registered for GMS services on reference date")))
       .and(q -> q
-        .setTypeOf(NAMESPACE.IM + "Patient")
         .or(m -> m
+          .setTypeOf(NAMESPACE.IM + "Patient")
           .setDescription("aged between 65 and 70")
           .setWhere(ageWhere))
         .or(m -> m
@@ -673,7 +673,7 @@ public class CoreQueryImporter implements TTImport {
           .setDescription("has pre-diabetes")
           .where(w -> w
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
-            .addIs(new Node().setIri(NAMESPACE.SNOMED + "714628002").setDescendantsOf(true)))))
+            .addIs(new Node().setIri(NAMESPACE.SNOMED + "714628002").setDescendantsOrSelfOf(true)))))
       .and(q -> q
         .setDescription("Latest systolic within 12 months of the search date is high")
         .setTypeOf(NAMESPACE.IM + "Observation")
