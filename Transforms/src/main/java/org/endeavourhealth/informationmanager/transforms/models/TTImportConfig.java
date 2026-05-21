@@ -13,6 +13,7 @@ public class TTImportConfig {
   private boolean skipdelete = false;
   private boolean skiplucene = false;
   private boolean skipBulk = false;
+  private String subFolder;
   private List<ImportType> imports = new ArrayList<>();
   private String singleEntity;
   private String eqdFile;
@@ -25,7 +26,14 @@ public class TTImportConfig {
     return this;
   }
 
+public String getSubFolder() {
+    return subFolder;
+}
 
+public TTImportConfig setSubFolder(String subFolder) {
+    this.subFolder = subFolder;
+    return this;
+}
 
   public String getEqdFile() {
     return eqdFile;

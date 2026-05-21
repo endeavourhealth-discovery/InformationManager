@@ -32,8 +32,8 @@ public class SingleEqdQueryImport {
 	private final EqdToIMQ converter = new EqdToIMQ(false);
 	private NAMESPACE namespace;
 
-	public void importEqd(String folder,String reportId,NAMESPACE namespace) throws Exception {;
-		Path startDir = Paths.get(folder);
+	public void importEqd(String folder,String subFolder,String reportId,NAMESPACE namespace) throws Exception {;
+		Path startDir = Paths.get(subFolder);
 		if (!Files.isDirectory(startDir)) {
 			System.err.println("The path provided is not a directory.");
 			System.exit(2);

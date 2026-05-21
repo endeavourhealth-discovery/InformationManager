@@ -40,9 +40,10 @@ public class CoreQueryImporter implements TTImport {
       age();
       ageAtEvent();
       placeOfResidenceAtEvent();
-      gmsRegistration();
+      gmsRegistrationAtEvent();
       gmsRegistrationStatus();
       gmsRegisteredPractice();
+      gmsRegistration();
       getDescendants();
       getSubclasses();
       getConcepts();
@@ -174,8 +175,46 @@ public class CoreQueryImporter implements TTImport {
                   .setParameter("$searchDate")))))));
   }
 
-
   private void gmsRegistration() throws JsonProcessingException {
+    TTEntity gms = new TTEntity()
+      .setIri(NAMESPACE.IM + "gmsRegistration")
+      .setCrud(iri(IM.UPDATE_PREDICATES))
+      .setScheme(NAMESPACE.IM.asIri())
+        .set(iri(IM.DEFINITION),TTLiteral.literal(new Query()
+      .setName("gms registration episode")
+      .setDescription("Current registration episode on search date")
+      .setTypeOf(NAMESPACE.IM + "Patient")
+      .and(m -> m
+        .setTypeOf(NAMESPACE.IM + "EpisodeOfCare")
+        .where(w -> w
+          .and(pv -> pv
+            .setIri(NAMESPACE.IM + "gpPatientType")
+            .addIs(new Node().setIri("http://hl7.org/fhir/registration-type/r").setName("Regular GMS patient")))
+          .and(pv -> pv
+            .setIri(NAMESPACE.IM + "effectiveDate")
+            .setOperator(Operator.lte)
+            .setCompare(new Compare()
+              .setLeft(new ValueSource()
+                .setIri(NAMESPACE.IM+"effectiveDate"))
+              .setRight(new ValueSource()
+                .setParameter("$searchDate"))))
+          .and(pv -> pv
+            .or(pv1 -> pv1
+              .setIri(NAMESPACE.IM + "endDate")
+              .setIsNull(true))
+            .or(pv1 -> pv1
+              .setIri(NAMESPACE.IM + "endDate")
+              .setOperator(Operator.gt)
+              .setCompare(new Compare()
+                .setLeft(new ValueSource()
+                  .setIri(NAMESPACE.IM+"endDate"))
+                  .setRight(new ValueSource()
+                    .setParameter("$searchDate")))))))));
+     document.addEntity(gms);
+  }
+
+
+  private void gmsRegistrationAtEvent() throws JsonProcessingException {
     TTEntity gms = new TTEntity()
       .setIri(NAMESPACE.IM + "gmsRegistrationAtEvent")
       .setCrud(iri(IM.UPDATE_PREDICATES))
@@ -450,7 +489,6 @@ public class CoreQueryImporter implements TTImport {
     document.addEntity(entity);
 
   }
-
 
 
 
@@ -731,8 +769,8 @@ public class CoreQueryImporter implements TTImport {
           .as("date")
           .setIri(NAMESPACE.IM + "effectiveDate")))
       .and(q ->q
-        .setName("Invited for screening after high BP reading")
         .setNotExists(true)
+        .setName("Invited for screening after high BP reading")
         .setDescription("Already invited for screening with an effective date after the effective date of the high BP reading")
         .setNodeRef("HighBPReading")
         .setTypeOf(NAMESPACE.IM + "Procedure")
@@ -748,7 +786,7 @@ public class CoreQueryImporter implements TTImport {
               .right (r->r
                 .setNodeRef("HighBPReading")
                 .setIri(NAMESPACE.IM + "effectiveDate").setPropertyRef("date"))))))
-      .and(q -> q
+      .and(not -> not
         .setNotExists(true)
         .setName("on hypertension register")
         .setDescription("is registered on the hypertensives register")

@@ -52,6 +52,7 @@ public class ImportApp {
           case "skiplucene" -> cfg.setSkiplucene(true);
           case "privacy" -> TTFilerFactory.setPrivacyLevel(Integer.parseInt(args[i].split("=")[1]));
           case "entity" -> cfg.setSingleEntity(args[i].split("=")[1]);
+          case "subFolder" -> cfg.setSubFolder(args[i].split("=")[1]);
           default -> {
             if (args[i].contains("test="))
               testDirectory = args[i].substring(args[i].lastIndexOf("=") + 1);
