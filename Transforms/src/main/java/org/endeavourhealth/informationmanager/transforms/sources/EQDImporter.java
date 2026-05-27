@@ -299,10 +299,9 @@ public class EQDImporter {
 				if (entity.get(iri(IM.DEFINITION)) != null) {
 					Query qry = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 					if (qry.getIs()!=null) {
-						String parent = qry.getIs().get(0).getIri();
+						String parent = qry.getIs().getIri();
 						if (parent.equals(NAMESPACE.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
-							qry.setIs(new ArrayList<>());
-							qry.addIs(new Node().setIri(NAMESPACE.IM + "Q_RegisteredPatient"));
+							qry.setIs(new Node().setIri(NAMESPACE.IM + "Q_RegisteredPatient"));
 							entity.set(iri(IM.DEFINITION), TTLiteral.literal(qry));
 						}
 					}

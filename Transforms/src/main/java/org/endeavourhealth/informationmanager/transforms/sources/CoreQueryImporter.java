@@ -536,7 +536,7 @@ public class CoreQueryImporter implements TTImport {
           .and(m -> m
             .setName("Data model property")
             .setDescription("A given property ($myProperty) of a given data model ($myDataModel)")
-            .addIs(new Node()
+            .setIs(new Node()
               .setParameter("myDataModel"))
             .addPath(new Path()
               .setIri(SHACL.PROPERTY.toString())
@@ -602,7 +602,7 @@ public class CoreQueryImporter implements TTImport {
           .and(m -> m
             .setName("Data model property ranges")
             .setDescription("The range (node, class or datatype) of $myProperty on $myDataModel")
-            .addIs(new Node()
+            .setIs(new Node()
               .setParameter("myDataModel"))
             .addPath(new Path()
               .setIri("http://www.w3.org/ns/shacl#property")
@@ -656,7 +656,7 @@ public class CoreQueryImporter implements TTImport {
         .setActiveOnly(true)
         .setDescription("All super types of an entity (where the entity 'is a' $this)")
         .setNode("isa")
-        .addIs(new Node()
+        .setIs(new Node()
           .setParameter("this")
           .setAncestorsOf(true))
         .return_(p -> p.setNodeRef("isa").setIri(RDFS.LABEL))
@@ -998,7 +998,7 @@ public class CoreQueryImporter implements TTImport {
       .set(iri(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Properties that can be used for a concept {this}")
-          .addIs(new Node().setParameter("this").setAncestorsOf(true))
+          .setIs(new Node().setParameter("this").setAncestorsOf(true))
           .where(w->w
             .and(w1->w1
               .setInverse(true)
@@ -1156,7 +1156,7 @@ public class CoreQueryImporter implements TTImport {
           .setActiveOnly(true)
           .setDescription("Is a descendant of, or $this")
           .setNode("isa")
-          .addIs(new Node()
+          .setIs(new Node()
             .setParameter("this")
             .setDescendantsOrSelfOf(true))
           .return_(p -> p.setNodeRef("isa").setIri(RDFS.LABEL))

@@ -81,7 +81,7 @@ public class IndicatorImporter {
       document.addEntity(dataSetEntity);
       Query datasetQuery = new Query();
       datasetQuery.setTypeOf(NAMESPACE.IM + "Patient");
-      datasetQuery.addIs(Node.iri(cohortIri));
+      datasetQuery.setIs(Node.iri(cohortIri));
       dataSetEntity.addObject(iri(IM.DEPENDENT_ON), iri(cohortIri));
       TTEntity patientDetails = columnGroupNameToEntity.get("Patient details");
       Query patientColumnGroup = patientDetails.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
@@ -302,9 +302,8 @@ public class IndicatorImporter {
             Query indicatorQuery = indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
             Match rule= indicatorQuery.getRule().getFirst();
             if (rule.getIs() != null) {
-              for (Node cohort : rule.getIs()) {
-                indicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
-              }
+              Node cohort = rule.getIs();
+              indicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
             }
             indicator.set(iri(IM.NUMERATOR), iri(queryIri));
             String orderText = fields[1];
@@ -433,12 +432,11 @@ public class IndicatorImporter {
 
   private void configureMatch(TTEntity indicatorEntity, Match match,TTEntity queryEntity,Bool operator) throws Exception {
     if (match.getIs() != null) {
-      for (Node cohort: match.getIs()) {
+      Node cohort= match.getIs();
         TTEntity cohortEntity = getEntityFromIri(cohort.getIri());
         //TTEntity childEntity = createChildIndicator(cohort.getIri(), cohortEntity.getName(), indicatorEntity, operator);
         //configureIndicator(childEntity, cohortEntity, operator == Bool.or ? Bool.or : Bool.and);
         return;
-      }
     }
     if (match.getAnd() != null) {
       for (Match subMatch : match.getAnd()) {
