@@ -445,6 +445,9 @@ public class IM1MapImport implements TTImport {
           namespace = NAMESPACE.FHIR;
         }
         break;
+      case "DM+D":
+        namespace = NAMESPACE.SNOMED;
+        break;
       default:
         if (code.startsWith("DM_"))
           LOG.info("data model property");
