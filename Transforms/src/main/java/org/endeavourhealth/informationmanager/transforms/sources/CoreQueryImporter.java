@@ -248,7 +248,6 @@ public class CoreQueryImporter implements TTImport {
     query.addReturn(returnProperty);
     returnProperty.case_(c -> c
       .when(when -> when
-        .where(w -> w
           .or(w1 -> w1
             .setIri(NAMESPACE.IM + "dateOfDeath")
             .setIsNull(true))
@@ -259,10 +258,9 @@ public class CoreQueryImporter implements TTImport {
               .setLeft(new ValueSource()
                 .setIri(NAMESPACE.IM+"dateOfDeath"))
               .setRight(new ValueSource()
-                .setParameter("$searchDate")))))
-        .setThen(NAMESPACE.IM + "CaseloadStatusDead"))
+                .setParameter("$searchDate"))))
+        .setThen(new Expression().setValue(NAMESPACE.IM + "CaseloadStatusDead")))
       .when(when -> when
-        .where(pv -> pv
           .or(pv1 -> pv1
             .setNodeRef("currentEpisode")
             .setIri(NAMESPACE.IM + "endDate")
@@ -276,9 +274,9 @@ public class CoreQueryImporter implements TTImport {
                 .setIri(NAMESPACE.IM+"endDate"))
               .setRight(new ValueSource()
                 .setParameter("$searchDate")))
-            .setOperator(Operator.gt)))
-        .setThen(NAMESPACE.IM + "CaseloadStatusActive"))
-      .setElse(NAMESPACE.IM + "CaseloadStatusLeft"));
+            .setOperator(Operator.gt))
+        .setThen(new Expression().setValue(NAMESPACE.IM + "CaseloadStatusActive")))
+      .setElse(new Expression().setValue(NAMESPACE.IM + "CaseloadStatusLeft")));
 
     TTEntity gms = new TTEntity()
       .setIri(NAMESPACE.IM + "gmsRegistrationStatus")
@@ -742,6 +740,7 @@ public class CoreQueryImporter implements TTImport {
             .setDirection(Order.descending))
           .setLimit(1))
         .then(then->then
+          .where(thenw->thenw
           .or(whereEither -> whereEither
             .and(w1 -> w1
               .setIri(NAMESPACE.IM + "concept")
@@ -763,7 +762,7 @@ public class CoreQueryImporter implements TTImport {
             .and(w1 -> w1
               .setIri(NAMESPACE.IM+"value")
               .setOperator(Operator.gt)
-              .setValue("130"))))
+              .setValue("130")))))
         .setNode("HighBPReading")
         .return_(r->r
           .as("date")
