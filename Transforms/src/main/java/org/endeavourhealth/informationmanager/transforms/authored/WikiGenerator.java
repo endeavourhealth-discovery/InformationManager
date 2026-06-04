@@ -3,7 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.authored;
 import org.endeavourhealth.imapi.logic.service.EntityService;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,8 +50,8 @@ public class WikiGenerator {
 
     String name = shape.getName();
     TTIriRef target = null;
-    if (shape.get(iri(SHACL.TARGETCLASS)) != null)
-      target = shape.get(iri(SHACL.TARGETCLASS)).asIriRef();
+    if (shape.get(new TTIriRef(SHACL.TARGETCLASS)) != null)
+      target = shape.get(new TTIriRef(SHACL.TARGETCLASS)).asIriRef();
     String link = getLink(shape.getIri());
 
     classText.append("=== ").append("[")
@@ -63,8 +63,8 @@ public class WikiGenerator {
     }
 
 
-    if (shape.get(iri(RDFS.SUBCLASS_OF)) != null) {
-      TTEntity superShape = getEntity(shape.get(iri(RDFS.SUBCLASS_OF)).asIriRef().getIri());
+    if (shape.get(new TTIriRef(RDFS.SUBCLASS_OF)) != null) {
+      TTEntity superShape = getEntity(shape.get(new TTIriRef(RDFS.SUBCLASS_OF)).asIriRef().getIri());
       classText.append("\nIs a subtype of " + "[[#").append(superShape.getName()).append("|").append(superShape.getName()).append("]]\n\n");
       shapesToDo.add(superShape.getIri());
     }
@@ -112,9 +112,9 @@ public class WikiGenerator {
     StringBuilder classText = new StringBuilder();
     classText.append(generateHeader(shape));
     classText.append(getTable(shape));
-    if (shape.get(iri(IM.EXAMPLE)) != null) {
+    if (shape.get(new TTIriRef(IM.EXAMPLE)) != null) {
       classText.append("{{Note| Example <br>");
-      classText.append(shape.get(iri(IM.EXAMPLE)).asLiteral().getValue()).append(" }}\n");
+      classText.append(shape.get(new TTIriRef(IM.EXAMPLE)).asLiteral().getValue()).append(" }}\n");
     }
 
 
@@ -152,11 +152,11 @@ public class WikiGenerator {
 
   private int getRowSpan(TTEntity shape) {
     int rowSpan = 0;
-    if (shape.get(iri(SHACL.PROPERTY)) != null) {
-      for (TTValue prop : shape.get(iri(SHACL.PROPERTY)).getElements()) {
-        if (prop.asNode().get(iri(IM.INHERITED_FROM)) == null) {
-          if (prop.asNode().get(iri(SHACL.OR)) != null) {
-            rowSpan = rowSpan + prop.asNode().get(iri(SHACL.OR)).size();
+    if (shape.get(new TTIriRef(SHACL.PROPERTY)) != null) {
+      for (TTValue prop : shape.get(new TTIriRef(SHACL.PROPERTY)).getElements()) {
+        if (prop.asNode().get(new TTIriRef(IM.INHERITED_FROM)) == null) {
+          if (prop.asNode().get(new TTIriRef(SHACL.OR)) != null) {
+            rowSpan = rowSpan + prop.asNode().get(new TTIriRef(SHACL.OR)).size();
           } else
             rowSpan++;
         }
@@ -169,34 +169,34 @@ public class WikiGenerator {
 
 
     int rowSpan = 0;
-    if (shape.get(iri(SHACL.PROPERTY)) != null)
+    if (shape.get(new TTIriRef(SHACL.PROPERTY)) != null)
       rowSpan = getRowSpan(shape);
     if (rowSpan > 0)
 
 
-      if (shape.get(iri(SHACL.PROPERTY)) == null) {
+      if (shape.get(new TTIriRef(SHACL.PROPERTY)) == null) {
         table.append("\n|-");
       } else {
 
-        List<TTNode> properties = shape.get(iri(SHACL.PROPERTY)).getElements().stream().map(TTValue::asNode)
-          .sorted(Comparator.comparing((TTNode p) -> p.get(iri(SHACL.ORDER)).asLiteral().intValue()))
+        List<TTNode> properties = shape.get(new TTIriRef(SHACL.PROPERTY)).getElements().stream().map(TTValue::asNode)
+          .sorted(Comparator.comparing((TTNode p) -> p.get(new TTIriRef(SHACL.ORDER)).asLiteral().intValue()))
           .toList();
         int propCount = 0;
         for (TTNode property : properties) {
-          if (property.get(iri(IM.INHERITED_FROM)) != null)
+          if (property.get(new TTIriRef(IM.INHERITED_FROM)) != null)
             continue;
           propCount++;
-          if (property.get(iri(SHACL.OR)) == null) {
+          if (property.get(new TTIriRef(SHACL.OR)) == null) {
             processField(property, 2);
             processCardinality(property);
             processType(property);
             processComment(property);
           } else {
-            table.append("|rowspan=\"").append(property.get(iri(SHACL.OR)).size()).append("\"|");
+            table.append("|rowspan=\"").append(property.get(new TTIriRef(SHACL.OR)).size()).append("\"|");
             String card = getCardinality(property);
             table.append("or<br>").append(card).append("\n|");
             int orCount = 0;
-            for (TTValue orProp : property.get(iri(SHACL.OR)).getElements()) {
+            for (TTValue orProp : property.get(new TTIriRef(SHACL.OR)).getElements()) {
               orCount++;
               processField(orProp.asNode(), 1);
               if (orCount == 1) {
@@ -206,7 +206,7 @@ public class WikiGenerator {
               }
               processType(orProp.asNode());
               processComment(orProp.asNode());
-              if (orCount < property.get(iri(SHACL.OR)).getElements().size())
+              if (orCount < property.get(new TTIriRef(SHACL.OR)).getElements().size())
                 table.append("\n|\n");
             }
           }
@@ -221,7 +221,7 @@ public class WikiGenerator {
   private void processType(TTNode prop) throws DataFormatException, IOException {
     TTIriRef type = null;
     String title = "";
-    for (TTIriRef test : List.of(iri(SHACL.NODE), iri(SHACL.NODE_KIND), iri(SHACL.DATATYPE), iri(SHACL.CLASS))) {
+    for (TTIriRef test : List.of(new TTIriRef(SHACL.NODE), new TTIriRef(SHACL.NODE_KIND), new TTIriRef(SHACL.DATATYPE), new TTIriRef(SHACL.CLASS))) {
       if (prop.get(test) != null) {
         type = prop.get(test).asIriRef();
         title = getTitle(type);
@@ -231,7 +231,7 @@ public class WikiGenerator {
       throw new DataFormatException("Unknown property type in shape");
     String link = getLink(type.getIri());
     String localType = localName(type.getIri());
-    if (prop.get(iri(SHACL.NODE)) != null) {
+    if (prop.get(new TTIriRef(SHACL.NODE)) != null) {
       if (!veto.contains(type.getIri())) {
         if (!shapesToDo.contains(type.getIri())) {
           shapesToDo.add(type.getIri());
@@ -268,8 +268,8 @@ public class WikiGenerator {
     }
     TTEntity entity = getEntity(iri.getIri());
     if (entity != null) {
-      if (entity.get(iri(RDFS.COMMENT)) != null)
-        return entity.get(iri(RDFS.COMMENT)).asLiteral().getValue().replaceAll("<br>", "");
+      if (entity.get(new TTIriRef(RDFS.COMMENT)) != null)
+        return entity.get(new TTIriRef(RDFS.COMMENT)).asLiteral().getValue().replaceAll("<br>", "");
       else
         return "";
     } else
@@ -282,8 +282,8 @@ public class WikiGenerator {
   }
 
   private String getCardinality(TTNode property) {
-    int min = property.get(iri(SHACL.MINCOUNT)) == null ? 0 : property.get(iri(SHACL.MINCOUNT)).asLiteral().intValue();
-    Integer max = property.get(iri(SHACL.MAXCOUNT)) == null ? null : property.get(iri(SHACL.MAXCOUNT)).asLiteral().intValue();
+    int min = property.get(new TTIriRef(SHACL.MINCOUNT)) == null ? 0 : property.get(new TTIriRef(SHACL.MINCOUNT)).asLiteral().intValue();
+    Integer max = property.get(new TTIriRef(SHACL.MAXCOUNT)) == null ? null : property.get(new TTIriRef(SHACL.MAXCOUNT)).asLiteral().intValue();
     if (min == 0 && max == null)
       return "0..*";
     else if (min == 0)
@@ -303,9 +303,9 @@ public class WikiGenerator {
   private void processField(TTNode property, int colspan) throws DataFormatException, IOException {
     if (colspan > 1)
       table.append("|colspan=\"").append(colspan).append("\"|");
-    String link = getLink(property.get(iri(SHACL.PATH)).asIriRef().getIri());
-    String title = getTitle(property.get(iri(SHACL.PATH)).asIriRef());
-    String fieldName = localName(property.get(iri(SHACL.PATH)).asIriRef().getIri());
+    String link = getLink(property.get(new TTIriRef(SHACL.PATH)).asIriRef().getIri());
+    String title = getTitle(property.get(new TTIriRef(SHACL.PATH)).asIriRef());
+    String fieldName = localName(property.get(new TTIriRef(SHACL.PATH)).asIriRef().getIri());
     table.append("<span title=\"").append(title).append("\">");
     table.append("[").append(link).append(" ").append("<span style=\"color:green\">").append(fieldName).append(" ]</span></span>\n");
     //table.append("<span style=\"color:green\">" + " ["+link+" "+ fieldName + "]</span></span>\n");
@@ -314,8 +314,8 @@ public class WikiGenerator {
 
   private void processComment(TTNode property) {
     String comment = "";
-    if (property.get(iri(RDFS.COMMENT)) != null) {
-      comment = property.get(iri(RDFS.COMMENT)).asLiteral().getValue();
+    if (property.get(new TTIriRef(RDFS.COMMENT)) != null) {
+      comment = property.get(new TTIriRef(RDFS.COMMENT)).asLiteral().getValue();
     }
     table.append(comment).append("\n|-\n");
   }
@@ -346,14 +346,14 @@ public class WikiGenerator {
       manager.loadDocument(new File(importFolder + "/DiscoveryCore/CoreOntology.json"));
       List<TTEntity> folders = new ArrayList<>();
       for (TTEntity entity : manager.getDocument().getEntities()) {
-        if (entity.get(iri(IM.IS_CONTAINED_IN)) != null) {
-          for (TTValue value : entity.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
+        if (entity.get(new TTIriRef(IM.IS_CONTAINED_IN)) != null) {
+          for (TTValue value : entity.get(new TTIriRef(IM.IS_CONTAINED_IN)).getElements()) {
             if (value.asIriRef().getIri().equals(iri))
               folders.add(entity);
           }
         }
       }
-      folders.sort(Comparator.comparing((TTNode p) -> p.get(iri(SHACL.ORDER)).asLiteral().intValue()));
+      folders.sort(Comparator.comparing((TTNode p) -> p.get(new TTIriRef(SHACL.ORDER)).asLiteral().intValue()));
       return folders;
     }
   }

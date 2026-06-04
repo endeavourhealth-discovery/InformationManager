@@ -1,6 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.singlesources;
 
-import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
+import org.endeavourhealth.interfacemanager.model.NAMESPACE;
 import org.endeavourhealth.informationmanager.transforms.sources.SingleEqdQueryImport;
 
 public class SingleQuery {
@@ -8,7 +8,7 @@ public class SingleQuery {
 		String importFolder = argv[0];
 		String reportId = argv[1];
 		String subFolder = argv[2];
-		NAMESPACE namespace= NAMESPACE.from(argv[3]);
+		NAMESPACE namespace = NAMESPACE.fromValue(argv[3]);
 		new SingleEqdQueryImport().importEqd(importFolder,subFolder,reportId,namespace);
 		}
 }

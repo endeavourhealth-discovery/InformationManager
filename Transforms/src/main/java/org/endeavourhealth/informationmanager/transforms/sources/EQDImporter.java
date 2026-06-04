@@ -16,7 +16,7 @@ import org.endeavourhealth.imapi.queryengine.QuerySummariser;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.*;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.slf4j.Logger;
@@ -187,11 +187,11 @@ public class EQDImporter {
 
 	private void addMissingFolders(TTDocument document) {
 		for (TTEntity report : document.getEntities()) {
-		if (report.isType(iri(IM.QUERY))&&report.get(iri(IM.IS_CONTAINED_IN))!=null){
-				for (TTValue folder: report.get(iri(IM.IS_CONTAINED_IN)).getElements()){
+		if (report.isType(new TTIriRef(IM.QUERY))&&report.get(new TTIriRef(IM.IS_CONTAINED_IN))!=null){
+				for (TTValue folder: report.get(new TTIriRef(IM.IS_CONTAINED_IN)).getElements()){
 					TTEntity folderEntity= manager.getEntity(folder.asIriRef().getIri());
 					if (folderEntity==null){
-						report.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(mainFolder)));
+						report.set(new TTIriRef(IM.IS_CONTAINED_IN), new TTArray().add(new TTIriRef(mainFolder)));
 					}
 				}
 			}
@@ -206,23 +206,23 @@ public class EQDImporter {
 
 	private void createReportFolders(TTDocument document) {
 		for (TTEntity entity: document.getEntities()){
-			if (entity.isType(iri(IM.QUERY))||entity.isType(iri(IM.QUERY))){
+			if (entity.isType(new TTIriRef(IM.QUERY))||entity.isType(new TTIriRef(IM.QUERY))){
 				String reportFolderIri= namespace+ "Folder_"+entity.getIri().split("#")[1];
 				TTEntity reportFolder= folderToEntity.get(reportFolderIri);
 				if (reportFolder==null){
 					 reportFolder = new TTEntity()
 						.setIri(reportFolderIri)
 						.setName(entity.getName() + " (folder)")
-						.addType(iri(IM.FOLDER));
+						.addType(new TTIriRef(IM.FOLDER));
 					newFolders.add(reportFolder);
 					folderToEntity.put(reportFolderIri,reportFolder);
 				}
-				if (entity.get(iri(IM.IS_CONTAINED_IN))!=null) {
-					for (TTValue currentFolder : entity.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
-						reportFolder.addObject(iri(IM.IS_CONTAINED_IN), currentFolder.asIriRef().getIri());
+				if (entity.get(new TTIriRef(IM.IS_CONTAINED_IN))!=null) {
+					for (TTValue currentFolder : entity.get(new TTIriRef(IM.IS_CONTAINED_IN)).getElements()) {
+						reportFolder.addObject(new TTIriRef(IM.IS_CONTAINED_IN), currentFolder.asIriRef().getIri());
 					}
 				}
-				entity.set(iri(IM.IS_CONTAINED_IN),new TTArray().add(iri(reportFolder.getIri())));
+				entity.set(new TTIriRef(IM.IS_CONTAINED_IN),new TTArray().add(new TTIriRef(reportFolder.getIri())));
 				}
 			}
 
@@ -232,27 +232,27 @@ public class EQDImporter {
 	private void cleanFolders(TTDocument document){
 		for (TTEntity entity : document.getEntities()) {
 			if (!entity.getIri().equals(mainFolder) && !entity.getIri().equals(setFolder)) {
-				if (entity.isType(iri(IM.FOLDER)) && entity.get(iri(IM.IS_CONTAINED_IN)) == null) {
-					entity.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
+				if (entity.isType(new TTIriRef(IM.FOLDER)) && entity.get(new TTIriRef(IM.IS_CONTAINED_IN)) == null) {
+					entity.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(mainFolder));
 				}
-				else if (entity.get(iri(IM.IS_CONTAINED_IN)) != null) {
+				else if (entity.get(new TTIriRef(IM.IS_CONTAINED_IN)) != null) {
 					boolean hasParentFolder = true;
 					TTArray fixedFolders = new TTArray();
 					for (TTValue folder : entity.get(IM.IS_CONTAINED_IN).getElements()) {
 						if (manager.getEntity(folder.asIriRef().getIri()) == null) {
 							String fixedFolder = fixFolder(folder.asIriRef().getIri());
 							if (manager.getEntity(fixedFolder) != null) {
-								fixedFolders.add(iri(fixedFolder));
+								fixedFolders.add(new TTIriRef(fixedFolder));
 							}
 							else
 								hasParentFolder = false;
 						}
 					}
 					if (!fixedFolders.isEmpty()) {
-						entity.set(iri(IM.IS_CONTAINED_IN), fixedFolders);
+						entity.set(new TTIriRef(IM.IS_CONTAINED_IN), fixedFolders);
 					}
-					else if (!hasParentFolder && entity.isType(iri(IM.FOLDER))) {
-						entity.set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(mainFolder)));
+					else if (!hasParentFolder && entity.isType(new TTIriRef(IM.FOLDER))) {
+						entity.set(new TTIriRef(IM.IS_CONTAINED_IN), new TTArray().add(new TTIriRef(mainFolder)));
 					}
 				}
 			}
@@ -267,8 +267,8 @@ public class EQDImporter {
 			if (entity.getIri().equals(mainFolder)||entity.getIri().equals(setFolder)){
 				usedFolders.put(entity.getIri(),entity);
 			} else {
-				if (entity.get(iri(IM.IS_CONTAINED_IN)) != null) {
-					for (TTValue used : entity.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
+				if (entity.get(new TTIriRef(IM.IS_CONTAINED_IN)) != null) {
+					for (TTValue used : entity.get(new TTIriRef(IM.IS_CONTAINED_IN)).getElements()) {
 						try {
 							TTEntity aFolder = manager.getEntity(used.asIriRef().getIri());
 							if (aFolder != null) usedFolders.put(used.asIriRef().getIri(), aFolder);
@@ -281,7 +281,7 @@ public class EQDImporter {
 		}
 		Set<TTEntity> toRemove= new HashSet<>();
 		for (TTEntity entity : manager.getDocument().getEntities()) {
-			if (entity.isType(iri(IM.FOLDER))) {
+			if (entity.isType(new TTIriRef(IM.FOLDER))) {
 				if (!usedFolders.containsKey(entity.getIri())) {
 					toRemove.add(entity);
 				}
@@ -295,14 +295,14 @@ public class EQDImporter {
 
 	private void setRegisteredPatientParent(TTDocument document) throws JsonProcessingException {
 		for (TTEntity entity : document.getEntities()) {
-			if (entity.isType(iri(IM.QUERY))) {
-				if (entity.get(iri(IM.DEFINITION)) != null) {
-					Query qry = entity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
+			if (entity.isType(new TTIriRef(IM.QUERY))) {
+				if (entity.get(new TTIriRef(IM.DEFINITION)) != null) {
+					Query qry = entity.get(new TTIriRef(IM.DEFINITION)).asLiteral().objectValue(Query.class);
 					if (qry.getIs()!=null) {
 						String parent = qry.getIs().getIri();
 						if (parent.equals(NAMESPACE.SMARTLIFE + "71154095-0C58-4193-B58F-21F05EA0BE2F")) {
 							qry.setIs(new Node().setIri(NAMESPACE.IM + "Q_RegisteredPatient"));
-							entity.set(iri(IM.DEFINITION), TTLiteral.literal(qry));
+							entity.set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(qry));
 						}
 					}
 				}
@@ -320,39 +320,39 @@ public class EQDImporter {
 		TTEntity folder = new TTEntity()
 			.setIri(namespace.toString() + UUID.randomUUID())
 			.setName("Sets used in " + report.getName())
-			.addType(iri(IM.FOLDER));
+			.addType(new TTIriRef(IM.FOLDER));
 		toAdd.add(folder);
 		folderMap.put(report.getIri(), folder);
-		if (report.get(iri(IM.IS_CONTAINED_IN))!=null) {
-			for (TTValue rf : report.get(iri(IM.IS_CONTAINED_IN)).getElements()) {
+		if (report.get(new TTIriRef(IM.IS_CONTAINED_IN))!=null) {
+			for (TTValue rf : report.get(new TTIriRef(IM.IS_CONTAINED_IN)).getElements()) {
 				TTIriRef reportFolder = rf.asIriRef();
 				TTEntity groupFolder = folderMap.get(reportFolder.getIri());
 				if (groupFolder == null) {
 					groupFolder = new TTEntity()
 						.setIri(namespace.toString() + UUID.randomUUID())
-						.addType(iri(IM.FOLDER))
+						.addType(new TTIriRef(IM.FOLDER))
 						.setName("Sets for " + reportFolder.getName());
-					groupFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(setFolder));
+					groupFolder.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(setFolder));
 					folderMap.put(reportFolder.getIri(), groupFolder);
 					toAdd.add(groupFolder);
 				}
-				folder.addObject(iri(IM.IS_CONTAINED_IN), iri(groupFolder.getIri()));
+				folder.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(groupFolder.getIri()));
 			}
 		}
-		else if (report.get(iri(RDFS.SUBCLASS_OF))!=null) {
-			for (TTValue rf : report.get(iri(RDFS.SUBCLASS_OF)).getElements()) {
+		else if (report.get(new TTIriRef(RDFS.SUBCLASS_OF))!=null) {
+			for (TTValue rf : report.get(new TTIriRef(RDFS.SUBCLASS_OF)).getElements()) {
 				TTIriRef reportFolder = rf.asIriRef();
 				TTEntity groupFolder = folderMap.get(reportFolder.getIri());
 				if (groupFolder == null) {
 					groupFolder = new TTEntity()
 						.setIri(namespace.toString() + UUID.randomUUID())
-						.addType(iri(IM.FOLDER))
+						.addType(new TTIriRef(IM.FOLDER))
 						.setName("Sets for " + reportFolder.getName());
-					groupFolder.addObject(iri(IM.IS_CONTAINED_IN), iri(setFolder));
+					groupFolder.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(setFolder));
 					folderMap.put(reportFolder.getIri(), groupFolder);
 					toAdd.add(groupFolder);
 				}
-				folder.addObject(iri(IM.IS_CONTAINED_IN), iri(groupFolder.getIri()));
+				folder.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(groupFolder.getIri()));
 			}
 		}
 		return folder;

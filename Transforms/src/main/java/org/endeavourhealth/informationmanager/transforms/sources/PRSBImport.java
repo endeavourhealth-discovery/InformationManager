@@ -3,7 +3,7 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.json.simple.JSONArray;
@@ -90,8 +90,8 @@ public class PRSBImport implements TTImport {
   }
 
   private void parsePRSBModel(JSONObject dataModel) throws DataFormatException {
-    TTEntity dm = newEntity(dataModel, iri(SHACL.NODESHAPE));
-    dm.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "DiscoveryOntology"));
+    TTEntity dm = newEntity(dataModel, new TTIriRef(SHACL.NODESHAPE));
+    dm.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "DiscoveryOntology"));
     JSONArray recordTypes = (JSONArray) dataModel.entrySet();
     dataModel.entrySet().forEach(c -> {
       try {
@@ -104,14 +104,14 @@ public class PRSBImport implements TTImport {
 
   private void parseRecordType(JSONObject c) throws DataFormatException {
     String prsbId = (String) c.get("iddisplay");
-    TTEntity rt = newEntity(c, iri(SHACL.NODESHAPE));
+    TTEntity rt = newEntity(c, new TTIriRef(SHACL.NODESHAPE));
     TTArray axioms = axiomMap.get(prsbId);
 
   }
 
   private TTIriRef mapStatus(String status) throws DataFormatException {
     if (status.equals("draft"))
-      return iri(IM.DRAFT);
+      return new TTIriRef(IM.DRAFT);
     else
       throw new DataFormatException("unknown status type - " + status);
 
@@ -119,7 +119,7 @@ public class PRSBImport implements TTImport {
 
   private TTEntity newEntity(JSONObject c, TTIriRef... types) throws DataFormatException {
     TTEntity entity = new TTEntity();
-    entity.set(iri(IM.HAS_STATUS), mapStatus(c.get("statusCode").toString()));
+    entity.set(new TTIriRef(IM.HAS_STATUS), mapStatus(c.get("statusCode").toString()));
     Arrays.stream(types).forEach(type -> entity.addType(type));
     String prsbId = c.get("iddisplay").toString();
     entity.setCode(prsbId);
@@ -129,7 +129,7 @@ public class PRSBImport implements TTImport {
     entity.setName(name);
     if (c.get("shortName") != null) {
       String shortName = (String) c.get("shortName");
-      entity.set(TTIriRef.iri(NAMESPACE.IM + "shortName"), TTLiteral.literal((shortName)));
+      entity.set(new TTIriRef(NAMESPACE.IM + "shortName"), TTLiteral.literal((shortName)));
     }
     entity.setIri(iri);
     String description = getObjectArrayliteral(c, "desc", "#text");
@@ -137,8 +137,8 @@ public class PRSBImport implements TTImport {
       entity.setDescription(description);
     String background = getObjectArrayliteral(c, "context", "#text");
     if (background != null)
-      entity.set(TTIriRef.iri(NAMESPACE.IM + "backgroundContext"), TTLiteral.literal(background));
-    if (entity.isType(iri(SHACL.NODESHAPE)))
+      entity.set(new TTIriRef(NAMESPACE.IM + "backgroundContext"), TTLiteral.literal(background));
+    if (entity.isType(new TTIriRef(SHACL.NODESHAPE)))
       return entity;
     return entity;
 

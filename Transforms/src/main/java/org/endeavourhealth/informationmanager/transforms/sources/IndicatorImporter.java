@@ -15,10 +15,7 @@ import org.endeavourhealth.imapi.model.requests.QueryRequest;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.queryengine.QueryDescriptor;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
-import org.endeavourhealth.imapi.vocabulary.SHACL;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,9 +55,9 @@ public class IndicatorImporter {
       importIndicators(indicatorFile);
       for (int i=0; i <document.getEntities().size(); i++) {
         TTEntity indicator = document.getEntities().get(i);
-        if (indicator.isType(iri(IM.INDICATOR))) {
-          TTEntity indicatorQuery= entityService.getPartialEntities(Set.of(indicator.get(iri(IM.NUMERATOR)).asIriRef().getIri()), Set.of(IM.DEFINITION.toString())).get(0);
-          addColumnGroups(indicator,indicatorQuery.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class));
+        if (indicator.isType(new TTIriRef(IM.INDICATOR))) {
+          TTEntity indicatorQuery= entityService.getPartialEntities(Set.of(indicator.get(new TTIriRef(IM.NUMERATOR)).asIriRef().getIri()), Set.of(IM.DEFINITION.toString())).get(0);
+          addColumnGroups(indicator,indicatorQuery.get(new TTIriRef(IM.DEFINITION)).asLiteral().objectValue(Query.class));
         }
       }
       try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
@@ -71,20 +68,20 @@ public class IndicatorImporter {
 
 
   private void addColumnGroups(TTEntity indicator, Query indicatorQuery) throws Exception {
-    if (indicator.get(iri(IM.DENOMINATOR))!=null) {
+    if (indicator.get(new TTIriRef(IM.DENOMINATOR))!=null) {
       String cohortIri = indicator.get(IM.DENOMINATOR).asIriRef().getIri();
       TTEntity dataSetEntity = new TTEntity().setName("Data set for " + indicator.getName());
       String dataSetIri = namespace + "DataSet-" + indicator.getName().hashCode();
       dataSetEntity.setIri(dataSetIri)
-        .addType(iri(IM.QUERY));
-      dataSetEntity.setScheme(iri(namespace));
+        .addType(new TTIriRef(IM.QUERY));
+      dataSetEntity.setScheme(new TTIriRef(namespace));
       document.addEntity(dataSetEntity);
       Query datasetQuery = new Query();
       datasetQuery.setTypeOf(NAMESPACE.IM + "Patient");
       datasetQuery.setIs(Node.iri(cohortIri));
-      dataSetEntity.addObject(iri(IM.DEPENDENT_ON), iri(cohortIri));
+      dataSetEntity.addObject(new TTIriRef(IM.DEPENDENT_ON), new TTIriRef(cohortIri));
       TTEntity patientDetails = columnGroupNameToEntity.get("Patient details");
-      Query patientColumnGroup = patientDetails.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
+      Query patientColumnGroup = patientDetails.get(new TTIriRef(IM.DEFINITION)).asLiteral().objectValue(Query.class);
       datasetQuery.addColumnGroup(patientColumnGroup);
       for (List<Match> matches : Arrays.asList(indicatorQuery.getAnd(), indicatorQuery.getOr(), indicatorQuery.getRule())) {
         if (matches != null) {
@@ -93,8 +90,8 @@ public class IndicatorImporter {
           }
         }
       }
-      dataSetEntity.set(iri(IM.DEFINITION),TTLiteral.literal(datasetQuery));
-      indicator.set(iri(IM.HAS_DATASET),iri(dataSetIri));
+      dataSetEntity.set(new TTIriRef(IM.DEFINITION),TTLiteral.literal(datasetQuery));
+      indicator.set(new TTIriRef(IM.HAS_DATASET), new TTIriRef(dataSetIri));
     }
 
   }
@@ -133,7 +130,7 @@ public class IndicatorImporter {
     if (columnGroup.getOrderBy()==null) {
       columnGroup.orderBy(o -> o
         .addProperty(new OrderDirection()
-          .setDirection(Order.descending)
+          .setDirection(Order.DESCENDING)
           .setIri(NAMESPACE.IM + "effectiveDate"))
         .setLimit(1));
     }
@@ -266,13 +263,13 @@ public class IndicatorImporter {
             String folderIri = namespace + "Folder-" + fields[2].hashCode();
             indicatorFolder.setIri(folderIri)
               .setName(fields[2])
-              .addType(iri(IM.FOLDER))
-              .setScheme(iri(namespace));
+              .addType(new TTIriRef(IM.FOLDER))
+              .setScheme(new TTIriRef(namespace));
             if (!parentFolder.isEmpty()) {
-              indicatorFolder.addObject(iri(IM.IS_CONTAINED_IN), (iri(namespace + "Folder-" + parentFolder.hashCode())));
+              indicatorFolder.addObject(new TTIriRef(IM.IS_CONTAINED_IN), (new TTIriRef(namespace + "Folder-" + parentFolder.hashCode())));
             }
             else indicatorFolder
-              .addObject(iri(IM.IS_CONTAINED_IN), (iri(mainFolder)));
+              .addObject(new TTIriRef(IM.IS_CONTAINED_IN), (new TTIriRef(mainFolder)));
             document.addEntity(indicatorFolder);
             entities.put(folderIri, indicatorFolder);
             labelToEntity.put(fields[2], indicatorFolder);
@@ -295,35 +292,35 @@ public class IndicatorImporter {
             String indicatorIri = namespace + "Indicator-" + indicatorLabel.hashCode();
             TTEntity indicator = new TTEntity();
             indicator.setIri(indicatorIri);
-            indicator.setScheme(iri(namespace.toString()));
+            indicator.setScheme(new TTIriRef(namespace.toString()));
             indicator.setName(indicatorLabel);
-            indicator.addType(iri(IM.INDICATOR));
+            indicator.addType(new TTIriRef(IM.INDICATOR));
             TTEntity indicatorQueryEntity = entityService.getPartialEntities(Set.of(queryIri), Set.of(IM.DEFINITION.toString())).get(0);
-            Query indicatorQuery = indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
+            Query indicatorQuery = indicatorQueryEntity.get(new TTIriRef(IM.DEFINITION)).asLiteral().objectValue(Query.class);
             Match rule= indicatorQuery.getRule().getFirst();
             if (rule.getIs() != null) {
               Node cohort = rule.getIs();
-              indicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
+              indicator.addObject(new TTIriRef(IM.DENOMINATOR), new TTIriRef(cohort.getIri()));
             }
-            indicator.set(iri(IM.NUMERATOR), iri(queryIri));
+            indicator.set(new TTIriRef(IM.NUMERATOR), new TTIriRef(queryIri));
             String orderText = fields[1];
             if (!orderText.isEmpty()) {
               Integer order = orderText.contains(".") ? Integer.parseInt(orderText.substring(orderText.lastIndexOf(".") + 1))
                 : Integer.parseInt(orderText);
-              indicator.set(iri(SHACL.ORDER), TTLiteral.literal(order));
+              indicator.set(new TTIriRef(SHACL.ORDER), TTLiteral.literal(order));
             }
 
             document.addEntity(indicator);
             entities.put(indicatorIri, indicator);
             labelToEntity.put(indicatorLabel, indicator);
             if (parent.equals("")) {
-              indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
+              indicator.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(mainFolder));
             }
             else {
               TTEntity parentIndicator = labelToEntity.get(parent);
-              if (parentIndicator.isType(iri(IM.FOLDER)))
-                indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(parentIndicator.getIri()));
-              else indicator.addObject(iri(IM.IS_SUBINDICATOR_OF), iri(parentIndicator.getIri()));
+              if (parentIndicator.isType(new TTIriRef(IM.FOLDER)))
+                indicator.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(parentIndicator.getIri()));
+              else indicator.addObject(new TTIriRef(IM.IS_SUBINDICATOR_OF), new TTIriRef(parentIndicator.getIri()));
             }
           }
           else if (inputType.equals("C")) {
@@ -358,10 +355,10 @@ public class IndicatorImporter {
     TTEntity columnGroupEntity= new TTEntity()
       .setIri(namespace+"ColumnGroup-"+name.hashCode())
       .setName(name+ " Column group")
-      .addType(iri(IM.QUERY))
-      .setScheme(iri(namespace))
-      .addObject(iri(IM.IS_CONTAINED_IN),iri(NAMESPACE.IM+"ColumnGroups"))
-      .set(iri(IM.DEFINITION),TTLiteral.literal(newGroup));
+      .addType(new TTIriRef(IM.QUERY))
+      .setScheme(new TTIriRef(namespace))
+      .addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM+"ColumnGroups"))
+      .set(new TTIriRef(IM.DEFINITION),TTLiteral.literal(newGroup));
     document.addEntity(columnGroupEntity);
     columnGroupNameToEntity.put(name,columnGroupEntity);
 
@@ -398,7 +395,7 @@ public class IndicatorImporter {
   private void configureKPI(TTEntity indicator,String queryIri) throws Exception {
     System.out.println(indicator.getName());
     TTEntity queryEntity = getEntityFromIri(queryIri);
-    configureIndicator(indicator,queryEntity,Bool.and);
+    configureIndicator(indicator,queryEntity, Bool.AND);
 
   }
 
@@ -410,7 +407,7 @@ public class IndicatorImporter {
     String queryName = queryEntity.getName();
     String cohortName=queryEntity.getName();
     System.out.println(cohortName);
-    Query query= queryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
+    Query query= queryEntity.get(new TTIriRef(IM.DEFINITION)).asLiteral().objectValue(Query.class);
     query= descriptor.describeQuery(query,DisplayMode.LOGICAL);
     LogicOptimizer.optimizeQuery(query);
     boolean or= false;
@@ -418,12 +415,12 @@ public class IndicatorImporter {
     if (query.getAnd() != null) {
       int clauseIndex=0;
       for (Match subMatch : query.getAnd()) {
-        configureMatch(indicatorEntity, subMatch, queryEntity, Bool.and);
+        configureMatch(indicatorEntity, subMatch, queryEntity, Bool.AND);
       }
     }
     else if (query.getOr() != null) {
       for (Match subMatch : query.getOr()) {
-        configureMatch(indicatorEntity,subMatch,queryEntity,Bool.or);
+        configureMatch(indicatorEntity,subMatch,queryEntity,Bool.OR);
       }
     }
 
@@ -435,17 +432,17 @@ public class IndicatorImporter {
       Node cohort= match.getIs();
         TTEntity cohortEntity = getEntityFromIri(cohort.getIri());
         //TTEntity childEntity = createChildIndicator(cohort.getIri(), cohortEntity.getName(), indicatorEntity, operator);
-        //configureIndicator(childEntity, cohortEntity, operator == Bool.or ? Bool.or : Bool.and);
+        //configureIndicator(childEntity, cohortEntity, operator == Bool.OR ? Bool.OR : Bool.AND);
         return;
     }
     if (match.getAnd() != null) {
       for (Match subMatch : match.getAnd()) {
-        configureMatch(indicatorEntity, subMatch, queryEntity, Bool.and);
+        configureMatch(indicatorEntity, subMatch, queryEntity, Bool.AND);
       }
     }
     else if (match.getOr() != null) {
       for (Match subMatch : match.getOr()) {
-        configureMatch(indicatorEntity,subMatch,queryEntity,Bool.or);
+        configureMatch(indicatorEntity,subMatch,queryEntity,Bool.OR);
       }
     }
     else {
@@ -591,7 +588,7 @@ public class IndicatorImporter {
           createSchedule(careActivityEntity, procedureWhere, dateWhere);
           careActivityEntity.setIri(careActivityIri);
           careActivityEntity.setName(careActivityLabel);
-          careActivityEntity.addType(iri(IM.CARE_ACTIVITY));
+          careActivityEntity.addType(new TTIriRef(IM.CARE_ACTIVITY));
 
         }
         if (targetName != null) {
@@ -607,9 +604,9 @@ public class IndicatorImporter {
             entities.put(targetIri, targetEntity);
             targetEntity.setIri(targetIri);
             targetEntity.setName(targetLabel);
-            targetEntity.addType(iri(IM.CARE_TARGET));
+            targetEntity.addType(new TTIriRef(IM.CARE_TARGET));
           }
-          careActivityEntity.addObject(iri(NAMESPACE.IM + "careTarget"), iri(targetEntity.getIri()));
+          careActivityEntity.addObject(new TTIriRef(NAMESPACE.IM + "careTarget"), new TTIriRef(targetEntity.getIri()));
         }
       }
 
@@ -621,7 +618,7 @@ public class IndicatorImporter {
   private void createSchedule(TTEntity careActivityEntity, Where procedureWhere,Where dateWhere) throws Exception {
     if (procedureWhere == null) return;
     String procedureIri = procedureWhere.getIs().getFirst().getIri();
-    careActivityEntity.set(NAMESPACE.IM + "procedure", iri(procedureIri));
+    careActivityEntity.set(NAMESPACE.IM + "procedure", new TTIriRef(procedureIri));
     if (dateWhere!=null) {
       if (dateWhere.getRange() != null) {
         if (dateWhere.getRange() != null) {
@@ -644,11 +641,11 @@ public class IndicatorImporter {
     String value = from.getValue();
     if (value.equals("15")){
       value="1";
-      units=iri(NAMESPACE.IM+"Years");
+      units=new TTIriRef(NAMESPACE.IM+"Years");
     }
     else if (value.equals("27")){
       value="2";
-      units=iri(NAMESPACE.IM+"Years");
+      units=new TTIriRef(NAMESPACE.IM+"Years");
     }
     scheduleNode.set(NAMESPACE.IM + "value", TTLiteral.literal(value));
     if (units!=null) {
@@ -701,7 +698,7 @@ public class IndicatorImporter {
   private QueryRequest createRequest(String conceptIri, Set<String> parentIris, Query query) {
     Set<TTIriRef> parents;
     if (parentIris!=null)
-      parents=parentIris.stream().map(TTIriRef::iri).collect(Collectors.toSet());
+      parents=parentIris.stream().map(TTIriRef::new).collect(Collectors.toSet());
     else {
       parents = null;
     }
@@ -709,7 +706,7 @@ public class IndicatorImporter {
       .setQuery(query)
       .argument(a->a
         .setParameter("concept")
-        .setValueIri(iri(conceptIri)));
+        .setValueIri(new TTIriRef(conceptIri)));
     if (parents!=null) {
       request.argument(a->a
         .setParameter("parents")

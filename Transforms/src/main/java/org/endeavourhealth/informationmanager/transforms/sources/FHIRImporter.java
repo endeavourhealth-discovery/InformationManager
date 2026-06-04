@@ -3,7 +3,8 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.logic.CachedObjectMapper;
 import org.endeavourhealth.imapi.model.fhir.CodeSystem;
@@ -52,7 +53,7 @@ public class FHIRImporter implements TTImport {
 					FHIRDocument fhirDocument = loadDocument(path.toFile());
 					if (fhirDocument.getValueSets() != null) {
 						for (ValueSet fhirSet : fhirDocument.getValueSets()) {
-							TTEntity set = converter.convertValueSet(fhirSet, iri(IM.VALUE_SET), valueSetFolder);
+							TTEntity set = converter.convertValueSet(fhirSet, new TTIriRef(IM.VALUE_SET), valueSetFolder);
 							document.addEntity(set);
 						}
 
@@ -89,11 +90,11 @@ public class FHIRImporter implements TTImport {
 	private void topFolders() {
 		TTEntity entity = new TTEntity()
 			.setIri(valueSetFolder)
-			.addType(iri(IM.FOLDER))
+			.addType(new TTIriRef(IM.FOLDER))
 			.setName(" based value set library")
-			.setStatus(iri(IM.ACTIVE))
+			.setStatus(new TTIriRef(IM.ACTIVE))
 			.setDescription("A library of value sets generated from BNF codes and NHS BNF snomed maps");
-		entity.addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "QueryConceptSets"));
+		entity.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "QueryConceptSets"));
 		document.addEntity(entity);
 	}
 

@@ -1,8 +1,8 @@
 package org.endeavourhealth.informationmanager.utils.codegen;
 
 import org.endeavourhealth.imapi.logic.codegen.CodeGenJava;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.interfacemanager.model.GRAPH;
+import org.endeavourhealth.interfacemanager.model.IM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

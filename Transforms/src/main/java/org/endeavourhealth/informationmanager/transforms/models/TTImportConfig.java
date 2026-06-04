@@ -1,6 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.models;
 
-import org.endeavourhealth.imapi.vocabulary.ImportType;
+import org.endeavourhealth.interfacemanager.model.IMPORTTYPE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ public class TTImportConfig {
   private boolean skiplucene = false;
   private boolean skipBulk = false;
   private String subFolder;
-  private List<ImportType> imports = new ArrayList<>();
+  private List<IMPORTTYPE> imports = new ArrayList<>();
   private String singleEntity;
   private String eqdFile;
   private String mainFolder;
@@ -52,16 +52,16 @@ public TTImportConfig setSubFolder(String subFolder) {
     return this;
   }
 
-  public List<ImportType> getImports() {
+  public List<IMPORTTYPE> getImports() {
     return imports;
   }
 
-  public TTImportConfig setImports(List<ImportType> imports) {
+  public TTImportConfig setImports(List<IMPORTTYPE> imports) {
     this.imports = imports;
     return this;
   }
 
-  public TTImportConfig addImport(ImportType importType) {
+  public TTImportConfig addImport(IMPORTTYPE importType) {
     imports.add(importType);
     return this;
   }

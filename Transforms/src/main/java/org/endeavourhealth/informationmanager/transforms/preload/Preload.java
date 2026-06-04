@@ -18,8 +18,8 @@ import org.endeavourhealth.imapi.logic.reasoner.DomainResolver;
 import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetMemberGenerator;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.ImportType;
+import org.endeavourhealth.interfacemanager.model.GRAPH;
+import org.endeavourhealth.interfacemanager.model.IMPORTTYPE;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
@@ -110,7 +110,7 @@ public class Preload {
 
   }
 
-  public static List<ImportType> canBulk = List.of(ImportType.CORE, ImportType.SNOMED, ImportType.ENCOUNTERS, ImportType.QUERY, ImportType.IM1, ImportType.FHIR, ImportType.EMIS, ImportType.TPP, ImportType.OPCS4, ImportType.ICD10, ImportType.VISION, ImportType.ODS, ImportType.BARTS_CERNER, ImportType.NHS_TFC);
+  public static List<IMPORTTYPE> canBulk = List.of(IMPORTTYPE.CORE, IMPORTTYPE.SNOMED, IMPORTTYPE.ENCOUNTERS, IMPORTTYPE.QUERY, IMPORTTYPE.IM1, IMPORTTYPE.FHIR, IMPORTTYPE.EMIS, IMPORTTYPE.TPP, IMPORTTYPE.OPCS4, IMPORTTYPE.ICD10, IMPORTTYPE.VISION, IMPORTTYPE.ODS, IMPORTTYPE.BARTS_CERNER, IMPORTTYPE.NHS_TFC);
 
   private static void importData(TTImportConfig cfg, String graphdb) throws Exception {
     LOG.info("Validating config...");
@@ -118,13 +118,13 @@ public class Preload {
 
     LOG.info("Validating data files...");
     TTImportByType importer = new Importer();
-    for (ImportType i : cfg.getImports()) {
+    for (IMPORTTYPE i : cfg.getImports()) {
       importer.validateByType(i, cfg.getFolder());
     }
 
     LOG.info("Importing files...");
     if (!cfg.isSkipBulk()) {
-      for (ImportType i : cfg.getImports()) {
+      for (IMPORTTYPE i : cfg.getImports()) {
         if (canBulk.contains(i)) {
           importer.importByType(i, cfg);
         }
@@ -148,7 +148,7 @@ public class Preload {
     TTFilerFactory.setBulk(false);
     TTFilerFactory.setTransactional(true);
 
-    for (ImportType i : cfg.getImports()) {
+    for (IMPORTTYPE i : cfg.getImports()) {
       if (!canBulk.contains(i)) {
         importer.importByType(i, cfg);
       }

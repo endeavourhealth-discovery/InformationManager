@@ -1,7 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
@@ -24,7 +24,7 @@ public class Importer implements TTImportByType {
    * @throws Exception if one of the sources is invalid
    */
   @Override
-  public TTImportByType importByType(ImportType importType, TTImportConfig config) throws Exception {
+  public TTImportByType importByType(IMPORTTYPE importType, TTImportConfig config) throws Exception {
     LOG.info("Importing {}", importType);
     try (TTImport importer = getImporter(importType)) {
       importer.validateFiles(config.getFolder());
@@ -34,7 +34,7 @@ public class Importer implements TTImportByType {
   }
 
   @Override
-  public TTImportByType validateByType(ImportType importType, String inFolder) throws Exception {
+  public TTImportByType validateByType(IMPORTTYPE importType, String inFolder) throws Exception {
     try (TTImport importer = getImporter(importType)) {
       importer.validateFiles(inFolder);
       return this;
@@ -42,34 +42,34 @@ public class Importer implements TTImportByType {
   }
 
 
-  private TTImport getImporter(ImportType importType) throws ImportException {
+  private TTImport getImporter(IMPORTTYPE importType) throws ImportException {
     return switch (importType) {
-      case ImportType.SINGLE_FILE -> new SingleFileImporter();
-      case ImportType.QUERY -> new CoreQueryImporter();
-      case ImportType.BNF -> new BNFImporter();
-      case ImportType.CORE -> new CoreImporter();
-      case ImportType.BARTS_CERNER -> new BartsCernerImport();
-      case ImportType.SNOMED -> new SnomedImporter();
-      case ImportType.EMIS -> new EMISImport();
-      case ImportType.TPP -> new TPPImporter();
-      case ImportType.OPCS4 -> new OPCS4Importer();
-      case ImportType.ICD10 -> new ICD10Importer();
-      case ImportType.ENCOUNTERS -> new EncountersImporter();
-      case ImportType.VISION -> new VisionImport();
-      case ImportType.PRSB -> new PRSBImport();
-      case ImportType.KINGS_APEX -> new ApexKingsImport();
-      case ImportType.KINGS_WINPATH -> new WinPathKingsImport();
-      case ImportType.ODS -> new OdsImporter();
-      case ImportType.IM1 -> new IM1MapImport();
-      case ImportType.CEG -> new CEGImporter();
-      case ImportType.SMARTLIFE -> new SmartLifeImporter();
-      case ImportType.QOF -> new QOFQueryImport();
-      case ImportType.NHS_TFC -> new NHSTfcImport();
-      case ImportType.DELTAS -> new DeltaImporter();
-      case ImportType.QR -> new QImporter();
-      case ImportType.CPRD_MED -> new CPRDImport();
-      case ImportType.FHIR -> new FHIRImporter();
-      case ImportType.SMARTLIFEINDICATOR -> new SmartLifeIndicatorImporter();
+      case IMPORTTYPE.SINGLE_FILE -> new SingleFileImporter();
+      case IMPORTTYPE.QUERY -> new CoreQueryImporter();
+      case IMPORTTYPE.BNF -> new BNFImporter();
+      case IMPORTTYPE.CORE -> new CoreImporter();
+      case IMPORTTYPE.BARTS_CERNER -> new BartsCernerImport();
+      case IMPORTTYPE.SNOMED -> new SnomedImporter();
+      case IMPORTTYPE.EMIS -> new EMISImport();
+      case IMPORTTYPE.TPP -> new TPPImporter();
+      case IMPORTTYPE.OPCS4 -> new OPCS4Importer();
+      case IMPORTTYPE.ICD10 -> new ICD10Importer();
+      case IMPORTTYPE.ENCOUNTERS -> new EncountersImporter();
+      case IMPORTTYPE.VISION -> new VisionImport();
+      case IMPORTTYPE.PRSB -> new PRSBImport();
+      case IMPORTTYPE.KINGS_APEX -> new ApexKingsImport();
+      case IMPORTTYPE.KINGS_WINPATH -> new WinPathKingsImport();
+      case IMPORTTYPE.ODS -> new OdsImporter();
+      case IMPORTTYPE.IM1 -> new IM1MapImport();
+      case IMPORTTYPE.CEG -> new CEGImporter();
+      case IMPORTTYPE.SMARTLIFE -> new SmartLifeImporter();
+      case IMPORTTYPE.QOF -> new QOFQueryImport();
+      case IMPORTTYPE.NHS_TFC -> new NHSTfcImport();
+      case IMPORTTYPE.DELTAS -> new DeltaImporter();
+      case IMPORTTYPE.QR -> new QImporter();
+      case IMPORTTYPE.CPRD_MED -> new CPRDImport();
+      case IMPORTTYPE.FHIR -> new FHIRImporter();
+      case IMPORTTYPE.SMARTLIFEINDICATOR -> new SmartLifeIndicatorImporter();
       default -> throw new ImportException("Unrecognised import type [" + importType + "]");
     };
   }

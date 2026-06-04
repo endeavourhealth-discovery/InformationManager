@@ -10,7 +10,7 @@ import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 
@@ -82,9 +82,9 @@ public class CoreQueryImporter implements TTImport {
     TTEntity defaults= new TTEntity()
       .setIri(NAMESPACE.IM+"StandardIndicators")
       .setName("Standard indicators")
-      .addType(iri(IM.FOLDER))
-      .setScheme(iri(NAMESPACE.IM))
-      .addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM+"Indicators"));
+      .addType(new TTIriRef(IM.FOLDER))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM+"Indicators"));
     defaults.set(IM.ORDER,TTLiteral.literal(1));
     manager.getDocument().addEntity(defaults);
     IndicatorGenerator generator= new IndicatorGenerator();
@@ -95,15 +95,15 @@ public class CoreQueryImporter implements TTImport {
       null,
       NAMESPACE.IM+"Q_RegisteredGMS",
       null);
-    GMSIndicator.set(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM+"StandardIndicators"));
+    GMSIndicator.set(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM+"StandardIndicators"));
     manager.getDocument().addEntity(GMSIndicator);
   }
 
   private void generateDefaultCohorts(TTManager manager) throws JsonProcessingException {
     TTEntity gms = manager.getEntity(NAMESPACE.IM + "Q_RegisteredGMS");
-    gms.addObject(TTIriRef.iri(IM.IS_CONTAINED_IN), TTVariable.iri(NAMESPACE.IM + "Q_DefaultCohorts"));
-    gms.addObject(iri(IM.CONTEXT_ORDER), new TTNode().set(SHACL.ORDER, TTLiteral.literal(1))
-      .set(IM.CONTEXT, TTIriRef.iri(NAMESPACE.IM + "Q_DefaultCohorts")));
+    gms.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "Q_DefaultCohorts"));
+    gms.addObject(new TTIriRef(IM.CONTEXT_ORDER), new TTNode().set(SHACL.ORDER, TTLiteral.literal(1))
+      .set(IM.CONTEXT, new TTIriRef(NAMESPACE.IM + "Q_DefaultCohorts")));
     int order = 1;
     for (String defaultFolder : List.of("Patient", "PeopleAndThings", "ClinicalInformation", "PersonalHealthManagement", "ProcessOfCare", "Q_Queries")) {
       order++;
@@ -114,10 +114,10 @@ public class CoreQueryImporter implements TTImport {
   private void addToDefaults(String defaultEntity, TTManager manager, int order) {
     TTEntity entity = new TTEntity()
       .setIri(NAMESPACE.IM + defaultEntity)
-      .setScheme(NAMESPACE.IM.asIri())
-      .setCrud(iri(IM.ADD_QUADS));
-    entity.addObject(TTVariable.iri(IM.IS_CONTAINED_IN), TTVariable.iri(NAMESPACE.IM + "Q_DefaultCohorts"));
-    entity.addObject(iri(IM.CONTEXT_ORDER), new TTNode().set(SHACL.ORDER, TTLiteral.literal(order)).set(IM.CONTEXT, TTIriRef.iri(NAMESPACE.IM + "Q_DefaultCohorts")));
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .setCrud(new TTIriRef(IM.ADD_QUADS));
+    entity.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "Q_DefaultCohorts"));
+    entity.addObject(new TTIriRef(IM.CONTEXT_ORDER), new TTNode().set(SHACL.ORDER, TTLiteral.literal(order)).set(IM.CONTEXT, new TTIriRef(NAMESPACE.IM + "Q_DefaultCohorts")));
     manager.getDocument().addEntity(entity);
   }
 
@@ -126,19 +126,19 @@ public class CoreQueryImporter implements TTImport {
     TTEntity gms = new TTEntity()
       .setIri(NAMESPACE.IM + "gmsRegisteredPractice")
       .setDescription("Returns the practice if the patient is registered as a GMS patient on the reference date")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-      .addObject(iri(SHACL.PARAMETER), new TTNode()
-        .set(iri(RDFS.LABEL), TTLiteral.literal("searchDate"))
-        .set(iri(SHACL.DATATYPE), iri(NAMESPACE.IM + "DateTime")));
+      .setCrud(new TTIriRef(IM.UPDATE_PREDICATES))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .addObject(new TTIriRef(SHACL.PARAMETER), new TTNode()
+        .set(new TTIriRef(RDFS.LABEL), TTLiteral.literal("searchDate"))
+        .set(new TTIriRef(SHACL.DATATYPE), new TTIriRef(NAMESPACE.IM + "DateTime")));
     Query query = getGmsIsRegistered();
     query
-      .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("reg").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1));
+      .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("reg").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.DESCENDING)).setLimit(1));
     query.return_(p -> p
       .setNodeRef("reg")
       .setIri(NAMESPACE.IM + "provider"));
     query.setName("GMS registered practice");
-    gms.set(iri(IM.DEFINITION), TTLiteral.literal(query));
+    gms.set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(query));
     document.addEntity(gms);
   }
 
@@ -178,9 +178,9 @@ public class CoreQueryImporter implements TTImport {
   private void gmsRegistration() throws JsonProcessingException {
     TTEntity gms = new TTEntity()
       .setIri(NAMESPACE.IM + "gmsRegistration")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-        .set(iri(IM.DEFINITION),TTLiteral.literal(new Query()
+      .setCrud(new TTIriRef(IM.UPDATE_PREDICATES))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+        .set(new TTIriRef(IM.DEFINITION),TTLiteral.literal(new Query()
       .setName("gms registration episode")
       .setDescription("Current registration episode on search date")
       .setTypeOf(NAMESPACE.IM + "Patient")
@@ -217,12 +217,12 @@ public class CoreQueryImporter implements TTImport {
   private void gmsRegistrationAtEvent() throws JsonProcessingException {
     TTEntity gms = new TTEntity()
       .setIri(NAMESPACE.IM + "gmsRegistrationAtEvent")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-      .addObject(iri(SHACL.PARAMETER), new TTNode()
-        .set(iri(RDFS.LABEL), TTLiteral.literal("searchDate"))
-        .set(iri(SHACL.DATATYPE), iri(NAMESPACE.IM + "DateTime")))
-      .set(iri(IM.DEFINITION),
+      .setCrud(new TTIriRef(IM.UPDATE_PREDICATES))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .addObject(new TTIriRef(SHACL.PARAMETER), new TTNode()
+        .set(new TTIriRef(RDFS.LABEL), TTLiteral.literal("searchDate"))
+        .set(new TTIriRef(SHACL.DATATYPE), new TTIriRef(NAMESPACE.IM + "DateTime")))
+      .set(new TTIriRef(IM.DEFINITION),
         TTLiteral.literal(getGmsQuery()));
 
     document.addEntity(gms);
@@ -280,9 +280,9 @@ public class CoreQueryImporter implements TTImport {
 
     TTEntity gms = new TTEntity()
       .setIri(NAMESPACE.IM + "gmsRegistrationStatus")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.DEFINITION),
+      .setCrud(new TTIriRef(IM.UPDATE_PREDICATES))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.DEFINITION),
         TTLiteral.literal(query));
     document.addEntity(gms);
 
@@ -292,16 +292,16 @@ public class CoreQueryImporter implements TTImport {
   private void ethnicity() throws JsonProcessingException {
     TTEntity ethnicity = new TTEntity()
       .setIri(NAMESPACE.IM + "ethnicity")
-      .setCrud(iri(IM.ADD_QUADS))
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .setCrud(new TTIriRef(IM.ADD_QUADS))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Ethnicity definition")
           .setTypeOf(NAMESPACE.IM + "Observation")
           .where(ob->ob
             .setIri(NAMESPACE.IM + "concept")
             .is(is -> is.setIri(NAMESPACE.IM + "im:VSET_Ethnicity").setMemberOf(true)))
-          .orderBy(ob -> ob.addProperty(new OrderDirection().setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+          .orderBy(ob -> ob.addProperty(new OrderDirection().setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.DESCENDING)).setLimit(1))));
     document.addEntity(ethnicity);
 
   }
@@ -309,16 +309,16 @@ public class CoreQueryImporter implements TTImport {
   private void mainLanguage() throws JsonProcessingException {
     TTEntity ethnicity = new TTEntity()
       .setIri(NAMESPACE.IM + "mainSpokenLanguage")
-      .setCrud(iri(IM.ADD_QUADS))
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .setCrud(new TTIriRef(IM.ADD_QUADS))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Main language definition")
           .setTypeOf(NAMESPACE.IM + "Observation")
           .where(ob->ob
             .setIri(NAMESPACE.IM + "concept")
             .is(is -> is.setIri(NAMESPACE.SNOMED+ "370157003").setDescendantsOrSelfOf(true)))
-          .orderBy(ob -> ob.addProperty(new OrderDirection().setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+          .orderBy(ob -> ob.addProperty(new OrderDirection().setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.DESCENDING)).setLimit(1))));
     document.addEntity(ethnicity);
 
   }
@@ -327,9 +327,9 @@ public class CoreQueryImporter implements TTImport {
   private void addressProperty(String propertyName, String value) throws JsonProcessingException {
     TTEntity address = new TTEntity()
       .setIri(NAMESPACE.IM + propertyName)
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .setCrud(new TTIriRef(IM.UPDATE_PREDICATES))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName(value + " address property definition")
           .path(p -> p.setIri(NAMESPACE.IM + "address").setTypeOf(NAMESPACE.IM + "AssignedAddress")
@@ -365,11 +365,11 @@ public class CoreQueryImporter implements TTImport {
               .setNodeRef("Address")
               .setIri(NAMESPACE.IM + "addressUse")
               .is(is -> is.setIri("http://hl7.org/fhir/fhir-address-use/" + value))))
-          .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+          .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.DESCENDING)).setLimit(1))));
     TTNode parameter = new TTNode();
-    parameter.set(iri(RDFS.LABEL), TTLiteral.literal("eventDate"));
-    parameter.set(iri(SHACL.DATATYPE), iri(NAMESPACE.IM + "DateTime"));
-    address.addObject(iri(SHACL.PARAMETER), parameter);
+    parameter.set(new TTIriRef(RDFS.LABEL), TTLiteral.literal("eventDate"));
+    parameter.set(new TTIriRef(SHACL.DATATYPE), new TTIriRef(NAMESPACE.IM + "DateTime"));
+    address.addObject(new TTIriRef(SHACL.PARAMETER), parameter);
     document.addEntity(address);
 
 
@@ -378,9 +378,9 @@ public class CoreQueryImporter implements TTImport {
   private void telephoneProperty(String propertyName, String value) throws JsonProcessingException {
     TTEntity address = new TTEntity()
       .setIri(NAMESPACE.IM + propertyName)
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
+      .setCrud(new TTIriRef(IM.UPDATE_PREDICATES))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(new Query()
         .setName(value + " telephone property definition")
         .path(p -> p.setIri(NAMESPACE.IM + propertyName).setTypeOf(NAMESPACE.IM + "TelephoneNumber")
           .setNode("Telephone")
@@ -394,7 +394,7 @@ public class CoreQueryImporter implements TTImport {
             .setNodeRef("Telephone")
             .setIri(NAMESPACE.IM + "use")
             .is(is -> is.setIri("http://hl7.org/fhir/contact-point-use/" + value))))
-        .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("Telephone").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+        .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("Telephone").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.DESCENDING)).setLimit(1))));
     document.addEntity(address);
 
   }
@@ -410,14 +410,14 @@ public class CoreQueryImporter implements TTImport {
           .setParameter("$searchDate"))));
     TTEntity age = new TTEntity()
       .setIri(NAMESPACE.IM + "age")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.DEFINITION),
+      .setCrud(new TTIriRef(IM.UPDATE_PREDICATES))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.DEFINITION),
         TTLiteral.literal(ageQuery));
     TTNode parameter = new TTNode();
-    parameter.set(iri(RDFS.LABEL), TTLiteral.literal("searchDate"));
-    parameter.set(iri(SHACL.DATATYPE), iri(NAMESPACE.IM + "DateTime"));
-    age.addObject(iri(SHACL.PARAMETER), parameter);
+    parameter.set(new TTIriRef(RDFS.LABEL), TTLiteral.literal("searchDate"));
+    parameter.set(new TTIriRef(SHACL.DATATYPE), new TTIriRef(NAMESPACE.IM + "DateTime"));
+    age.addObject(new TTIriRef(SHACL.PARAMETER), parameter);
     document.addEntity(age);
   }
   private void ageAtEvent() throws JsonProcessingException {
@@ -435,9 +435,9 @@ public class CoreQueryImporter implements TTImport {
           .setIri(NAMESPACE.IM + "effectiveDate"))));
     TTEntity age = new TTEntity()
       .setIri(NAMESPACE.IM + "ageAtEvent")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.DEFINITION),
+      .setCrud(new TTIriRef(IM.UPDATE_PREDICATES))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.DEFINITION),
         TTLiteral.literal(ageQuery));
     document.addEntity(age);
   }
@@ -445,9 +445,9 @@ public class CoreQueryImporter implements TTImport {
   private void placeOfResidenceAtEvent() throws JsonProcessingException {
     TTEntity entity = new TTEntity()
       .setIri(NAMESPACE.IM + "placeOfResidenceAtEvent")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .setCrud(new TTIriRef(IM.UPDATE_PREDICATES))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("place of residence at event")
           .path(p -> p.setIri(NAMESPACE.IM + "address").setTypeOf(NAMESPACE.IM + "AssignedAddress")
@@ -483,7 +483,7 @@ public class CoreQueryImporter implements TTImport {
               .setNodeRef("Address")
               .setIri(NAMESPACE.IM + "addressUse")
               .is(is -> is.setIri("http://hl7.org/fhir/fhir-address-use/home" ))))
-          .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+          .orderBy(ob -> ob.addProperty(new OrderDirection().setNodeRef("Address").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.DESCENDING)).setLimit(1))));
     document.addEntity(entity);
 
   }
@@ -492,7 +492,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void objectPropertyRangeSuggestions() throws JsonProcessingException {
     TTEntity query = getFormValidationEntity("ObjectPropertyRangeSuggestions", "Range suggestions for object property", "takes account of the data model shape that the property is part of")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         getRangeSuggestion()));
 
     document.addEntity(query);
@@ -527,7 +527,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void dataModelPropertyByShape() throws JsonProcessingException {
     TTEntity query = getFormValidationEntity("DataModelPropertyByShape", "Data model property", "takes account of the data model shape that the property is part of")
-      .set(IM.DEFINITION.asIri(), TTLiteral.literal(
+      .set(new TTIriRef(NAMESPACE.IM), TTLiteral.literal(
         new Query()
           .setName("Data model property")
           .setDescription("get properties of property objects for specific data model and property")
@@ -593,7 +593,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void dataModelPropertyRange() throws JsonProcessingException {
     TTEntity query = getFormValidationEntity("DataModelPropertyRange", "Data model property range", "returns a flat list of data model property ranges based on input data model and property")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Data model property range")
           .setDescription("get node, class or datatype value (range)  of property objects for specific data model and property")
@@ -636,7 +636,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void dataPropertyRangeSuggestions() throws JsonProcessingException {
     TTEntity query = getFormValidationEntity("dataPropertyRangeSuggestions", "Range suggestions for data property", "takes account of the data model shape that the property is part of")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         getRangeSuggestion()));
     document.addEntity(query);
 
@@ -647,8 +647,8 @@ public class CoreQueryImporter implements TTImport {
 
   private void getAncestors() throws JsonProcessingException {
     TTEntity query = getFormValidationEntity("GetAncestors", "Get active supertypes of concept", "returns transitive closure of an entity and its supertypes, usually used with a text search filter to narrow results");
-    query.getPredicateMap().remove(TTIriRef.iri(NAMESPACE.IM + "query"));
-    query.set(iri(IM.DEFINITION),
+    query.getPredicateMap().remove(new TTIriRef(NAMESPACE.IM + "query"));
+    query.set(new TTIriRef(IM.DEFINITION),
       TTLiteral.literal(new Query()
         .setName("All supert types of an entity, active only")
         .setActiveOnly(true)
@@ -680,12 +680,12 @@ public class CoreQueryImporter implements TTImport {
     Where ageWhere = new Where();
     Value fromAge = new Value();
     fromAge.setOperator(Operator.gte)
-      .setUnits(iri(IM.YEARS))
+      .setUnits(new TTIriRef(IM.YEARS))
       .setValue("65");
     Value toAge = new Value();
     toAge
       .setOperator(Operator.lt)
-      .setUnits(iri(IM.YEARS))
+      .setUnits(new TTIriRef(IM.YEARS))
       .setValue("70");
     ageWhere
       .setIri(NAMESPACE.IM + "age")
@@ -731,13 +731,13 @@ public class CoreQueryImporter implements TTImport {
                 .setIri(NAMESPACE.IM + "effectiveDate"))
               .right(r->r
                 .setParameter("$searchDate"))
-              .setUnits(iri(IM.MONTHS)))
+              .setUnits(new TTIriRef(IM.MONTHS)))
             .setOperator(Operator.gte)
             .setValue("-12")))
         .setOrderBy(new OrderLimit()
           .addProperty(new OrderDirection()
             .setIri(NAMESPACE.IM + "effectiveDate")
-            .setDirection(Order.descending))
+            .setDirection(Order.DESCENDING))
           .setLimit(1))
         .then(then->then
           .where(thenw->thenw
@@ -792,16 +792,16 @@ public class CoreQueryImporter implements TTImport {
         .is(is->is.setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
           .setName("Hypertensives")));
 
-    TTEntity qry = new TTEntity().addType(iri(IM.QUERY))
-      .set(iri(IM.RETURN_TYPE), TTIriRef.iri(NAMESPACE.IM + "Patient"))
+    TTEntity qry = new TTEntity().addType(new TTIriRef(IM.QUERY))
+      .set(new TTIriRef(IM.RETURN_TYPE), new TTIriRef(NAMESPACE.IM + "Patient"))
       .setIri(NAMESPACE.IM + "Q_TestQuery")
       .setName("Patients 65-70, or diabetes or prediabetes that need invitations for blood pressure measuring")
       .setDescription("Test for patients either aged between 65 and 70 or with diabetes with the most recent systolic in the last 12 months either home >130 or office >140, not followed by a screening invite, excluding hypertensives")
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.DEFINITION), TTLiteral.literal(query))
-      .addObject(iri(IM.DEPENDENT_ON), TTIriRef.iri(NAMESPACE.IM + "Q_RegisteredGMS"))
-      .addObject(iri(IM.DEPENDENT_ON), TTIriRef.iri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387"))
-      .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "Q_StandardCohorts"));
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(query))
+      .addObject(new TTIriRef(IM.DEPENDENT_ON), new TTIriRef(NAMESPACE.IM + "Q_RegisteredGMS"))
+      .addObject(new TTIriRef(IM.DEPENDENT_ON), new TTIriRef("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387"))
+      .addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "Q_StandardCohorts"));
 
     document.addEntity(qry);
   }
@@ -811,8 +811,8 @@ public class CoreQueryImporter implements TTImport {
       .setIri(NAMESPACE.IM + "DeleteSets")
       .setName("Delete all concept sets in a scheme")
       .setDescription("Pass in the graph name as a 'this' argument and it deletes all sets")
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.UPDATE_PROCEDURE), TTLiteral.literal(new Update()
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.UPDATE_PROCEDURE), TTLiteral.literal(new Update()
         .match(m -> m
           .where(w->w
             .and(w1->w1
@@ -830,26 +830,26 @@ public class CoreQueryImporter implements TTImport {
 
 
     TTEntity qry = new TTEntity()
-      .addType(iri(IM.QUERY))
-      .setScheme(NAMESPACE.IM.asIri())
-      .set(iri(IM.RETURN_TYPE), TTIriRef.iri(NAMESPACE.IM + "Patient"))
-      .set(iri(IM.USAGE_TOTAL), TTLiteral.literal(10000))
-      .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "Q_StandardCohorts"))
-      .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "Q_DefaultCohorts"))
-      .set(iri(SHACL.ORDER), TTLiteral.literal(1))
+      .addType(new TTIriRef(IM.QUERY))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .set(new TTIriRef(IM.RETURN_TYPE), new TTIriRef(NAMESPACE.IM + "Patient"))
+      .set(new TTIriRef(IM.USAGE_TOTAL), TTLiteral.literal(10000))
+      .addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "Q_StandardCohorts"))
+      .addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "Q_DefaultCohorts"))
+      .set(new TTIriRef(SHACL.ORDER), TTLiteral.literal(1))
       .setIri(NAMESPACE.IM + "Q_RegisteredGMS")
-      .set(iri(IM.ALTERNATIVE_CODE), TTLiteral.literal("RegisteredAsGMS"))
+      .set(new TTIriRef(IM.ALTERNATIVE_CODE), TTLiteral.literal("RegisteredAsGMS"))
       .setName("Patients registered for GMS services on the reference date")
       .setDescription("For any gpRegistration period,a gpRegistration start date before the reference date and no end date, or an end date after the reference date.");
 
-    qry.set(iri(IM.DEFINITION), TTLiteral.literal(getGmsIsRegistered()));
+    qry.set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(getGmsIsRegistered()));
     document.addEntity(qry);
   }
 
 
   private void getSearchAll() throws JsonProcessingException {
     getFormValidationEntity("SearchmainTypes", "Search for entities of the main types", "used to filter free text searches excluding queries and concept sets")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setActiveOnly(true)
           .setName("Search for all main types")
@@ -870,7 +870,7 @@ public class CoreQueryImporter implements TTImport {
             .or(w -> w
               .setName("Value Sets")
               .setDescription("Type is Value Set")
-              .setTypeOf(IM.VALUESET.toString()))
+              .setTypeOf(IM.VALUE_SET.toString()))
             .or(w -> w
               .setName("Data model property")
               .setDescription("Type is Data Model Property")
@@ -918,12 +918,12 @@ public class CoreQueryImporter implements TTImport {
         .return_(p1 -> p1
           .setIri(SHACL.PATH)));
     getFormValidationEntity("AllowableChildTypes", "Allowable child types for editor", "used in the editor to select the type of entity being created as a subtype")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(query));
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(query));
   }
 
   private void isAllowableRange() throws JsonProcessingException {
     getFormValidationEntity("IsAllowableRange", "Is an entity an allowable range a particular property", "uses inverse range property to check the ranges of the property as authored. Should be used with another ")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Is an entity an allowable range a particular property")
           .setActiveOnly(true)
@@ -939,7 +939,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void isValidProperty() throws JsonProcessingException {
     getFormValidationEntity("IsValidProperty", "is a valid property", "is the property a valid value for the concept(s)")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Is it a valid property")
           .setDescription("is the property 'property' a valid value for the concept(s) 'concepts")
@@ -957,7 +957,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void isValidType() throws JsonProcessingException {
     getFormValidationEntity("IsValidType", "is a valid type", "is the entity a valid type")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Is '$entity' a valid $type")
           .setDescription("is the type of the selecvted entity a type of allowed types")
@@ -969,7 +969,7 @@ public class CoreQueryImporter implements TTImport {
   }
   private void isValidDescendant() throws JsonProcessingException {
     getFormValidationEntity("IsValidDescendant", "is a valid descendant", "is the concept a valid descendant of some parent")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Is it a valid property")
           .setDescription("is the property 'property' a valid value for the concept(s) 'concepts")
@@ -982,7 +982,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void entityFilter() throws JsonProcessingException {
     getFormValidationEntity("EntityFilter", "Entity filter", "Parameterised list of entities to filter on a text search")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Entity filter")
           .where(w->w
@@ -994,7 +994,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void getAllowableProperties() throws JsonProcessingException {
     getFormValidationEntity("AllowableProperties", "Properties that have been used for subtypes of a terminology concept", "Returns a list of properties for a particular term concept")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Properties that can be used for a concept {this}")
           .setIs(new Node().setParameter("this").setAncestorsOf(true))
@@ -1014,7 +1014,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void getAllowablePropertyAncestors() throws JsonProcessingException {
     getFormValidationEntity("AllowablePropertyAncestors", "Allowable properties for a terminology concept", "Returns a list of properties for a particular term concept, used in value set definitions with RCL")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setTypeOf(RDF.PROPERTY.toString())
           .setName("Allowable Properties for a terminology concept")
@@ -1034,7 +1034,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void getConcepts() throws JsonProcessingException {
     getFormValidationEntity("SearchEntities", "Search for entities of a certain type", "parameter 'this' set to the list of type iris, Normally used with a text search entry to filter the list")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setActiveOnly(true)
           .setName("Search for concepts of $this type")
@@ -1044,12 +1044,12 @@ public class CoreQueryImporter implements TTImport {
             .setParameter("this"))
           .return_(p -> p.setIri(RDFS.LABEL))
           .return_(p -> p.setIri(RDF.TYPE))))
-      .getPredicateMap().remove(TTIriRef.iri(NAMESPACE.IM + "query"));
+      .getPredicateMap().remove(new TTIriRef(NAMESPACE.IM + "query"));
   }
 
   private void searchFolders() throws JsonProcessingException {
     getFormValidationEntity("SearchFolders", "Search for folder by name", "Returns a list of folder using a text search")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Search for folders by name")
           .setDescription("Search for folders by name")
@@ -1064,7 +1064,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void searchContainedIn() throws JsonProcessingException {
     getFormValidationEntity("SearchContainedIn", "Search for entities contained in parent folder", "parameter 'value' needs to be set to the parent folder")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
           new Query()
             .setName("Search for entities contained in parent folder")
             .setDescription("Search for entities contained in parent folder $value")
@@ -1083,7 +1083,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void searchAllowableSubclass() throws JsonProcessingException {
     getFormValidationEntity("SearchAllowableSubclass", "Search for allowable subclasses", "parameter 'value' needs to be set to current entity type")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
           new Query()
             .setName("Search for allowable subclasses")
             .setDescription("Search for allowable subclasses")
@@ -1102,7 +1102,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void searchAllowableChildOf() throws JsonProcessingException {
     getFormValidationEntity("SearchAllowableChildOf", "Search for allowable parents of a child query", "parameter 'value' needs to be set to current entity type")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
           new Query()
             .setName("Search for allowable shild of")
             .setDescription("Search for allowable child of parents")
@@ -1121,7 +1121,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void searchAllowableContainedIn() throws JsonProcessingException {
     getFormValidationEntity("SearchAllowableContainedIn", "Search for allowable parent folder", "parameter 'value' needs to be set to the current entity type")
-      .set(iri(IM.DEFINITION), TTLiteral.literal(
+      .set(new TTIriRef(IM.DEFINITION), TTLiteral.literal(
         new Query()
           .setName("Search for allowable contained in")
           .setDescription("Search for allowable contained in")
@@ -1148,7 +1148,7 @@ public class CoreQueryImporter implements TTImport {
 
   private void getDescendants() throws JsonProcessingException {
     getFormValidationEntity("GetDescendants", "Get active subtypes of concept", "returns transitive closure of an entity and its subtypes, usually used with a text search filter to narrow results")
-      .set(iri(IM.DEFINITION),
+      .set(new TTIriRef(IM.DEFINITION),
         TTLiteral.literal(new Query()
           .setName("All subtypes of an entity $this , active only")
           .setDescription("All subtypes of an entity, active only")
@@ -1160,12 +1160,12 @@ public class CoreQueryImporter implements TTImport {
             .setDescendantsOrSelfOf(true))
           .return_(p -> p.setNodeRef("isa").setIri(RDFS.LABEL))
           .return_(p -> p.setNodeRef("isa").setIri(IM.CODE))))
-      .getPredicateMap().remove(TTIriRef.iri(NAMESPACE.IM + "query"));
+      .getPredicateMap().remove(new TTIriRef(NAMESPACE.IM + "query"));
   }
 
   private void getSubclasses() throws JsonProcessingException {
     getFormValidationEntity("GetSubClasses", "Get active subclasses of entity", "returns all subclasses of an entity, active only, used with Creator/Editor to get Status subclasses")
-      .set(iri(IM.DEFINITION),
+      .set(new TTIriRef(IM.DEFINITION),
         TTLiteral.literal(new Query()
           .setName("All subclasses of an entity $this, active only")
           .setDescription("All subclasses of an entity, active only")
@@ -1178,12 +1178,12 @@ public class CoreQueryImporter implements TTImport {
               .setParameter("this")))
           .return_(p -> p.setNodeRef("subclass").setIri(RDFS.LABEL))
           .return_(p -> p.setNodeRef("subclass").setIri(IM.CODE))))
-      .getPredicateMap().remove(TTIriRef.iri(NAMESPACE.IM + "query"));
+      .getPredicateMap().remove(new TTIriRef(NAMESPACE.IM + "query"));
   }
 
   private void getSubsets() throws JsonProcessingException {
     getFormValidationEntity("GetSubsets", "Get subsets using superset iri", "return items which have a isSubsetOf predicate linked to the iri provided")
-      .set(iri(IM.DEFINITION),
+      .set(new TTIriRef(IM.DEFINITION),
         TTLiteral.literal(new Query()
           .setName("All subsets of an entity, active only")
           .setActiveOnly(true)
@@ -1197,7 +1197,7 @@ public class CoreQueryImporter implements TTImport {
           )
         )
       )
-      .getPredicateMap().remove(TTIriRef.iri(NAMESPACE.IM + "query"));
+      .getPredicateMap().remove(new TTIriRef(NAMESPACE.IM + "query"));
   }
 
   private TTEntity getFormValidationEntity(String iri, String name, String comment) {
@@ -1205,9 +1205,9 @@ public class CoreQueryImporter implements TTImport {
       .setIri(NAMESPACE.IM + "Query_" + iri)
       .setName(name)
       .setDescription(comment)
-      .addType(iri(IM.QUERY))
-      .setScheme(NAMESPACE.IM.asIri())
-      .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "IMFormValidationQueries"));
+      .addType(new TTIriRef(IM.QUERY))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "IMFormValidationQueries"));
     document.addEntity(entity);
     return entity;
   }
@@ -1216,9 +1216,9 @@ public class CoreQueryImporter implements TTImport {
       .setIri(NAMESPACE.IM + "CG_" + iri)
       .setName(name)
       .setDescription(comment)
-      .addType(iri(IM.QUERY))
-      .setScheme(NAMESPACE.IM.asIri())
-      .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "ColumnGroups"));
+      .addType(new TTIriRef(IM.QUERY))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
+      .addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "ColumnGroups"));
     document.addEntity(entity);
     return entity;
   }

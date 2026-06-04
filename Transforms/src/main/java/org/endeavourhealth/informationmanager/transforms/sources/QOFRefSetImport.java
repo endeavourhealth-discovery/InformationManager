@@ -5,7 +5,7 @@ import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.XlsxExpander;
 import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
@@ -87,22 +87,22 @@ public class QOFRefSetImport implements TTImport {
       setCount++;
       LOG.info("Creating refset {}", fields[2]);
       TTEntity set = new TTEntity()
-        .set(iri(IM.ALTERNATIVE_CODE), TTLiteral.literal(fields[1]))
+        .set(new TTIriRef(IM.ALTERNATIVE_CODE), TTLiteral.literal(fields[1]))
         .setIri(setIri)
         .setName(fields[2])
-        .setScheme(NAMESPACE.SNOMED.asIri())
-        .setCrud(iri(IM.UPDATE_PREDICATES))
-        .setType(new TTArray().add(iri(IM.CONCEPT_SET)));
+        .setScheme(new TTIriRef(NAMESPACE.SNOMED))
+        .setCrud(new TTIriRef(IM.UPDATE_PREDICATES))
+        .setType(new TTArray().add(new TTIriRef(IM.CONCEPT_SET)));
       document.addEntity(set);
       c = new TTEntity()
         .setIri(setIri)
-          .setCrud((iri(IM.ADD_QUADS)))
-        .addObject(iri(IM.IS_CONTAINED_IN), iri(PCDFolder));
-      TTManager.addTermCode(c, fields[1], fields[1], iri(IM.ACTIVE));
+          .setCrud((new TTIriRef(IM.ADD_QUADS)))
+        .addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(PCDFolder));
+      TTManager.addTermCode(c, fields[1], fields[1], new TTIriRef(IM.ACTIVE));
       document.addEntity(c);
       qofMap.put(setIri, c);
     }
-    c.addObject(iri(IM.HAS_MEMBER), iri(NAMESPACE.SNOMED + fields[3]));
+    c.addObject(new TTIriRef(IM.HAS_MEMBER), new TTIriRef(NAMESPACE.SNOMED + fields[3]));
   }
 
 
@@ -119,11 +119,11 @@ public class QOFRefSetImport implements TTImport {
       .setIri(PCDFolder)
       .setName("Primary Care Code clusters")
       .setDescription("PCD portal  code cluster, reference sets , which are a subset of the Snomed-CT reference sets. The content of these are sourced from the UK Snomed-CT releases.")
-      .setScheme(NAMESPACE.SNOMED.asIri())
-      .addType(iri(IM.FOLDER));
-    clusters.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
+      .setScheme(new TTIriRef(NAMESPACE.SNOMED))
+      .addType(new TTIriRef(IM.FOLDER));
+    clusters.addObject(new TTIriRef(IM.CONTENT_TYPE), new TTIriRef(IM.CONCEPT_SET));
     clusters
-      .addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "QueryConceptSets"));
+      .addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "QueryConceptSets"));
     document.addEntity(clusters);
     importExpandedRefsetFiles(path);
   }

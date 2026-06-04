@@ -5,7 +5,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -42,15 +42,15 @@ public class NHSTfcImport implements TTImport {
   }
 
   private void setNHSDD() {
-    nhsTfc = TTIriRef.iri(NAMESPACE.NHS_TFC + "NHSTfc");
+    nhsTfc = new TTIriRef(NAMESPACE.NHS_TFC + "NHSTfc");
     TTEntity nhs = new TTEntity()
       .setIri(nhsTfc.getIri())
       .setName("Main Specialty and Treatment Function Codes")
-      .setScheme(iri(NAMESPACE.NHS_TFC))
+      .setScheme(new TTIriRef(NAMESPACE.NHS_TFC))
       .setCode("0")
-      .addType(iri(IM.CONCEPT))
-      .setStatus(iri(IM.ACTIVE));
-    nhs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "CodeBasedTaxonomies"));
+      .addType(new TTIriRef(IM.CONCEPT))
+      .setStatus(new TTIriRef(IM.ACTIVE));
+    nhs.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "CodeBasedTaxonomies"));
     document.addEntity(nhs);
   }
 
@@ -70,12 +70,12 @@ public class NHSTfcImport implements TTImport {
         TTEntity tfc = new TTEntity()
           .setIri(NAMESPACE.NHS_TFC + code)
           .setName(term)
-          .setScheme(iri(NAMESPACE.NHS_TFC))
+          .setScheme(new TTIriRef(NAMESPACE.NHS_TFC))
           .setCode(code)
-          .addType(iri(IM.CONCEPT))
-          .setStatus(iri(IM.ACTIVE));
-        tfc.addObject(iri(IM.IS_CHILD_OF), nhsTfc);
-        tfc.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomed));
+          .addType(new TTIriRef(IM.CONCEPT))
+          .setStatus(new TTIriRef(IM.ACTIVE));
+        tfc.addObject(new TTIriRef(IM.IS_CHILD_OF), nhsTfc);
+        tfc.addObject(new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.SNOMED + snomed));
         document.addEntity(tfc);
         line = reader.readLine();
       }

@@ -2,7 +2,7 @@ package org.endeavourhealth.informationmanager.transforms.online;
 
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
@@ -68,7 +68,7 @@ public class ImportApp {
   private static void importData(String importTypeName, TTImportConfig cfg) throws Exception {
     TTImportByType importer = new Importer();
 
-    ImportType importType = ImportType.from(importTypeName);
+    IMPORTTYPE importType = IMPORTTYPE.fromValue(importTypeName);
 
     if (importType == null)
       throw new IllegalArgumentException("Unknown import type [" +  importTypeName + "]");

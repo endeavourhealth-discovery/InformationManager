@@ -7,7 +7,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -80,7 +80,7 @@ public class BartsCernerImport implements TTImport {
       return;
     for (String parent : childToParent.get(childCode)) {
       TTEntity parentSet = codeToSet.get(parent);
-      childSet.addObject(iri(IM.IS_CHILD_OF), iri(parentSet.getIri()));
+      childSet.addObject(new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(parentSet.getIri()));
       if (!doneAlready.contains(parentSet)) {
         doneAlready.add(parentSet);
         document.addEntity(parentSet);
@@ -105,9 +105,9 @@ public class BartsCernerImport implements TTImport {
           String snomed = fields[2];
           TTEntity barts = codeToConcept.get(code);
           if (snomed.contains("1000252"))
-            barts.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.IM + snomed));
+            barts.addObject (new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.IM + snomed));
           else
-            barts.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomed));
+            barts.addObject (new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.SNOMED + snomed));
           line = reader.readLine();
         }
       }
@@ -119,21 +119,21 @@ public class BartsCernerImport implements TTImport {
   private void setTopLevel() {
     TTEntity topConcept = new TTEntity()
       .setIri(BARTS_CERNER_CODES)
-      .addType(iri(IM.CONCEPT))
+      .addType (new TTIriRef(IM.CONCEPT))
       .setName("Barts Cerner codes")
       .setCode("BartsCernerCodes")
-      .setScheme(iri(NAMESPACE.BARTS_CERNER))
+      .setScheme (new TTIriRef(NAMESPACE.BARTS_CERNER))
       .setDescription("The Cerner codes used in Barts NHS Trust Millennium system");
-    topConcept.addObject(iri(IM.IS_CHILD_OF), iri(NAMESPACE.IM + "CodeBasedTaxonomies"));
+    topConcept.addObject (new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(NAMESPACE.IM + "CodeBasedTaxonomies"));
     document.addEntity(topConcept);
     TTEntity unmatchedConcept = new TTEntity()
       .setIri(UNCLASSIFIED)
-      .addType(iri(IM.CONCEPT))
-      .setScheme(iri(NAMESPACE.BARTS_CERNER))
+      .addType (new TTIriRef(IM.CONCEPT))
+      .setScheme (new TTIriRef(NAMESPACE.BARTS_CERNER))
       .setName("Unclassified Barts Cerner codes")
       .setDescription("The Cerner codes used in Barts NHS Trust Millennium system"
         + "that have not yet been placed in the Barts event set hierarchy");
-    unmatchedConcept.addObject(iri(IM.IS_CHILD_OF), iri(BARTS_CERNER_CODES));
+    unmatchedConcept.addObject (new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(BARTS_CERNER_CODES));
     document.addEntity(unmatchedConcept);
   }
 
@@ -157,7 +157,7 @@ public class BartsCernerImport implements TTImport {
     for (Map.Entry<String, TTEntity> entry : codeToSet.entrySet()) {
       String code = entry.getKey();
       if (childToParent.get(code) == null)
-        entry.getValue().addObject(iri(IM.IS_CHILD_OF), iri(BARTS_CERNER_CODES));
+        entry.getValue().addObject (new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(BARTS_CERNER_CODES));
 
     }
 
@@ -177,8 +177,8 @@ public class BartsCernerImport implements TTImport {
       LOG.info("missing event set cd {} {}", parent, fields[1]);
     Integer order = Integer.parseInt(fields[4]);
     TTEntity eventSet = codeToSet.get(child);
-    eventSet.addObject(iri(IM.IS_CHILD_OF), iri(NAMESPACE.BARTS_CERNER + parent));
-    eventSet.set(iri(IM.DISPLAY_ORDER), TTLiteral.literal(order));
+    eventSet.addObject (new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(NAMESPACE.BARTS_CERNER + parent));
+    eventSet.set (new TTIriRef(IM.DISPLAY_ORDER), TTLiteral.literal(order));
     if (childToParent.get(child) == null)
       childToParent.put(child, new HashSet<>());
     childToParent.get(child).add(parent);
@@ -214,10 +214,10 @@ public class BartsCernerImport implements TTImport {
     if (usedConcept == null) {
       usedConcept = new TTEntity()
         .setIri(iri)
-        .addType(iri(IM.CONCEPT))
+        .addType (new TTIriRef(IM.CONCEPT))
         .setCode(code)
-        .setScheme(iri(NAMESPACE.BARTS_CERNER));
-      usedConcept.addObject(iri(IM.IS_CHILD_OF), iri(UNCLASSIFIED));
+        .setScheme (new TTIriRef(NAMESPACE.BARTS_CERNER));
+      usedConcept.addObject (new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(UNCLASSIFIED));
       document.addEntity(usedConcept);
       codeToConcept.put(code, usedConcept);
     }
@@ -253,10 +253,10 @@ public class BartsCernerImport implements TTImport {
     String iri = NAMESPACE.BARTS_CERNER + code;
     TTEntity eventSet = new TTEntity()
       .setIri(iri)
-      .addType(iri(IM.CONCEPT))
+      .addType (new TTIriRef(IM.CONCEPT))
       .setName(term)
       .setCode(code)
-      .setScheme(iri(NAMESPACE.BARTS_CERNER));
+      .setScheme (new TTIriRef(NAMESPACE.BARTS_CERNER));
     codeToSet.put(code, eventSet);
     termToSet.put(xterm, eventSet);
   }
@@ -292,9 +292,9 @@ public class BartsCernerImport implements TTImport {
     String iri = NAMESPACE.BARTS_CERNER + code;
     TTEntity codeConcept = new TTEntity()
       .setIri(iri)
-      .addType(iri(IM.CONCEPT))
+      .addType (new TTIriRef(IM.CONCEPT))
       .setCode(code)
-      .setScheme(iri(NAMESPACE.BARTS_CERNER));
+      .setScheme (new TTIriRef(NAMESPACE.BARTS_CERNER));
     if (term.equals("")) {
       codeConcept.setName("no name assigned");
     } else {
@@ -306,13 +306,13 @@ public class BartsCernerImport implements TTImport {
       if (parents != null) {
         for (String parent : parents) {
           parentSet = codeToSet.get(parent);
-          codeConcept.addObject(iri(IM.IS_CHILD_OF), iri(parentSet.getIri()));
+          codeConcept.addObject (new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(parentSet.getIri()));
           usedSets.add(parentSet);
         }
       } else
-        codeConcept.addObject(iri(IM.IS_CHILD_OF), iri(UNCLASSIFIED));
+        codeConcept.addObject (new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(UNCLASSIFIED));
     } else
-      codeConcept.addObject(iri(IM.IS_CHILD_OF), iri(UNCLASSIFIED));
+      codeConcept.addObject (new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(UNCLASSIFIED));
     document.addEntity(codeConcept);
     codeToConcept.put(code, codeConcept);
   }

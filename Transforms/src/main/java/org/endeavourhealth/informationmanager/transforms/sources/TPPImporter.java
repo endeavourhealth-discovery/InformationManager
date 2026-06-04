@@ -10,7 +10,7 @@ import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -124,9 +124,9 @@ public class TPPImporter implements TTImport {
     for (Map.Entry<String, TTEntity> entry : codeToEntity.entrySet()) {
       String code = entry.getKey();
       TTEntity tppEntity = entry.getValue();
-      if (tppEntity.get(iri(IM.MATCHED_TO)) == null) {
-        if (tppEntity.get(iri(IM.IS_CHILD_OF)) == null)
-          tppEntity.addObject(iri(IM.IS_CHILD_OF), TTIriRef.iri(NAMESPACE.TPP + "TPPOrphanCodes"));
+      if (tppEntity.get(new TTIriRef(IM.MATCHED_TO)) == null) {
+        if (tppEntity.get(new TTIriRef(IM.IS_CHILD_OF)) == null)
+          tppEntity.addObject(new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(NAMESPACE.TPP + "TPPOrphanCodes"));
       }
     }
   }
@@ -134,15 +134,15 @@ public class TPPImporter implements TTImport {
   private void addDiscoveryMaps() {
     TTEntity entity = new TTEntity()
       .setIri(NAMESPACE.TPP + "Y2a0e")
-      .setCrud(iri(IM.ADD_QUADS))
-      .setScheme(NAMESPACE.TPP.asIri())
-      .set(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + "1156257007"));
+      .setCrud(new TTIriRef(IM.ADD_QUADS))
+      .setScheme(new TTIriRef(NAMESPACE.TPP))
+      .set(new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.SNOMED + "1156257007"));
     document.addEntity(entity);
     entity = new TTEntity()
       .setIri(NAMESPACE.TPP + "Y29ea")
-      .setCrud(iri(IM.ADD_QUADS))
-      .setScheme(NAMESPACE.TPP.asIri())
-      .set(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + "1324671000000103"));
+      .setCrud(new TTIriRef(IM.ADD_QUADS))
+      .setScheme(new TTIriRef(NAMESPACE.TPP))
+      .set(new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.SNOMED + "1324671000000103"));
     document.addEntity(entity);
   }
 
@@ -156,15 +156,15 @@ public class TPPImporter implements TTImport {
       if (entity == null) {
         entity = new TTEntity()
           .setIri(vaccine.getIri())
-          .setCrud(iri(IM.ADD_QUADS))
+          .setCrud(new TTIriRef(IM.ADD_QUADS))
           .setCode(code)
-          .setScheme(iri(NAMESPACE.TPP))
-          .set(iri(IM.MATCHED_TO), vaccine.get(iri(IM.MATCHED_TO)));
+          .setScheme(new TTIriRef(NAMESPACE.TPP))
+          .set(new TTIriRef(IM.MATCHED_TO), vaccine.get(new TTIriRef(IM.MATCHED_TO)));
         document.addEntity(entity);
 
       }
-      for (TTValue match : vaccine.get(iri(IM.MATCHED_TO)).getElements()) {
-        entity.addObject(iri(IM.MATCHED_TO), match);
+      for (TTValue match : vaccine.get(new TTIriRef(IM.MATCHED_TO)).getElements()) {
+        entity.addObject(new TTIriRef(IM.MATCHED_TO), match);
       }
     }
 
@@ -179,7 +179,7 @@ public class TPPImporter implements TTImport {
           if (emisToSnomed.get(scode) != null) {
             for (String snomed : emisToSnomed.get(scode)) {
               if (!alreadyMapped(entity, snomed.split("#")[1])) {
-                entity.addObject(iri(IM.MATCHED_TO), iri(snomed));
+                entity.addObject(new TTIriRef(IM.MATCHED_TO), new TTIriRef(snomed));
               }
             }
           }
@@ -217,8 +217,8 @@ public class TPPImporter implements TTImport {
           tpp = new TTEntity().setIri(NAMESPACE.TPP + code.replace(".", "_"));
           tpp.setCode(code);
           tpp.setName(term);
-          tpp.setScheme(NAMESPACE.TPP.asIri());
-          tpp.addType(iri(IM.CONCEPT));
+          tpp.setScheme(new TTIriRef(NAMESPACE.TPP));
+          tpp.addType(new TTIriRef(IM.CONCEPT));
           codeToEntity.put(code, tpp);
           document.addEntity(tpp);
 
@@ -247,7 +247,7 @@ public class TPPImporter implements TTImport {
           TTEntity tpp = codeToEntity.get(code);
           if (tpp != null) {
             if (!alreadyMapped(tpp, snomed))
-              tpp.addObject(iri(IM.MATCHED_TO), iri(NAMESPACE.SNOMED + snomed));
+              tpp.addObject(new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.SNOMED + snomed));
           }
         }
 
@@ -260,9 +260,9 @@ public class TPPImporter implements TTImport {
   }
 
   private boolean alreadyMapped(TTEntity tpp, String snomed) {
-    if (tpp.get(iri(IM.MATCHED_TO)) == null)
+    if (tpp.get(new TTIriRef(IM.MATCHED_TO)) == null)
       return false;
-    for (TTValue superClass : tpp.get(iri(IM.MATCHED_TO)).iterator()) {
+    for (TTValue superClass : tpp.get(new TTIriRef(IM.MATCHED_TO)).iterator()) {
       if (superClass.asIriRef().getIri().split("#")[1].equals(snomed))
         return true;
     }
@@ -284,9 +284,9 @@ public class TPPImporter implements TTImport {
           TTEntity tpp = codeToEntity.get(child);
           if (tpp != null) {
             if (!parent.startsWith(".")) {
-              TTManager.addChildOf(tpp, iri(NAMESPACE.TPP + parent.replace(".", "_")));
+              TTManager.addChildOf(tpp, new TTIriRef(NAMESPACE.TPP + parent.replace(".", "_")));
             } else {
-              TTManager.addChildOf(tpp, iri(NAMESPACE.TPP + "TPPCodes"));
+              TTManager.addChildOf(tpp, new TTIriRef(NAMESPACE.TPP + "TPPCodes"));
             }
           }
           line = reader.readLine();
@@ -402,11 +402,11 @@ public class TPPImporter implements TTImport {
               (code.replace(".", "_"));
             TTEntity tpp = new TTEntity().setIri(iri);
             tpp.setCode(code);
-            tpp.setScheme(iri(NAMESPACE.TPP));
-            tpp.setStatus(iri(IM.ACTIVE));
-            tpp.addType(iri(IM.CONCEPT));
+            tpp.setScheme(new TTIriRef(NAMESPACE.TPP));
+            tpp.setStatus(new TTIriRef(IM.ACTIVE));
+            tpp.addType(new TTIriRef(IM.CONCEPT));
             if (code.startsWith("."))
-              tpp.setStatus(iri(IM.INACTIVE));
+              tpp.setStatus(new TTIriRef(IM.INACTIVE));
             if (code.equals("....."))
               tpp.setName("CTV3 codes");
             codeToEntity.put(code, tpp);
@@ -422,19 +422,19 @@ public class TPPImporter implements TTImport {
 
   private void addTPPTopLevel() {
     TTEntity c = new TTEntity().setIri(NAMESPACE.TPP + "TPPCodes")
-      .addType(iri(IM.CONCEPT))
+      .addType(new TTIriRef(IM.CONCEPT))
       .setName("TPP (CTV3) and TPP local codes")
-      .setScheme(iri(NAMESPACE.TPP))
+      .setScheme(new TTIriRef(NAMESPACE.TPP))
       .setCode("TPPCodes");
-    c.set(iri(IM.IS_CONTAINED_IN), new TTArray());
-    c.get(iri(IM.IS_CONTAINED_IN)).add(TTIriRef.iri(NAMESPACE.IM + "CodeBasedTaxonomies"));
+    c.set(new TTIriRef(IM.IS_CONTAINED_IN), new TTArray());
+    c.get(new TTIriRef(IM.IS_CONTAINED_IN)).add(new TTIriRef(NAMESPACE.IM + "CodeBasedTaxonomies"));
     document.addEntity(c);
     c = new TTEntity().setIri(NAMESPACE.TPP + "TPPOrphanCodes")
-      .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(NAMESPACE.TPP + "TPPCodes")))
+      .set(new TTIriRef(IM.IS_CHILD_OF), new TTArray().add(new TTIriRef(NAMESPACE.TPP + "TPPCodes")))
       .setName("TPP unmatched orphan codes")
-      .addType(iri(IM.CONCEPT))
+      .addType(new TTIriRef(IM.CONCEPT))
       .setDescription("TPP orphan codes whose parent is unknown and are not matched to UK Snomed-CT")
-      .setScheme(iri(NAMESPACE.TPP));
+      .setScheme(new TTIriRef(NAMESPACE.TPP));
     document.addEntity(c);
   }
 
@@ -461,15 +461,15 @@ public class TPPImporter implements TTImport {
         if (tpp == null) {
           tpp = new TTEntity().setIri(NAMESPACE.TPP + code.replace(".", "_"));
           tpp.setCode(code);
-          tpp.setScheme(iri(NAMESPACE.TPP));
+          tpp.setScheme(new TTIriRef(NAMESPACE.TPP));
           tpp.setName("TPP local code. name unknown");
-          tpp.addType(iri(IM.CONCEPT));
+          tpp.addType(new TTIriRef(IM.CONCEPT));
           codeToEntity.put(code, tpp);
           document.addEntity(tpp);
 
         }
         if (!alreadyMapped(tpp, snomed)) {
-          tpp.addObject(iri(IM.MATCHED_TO), iri(NAMESPACE.SNOMED + snomed));
+          tpp.addObject(new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.SNOMED + snomed));
         }
       }
       LOG.info("Process ended with {}", count);
@@ -498,15 +498,15 @@ public class TPPImporter implements TTImport {
         if (tpp == null) {
           tpp = new TTEntity().setIri(NAMESPACE.TPP + code.replace(".", "_"));
           tpp.setCode(code);
-          tpp.setScheme(iri(NAMESPACE.TPP));
+          tpp.setScheme(new TTIriRef(NAMESPACE.TPP));
           tpp.setName(name);
-          tpp.addType(iri(IM.CONCEPT));
+          tpp.addType(new TTIriRef(IM.CONCEPT));
           codeToEntity.put(code, tpp);
           document.addEntity(tpp);
 
         }
         if (!alreadyMapped(tpp, snomed.split("#")[1])) {
-          tpp.addObject(iri(IM.MATCHED_TO), iri(snomed));
+          tpp.addObject(new TTIriRef(IM.MATCHED_TO), new TTIriRef(snomed));
         }
         line = reader.readLine();
       }

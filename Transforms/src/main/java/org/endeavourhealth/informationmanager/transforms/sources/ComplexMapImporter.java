@@ -2,8 +2,8 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
+import org.endeavourhealth.interfacemanager.model.IM;
+import org.endeavourhealth.interfacemanager.model.NAMESPACE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,7 @@ public class ComplexMapImporter {
     this.refset = refset;
     this.sourceCodes = sourceCodes;
     this.legacyCodeToEntity = legacyCodeToEntity;
-    document.setCrud(iri(IM.UPDATE_PREDICATES));
+    document.setCrud(new TTIriRef(IM.UPDATE_PREDICATES));
     if (!refset.equals(OPCS4_REFERENCE_SET) && !refset.equals(ICD10_REFERENCE_SET))
       throw new IllegalArgumentException(refset + " reference set is not supported yet");
 
@@ -72,11 +72,11 @@ public class ComplexMapImporter {
   }
 
   private void setMapsForEntity(String snomed, List<ComplexMap> mapList) throws JsonProcessingException {
-    TTEntity entity = new TTEntity().setIri((NAMESPACE.SNOMED + snomed)).setScheme(NAMESPACE.SNOMED.asIri());  // snomed entity reference
+    TTEntity entity = new TTEntity().setIri((NAMESPACE.SNOMED + snomed)).setScheme(new TTIriRef(NAMESPACE.SNOMED));  // snomed entity reference
     document.addEntity(entity);
     for (ComplexMap sourceMap : mapList) {
       TTNode ttComplexMap = new TTNode();
-      entity.addObject(iri(IM.HAS_MAP), ttComplexMap);
+      entity.addObject(new TTIriRef(IM.HAS_MAP), ttComplexMap);
       processMap(snomed, sourceMap, ttComplexMap);
     }
   }
@@ -85,22 +85,22 @@ public class ComplexMapImporter {
     if (sourceMap.getMapGroups().size() == 1) {
       ComplexMapGroup targetGroup = sourceMap.getMapGroups().get(0);
       TTArray ttTargetGroup = new TTArray();
-      ttComplexMap.set(iri(IM.SOME_OF), ttTargetGroup);
+      ttComplexMap.set(new TTIriRef(IM.SOME_OF), ttTargetGroup);
       for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
         TTEntity legacy = legacyCodeToEntity.get(sourceTarget.getTarget());
         if (legacy != null) {
-          legacy.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomed));
+          legacy.addObject(new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.SNOMED + snomed));
           addMapTarget(ttTargetGroup, sourceTarget);
         }
       }
     } else {
       TTArray targetGroups = new TTArray();
-      ttComplexMap.set(iri(IM.COMBINATION_OF), targetGroups);
+      ttComplexMap.set(new TTIriRef(IM.COMBINATION_OF), targetGroups);
       for (ComplexMapGroup targetGroup : sourceMap.getMapGroups()) {
         TTNode ttTargetGroup = new TTNode();
         targetGroups.add(ttTargetGroup);
         TTArray ttTargetChoice = new TTArray();
-        ttTargetGroup.set(iri(IM.ONE_OF), ttTargetChoice);
+        ttTargetGroup.set(new TTIriRef(IM.ONE_OF), ttTargetChoice);
         for (ComplexMapTarget sourceTarget : targetGroup.getTargetMaps()) {
           if (legacyCodeToEntity.get(sourceTarget.getTarget()) != null)
             addMapTarget(ttTargetChoice, sourceTarget);
@@ -112,12 +112,12 @@ public class ComplexMapImporter {
   public void addMapTarget(TTArray targetGroup, ComplexMapTarget sourceTarget) {
     TTNode mapNode = new TTNode();
     targetGroup.add(mapNode);
-    mapNode.set(iri(IM.MAPPED_TO), TTIriRef.iri(legacyCodeToEntity.get(sourceTarget.getTarget()).getIri()));
+    mapNode.set(new TTIriRef(IM.MAPPED_TO), new TTIriRef(legacyCodeToEntity.get(sourceTarget.getTarget()).getIri()));
     if (sourceTarget.getAdvice() != null)
-      mapNode.set(iri(IM.MAP_ADVICE), TTLiteral.literal(sourceTarget.getAdvice()));
+      mapNode.set(new TTIriRef(IM.MAP_ADVICE), TTLiteral.literal(sourceTarget.getAdvice()));
     if (sourceTarget.getPriority() != null)
-      mapNode.set(iri(IM.MAP_PRIORITY), TTLiteral.literal(sourceTarget.getPriority()));
-    mapNode.set(iri(IM.ASSURANCE_LEVEL), iri(IM.NATIONALLY_ASSURED));
+      mapNode.set(new TTIriRef(IM.MAP_PRIORITY), TTLiteral.literal(sourceTarget.getPriority()));
+    mapNode.set(new TTIriRef(IM.ASSURANCE_LEVEL), new TTIriRef(IM.NATIONALLY_ASSURED));
   }
 
 

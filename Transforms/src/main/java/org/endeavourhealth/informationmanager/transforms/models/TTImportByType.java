@@ -1,6 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.models;
 
-import org.endeavourhealth.imapi.vocabulary.ImportType;
+import org.endeavourhealth.interfacemanager.model.IMPORTTYPE;
 
 /**
  * An interface that handles a variety of data imports to the information model as specified by the type of import (Graph name)
@@ -8,9 +8,9 @@ import org.endeavourhealth.imapi.vocabulary.ImportType;
  */
 public interface TTImportByType {
 
-  TTImportByType importByType(ImportType importType, TTImportConfig config) throws Exception;
+  TTImportByType importByType(IMPORTTYPE importType, TTImportConfig config) throws Exception;
 
-  TTImportByType validateByType(ImportType importType, String inFolder) throws Exception;
+  TTImportByType validateByType(IMPORTTYPE importType, String inFolder) throws Exception;
 
 }
 

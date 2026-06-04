@@ -9,9 +9,9 @@ import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.IM;
-import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
+import org.endeavourhealth.interfacemanager.model.GRAPH;
+import org.endeavourhealth.interfacemanager.model.IM;
+import org.endeavourhealth.interfacemanager.model.NAMESPACE;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -49,7 +49,7 @@ public class CoreVerbImporter implements TTImport {
       .setIri(NAMESPACE.IM + iri)
       .setName(iri);
     keyValue.entrySet().stream().forEach(e ->
-      entity.set(TTIriRef.iri(NAMESPACE.IM + e.getKey()), TTLiteral.literal(e.getValue())));
+      entity.set(new TTIriRef(NAMESPACE.IM + e.getKey()), TTLiteral.literal(e.getValue())));
     document.addEntity(entity);
   }
 

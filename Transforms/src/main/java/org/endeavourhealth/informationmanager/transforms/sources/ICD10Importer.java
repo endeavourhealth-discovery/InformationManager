@@ -6,7 +6,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -28,7 +28,7 @@ public class ICD10Importer implements TTImport {
   private static final String[] maps = {".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
   private static final String[] chapters = {".*\\\\ICD10\\\\ICD10-Chapters.txt"};
 
-  private final TTIriRef icd10Codes = TTIriRef.iri(NAMESPACE.ICD10 + "ICD10Codes");
+  private final TTIriRef icd10Codes = new TTIriRef(NAMESPACE.ICD10 + "ICD10Codes");
   private final TTManager manager = new TTManager();
   private final Map<String, TTEntity> startChapterMap = new HashMap<>();
   private final List<String> startChapterList = new ArrayList<>();
@@ -75,7 +75,7 @@ public class ICD10Importer implements TTImport {
       if (code.contains(".")) {
         String qParent = code.substring(0, code.indexOf("."));
         TTEntity parent = codeToEntity.get(qParent);
-        icd10Entity.addObject(iri(IM.IS_CHILD_OF), TTIriRef.iri(parent.getIri()));
+        icd10Entity.addObject(new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(parent.getIri()));
       } else {
         int insertion = Collections.binarySearch(startChapterList, code);
         int parentIndex;
@@ -86,7 +86,7 @@ public class ICD10Importer implements TTImport {
         String qParent = startChapterList.get(parentIndex);
         TTEntity parent = startChapterMap.get(qParent);
         // LOG.info("{} in {}?", code, parent.getCode());
-        icd10Entity.addObject(iri(IM.IS_CHILD_OF), TTIriRef.iri(parent.getIri()));
+        icd10Entity.addObject(new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(parent.getIri()));
       }
 
     }
@@ -97,11 +97,11 @@ public class ICD10Importer implements TTImport {
     TTEntity icd10 = new TTEntity()
       .setIri(icd10Codes.getIri())
       .setName("ICD10 5th edition classification codes")
-      .addType(iri(IM.CONCEPT))
+      .addType(new TTIriRef(IM.CONCEPT))
       .setCode("ICD10Codes")
-      .setScheme(iri(NAMESPACE.ICD10))
+      .setScheme(new TTIriRef(NAMESPACE.ICD10))
       .setDescription("ICD1O classification used in backward maps from Snomed");
-    icd10.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "CodeBasedTaxonomies"));
+    icd10.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "CodeBasedTaxonomies"));
     document.addEntity(icd10);
 
   }
@@ -135,10 +135,10 @@ public class ICD10Importer implements TTImport {
           .setCode(code)
           .setName(label)
           .setIri(iri)
-          .setScheme(iri(NAMESPACE.ICD10))
-          .setStatus(iri(IM.ACTIVE))
-          .addType(iri(IM.CONCEPT));
-        c.addObject(iri(IM.IS_CHILD_OF), icd10Codes);
+          .setScheme(new TTIriRef(NAMESPACE.ICD10))
+          .setStatus(new TTIriRef(IM.ACTIVE))
+          .addType(new TTIriRef(IM.CONCEPT));
+        c.addObject(new TTIriRef(IM.IS_CHILD_OF), icd10Codes);
         startChapterMap.put(code.substring(0, code.indexOf("-")), c);
         startChapterList.add(code.substring(0, code.indexOf("-")));
         document.addEntity(c);
@@ -165,9 +165,9 @@ public class ICD10Importer implements TTImport {
         String[] fields = line.split("\t");
         TTEntity c = new TTEntity()
           .setCode(fields[0])
-          .setScheme(iri(NAMESPACE.ICD10))
+          .setScheme(new TTIriRef(NAMESPACE.ICD10))
           .setIri(NAMESPACE.ICD10 + (fields[0].replace(".", "")))
-          .addType(iri(IM.CONCEPT));
+          .addType(new TTIriRef(IM.CONCEPT));
         if (fields[4].length() > 250) {
           c.setName(fields[4].substring(0, 200));
           c.setDescription(fields[4]);

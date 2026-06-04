@@ -1,7 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -78,10 +78,10 @@ public class CPRDImport implements TTImport {
         concept.setIri(NAMESPACE.CPRD_PROD + "Product_" + drugId);
         concept.setName(fields[2]);
         concept.setCode(drugId);
-        concept.setScheme(iri(NAMESPACE.CPRD_PROD));
-        concept.setStatus(iri(IM.ACTIVE));
+        concept.setScheme(new TTIriRef(NAMESPACE.CPRD_PROD));
+        concept.setStatus(new TTIriRef(IM.ACTIVE));
         if (!fields[1].equals("")) {
-          concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + fields[1]));
+          concept.addObject(new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.SNOMED + fields[1]));
         }
         document.addEntity(concept);
         line = reader.readLine();
@@ -108,12 +108,12 @@ public class CPRDImport implements TTImport {
         concept.setIri(NAMESPACE.CPRD_PROD + "Medical_" + medId);
         concept.setName(fields[4]);
         concept.setCode(medId);
-        concept.setScheme(iri(NAMESPACE.CPRD_PROD));
-        concept.setStatus(iri(IM.ACTIVE));
-        concept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + fields[5]));
+        concept.setScheme(new TTIriRef(NAMESPACE.CPRD_PROD));
+        concept.setStatus(new TTIriRef(IM.ACTIVE));
+        concept.addObject(new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.SNOMED + fields[5]));
         TTNode termCode = new TTNode();
-        termCode.set(iri(IM.CODE), TTLiteral.literal(fields[6]));
-        concept.addObject(iri(IM.HAS_TERM_CODE), termCode);
+        termCode.set(new TTIriRef(IM.CODE), TTLiteral.literal(fields[6]));
+        concept.addObject(new TTIriRef(IM.HAS_TERM_CODE), termCode);
         document.addEntity(concept);
         line = reader.readLine();
       }

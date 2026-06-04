@@ -99,7 +99,7 @@ public class StaticConstGenerator implements Plugin<Project> {
             }
         
             public TTIriRef asIri() {
-              return iri(
+              return new TTIriRef(
                 value, 
                 Arrays.stream(this.name().split("_"))
                   .map(i -> i.substring(0, 1).toUpperCase() + i.substring(1).toLowerCase())

@@ -7,7 +7,7 @@ import org.endeavourhealth.imapi.model.tripletree.TTDocument;
 import org.endeavourhealth.imapi.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -33,7 +33,7 @@ public class OPCS4Importer implements TTImport {
   private static final String[] chapters = {".*\\\\OPCS4\\\\OPCSChapters.txt"};
   private static final String[] maps = {".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
 
-  private final TTIriRef opcscodes = TTIriRef.iri(NAMESPACE.OPCS4 + "OPCS49Classification");
+  private final TTIriRef opcscodes = new TTIriRef(NAMESPACE.OPCS4 + "OPCS49Classification");
   private final Map<String, TTEntity> codeToEntity = new HashMap<>();
   private final Map<String, TTEntity> altCodeToEntity = new HashMap<>();
   private final ImportMaps importMaps = new ImportMaps();
@@ -77,12 +77,12 @@ public class OPCS4Importer implements TTImport {
     Path file = ImportUtils.findFileForId(inFolder, chapters[0]);
     TTEntity opcs = new TTEntity()
       .setIri(opcscodes.getIri())
-      .addType(iri(IM.CONCEPT))
+      .addType(new TTIriRef(IM.CONCEPT))
       .setName("OPCS 4-9 Classification")
       .setCode("OPCS49Classification")
-      .setScheme(iri(NAMESPACE.OPCS4))
+      .setScheme(new TTIriRef(NAMESPACE.OPCS4))
       .setDescription("Classification of OPCS4 with chapter headings");
-    opcs.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "CodeBasedTaxonomies"));
+    opcs.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "CodeBasedTaxonomies"));
     document.addEntity(opcs);
 
     try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -95,9 +95,9 @@ public class OPCS4Importer implements TTImport {
         c.setIri(NAMESPACE.OPCS4 + chapter)
           .setName(term + " (chapter " + chapter + ")")
           .setCode(chapter)
-          .setScheme(iri(NAMESPACE.OPCS4))
-          .addType(iri(IM.CONCEPT))
-          .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(opcs.getIri())));
+          .setScheme(new TTIriRef(NAMESPACE.OPCS4))
+          .addType(new TTIriRef(IM.CONCEPT))
+          .set(new TTIriRef(IM.IS_CHILD_OF), new TTArray().add(new TTIriRef(opcs.getIri())));
         codeToEntity.put(chapter, c);
         document.addEntity(c);
         line = reader.readLine();
@@ -107,9 +107,9 @@ public class OPCS4Importer implements TTImport {
       .setIri(NAMESPACE.OPCS4 + "O")
       .setName("Overflow codes (chapter " + "O" + ")")
       .setCode("O")
-      .addType(iri(IM.CONCEPT))
-      .setScheme(iri(NAMESPACE.OPCS4))
-      .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(opcs.getIri())));
+      .addType(new TTIriRef(IM.CONCEPT))
+      .setScheme(new TTIriRef(NAMESPACE.OPCS4))
+      .set(new TTIriRef(IM.IS_CHILD_OF), new TTArray().add(new TTIriRef(opcs.getIri())));
     codeToEntity.put("O", c);
     document.addEntity(c);
   }
@@ -131,17 +131,17 @@ public class OPCS4Importer implements TTImport {
         String code = fields[0];
         TTEntity c = new TTEntity()
           .setCode(fields[0])
-          .setScheme(iri(NAMESPACE.OPCS4))
+          .setScheme(new TTIriRef(NAMESPACE.OPCS4))
           .setIri(NAMESPACE.OPCS4 + (fields[0].replace(".", "")))
-          .addType(iri(IM.CONCEPT));
+          .addType(new TTIriRef(IM.CONCEPT));
         if (code.contains(".")) {
           String qParent = code.substring(0, code.indexOf("."));
           TTEntity parent = codeToEntity.get(qParent);
-          c.addObject(iri(IM.IS_CHILD_OF), TTIriRef.iri(parent.getIri()));
+          c.addObject(new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(parent.getIri()));
         } else {
           String qParent = code.substring(0, 1);
           TTEntity parent = codeToEntity.get(qParent);
-          c.addObject(iri(IM.IS_CHILD_OF), TTIriRef.iri(parent.getIri()));
+          c.addObject(new TTIriRef(IM.IS_CHILD_OF), new TTIriRef(parent.getIri()));
         }
         codeToEntity.put(fields[0], c);
         altCodeToEntity.put(fields[0].replace(".", ""), c);

@@ -8,7 +8,7 @@ import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -154,9 +154,9 @@ public class BNFImporter implements TTImport {
       String setIri= entity.getIri();
       if (setToSnomed.get(setIri)!=null) {
         for (String snomed : setToSnomed.get(setIri)) {
-              entity.addObject(iri(IM.ENTAILED_MEMBER), new TTNode()
-                .set(iri(IM.IS), iri(snomed))
-                .set(iri(IM.ENTAILMENT), iri(IM.DESCENDANTS_OR_SELF_OF)));
+              entity.addObject(new TTIriRef(IM.ENTAILED_MEMBER), new TTNode()
+                .set(new TTIriRef(IM.IS), new TTIriRef(snomed))
+                .set(new TTIriRef(IM.ENTAILMENT), new TTIriRef(IM.DESCENDANTS_OR_SELF_OF)));
         }
       }
     }
@@ -168,7 +168,7 @@ public class BNFImporter implements TTImport {
     List<TTEntity> toRemove = new ArrayList<>();
     for (TTEntity set : document.getEntities()) {
       if (!toRemove.contains(set)) {
-        if (set.isType(iri(IM.CONCEPT_SET))) {
+        if (set.isType(new TTIriRef(IM.CONCEPT_SET))) {
           flattenParent(set, toRemove);
         }
       }
@@ -182,10 +182,10 @@ public class BNFImporter implements TTImport {
     TTEntity parent = getParent(set);
     if (!set.getIri().equals(parent.getIri())) {
       toRemove.add(set);
-      if (set.get(iri(IM.ENTAILED_MEMBER)) != null) {
-        parent.setType(new TTArray().add(iri(IM.CONCEPT_SET)));
-        parent.set(iri(IM.ENTAILED_MEMBER),set.get(iri(IM.ENTAILED_MEMBER)));
-        set.getPredicateMap().remove(iri(IM.ENTAILED_MEMBER));
+      if (set.get(new TTIriRef(IM.ENTAILED_MEMBER)) != null) {
+        parent.setType(new TTArray().add(new TTIriRef(IM.CONCEPT_SET)));
+        parent.set(new TTIriRef(IM.ENTAILED_MEMBER),set.get(new TTIriRef(IM.ENTAILED_MEMBER)));
+        set.getPredicateMap().remove(new TTIriRef(IM.ENTAILED_MEMBER));
       }
     }
   }
@@ -195,10 +195,10 @@ public class BNFImporter implements TTImport {
     if (!set.getIri().endsWith("0"))
       return set;
     TTIriRef parent;
-    if (set.get(iri(IM.IS_CONTAINED_IN)) != null) {
-      parent = set.get(iri(IM.IS_CONTAINED_IN)).get(0).asIriRef();
+    if (set.get(new TTIriRef(IM.IS_CONTAINED_IN)) != null) {
+      parent = set.get(new TTIriRef(IM.IS_CONTAINED_IN)).get(0).asIriRef();
     } else
-      parent = set.get(iri(IM.IS_SUBSET_OF)).get(0).asIriRef();
+      parent = set.get(new TTIriRef(IM.IS_SUBSET_OF)).get(0).asIriRef();
     TTEntity parentEntity = manager.getEntity(parent.getIri());
     if (children.get(parentEntity.getIri()).size() == 1) {
       return getParent(parentEntity);
@@ -210,12 +210,12 @@ public class BNFImporter implements TTImport {
   private void topFolder() {
     TTEntity entity = new TTEntity()
       .setIri(topFolder)
-      .addType(iri(IM.FOLDER))
-      .setScheme(NAMESPACE.IM.asIri())
+      .addType(new TTIriRef(IM.FOLDER))
+      .setScheme(new TTIriRef(NAMESPACE.IM))
       .setName("BNF based value set library")
-      .setStatus(iri(IM.ACTIVE))
+      .setStatus(new TTIriRef(IM.ACTIVE))
       .setDescription("A library of value sets generated from BNF codes and NHS BNF snomed maps");
-    entity.addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "QueryConceptSets"));
+    entity.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "QueryConceptSets"));
     document.addEntity(entity);
   }
 
@@ -329,11 +329,11 @@ public class BNFImporter implements TTImport {
   private void setNewEntity(String code, String name, String type, String parent, String superset) {
     TTEntity entity = new TTEntity()
       .setIri(NAMESPACE.BNF + "BNF_" + code)
-      .addType(iri(type))
-      .setScheme(NAMESPACE.BNF.asIri())
+      .addType(new TTIriRef(type))
+      .setScheme(new TTIriRef(NAMESPACE.BNF))
       .setName(name);
     if (parent != null) {
-      entity.addObject(iri(IM.IS_CONTAINED_IN), iri(parent));
+      entity.addObject(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(parent));
       if (code.matches("\\d+")) {
         String parentOrder = parent.split("#")[1];
         int order;
@@ -341,12 +341,12 @@ public class BNFImporter implements TTImport {
           order = Integer.parseInt(code) - Integer.parseInt(parentOrder);
         } else
           order = Integer.parseInt(code);
-        entity.set(iri(SHACL.ORDER), TTLiteral.literal(order));
+        entity.set(new TTIriRef(SHACL.ORDER), TTLiteral.literal(order));
       }
       children.computeIfAbsent(parent, p -> new HashSet<>()).add(entity.getIri());
     }
     if (superset != null) {
-      entity.addObject(iri(IM.IS_SUBSET_OF), iri(superset));
+      entity.addObject(new TTIriRef(IM.IS_SUBSET_OF), new TTIriRef(superset));
       children.computeIfAbsent(superset, s -> new HashSet<>()).add(entity.getIri());
     }
 
@@ -374,8 +374,8 @@ public class BNFImporter implements TTImport {
       if (emisIri!=null){
         TTEntity emisEntity= new TTEntity()
           .setIri(emisIri)
-          .setCrud(iri(IM.ADD_QUADS));
-        emisEntity.set(IM.MATCHED_TO,iri(NAMESPACE.BNF+"BNF_"+code));
+          .setCrud(new TTIriRef(IM.ADD_QUADS));
+        emisEntity.set(IM.MATCHED_TO, new TTIriRef(NAMESPACE.BNF+"BNF_"+code));
         document.addEntity(emisEntity);
       }
   }

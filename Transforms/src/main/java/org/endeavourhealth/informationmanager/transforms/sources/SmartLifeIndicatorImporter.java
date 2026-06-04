@@ -1,17 +1,12 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.utility.ThreadContext;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
-import org.endeavourhealth.informationmanager.transforms.ZipUtils;
+import org.endeavourhealth.interfacemanager.model.GRAPH;
+import org.endeavourhealth.interfacemanager.model.NAMESPACE;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.interfacemanager.model.IM;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
@@ -21,8 +16,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 public class SmartLifeIndicatorImporter implements TTImport {
 	private static final String[] queries = {".*\\\\Smartlife"};
@@ -57,28 +50,28 @@ public class SmartLifeIndicatorImporter implements TTImport {
 		TTEntity folder = new TTEntity()
 			.setIri(NAMESPACE.SMARTLIFE + "Q_SmartLifeQueries")
 			.setName("SmartLife queries")
-			.addType(iri(IM.FOLDER))
-			.setScheme(iri(NAMESPACE.SMARTLIFE))
-			.set(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "Q_Queries"));
-		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
+			.addType(new TTIriRef(IM.FOLDER))
+			.setScheme(new TTIriRef(NAMESPACE.SMARTLIFE))
+			.set(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "Q_Queries"));
+		folder.addObject(new TTIriRef(IM.CONTENT_TYPE), new TTIriRef(IM.QUERY));
 		document.addEntity(folder);
 		mainFolder= folder.getIri();
 		folder = new TTEntity()
 			.setIri(NAMESPACE.SMARTLIFE + "CSET_SmartLifeConceptSets")
 			.setName("Smart Life Health value set library")
-			.addType(iri(IM.FOLDER))
-			.setScheme(iri(NAMESPACE.SMARTLIFE))
-			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "QueryConceptSets"));
-		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
+			.addType(new TTIriRef(IM.FOLDER))
+			.setScheme(new TTIriRef(NAMESPACE.SMARTLIFE))
+			.set(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "QueryConceptSets"));
+		folder.addObject(new TTIriRef(IM.CONTENT_TYPE), new TTIriRef(IM.CONCEPT_SET));
 		document.addEntity(folder);
 		setFolder= folder.getIri();
 		folder = new TTEntity()
 			.setIri(NAMESPACE.SMARTLIFE + "SmartLifeIndicators")
 			.setName("Smart Life indicators")
-			.addType(iri(IM.FOLDER))
-			.setScheme(iri(NAMESPACE.SMARTLIFE))
-			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "Indicators"))
-			.addObject(iri(IM.CONTENT_TYPE), iri(IM.INDICATOR));
+			.addType(new TTIriRef(IM.FOLDER))
+			.setScheme(new TTIriRef(NAMESPACE.SMARTLIFE))
+			.set(new TTIriRef(IM.IS_CONTAINED_IN), new TTIriRef(NAMESPACE.IM + "Indicators"))
+			.addObject(new TTIriRef(IM.CONTENT_TYPE), new TTIriRef(IM.INDICATOR));
 		document.addEntity(folder);
 	}
 

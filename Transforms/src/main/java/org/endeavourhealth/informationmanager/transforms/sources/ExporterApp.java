@@ -1,7 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.logic.exporters.SetExporter;
-import org.endeavourhealth.imapi.vocabulary.IM;
+import org.endeavourhealth.interfacemanager.model.IM;
 
 public class ExporterApp {
   // TODO: Needs rework to use SetExporter to take advantage of latest changes (pre-expansion, subset predicate reversal, etc).

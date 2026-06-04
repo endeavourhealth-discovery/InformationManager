@@ -21,6 +21,7 @@ wsrs = "4.0.0"
 zip4j = "2.11.5"
 cucumber = "7.22.0"
 mockito = "5.14.2"
+interfaceManager = "0.0.0"
 
 [plugins]
 sonar = { id = "org.sonarqube", version = "6.2.0.5505" }
@@ -54,3 +55,5 @@ zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "zip4j" }
 cucumber = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
 cucumber-junit = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
 mockito = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+interfacemanager = { module = "org.endeavourhealth.interfacemanager:interfacemanager", version.ref = "interfaceManager" }
+

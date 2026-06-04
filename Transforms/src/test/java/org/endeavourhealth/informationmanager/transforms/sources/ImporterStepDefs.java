@@ -5,7 +5,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.endeavourhealth.imapi.filer.TTFilerException;
-import org.endeavourhealth.imapi.vocabulary.ImportType;
+import org.endeavourhealth.interfacemanager.model.IMPORTTYPE;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.verify;
 
 
 public class ImporterStepDefs {
-  private ImportType importType;
+  private IMPORTTYPE importType;
   private String folderPath;
   private TTImport mockImporter;
   private TTImportByType service;
@@ -26,7 +26,7 @@ public class ImporterStepDefs {
 
   @Given("I have the import type {string}")
   public void i_have_the_import_type(String importType) {
-    this.importType = ImportType.from(importType);
+    this.importType = IMPORTTYPE.fromValue(importType);
   }
 
   @And("the folder path is {string}")
@@ -98,18 +98,18 @@ public class ImporterStepDefs {
     }
 
     @Override
-    public TTImportByType importByType(ImportType importType, TTImportConfig config) throws Exception {
+    public TTImportByType importByType(IMPORTTYPE importType, TTImportConfig config) throws Exception {
       return null;
     }
 
     @Override
-    public TTImportByType validateByType(ImportType importType, String inFolder) throws Exception {
+    public TTImportByType validateByType(IMPORTTYPE importType, String inFolder) throws Exception {
       TTImport imp = getImporter(importType);
       imp.validateFiles(inFolder);
       return this;
     }
 
-    protected TTImport getImporter(ImportType importType) throws ImportException {
+    protected TTImport getImporter(IMPORTTYPE importType) throws ImportException {
       if (importType == null) {
         throw new ImportException("Unrecognised import type");
       }

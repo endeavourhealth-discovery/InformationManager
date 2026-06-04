@@ -15,7 +15,7 @@ import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
 import org.endeavourhealth.imapi.model.search.EntityDocument;
 import org.endeavourhealth.imapi.model.search.SearchTermCode;
 import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
+import org.endeavourhealth.interfacemanager.model.NAMESPACE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,7 +170,7 @@ public class OpenSearchSender {
 
 
           if (rs.hasBinding("scheme")) {
-            TTIriRef scheme = iri(rs.getValue("scheme").stringValue());
+            TTIriRef scheme = new TTIriRef(rs.getValue("scheme").stringValue());
 
             if (rs.getValue("schemeName") != null)
               scheme.setName(rs.getValue("schemeName").stringValue());
@@ -178,24 +178,24 @@ public class OpenSearchSender {
           }
 
           if (rs.getValue("status") != null) {
-            TTIriRef status = iri(rs.getValue("status").stringValue());
+            TTIriRef status = new TTIriRef(rs.getValue("status").stringValue());
             if (rs.getValue("statusName") != null)
               status.setName(rs.getValue("statusName").stringValue());
             blob.setStatus(status);
           }
 
           if (rs.getValue("type") != null) {
-            TTIriRef type = iri(rs.getValue("type").stringValue());
+            TTIriRef type = new TTIriRef(rs.getValue("type").stringValue());
             if (rs.getValue("typeName") != null)
               type.setName(rs.getValue("typeName").stringValue());
             blob.addType(type);
           }
           TTIriRef extraType;
           if (rs.getValue("extraType") != null) {
-            extraType = iri(rs.getValue("extraType").stringValue());
+            extraType = new TTIriRef(rs.getValue("extraType").stringValue());
             extraType.setName(rs.getValue("extraTypeName").stringValue());
             blob.addType(extraType);
-            if (extraType.equals(iri(NAMESPACE.IM + "DataModelEntity"))) {
+            if (extraType.equals(new TTIriRef(NAMESPACE.IM + "DataModelEntity"))) {
               int usageTotal = 2000000;
               blob.setUsageTotal(usageTotal);
             }
@@ -275,7 +275,7 @@ public class OpenSearchSender {
           if (rs.getValue("keyTerm") != null)
             keyTerm = rs.getValue("keyTerm").stringValue();
           if (rs.getValue("termCodeStatus") != null)
-            status = iri(rs.getValue("termCodeStatus").stringValue());
+            status = new TTIriRef(rs.getValue("termCodeStatus").stringValue());
           if (synonym != null) {
             addTerm(blob, synonym, termCode, status, keyTerm);
           } else if (termCode != null) {
@@ -313,7 +313,7 @@ public class OpenSearchSender {
           BindingSet rs = qr.next();
           String iri = rs.getValue("iri").stringValue();
           EntityDocument blob = batch.get(iri);
-          blob.getIsA().add(iri(rs.getValue("superType").stringValue()));
+          blob.getIsA().add(new TTIriRef(rs.getValue("superType").stringValue()));
         }
       }
     }
@@ -369,7 +369,7 @@ public class OpenSearchSender {
           BindingSet rs = qr.next();
           String iri = rs.getValue("iri").stringValue();
           EntityDocument blob = batch.get(iri);
-          blob.getMemberOf().add(iri(rs.getValue("set").stringValue()));
+          blob.getMemberOf().add(new TTIriRef(rs.getValue("set").stringValue()));
         }
 
       }

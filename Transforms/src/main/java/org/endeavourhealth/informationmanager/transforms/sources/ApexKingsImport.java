@@ -5,7 +5,8 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.interfacemanager.model.*;
+import org.endeavourhealth.imapi.utility.EnumUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -57,12 +58,12 @@ public class ApexKingsImport implements TTImport {
   private void setTopLevel() {
     TTEntity kings = new TTEntity()
       .setIri(KINGS_APEX_CODES)
-      .addType(iri(IM.CONCEPT))
+      .addType (new TTIriRef(IM.CONCEPT))
       .setName("Kings College Hospital Apex path codes")
       .setCode("KingsApexCodes")
-      .setScheme(NAMESPACE.KINGS_APEX.asIri())
+      .setScheme(EnumUtils.asIri(NAMESPACE.KINGS_APEX))
       .setDescription("Local codes for the Apex pathology system in kings")
-      .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(NAMESPACE.IM + "CodeBasedTaxonomies")));
+      .set (new TTIriRef(IM.IS_CONTAINED_IN), new TTArray().add(new TTIriRef(NAMESPACE.IM + "CodeBasedTaxonomies")));
     document.addEntity(kings);
   }
 
@@ -88,17 +89,17 @@ public class ApexKingsImport implements TTImport {
         String iri = NAMESPACE.KINGS_APEX + (fields[1].replaceAll("[ .,\"%]", ""));
         TTEntity entity = new TTEntity()
           .setIri(iri)
-          .addType(IM.CONCEPT.asIri())
+          .addType(EnumUtils.asIri(IM.CONCEPT))
           .setName(fields[2])
           .setDescription("Local apex Kings trust pathology system entity ")
           .setCode(code)
-          .setScheme(NAMESPACE.KINGS_APEX.asIri())
-          .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(KINGS_APEX_CODES)));
+          .setScheme(EnumUtils.asIri(NAMESPACE.KINGS_APEX))
+          .set (new TTIriRef(IM.IS_CHILD_OF), new TTArray().add(new TTIriRef(KINGS_APEX_CODES)));
         document.addEntity(entity);
         apexToRead.put(code, readCode);
         if (readToSnomed.get(readCode) != null) {
           for (String snomed : readToSnomed.get(readCode)) {
-            entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomed));
+            entity.addObject (new TTIriRef(IM.MATCHED_TO), new TTIriRef(NAMESPACE.SNOMED + snomed));
           }
         }
         count.getAndIncrement();
