@@ -54,7 +54,9 @@ public class QImporter implements TTImport {
   private final Map<String, String> projectVersion = new HashMap<>();
   private static final String[] sets = {".*\\\\QCodes\\\\Sets.txt"};
   private static final String[] bnfMaps = {".*\\\\QCodes\\\\QBNFMaps.txt"};
-
+  private static final String[] semanticMaps = {".*\\\\QCodes\\\\SemanticMaps.txt"};
+  private static final String semanticMapFolder= NAMESPACE.IM + "SemanticMaps";
+  private static final String qSemanticMapFolder= NAMESPACE.QR + "Q_SemanticMaps";
 
 
   @Override
@@ -84,6 +86,7 @@ public class QImporter implements TTImport {
         LOG.info("Deleting q code groups..");
         new SearchService().updateIM(qr, GRAPH.IM);
         processReplacementSets(manager,ttImportConfig.getFolder());
+        semanticMaps(manager,ttImportConfig.getFolder());
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
           filer.fileDocument(document);
         }
@@ -95,6 +98,49 @@ public class QImporter implements TTImport {
     }
 
     LOG.info("Finished importing Q data");
+  }
+
+  private void semanticMaps(TTManager manager, String folder) throws IOException {
+    Map<String,TTEntity> iriToMap= new HashMap<>();
+    for (String map : semanticMaps) {
+      Path file= ImportUtils.findFilesForId(folder,map).getFirst();
+      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+        reader.readLine();
+        String line = reader.readLine();
+        while (line != null &&!line.isEmpty()) {
+          String[] fields = line.split("\t");
+          String mapIri = fields[0];
+          String name = fields[2];
+          String targetText= fields[3];
+          String targetValue= fields[4];
+            String description = fields[5];
+
+            TTEntity mapEntity = iriToMap.get(mapIri);
+            if (mapEntity == null) {
+              mapEntity = new TTEntity()
+                .setIri(mapIri)
+                .setName("Q Map " + name)
+                .addType(iri(IM.SEMANTIC_MAP));
+              mapEntity.setScheme(NAMESPACE.QR.asIri());
+              mapEntity.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(qSemanticMapFolder));
+              mapEntity.set(IM.HAS_MAP_TYPE,iri(IM.DIRECT_MAP));
+              iriToMap.put(mapIri, mapEntity);
+              document.addEntity(mapEntity);
+            }
+            if (fields.length == 7) {
+              String codeGroup = fields[6];
+              TTNode mapEntry = new TTNode();
+              String sourceEntity = NAMESPACE.QR + "QCodeGroup_" + (codeGroup.split(" ")[0]);
+              mapEntry.set(IM.SOURCE_ENTITY, iri(sourceEntity));
+              mapEntry.set(IM.TARGET_TEXT, TTLiteral.literal(targetText));
+              mapEntry.set(IM.TARGET_VALUE, TTLiteral.literal(Integer.parseInt(targetValue)));
+              mapEntity.addObject(iri(IM.MAP_ENTRY), mapEntry);
+              mapEntry.set(RDFS.LABEL, TTLiteral.literal(description));
+            }
+          line = reader.readLine();
+        }
+      }
+    }
   }
 
   private void addBNFMapEntries(TTManager manager, String folder) throws IOException {
@@ -361,17 +407,16 @@ public class QImporter implements TTImport {
     folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
     document.addEntity(folder);
     folder.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "QueryConceptSets"));
-   /* TTEntity qFolder = new TTEntity()
-      .setIri(NAMESPACE.IM + "Q_PredictionQueries")
+    TTEntity qFolder = new TTEntity()
+      .setIri(qSemanticMapFolder)
       .addType(iri(IM.FOLDER))
       .setScheme(NAMESPACE.IM.asIri())
-      .setName("Predication queries")
+      .setName("Q Prediction Semantic Maps")
       .setDescription("Folder containing queries for prediction algorithms");
-    qFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.QUERY));
+    qFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.SEMANTIC_MAP));
     document.addEntity(qFolder);
-    qFolder.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "Q_Queries"));
+    qFolder.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(semanticMapFolder));
 
-    */
   }
 
   @Override
