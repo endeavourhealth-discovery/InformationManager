@@ -1,6 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.online;
 
-import org.endeavourhealth.imapi.vocabulary.ImportType;
+import org.endeavourhealth.library.vocabulary.ImportType;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;

@@ -3,17 +3,17 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.library.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
-import org.endeavourhealth.imapi.logic.CachedObjectMapper;
+import org.endeavourhealth.library.logic.CachedObjectMapper;
 import org.endeavourhealth.imapi.model.fhir.CodeSystem;
 import org.endeavourhealth.imapi.model.fhir.FHIRDocument;
 import org.endeavourhealth.imapi.model.fhir.ValueSet;
-import org.endeavourhealth.imapi.model.imq.QueryException;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
+import org.endeavourhealth.library.model.imq.QueryException;
+import org.endeavourhealth.library.model.tripletree.TTDocument;
+import org.endeavourhealth.library.model.tripletree.TTEntity;
 import org.endeavourhealth.imapi.transforms.FHIRToIM;
-import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.library.transforms.TTManager;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
 
 public class FHIRImporter implements TTImport {
 

@@ -16,16 +16,16 @@ import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.model.requests.QueryRequest;
+import org.endeavourhealth.library.model.requests.QueryRequest;
 import org.endeavourhealth.imapi.transforms.ECLToIMQ;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.library.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.service.EntityService;
 import org.endeavourhealth.imapi.logic.service.SearchService;
-import org.endeavourhealth.imapi.model.imq.*;
-import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
+import org.endeavourhealth.library.model.imq.*;
+import org.endeavourhealth.library.model.tripletree.*;
+import org.endeavourhealth.library.transforms.TTManager;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
@@ -40,8 +40,8 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static org.endeavourhealth.imapi.dataaccess.helpers.SparqlHelper.valueList;
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
-import static org.endeavourhealth.imapi.vocabulary.VocabUtils.asHashSet;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.vocabulary.VocabUtils.asHashSet;
 
 public class QImporter implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(QImporter.class);

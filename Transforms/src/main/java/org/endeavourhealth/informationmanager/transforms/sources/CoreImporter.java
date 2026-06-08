@@ -3,10 +3,10 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.reasoner.Reasoner;
-import org.endeavourhealth.imapi.model.imq.*;
-import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.library.model.imq.*;
+import org.endeavourhealth.library.model.tripletree.*;
+import org.endeavourhealth.library.transforms.TTManager;
+import org.endeavourhealth.library.vocabulary.GRAPH;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTVariable.iri;
+import static org.endeavourhealth.library.model.tripletree.TTVariable.iri;
 
 public class CoreImporter implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(CoreImporter.class);
