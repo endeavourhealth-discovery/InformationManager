@@ -7,6 +7,8 @@ import java.util.List;
 public interface VocabGeneratorExtension {
   Property<String> getInputJson();
 
+  Property<String> getPackagePath();
+
   Property<String> getJavaOutputFolder();
 
   Property<String> getTypeScriptOutputFolder();

@@ -1,6 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.singlesources;
 
-import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
+import org.endeavourhealth.library.vocabulary.NAMESPACE;
 import org.endeavourhealth.informationmanager.transforms.sources.SingleEqdQueryImport;
 
 public class SingleQuery {
