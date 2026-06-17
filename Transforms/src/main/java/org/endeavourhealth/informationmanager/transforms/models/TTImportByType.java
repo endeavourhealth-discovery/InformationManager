@@ -1,6 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.models;
 
-import org.endeavourhealth.imapi.vocabulary.ImportType;
+import org.endeavourhealth.library.vocabulary.ImportType;
 
 /**
  * An interface that handles a variety of data imports to the information model as specified by the type of import (Graph name)

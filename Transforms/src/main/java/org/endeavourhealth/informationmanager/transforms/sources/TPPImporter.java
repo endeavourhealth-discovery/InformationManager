@@ -8,9 +8,9 @@ import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
-import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.library.model.tripletree.*;
+import org.endeavourhealth.library.transforms.TTManager;
+import org.endeavourhealth.library.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
@@ -28,7 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
+
 
 
 /**

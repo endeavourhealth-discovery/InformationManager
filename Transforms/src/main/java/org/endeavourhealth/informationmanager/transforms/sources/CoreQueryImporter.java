@@ -7,18 +7,17 @@ import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.reasoner.IndicatorGenerator;
 import org.endeavourhealth.imapi.model.customexceptions.EQDException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
-import org.endeavourhealth.imapi.model.imq.*;
-import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
+import org.endeavourhealth.library.model.imq.*;
+import org.endeavourhealth.library.model.tripletree.*;
+import org.endeavourhealth.library.transforms.TTManager;
+import org.endeavourhealth.library.vocabulary.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
 
 public class CoreQueryImporter implements TTImport {
   public TTDocument document;
@@ -85,7 +84,7 @@ public class CoreQueryImporter implements TTImport {
       .addType(iri(IM.FOLDER))
       .setScheme(iri(NAMESPACE.IM))
       .addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM+"Indicators"));
-    defaults.set(IM.ORDER,TTLiteral.literal(1));
+    defaults.set(IM.ORDER, TTLiteral.literal(1));
     manager.getDocument().addEntity(defaults);
     IndicatorGenerator generator= new IndicatorGenerator();
     TTEntity GMSIndicator= generator.createIndicator(NAMESPACE.IM+"GMSIndicator"

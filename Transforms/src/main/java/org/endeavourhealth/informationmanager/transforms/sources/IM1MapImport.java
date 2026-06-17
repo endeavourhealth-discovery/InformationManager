@@ -4,13 +4,13 @@ import org.apache.commons.text.CaseUtils;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
-import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
+import org.endeavourhealth.library.model.tripletree.*;
+import org.endeavourhealth.library.transforms.TTManager;
+import org.endeavourhealth.library.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.DataFormatException;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
 
 public class IM1MapImport implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(IM1MapImport.class);
@@ -484,7 +484,7 @@ public class IM1MapImport implements TTImport {
           .addType(iri(IM.CONCEPT))
           .set(iri(IM.IS_A), NAMESPACE.FHIR + iriTerm);
         if (fhirToCore.get(oldIri) != null) {
-          entity.addObject(TTIriRef.iri(IM.MATCHED_TO), TTIriRef.iri(fhirToCore.get(oldIri)));
+          entity.addObject(iri(IM.MATCHED_TO), iri(fhirToCore.get(oldIri)));
         }
 
         TTEntity parent = iriToConcept.get(NAMESPACE.FHIR + iriTerm);
@@ -494,7 +494,7 @@ public class IM1MapImport implements TTImport {
             arr = new TTArray();
             parent.set(iri(IM.HAS_CHILDREN), arr);
           }
-          arr.add(TTIriRef.iri(entity.getIri()));
+          arr.add(iri(entity.getIri()));
         } else {
           LOG.error("Parent undefined");
         }
@@ -640,12 +640,12 @@ public class IM1MapImport implements TTImport {
     if (im1scheme != null)
       entity.set(iri(NAMESPACE.IM1), TTLiteral.literal(im1scheme));
     if (matchedIri != null) {
-      entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(matchedIri));
+      entity.addObject(iri(IM.MATCHED_TO), iri(matchedIri));
       entity.setStatus(iri(IM.DRAFT));
       Set<String> matches = entities.get(matchedIri);
       if (matches != null) {
         for (String iri : matches)
-          entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(iri));
+          entity.addObject(iri(IM.MATCHED_TO), iri(iri));
       }
     } else {
       if (entity.getScheme().equals(NAMESPACE.IM.asIri()))
@@ -740,13 +740,13 @@ public class IM1MapImport implements TTImport {
             if (!entities.containsKey(NAMESPACE.IM + lname)) {
               propertyEntity = addNewEntity(NAMESPACE.IM + lname, NAMESPACE.IM,
                 null, getTerm(lname), null, "CM_DiscoveryCode", targetProperty, null, iri(RDF.PROPERTY));
-              propertyIri = TTIriRef.iri(propertyEntity.getIri());
-              propertyEntity.addObject(iri(RDFS.SUBCLASS_OF), TTIriRef.iri(NAMESPACE.IM + "dataModelObjectProperty"));
+              propertyIri = iri(propertyEntity.getIri());
+              propertyEntity.addObject(iri(RDFS.SUBCLASS_OF), iri(NAMESPACE.IM + "dataModelObjectProperty"));
             } else {
-              propertyIri = TTIriRef.iri(NAMESPACE.IM + lname);
+              propertyIri = iri(NAMESPACE.IM + lname);
             }
           } else
-            propertyIri = TTIriRef.iri(propertyEntity.getIri());
+            propertyIri = iri(propertyEntity.getIri());
 
           String contextId = publisher + "/" + system + "/" + schema + "/" + table + "/" + field;
           String nodeIri = IM.CONTEXT_NODE + node;
@@ -877,7 +877,7 @@ public class IM1MapImport implements TTImport {
       String coreTerm = getPhrase(oldIri);
       TTIriRef core = importMaps.getReferenceFromCoreTerm(coreTerm);
       if (core != null)
-        entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(core.getIri()));
+        entity.addObject(iri(IM.MATCHED_TO), iri(core.getIri()));
     }
 
     return entity;

@@ -2,14 +2,16 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
+import org.endeavourhealth.library.model.tripletree.TTDocument;
+import org.endeavourhealth.library.model.tripletree.TTEntity;
+import org.endeavourhealth.library.model.tripletree.TTIriRef;
+import org.endeavourhealth.library.transforms.TTManager;
+import org.endeavourhealth.library.vocabulary.GRAPH;
+import org.endeavourhealth.library.vocabulary.IM;
+import org.endeavourhealth.library.vocabulary.NAMESPACE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +21,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
 
 public class ICD10Importer implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(ICD10Importer.class);
@@ -28,7 +30,7 @@ public class ICD10Importer implements TTImport {
   private static final String[] maps = {".*\\\\CLINICAL\\\\.*\\\\SnomedCT_UKClinicalRF2_PRODUCTION_.*\\\\Snapshot\\\\Refset\\\\Map\\\\der2_iisssciRefset_ExtendedMapUKCLSnapshot_GB1000000_.*\\.txt"};
   private static final String[] chapters = {".*\\\\ICD10\\\\ICD10-Chapters.txt"};
 
-  private final TTIriRef icd10Codes = TTIriRef.iri(NAMESPACE.ICD10 + "ICD10Codes");
+  private final TTIriRef icd10Codes = iri(NAMESPACE.ICD10 + "ICD10Codes");
   private final TTManager manager = new TTManager();
   private final Map<String, TTEntity> startChapterMap = new HashMap<>();
   private final List<String> startChapterList = new ArrayList<>();
@@ -75,7 +77,7 @@ public class ICD10Importer implements TTImport {
       if (code.contains(".")) {
         String qParent = code.substring(0, code.indexOf("."));
         TTEntity parent = codeToEntity.get(qParent);
-        icd10Entity.addObject(iri(IM.IS_CHILD_OF), TTIriRef.iri(parent.getIri()));
+        icd10Entity.addObject(iri(IM.IS_CHILD_OF), iri(parent.getIri()));
       } else {
         int insertion = Collections.binarySearch(startChapterList, code);
         int parentIndex;
@@ -86,7 +88,7 @@ public class ICD10Importer implements TTImport {
         String qParent = startChapterList.get(parentIndex);
         TTEntity parent = startChapterMap.get(qParent);
         // LOG.info("{} in {}?", code, parent.getCode());
-        icd10Entity.addObject(iri(IM.IS_CHILD_OF), TTIriRef.iri(parent.getIri()));
+        icd10Entity.addObject(iri(IM.IS_CHILD_OF), iri(parent.getIri()));
       }
 
     }
@@ -101,7 +103,7 @@ public class ICD10Importer implements TTImport {
       .setCode("ICD10Codes")
       .setScheme(iri(NAMESPACE.ICD10))
       .setDescription("ICD1O classification used in backward maps from Snomed");
-    icd10.addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "CodeBasedTaxonomies"));
+    icd10.addObject(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "CodeBasedTaxonomies"));
     document.addEntity(icd10);
 
   }

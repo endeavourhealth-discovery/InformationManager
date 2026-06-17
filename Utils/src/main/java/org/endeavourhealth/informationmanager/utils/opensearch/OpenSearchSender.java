@@ -12,10 +12,10 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
-import org.endeavourhealth.imapi.model.search.EntityDocument;
-import org.endeavourhealth.imapi.model.search.SearchTermCode;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
+import org.endeavourhealth.library.model.search.EntityDocument;
+import org.endeavourhealth.library.model.search.SearchTermCode;
+import org.endeavourhealth.library.model.tripletree.TTIriRef;
+import org.endeavourhealth.library.vocabulary.NAMESPACE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +26,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
+
 
 public class OpenSearchSender {
   private static final int BATCH_SIZE = 5000;
