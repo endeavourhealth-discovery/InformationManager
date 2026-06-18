@@ -54,4 +54,4 @@ zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "zip4j" }
 cucumber = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
 cucumber-junit = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
 mockito = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
-library = "org.endeavourhealth.library:Library:1.0.1-SNAPSHOT"
+library = "org.endeavourhealth.library:Library:1.0.2-SNAPSHOT"
