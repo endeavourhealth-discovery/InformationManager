@@ -2,13 +2,16 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.ZipUtils;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
+import org.endeavourhealth.library.model.tripletree.*;
+import org.endeavourhealth.library.transforms.TTManager;
+import org.endeavourhealth.library.vocabulary.GRAPH;
+import org.endeavourhealth.library.vocabulary.IM;
+import org.endeavourhealth.library.vocabulary.NAMESPACE;
+import org.endeavourhealth.library.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +25,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
 
 public class EMISImport implements TTImport {
   public static final String EMIS = "http://endhealth.info/emis#";
@@ -203,7 +206,7 @@ public class EMISImport implements TTImport {
           continue;
 
         TTEntity emisEntity = codeIdToEntity.get(emisCodeId);
-        emisEntity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomedCode));
+        emisEntity.addObject(iri(IM.MATCHED_TO), iri(NAMESPACE.SNOMED + snomedCode));
         if (status.equals(IM.ACTIVE))
           activeConcepts.add(emisCodeId);
         if (!descid.equals("")) {
@@ -238,9 +241,9 @@ public class EMISImport implements TTImport {
         if (emisConcept == null) {
           emisConcept = new TTEntity()
             .setIri(EMIS + codeId)
-            .setScheme(TTIriRef.iri(EMIS))
+            .setScheme(iri(EMIS))
             .setName(term)
-            .addType(TTIriRef.iri(IM.CONCEPT))
+            .addType(iri(IM.CONCEPT))
             .set(iri(IM.CODE_ID), TTLiteral.literal(codeId));
           TTEntity mainConcept = termToEmis.get(term);
           String code = codeId;
@@ -255,7 +258,7 @@ public class EMISImport implements TTImport {
         if (notFoundValue(emisConcept, iri(IM.HAS_TERM_CODE), iri(IM.CODE), codeId))
           TTManager.addTermCode(emisConcept, term, codeId);
         if (!snomed.equals("NULL")) {
-          emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomed));
+          emisConcept.addObject(iri(IM.MATCHED_TO), iri(NAMESPACE.SNOMED + snomed));
         }
         line = reader.readLine();
       }
@@ -307,13 +310,13 @@ public class EMISImport implements TTImport {
       TTEntity childEntity = codeIdToEntity.get(child);
       if (childEntity.get(iri(IM.MATCHED_TO)) == null) {
         if (alternateParents.get(childEntity.getCode()) != null) {
-          childEntity.addObject(iri(IM.LOCAL_SUBCLASS_OF), TTIriRef.iri(NAMESPACE.SNOMED + alternateParents.get(childEntity.getCode())));
+          childEntity.addObject(iri(IM.LOCAL_SUBCLASS_OF), iri(NAMESPACE.SNOMED + alternateParents.get(childEntity.getCode())));
         } else {
           Set<String> coreParents = new HashSet<>();
           getCoreParents(child, coreParents);
           if (!coreParents.isEmpty()) {
             for (String parent : coreParents) {
-              childEntity.addObject(iri(IM.LOCAL_SUBCLASS_OF), TTIriRef.iri(parent));
+              childEntity.addObject(iri(IM.LOCAL_SUBCLASS_OF), iri(parent));
             }
           }
         }
@@ -413,7 +416,7 @@ public class EMISImport implements TTImport {
       emisConcept = new TTEntity()
         .setIri(NAMESPACE.EMIS + codeId)
         .setCode(ec.conceptId)
-        .set(TTIriRef.iri(IM.ALTERNATIVE_CODE), TTLiteral.literal(code))
+        .set(iri(IM.ALTERNATIVE_CODE), TTLiteral.literal(code))
         .addType(iri(IM.CONCEPT))
         .setScheme(iri(NAMESPACE.EMIS));
       emisConcept
@@ -432,8 +435,8 @@ public class EMISImport implements TTImport {
         emisConcept.setStatus(iri(IM.INACTIVE));
         emisConcept.setName(name + " (emis code id)");
         snomedToEmis.put(conceptId, emisConcept);
-        if (notFound(emisConcept, iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + conceptId)))
-          emisConcept.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + conceptId));
+        if (notFound(emisConcept, iri(IM.MATCHED_TO), iri(NAMESPACE.SNOMED + conceptId)))
+          emisConcept.addObject(iri(IM.MATCHED_TO), iri(NAMESPACE.SNOMED + conceptId));
       }
     }
     if (code.equals("EMISNHH2")) {
@@ -443,7 +446,7 @@ public class EMISImport implements TTImport {
       if (parentId == null && emisConcept.get(iri(IM.MATCHED_TO)) == null) {
         emisConcept.set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(EMIS + "EMISOrphanCodes")));
       } else if (parentId != null) {
-        emisConcept.addObject(iri(IM.IS_CHILD_OF), TTIriRef.iri(EMIS + parentId));
+        emisConcept.addObject(iri(IM.IS_CHILD_OF), iri(EMIS + parentId));
         parentMap.computeIfAbsent(codeId, k -> new ArrayList<>());
         parentMap.get(codeId).add(parentId);
       }

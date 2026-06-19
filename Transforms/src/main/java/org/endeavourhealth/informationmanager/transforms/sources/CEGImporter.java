@@ -3,20 +3,18 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
+import org.endeavourhealth.library.model.tripletree.TTDocument;
+import org.endeavourhealth.library.model.tripletree.TTEntity;
+import org.endeavourhealth.library.model.tripletree.TTIriRef;
+import org.endeavourhealth.library.transforms.TTManager;
+import org.endeavourhealth.library.vocabulary.GRAPH;
+import org.endeavourhealth.library.vocabulary.IM;
+import org.endeavourhealth.library.vocabulary.NAMESPACE;
 
-import java.util.List;
-
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
 
 public class CEGImporter implements TTImport {
 
@@ -66,7 +64,7 @@ public class CEGImporter implements TTImport {
       .setIri(NAMESPACE.CEG + "CSET_CEGConceptSets")
       .setName("QMUL CEG value set library")
       .addType(iri(IM.FOLDER))
-      .set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "QueryConceptSets"));
+      .set(iri(IM.IS_CONTAINED_IN), iri(NAMESPACE.IM + "QueryConceptSets"));
     folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
     document.addEntity(folder);
     setFolder= folder.getIri();
@@ -76,7 +74,7 @@ public class CEGImporter implements TTImport {
   private void createOrg(TTDocument document) {
     TTEntity owner = new TTEntity()
       .setIri("http://org.endhealth.info/im#QMUL_CEG")
-      .addType(TTIriRef.iri(NAMESPACE.IM + "Organisation"))
+      .addType(iri(NAMESPACE.IM + "Organisation"))
       .setName("Clinical Effectiveness Group of Queen Mary University of London - CEG")
       .setDescription("The Clinical effectiveness group being a special division of Queen Mary University of London," +
         "deliverying improvements in clinical outcomes for the population of UK");

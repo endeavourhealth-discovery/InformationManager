@@ -1,8 +1,6 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-
-import org.endeavourhealth.imapi.model.imq.*;
-import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.library.model.tripletree.TTArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

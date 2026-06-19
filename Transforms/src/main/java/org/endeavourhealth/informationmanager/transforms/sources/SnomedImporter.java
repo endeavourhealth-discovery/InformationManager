@@ -3,16 +3,15 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.apache.commons.lang3.StringUtils;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.model.imq.ECLQueryRequest;
-import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.imapi.model.customexceptions.EclFormatException;
-import org.endeavourhealth.imapi.model.imq.Bool;
-import org.endeavourhealth.imapi.model.imq.Match;
-import org.endeavourhealth.imapi.model.imq.Query;
-import org.endeavourhealth.imapi.model.tripletree.*;
+import org.endeavourhealth.library.model.imq.ECLQueryRequest;
+import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
+import org.endeavourhealth.library.model.imq.Match;
+import org.endeavourhealth.library.model.imq.Query;
+import org.endeavourhealth.library.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.ECLToIMQ;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
+import org.endeavourhealth.library.transforms.TTManager;
+import org.endeavourhealth.library.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.slf4j.Logger;
@@ -24,7 +23,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
+
 
 public class SnomedImporter implements TTImport {
   public static final String[] concepts = {

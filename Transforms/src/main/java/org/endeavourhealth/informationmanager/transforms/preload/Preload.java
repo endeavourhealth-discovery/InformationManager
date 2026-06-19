@@ -18,8 +18,6 @@ import org.endeavourhealth.imapi.logic.reasoner.DomainResolver;
 import org.endeavourhealth.imapi.logic.reasoner.RangeInheritor;
 import org.endeavourhealth.imapi.logic.reasoner.SetBinder;
 import org.endeavourhealth.imapi.logic.reasoner.SetMemberGenerator;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
-import org.endeavourhealth.imapi.vocabulary.ImportType;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
@@ -28,6 +26,8 @@ import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
+import org.endeavourhealth.library.vocabulary.GRAPH;
+import org.endeavourhealth.library.vocabulary.ImportType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

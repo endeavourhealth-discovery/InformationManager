@@ -3,12 +3,17 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 import org.endeavourhealth.imapi.filer.*;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.logic.exporters.ImportMaps;
-import org.endeavourhealth.imapi.model.tripletree.*;
-import org.endeavourhealth.imapi.transforms.TTManager;
-import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
+import org.endeavourhealth.library.model.tripletree.TTArray;
+import org.endeavourhealth.library.model.tripletree.TTDocument;
+import org.endeavourhealth.library.model.tripletree.TTEntity;
+import org.endeavourhealth.library.model.tripletree.TTIriRef;
+import org.endeavourhealth.library.transforms.TTManager;
+import org.endeavourhealth.library.vocabulary.GRAPH;
+import org.endeavourhealth.library.vocabulary.IM;
+import org.endeavourhealth.library.vocabulary.NAMESPACE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +27,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
 
 public class ApexKingsImport implements TTImport {
   private static final Logger LOG = LoggerFactory.getLogger(ApexKingsImport.class);
@@ -62,7 +67,7 @@ public class ApexKingsImport implements TTImport {
       .setCode("KingsApexCodes")
       .setScheme(NAMESPACE.KINGS_APEX.asIri())
       .setDescription("Local codes for the Apex pathology system in kings")
-      .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(TTIriRef.iri(NAMESPACE.IM + "CodeBasedTaxonomies")));
+      .set(iri(IM.IS_CONTAINED_IN), new TTArray().add(iri(NAMESPACE.IM + "CodeBasedTaxonomies")));
     document.addEntity(kings);
   }
 
@@ -93,12 +98,12 @@ public class ApexKingsImport implements TTImport {
           .setDescription("Local apex Kings trust pathology system entity ")
           .setCode(code)
           .setScheme(NAMESPACE.KINGS_APEX.asIri())
-          .set(iri(IM.IS_CHILD_OF), new TTArray().add(TTIriRef.iri(KINGS_APEX_CODES)));
+          .set(iri(IM.IS_CHILD_OF), new TTArray().add(iri(KINGS_APEX_CODES)));
         document.addEntity(entity);
         apexToRead.put(code, readCode);
         if (readToSnomed.get(readCode) != null) {
           for (String snomed : readToSnomed.get(readCode)) {
-            entity.addObject(iri(IM.MATCHED_TO), TTIriRef.iri(NAMESPACE.SNOMED + snomed));
+            entity.addObject(iri(IM.MATCHED_TO), iri(NAMESPACE.SNOMED + snomed));
           }
         }
         count.getAndIncrement();

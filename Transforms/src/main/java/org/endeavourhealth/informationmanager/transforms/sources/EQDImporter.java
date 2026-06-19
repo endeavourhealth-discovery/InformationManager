@@ -6,19 +6,19 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.TTFilerException;
-import org.endeavourhealth.imapi.logic.reasoner.LogicOptimizer;
-import org.endeavourhealth.imapi.model.imq.Match;
-import org.endeavourhealth.imapi.model.imq.Node;
-import org.endeavourhealth.imapi.model.imq.Query;
-import org.endeavourhealth.imapi.model.imq.QueryException;
-import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.queryengine.QuerySummariser;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
-import org.endeavourhealth.imapi.transforms.TTManager;
 import org.endeavourhealth.imapi.transforms.eqd.*;
-import org.endeavourhealth.imapi.vocabulary.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
+import org.endeavourhealth.library.model.imq.Match;
+import org.endeavourhealth.library.model.imq.Node;
+import org.endeavourhealth.library.model.imq.Query;
+import org.endeavourhealth.library.model.tripletree.*;
+import org.endeavourhealth.library.transforms.TTManager;
+import org.endeavourhealth.library.vocabulary.IM;
+import org.endeavourhealth.library.vocabulary.NAMESPACE;
+import org.endeavourhealth.library.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +26,7 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 
-import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
+import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
 
 public class EQDImporter {
 	private static final Logger LOG = LoggerFactory.getLogger(EQDImporter.class);
@@ -36,7 +36,7 @@ public class EQDImporter {
 	private String setFolder;
 	private final EqdToIMQ converter;
 	private NAMESPACE namespace;
-	private final Map<String,TTEntity> folderToEntity= new HashMap<>();
+	private final Map<String, TTEntity> folderToEntity= new HashMap<>();
 	private final Set<TTEntity> newFolders= new HashSet<>();
 	private Properties uuidLabels;
 	private final Map<String,EQDOCCriterion> libraryItems= new HashMap<>();
@@ -180,7 +180,7 @@ public class EQDImporter {
 		for (TTEntity entity:document.getEntities()) {
 			String uuid= entity.getIri().substring(entity.getIri().lastIndexOf("#")+1);
 			if (uuidLabels.get(uuid)!=null){
-				entity.set(IM.ALTERNATIVE_CODE,TTLiteral.literal((String) uuidLabels.get(uuid)));
+				entity.set(IM.ALTERNATIVE_CODE, TTLiteral.literal((String) uuidLabels.get(uuid)));
 			}
 		}
 	}
