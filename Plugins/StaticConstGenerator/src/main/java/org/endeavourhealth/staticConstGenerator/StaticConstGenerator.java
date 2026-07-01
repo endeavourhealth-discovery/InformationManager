@@ -70,12 +70,12 @@ public class StaticConstGenerator implements Plugin<Project> {
         import com.fasterxml.jackson.annotation.JsonValue;
         import org.eclipse.rdf4j.model.IRI;
         import org.eclipse.rdf4j.model.util.Values;
-        import org.endeavourhealth.library.model.tripletree.TTIriRef;
+        import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
         
         import java.util.Arrays;
         import java.util.stream.Collectors;
         
-        import static org.endeavourhealth.library.model.tripletree.TTIriRef.iri;
+        import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
         
         public enum {TYPE} implements VocabEnum {
