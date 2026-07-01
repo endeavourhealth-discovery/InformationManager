@@ -10,6 +10,7 @@ import org.endeavourhealth.library.model.imq.QueryException;
 import org.endeavourhealth.library.model.tripletree.TTDocument;
 import org.endeavourhealth.library.transforms.TTManager;
 import org.endeavourhealth.library.vocabulary.GRAPH;
+import org.endeavourhealth.library.vocabulary.NAMESPACE;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,8 @@ public class CoreImporter implements TTImport {
     ".*\\\\DiscoveryCore\\\\StatsReports.json",
     ".*\\\\DiscoveryCore\\\\QueryHelpers.json",
     ".*\\\\DiscoveryCore\\\\Sets.json",
-    ".*\\\\DiscoveryCore\\\\Sets-KnowDiabetes.json"
+    ".*\\\\DiscoveryCore\\\\Sets-KnowDiabetes.json",
+    ".*\\\\FHIR\\\\FHIROntology.json"
   };
 
   private static final String INFERRED_SUFFIX = "-inferred.json";

@@ -61,6 +61,7 @@ public class QImporter implements TTImport {
   @Override
   public void importData(TTImportConfig ttImportConfig) throws ImportException {
 
+
     try {
       try (TTManager manager = new TTManager()) {
         manager.setDocument(document);
@@ -85,7 +86,6 @@ public class QImporter implements TTImport {
         LOG.info("Deleting q code groups..");
         new SearchService().updateIM(qr, GRAPH.IM);
         processReplacementSets(manager,ttImportConfig.getFolder());
-        semanticMaps(manager,ttImportConfig.getFolder());
         try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
           filer.fileDocument(document);
         }
@@ -95,51 +95,14 @@ public class QImporter implements TTImport {
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);
     }
+    try {
+      String file = ttImportConfig.getFolder() + "\\QCodes\\SemanticMaps.txt";
+      new SemanticMapImporter().importSemanticMaps("Q", "QCodeGroup", file, qSemanticMapFolder);
+    } catch (IOException e) {
+      throw new ImportException(e.getMessage(), e);
+    }
 
     LOG.info("Finished importing Q data");
-  }
-
-  private void semanticMaps(TTManager manager, String folder) throws IOException {
-    Map<String,TTEntity> iriToMap= new HashMap<>();
-    for (String map : semanticMaps) {
-      Path file= ImportUtils.findFilesForId(folder,map).getFirst();
-      try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-        reader.readLine();
-        String line = reader.readLine();
-        while (line != null &&!line.isEmpty()) {
-          String[] fields = line.split("\t");
-          String mapIri = fields[0];
-          String name = fields[2];
-          String targetText= fields[3];
-          String targetValue= fields[4];
-            String description = fields[5];
-
-            TTEntity mapEntity = iriToMap.get(mapIri);
-            if (mapEntity == null) {
-              mapEntity = new TTEntity()
-                .setIri(mapIri)
-                .setName("Q Map " + name)
-                .addType(iri(IM.SEMANTIC_MAP));
-              mapEntity.setScheme(NAMESPACE.QR.asIri());
-              mapEntity.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(qSemanticMapFolder));
-              mapEntity.set(IM.HAS_MAP_TYPE,iri(IM.DIRECT_MAP));
-              iriToMap.put(mapIri, mapEntity);
-              document.addEntity(mapEntity);
-            }
-            if (fields.length == 7) {
-              String codeGroup = fields[6];
-              TTNode mapEntry = new TTNode();
-              String sourceEntity = NAMESPACE.QR + "QCodeGroup_" + (codeGroup.split(" ")[0]);
-              mapEntry.set(IM.SOURCE_ENTITY, iri(sourceEntity));
-              mapEntry.set(IM.TARGET_TEXT, TTLiteral.literal(targetText));
-              mapEntry.set(IM.TARGET_VALUE, TTLiteral.literal(Integer.parseInt(targetValue)));
-              mapEntity.addObject(iri(IM.MAP_ENTRY), mapEntry);
-              mapEntry.set(RDFS.LABEL, TTLiteral.literal(description));
-            }
-          line = reader.readLine();
-        }
-      }
-    }
   }
 
   private void addBNFMapEntries(TTManager manager, String folder) throws IOException {
