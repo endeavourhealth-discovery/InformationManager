@@ -1,7 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.models;
 
 
-import org.endeavourhealth.library.vocabulary.ImportType;
+import org.endeavourhealth.imapi.vocabulary.ImportType;
 
 import java.util.ArrayList;
 import java.util.List;

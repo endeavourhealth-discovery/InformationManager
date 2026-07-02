@@ -26,8 +26,8 @@ import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
 import org.endeavourhealth.informationmanager.transforms.sources.DeltaImporter;
 import org.endeavourhealth.informationmanager.transforms.sources.ImportUtils;
 import org.endeavourhealth.informationmanager.transforms.sources.Importer;
-import org.endeavourhealth.library.vocabulary.GRAPH;
-import org.endeavourhealth.library.vocabulary.ImportType;
+import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import org.endeavourhealth.imapi.vocabulary.ImportType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

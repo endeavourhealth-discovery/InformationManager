@@ -4,7 +4,7 @@ import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 import org.endeavourhealth.informationmanager.transforms.models.TTImport;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportByType;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
-import org.endeavourhealth.library.vocabulary.ImportType;
+import org.endeavourhealth.imapi.vocabulary.ImportType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
