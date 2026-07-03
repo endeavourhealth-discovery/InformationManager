@@ -1,7 +1,7 @@
 package org.endeavourhealth.informationmanager.transforms.singlesources;
 
 import org.endeavourhealth.informationmanager.transforms.sources.SingleEqdQueryImport;
-import org.endeavourhealth.library.vocabulary.NAMESPACE;
+import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
 
 public class SingleQuery {
 	public static void main(String[] argv) throws Exception {
