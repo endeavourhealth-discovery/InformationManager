@@ -60,7 +60,6 @@ public class CoreImporter implements TTImport {
           }
         }
 
-
       }
 
     }

@@ -16,6 +16,7 @@ import org.endeavourhealth.imapi.dataaccess.databases.IMDB;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerException;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
+import org.endeavourhealth.imapi.logic.reasoner.SemanticMapGenerator;
 import org.endeavourhealth.imapi.model.requests.QueryRequest;
 import org.endeavourhealth.imapi.transforms.ECLToIMQ;
 import org.endeavourhealth.imapi.vocabulary.*;
@@ -56,11 +57,12 @@ public class QImporter implements TTImport {
   private static final String[] semanticMaps = {".*\\\\QCodes\\\\SemanticMaps.txt"};
   private static final String semanticMapFolder= NAMESPACE.IM + "SemanticMaps";
   private static final String qSemanticMapFolder= NAMESPACE.QR + "Q_SemanticMaps";
+  private final Map<String, Set<String>> supersetMap = new HashMap<>();
+  private final String supersetFolder = NAMESPACE.QR + "QSupersets";
 
 
   @Override
   public void importData(TTImportConfig ttImportConfig) throws ImportException {
-
 
     try {
       try (TTManager manager = new TTManager()) {
@@ -69,6 +71,8 @@ public class QImporter implements TTImport {
           "Q Research scheme and graph"
           , "Q Research scheme and graph"));
         addQFolders();
+        importSupersets(ttImportConfig);
+        importMaps(ttImportConfig);
         importQProjects();
         importCodeGroups();
         for (Map.Entry<String, TTEntity> entry : idProjectMap.entrySet()) {
@@ -91,18 +95,55 @@ public class QImporter implements TTImport {
         }
         resetDrugs(ttImportConfig.getFolder());
       }
+      new SemanticMapGenerator().updateAllSemanticMaps();
 
     } catch (Exception ex) {
       throw new ImportException(ex.getMessage(), ex);
     }
-    try {
-      String file = ttImportConfig.getFolder() + "\\QCodes\\SemanticMaps.txt";
-      new SemanticMapImporter().importSemanticMaps("Q", "QCodeGroup", file, qSemanticMapFolder);
-    } catch (IOException e) {
-      throw new ImportException(e.getMessage(), e);
-    }
-
     LOG.info("Finished importing Q data");
+  }
+
+  private void importSupersets(TTImportConfig config) throws Exception {
+    Set<String> superSets = new HashSet<>();
+    addQFolders();
+    String file = config.getFolder()+"\\QCodes\\Supersets.txt";
+    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+      reader.readLine();     // NOSONAR - Skip header
+      String line = reader.readLine();
+      while (line != null &&!line.isEmpty()) {
+        line = line.replace("\"", "");
+        String[] fields = line.split("\t");
+        String supersetId = fields[0];
+        String supersetName = fields[1];
+        String subsets = fields[2];
+        if (!superSets.contains(supersetId)) {
+          TTEntity superset = new TTEntity()
+            .setIri(supersetId)
+            .setName("Q superset " + supersetName)
+            .addType(iri(IM.CONCEPT_SET))
+            .setScheme(NAMESPACE.QR.asIri());
+          superset.addObject(iri(IM.IS_CONTAINED_IN), supersetFolder);
+          superSets.add(supersetId);
+          document.addEntity(superset);
+        }
+        for (String subsetId : subsets.split(",")) {
+          if (!subsetId.substring(0, subsetId.lastIndexOf("#") + 1).equals(NAMESPACE.QR.toString())) {
+            TTEntity subset = new TTEntity()
+              .setIri(subsetId)
+              .setCrud(iri(IM.ADD_QUADS));
+            subset.addObject(iri(IM.IS_SUBSET_OF), TTIriRef.iri(supersetId));
+            supersetMap.computeIfAbsent(subsetId, k -> new HashSet<>()).add(supersetId);
+            document.addEntity(subset);
+          }
+          else supersetMap.computeIfAbsent(subsetId, k -> new HashSet<>()).add(supersetId);
+          line = reader.readLine();
+        }
+      }
+    }
+  }
+
+  private void importMaps(TTImportConfig config) throws ImportException {
+    new SemanticMapImporter().importSemanticMaps(document,config.getFolder()+"\\QCodes",qSemanticMapFolder);
   }
 
   private void addBNFMapEntries(TTManager manager, String folder) throws IOException {
@@ -270,6 +311,11 @@ public class QImporter implements TTImport {
                 importCodes(projectId, qGroup, id);
               }
               qGroup.addObject(iri(IM.IS_SUBSET_OF), TTIriRef.iri(project.getValue().getIri()));
+              if (supersetMap.get(qGroup.getIri()) != null) {
+                for (String supersetId : supersetMap.get(qGroup.getIri())) {
+                  qGroup.addObject(iri(IM.IS_SUBSET_OF), TTIriRef.iri(supersetId));
+                }
+              }
             }
           }
         } else
@@ -378,7 +424,15 @@ public class QImporter implements TTImport {
     qFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.SEMANTIC_MAP));
     document.addEntity(qFolder);
     qFolder.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(semanticMapFolder));
-
+    qFolder = new TTEntity()
+      .setIri(supersetFolder)
+      .addType(iri(IM.FOLDER))
+      .setScheme(NAMESPACE.IM.asIri())
+      .setName("Q Supersets")
+      .setDescription("Folder containing supersets of Qcode groups");
+    qFolder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
+    document.addEntity(qFolder);
+    qFolder.set(iri(IM.IS_CONTAINED_IN), projectsFolder);
   }
 
   @Override

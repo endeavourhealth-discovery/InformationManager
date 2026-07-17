@@ -1,21 +1,16 @@
 package org.endeavourhealth.informationmanager.transforms.sources;
 
-import org.endeavourhealth.imapi.filer.TTDocumentFiler;
-import org.endeavourhealth.imapi.filer.TTFilerException;
-import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.model.imq.QueryException;
-import org.endeavourhealth.imapi.model.tripletree.TTDocument;
-import org.endeavourhealth.imapi.model.tripletree.TTEntity;
-import org.endeavourhealth.imapi.model.tripletree.TTIriRef;
-import org.endeavourhealth.imapi.model.tripletree.TTLiteral;
-import org.endeavourhealth.imapi.vocabulary.GRAPH;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.endeavourhealth.imapi.model.imq.*;
+import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.vocabulary.IM;
 import org.endeavourhealth.imapi.vocabulary.NAMESPACE;
+import org.endeavourhealth.imapi.vocabulary.SHACL;
+import org.endeavourhealth.informationmanager.transforms.models.ImportException;
 
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,95 +18,171 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
 
 public class SemanticMapImporter {
+	private String mapFolder;
+	private TTDocument document;
 
-	public void importSemanticMaps(String prefix,String groupPrefix,String file,String mapFolder) throws IOException {
-		Map<String, TTEntity> iriToMap= new HashMap<>();
-			TTDocument document = new TTDocument();
-			try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-				reader.readLine();
-				String line = reader.readLine();
-				while (line != null &&!line.isEmpty()) {
-					String[] fields = line.split("\t");
-					String mapIri = fields[0];
-					String entryNumber= fields[1];
-					String name = prefix+ "- map "+ fields[3]+ "(semantic map)";
-					String mapHeader= fields[2];
-					String targetText= fields[4];
-					String targetValue= fields[5];
-					String description= fields[6];
-					String codeGroup = fields[7];
-					String sourceEntity= fields[8];
-					String defaultText= fields[9];
-					String defaultValue= fields[10];
-					String property= fields[11];
-					String from= null;
-					String to= null;
-					String sourceType= null;
-					if (fields.length >12) {
-						from= fields[12];
-						if (fields.length >13) to= fields[13];
-					}
-					if (fields.length >14) {
-						sourceType= fields[14];
-					}
-					if (sourceEntity!=null) {
-						TTEntity mapEntity = iriToMap.get(mapIri);
-						if (mapEntity == null) {
-							mapEntity = new TTEntity()
-								.setIri(mapIri)
-								.setName(name)
-								.addType(iri(IM.SEMANTIC_MAP));
-							mapEntity.setScheme(NAMESPACE.QR.asIri());
-							mapEntity.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(mapFolder));
-							mapEntity.set(IM.HAS_MAP_TYPE,iri(IM.DIRECT_MAP));
-							iriToMap.put(mapIri, mapEntity);
-							document.addEntity(mapEntity);
-						}
-						setMapEntry(targetText, targetValue, mapEntity, entryNumber,sourceEntity, "Map - "+ mapHeader+" - "+description, property, from, to,sourceType,document);
-						if (!defaultText.isEmpty()) {
-							mapEntity.set(IM.DEFAULT_TEXT, TTLiteral.literal(defaultText));
-							mapEntity.set(IM.DEFAULT_VALUE, TTLiteral.literal(Integer.parseInt(defaultValue)));
-						}
-					}
+	public void importSemanticMaps(TTDocument document,String folder,String mapFolder) throws ImportException {
+		this.mapFolder= mapFolder;
+		this.document= document;
+		try {
+			Map<String,TTEntity> mapFolders= new HashMap<>();
+			Map<String,TTEntity> maps= new HashMap<>();
+			importMapFolders(folder,mapFolders);
+			importMaps(folder,mapFolders,maps);
+			importMapRules(folder,maps);
 
-					line = reader.readLine();
-				}
-			}
-		try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
-			filer.fileDocument(document);
-		} catch (QueryException e) {
-			throw new RuntimeException(e);
-		} catch (TTFilerException e) {
-			throw new RuntimeException(e);
+
+		} catch (Exception e) {
+			throw new ImportException(e.getMessage(),e);
 		}
 	}
 
-	private void setMapEntry(String targetText, String targetValue, TTEntity mapEntity, String entryNumber,String sourceEntity,String description,
-													 String property,String from,String to,
-													 String sourceType,
-													 TTDocument document) {
-		TTEntity mapEntry = new TTEntity();
-		mapEntry.setIri(mapEntity.getIri() + "_entry_" + entryNumber);
-		mapEntry.setScheme(NAMESPACE.QR.asIri());
-		mapEntry.setName(description);
-		mapEntry.addType(iri(IM.MAP_ENTRY));
-		document.addEntity(mapEntry);
-		mapEntity.addObject(iri(IM.HAS_MAP_ENTRY), iri(mapEntry.getIri()));
-		if (!sourceEntity.isEmpty()) {
-			mapEntry.set(IM.SOURCE_ENTITY, iri(sourceEntity));
+	private void importMaps(String folder, Map<String, TTEntity> maps, Map<String, TTEntity> mapEntries) throws Exception{
+		try (BufferedReader reader = new BufferedReader(new FileReader(folder +"/SemanticMaps.txt"))) {
+			reader.readLine();
+			String line = reader.readLine();
+			while (line != null && !line.isEmpty()) {
+				line = line.replace("\"", "");
+				String[] fields = line.split("\t");
+				String mapIri= fields[0];
+				String folderIri= fields[1];
+				TTEntity mapEntity = mapEntries.get(mapIri);
+				if (mapEntity == null) {
+					mapEntity = new TTEntity()
+						.setIri(mapIri)
+						.setScheme(iri(mapIri.substring(0, mapIri.lastIndexOf("#") + 1)))
+						.addType(iri(IM.SEMANTIC_MAP));
+					mapEntity.addObject(iri(IM.IS_CONTAINED_IN), iri(folderIri));
+					mapEntries.put(mapIri, mapEntity);
+					document.addEntity(mapEntity);
+				}
+				line= reader.readLine();
+			}
 		}
-		mapEntry.set(IM.TARGET_TEXT, TTLiteral.literal(targetText));
-		mapEntry.set(IM.TARGET_VALUE, TTLiteral.literal(Integer.parseInt(targetValue)));
-		mapEntry.set(IM.SOURCE_PROPERTY, iri(NAMESPACE.IM+property));
-		if (from != null &&!from.isEmpty()) {
-			mapEntry.set(IM.RANGE_FROM, TTLiteral.literal(from));
+	}
+
+	private void importMapFolders(String folder,Map<String,TTEntity> maps) throws Exception{
+		try (BufferedReader reader = new BufferedReader(new FileReader(folder +"/MapFolders.txt"))) {
+			reader.readLine();
+			String line = reader.readLine();
+			while (line != null &&!line.isEmpty()) {
+				line = line.replace("\"","");
+				String[] fields = line.split("\t");
+				String folderIri = fields[0];
+				String name= fields[1];
+				TTEntity folderEntity = new TTEntity()
+					.setIri(folderIri)
+					.setName(name)
+					.setScheme(iri(folderIri.substring(0,folderIri.lastIndexOf("#")+1)))
+					.addType(iri(IM.FOLDER));
+				folderEntity.addObject(iri(IM.IS_CONTAINED_IN),iri(mapFolder));
+				maps.put(folderIri,folderEntity);
+				document.addEntity(folderEntity);
+				line= reader.readLine();
+			}
 		}
-		if (to != null&&!to.isEmpty()) {
-			mapEntry.set(IM.RANGE_TO, TTLiteral.literal(to));
+	}
+		private void importMapRules(String folder,Map<String,TTEntity> maps) throws Exception {
+		Map<String,Integer> mapOrder = new HashMap<>();
+			try (BufferedReader reader = new BufferedReader(new FileReader(folder +"/MapEntries.txt"))) {
+				reader.readLine();
+				String line = reader.readLine();
+				while (line != null &&!line.isEmpty()) {
+					line = line.replace("\"", "");
+					String[] fields = line.split("\t");
+					String mapIri = fields[0];
+					String name= fields[1];
+					TTEntity map = maps.get(mapIri);
+					map.setName(name);
+					String property = fields[2];
+					String function = fields[3];
+					String sourceSets = fields[4];
+					String from = fields[5];
+					String to = fields[6];
+					String valueProperty = fields[7];
+					String targetText = fields[8];
+					String defaultText = fields[9];
+					String targetValue = fields[10];
+					String defaultValue = fields[11];
+					if (!defaultText.isEmpty()) {
+						map.set(IM.DEFAULT_TEXT, TTLiteral.literal(defaultText));
+					}
+					if (!defaultValue.isEmpty()) {
+						map.set(IM.DEFAULT_VALUE, TTLiteral.literal(defaultValue));
+					}
+					TTEntity mapEntry = new TTEntity();
+					document.addEntity(mapEntry);
+					Integer order = mapOrder.getOrDefault(mapIri, 0) + 1;
+					mapEntry.setIri(mapIri+"_"+targetText+"_"+order);
+					mapOrder.put(mapIri, order);
+					mapEntry.addType(iri(IM.MAP_ENTRY));
+					mapEntry.setName(map.getName()+" - "+targetText+"_"+order);
+					mapEntry.setScheme(map.getScheme());
+					mapEntry.set(SHACL.ORDER, TTLiteral.literal(order));
+					map.addObject(IM.HAS_MAP_ENTRY.asIri(), iri(mapEntry.getIri()));
+					for (String sourceSet : sourceSets.split(",")) {
+						mapEntry.addObject(iri(IM.SOURCE_ENTITY), iri(sourceSet));
+					}
+					if (!property.isEmpty()) {
+						mapEntry.set(IM.SOURCE_ENTITY_PROPERTY.asIri(), iri(NAMESPACE.IM + property));
+					}
+					if (!valueProperty.isEmpty()) {
+						mapEntry.set(IM.SOURCE_VALUE_PROPERTY.asIri(), iri(NAMESPACE.IM+ valueProperty));
+					}
+					if (!function.isEmpty()){
+						mapEntry.set(NAMESPACE.IM+"function", iri(NAMESPACE.IM+function));
+					}
+					mapEntry.set(IM.TARGET_TEXT, TTLiteral.literal(targetText));
+					mapEntry.set(IM.TARGET_VALUE, TTLiteral.literal(Integer.parseInt(targetValue)));
+					if (!from.isEmpty()) {
+						mapEntry.set(IM.RANGE_FROM, TTLiteral.literal(from));
+					}
+					if (!to.isEmpty()) {
+						mapEntry.set(IM.RANGE_TO, TTLiteral.literal(to));
+					}
+
+					line= reader.readLine();
+				}
+			}
+	}
+
+
+	private void setCase(TTEntity mapEntry,String property,String from,String to,String defaultText) throws JsonProcessingException {
+		Match match= null;
+		if (mapEntry.get(IM.DEFINITION)==null) {
+			match = new Match();
+			Return ret = new Return();
+			match.addReturn(ret);
+			Case case_ = new Case();
+			case_.setElse(new Expression().setValue(defaultText));
+			ret.setCase(case_);
+			mapEntry.set(IM.DEFINITION, TTLiteral.literal(match));;
 		}
-		if (sourceType != null&&!sourceType.isEmpty()) {
-			mapEntry.set(IM.SOURCE_TYPE, iri(sourceType));
+		else match = mapEntry.get(IM.DEFINITION).asLiteral().objectValue(Match.class);
+		Case case_ = match.getReturn().getFirst().getCase();
+		When when = new When();
+		case_.addWhen(when);
+		if (!property.equals("Count")) {
+			when.setIri(NAMESPACE.IM + property);
 		}
+		else {
+			when.setFunction(new FunctionClause().setIri(NAMESPACE.IM + "Count"));
+		}
+		if (!from.isEmpty()&& !to.isEmpty()) {
+				Range range = new Range();
+				range.setFrom(new Value().setValue(from).setOperator(Operator.gte));
+				range.setTo(new Value().setValue(to).setOperator(Operator.lte));
+				when.setRange(range);
+			}
+			else if (!from.isEmpty()) {
+				when.setValue(from);
+				when.setOperator(Operator.gte);
+			}
+			else if (!to.isEmpty()) {
+				when.setValue(to);
+				when.setOperator(Operator.lte);
+			}
+			mapEntry.addObject(IM.DEFINITION.asIri(), TTLiteral.literal(match));
 	}
 
 }

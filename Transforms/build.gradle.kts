@@ -8,7 +8,6 @@ dependencies {
   implementation(libs.imapi)
   implementation(libs.apache)
   implementation(libs.antlr)
-  implementation(libs.endeavourhealth)
   implementation(libs.jacksonDatabind)
   implementation(libs.jaxbApi)
   implementation(libs.jaxbRuntime)

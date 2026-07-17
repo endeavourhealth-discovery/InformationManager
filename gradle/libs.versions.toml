@@ -4,7 +4,6 @@ activation = "2.1.2"
 apache = "4.5.14"
 apachePoi = "5.4.0"
 antlr = "4.13.1"
-endeavour = "1.0.4-SNAPSHOT"
 gradleApi = "8.4"
 jackson = "2.16.0"
 jaxb = "4.0.4"
@@ -31,7 +30,6 @@ imapi = "org.endeavourhealth.imapi:IMAPI:2.1-SNAPSHOT"
 antlr = { module = "org.antlr:antlr4-runtime", version.ref = "antlr" }
 apache = { module = "org.apache.httpcomponents:httpclient", version.ref = "apache" }
 apache-poi = { module = "org.apache.poi:poi-ooxml", version.ref = "apachePoi" }
-endeavourhealth = {module= "org.endeavourhealth.library:Library",version.ref = "endeavour"}
 gradleApi = { module = "dev.gradleplugins:gradle-api", version.ref = "gradleApi" }
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jakartaActivation = { module = "jakarta.activation:jakarta.activation-api", version.ref = "activation" }
