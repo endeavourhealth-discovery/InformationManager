@@ -143,7 +143,7 @@ public class QImporter implements TTImport {
   }
 
   private void importMaps(TTImportConfig config) throws ImportException {
-    new SemanticMapImporter().importSemanticMaps(document,config.getFolder()+"\\QCodes",qSemanticMapFolder);
+    new SemanticMapImporter().importSemanticMaps(document,config.getFolder()+"\\QCodes",qSemanticMapFolder,"Q score map");
   }
 
   private void addBNFMapEntries(TTManager manager, String folder) throws IOException {

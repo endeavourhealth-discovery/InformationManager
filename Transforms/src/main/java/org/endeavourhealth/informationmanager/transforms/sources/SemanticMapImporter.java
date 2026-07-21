@@ -20,10 +20,12 @@ import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 public class SemanticMapImporter {
 	private String mapFolder;
 	private TTDocument document;
+	private String prefix;
 
-	public void importSemanticMaps(TTDocument document,String folder,String mapFolder) throws ImportException {
+	public void importSemanticMaps(TTDocument document,String folder,String mapFolder, String prefix) throws ImportException {
 		this.mapFolder= mapFolder;
 		this.document= document;
+		this.prefix= prefix;
 		try {
 			Map<String,TTEntity> mapFolders= new HashMap<>();
 			Map<String,TTEntity> maps= new HashMap<>();
@@ -92,6 +94,8 @@ public class SemanticMapImporter {
 					String[] fields = line.split("\t");
 					String mapIri = fields[0];
 					String name= fields[1];
+					if (prefix != null)
+						name= prefix+" - "+name;
 					TTEntity map = maps.get(mapIri);
 					map.setName(name);
 					String property = fields[2];
