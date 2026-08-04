@@ -176,15 +176,14 @@ public class ICD10Importer implements TTImport {
         } else {
           c.setName(fields[4]);
         }
-        if (!fields[5].isEmpty()) {
+        if (fields.length > 5 && !fields[5].isEmpty()) {
           c.setName(c.getName() + ", " + fields[5]);
           c.setDescription(c.getName() + ", " + fields[5]);
+          if (fields.length > 6 && !fields[6].isEmpty()) {
+            c.setName(c.getName() + ", " + fields[6]);
+            c.setDescription(c.getName() + ", " + fields[6]);
+          }
         }
-        if (!fields[6].isEmpty()) {
-          c.setName(c.getName() + ", " + fields[6]);
-          c.setDescription(c.getName() + ", " + fields[6]);
-        }
-
 
         codeToEntity.put(fields[0], c);
         altCodeToEntity.put(fields[1], c);
