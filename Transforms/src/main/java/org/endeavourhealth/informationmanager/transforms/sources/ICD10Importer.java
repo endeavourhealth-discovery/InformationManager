@@ -170,20 +170,19 @@ public class ICD10Importer implements TTImport {
           .setScheme(iri(NAMESPACE.ICD10))
           .setIri(NAMESPACE.ICD10 + (fields[0].replace(".", "")))
           .addType(iri(IM.CONCEPT));
-        if (fields[4].length() > 250) {
-          c.setName(fields[4].substring(0, 200));
-          c.setDescription(fields[4]);
-        } else {
-          c.setName(fields[4]);
-        }
+
+        c.setDescription(fields[4]);
         if (fields.length > 5 && !fields[5].isEmpty()) {
-          c.setName(c.getName() + ", " + fields[5]);
-          c.setDescription(c.getName() + ", " + fields[5]);
-          if (fields.length > 6 && !fields[6].isEmpty()) {
-            c.setName(c.getName() + ", " + fields[6]);
-            c.setDescription(c.getName() + ", " + fields[6]);
-          }
+          c.setDescription(c.getDescription() + ", " + fields[5]);
         }
+        if (fields.length > 6 && !fields[6].isEmpty()) {
+          c.setDescription(c.getDescription() + ", " + fields[6]);
+        }
+
+        if (c.getDescription().length() > 255)
+          c.setName(c.getDescription().substring(0, 200));
+        else
+          c.setName(c.getDescription());
 
         codeToEntity.put(fields[0], c);
         altCodeToEntity.put(fields[1], c);
