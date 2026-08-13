@@ -144,7 +144,6 @@ public class CoreQueryImporter implements TTImport {
   private Query getGmsIsRegistered() {
     return new Query()
       .setName("Patient registered as GMS on the reference date")
-      .setDescription("Is the patient registered as a GMS patient on the reference date?")
       .setTypeOf(NAMESPACE.IM + "Patient")
       .and(m -> m
         .setTypeOf(NAMESPACE.IM + "EpisodeOfCare")
@@ -181,7 +180,6 @@ public class CoreQueryImporter implements TTImport {
       .setScheme(NAMESPACE.IM.asIri())
         .set(iri(IM.DEFINITION),TTLiteral.literal(new Query()
       .setName("gms registration episode")
-      .setDescription("Current registration episode on search date")
       .setTypeOf(NAMESPACE.IM + "Patient")
       .and(m -> m
         .setTypeOf(NAMESPACE.IM + "EpisodeOfCare")
@@ -242,7 +240,7 @@ public class CoreQueryImporter implements TTImport {
   private void gmsRegistrationStatus() throws JsonProcessingException {
     Query query = getGmsQuery();
     query.setName("Returns the gpRegistration status of a patient if they are currently registered as a regular GMS patient, or if died");
-    query.setNode("currentEpisode");
+    query.setName("currentEpisode");
     Return returnProperty = new Return();
     query.addReturn(returnProperty);
     returnProperty.case_(c -> c
@@ -701,16 +699,13 @@ public class CoreQueryImporter implements TTImport {
       .and(q -> q
         .or(m -> m
           .setTypeOf(NAMESPACE.IM + "Patient")
-          .setDescription("aged between 65 and 70")
           .setWhere(ageWhere))
         .or(m -> m
           .setTypeOf(NAMESPACE.IM + "Condition")
-          .setDescription("has pre-diabetes")
           .where(w -> w
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri(NAMESPACE.SNOMED + "714628002").setDescendantsOrSelfOf(true)))))
       .and(q -> q
-        .setDescription("Latest systolic within 12 months of the search date is high")
         .setTypeOf(NAMESPACE.IM + "Observation")
         .where(and -> and
           .and(ww -> ww
@@ -762,15 +757,13 @@ public class CoreQueryImporter implements TTImport {
               .setIri(NAMESPACE.IM+"value")
               .setOperator(Operator.gt)
               .setValue("130")))))
-        .setNode("HighBPReading")
+        .setAs("HighBPReading")
         .return_(r->r
           .as("date")
           .setIri(NAMESPACE.IM + "effectiveDate")))
       .and(q ->q
         .setNotExists(true)
-        .setName("Invited for screening after high BP reading")
-        .setDescription("Already invited for screening with an effective date after the effective date of the high BP reading")
-        .setNodeRef("HighBPReading")
+        .setFrom("HighBPReading")
         .setTypeOf(NAMESPACE.IM + "Procedure")
         .where(and -> and
           .and(inv -> inv
@@ -787,7 +780,6 @@ public class CoreQueryImporter implements TTImport {
       .and(not -> not
         .setNotExists(true)
         .setName("on hypertension register")
-        .setDescription("is registered on the hypertensives register")
         .is(is->is.setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
           .setName("Hypertensives")));
 

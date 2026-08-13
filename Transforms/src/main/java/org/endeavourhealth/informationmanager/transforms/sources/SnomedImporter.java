@@ -6,7 +6,6 @@ import org.endeavourhealth.imapi.filer.TTFilerFactory;
 import org.endeavourhealth.imapi.model.customexceptions.EclFormatException;
 import org.endeavourhealth.imapi.model.imq.ECLQueryRequest;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
-import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
 import org.endeavourhealth.imapi.transforms.ECLToIMQ;
@@ -713,12 +712,13 @@ public class SnomedImporter implements TTImport {
       op.addObject(iri(RDFS.RANGE), iri(expression.getIs().getIri()));
     }
     if (expression.getOr() != null) {
-      for (Match match : expression.getOr()) {
+      for (Query match : expression.getOr()) {
         if (match.getIs() != null) {
           op.addObject(iri(RDFS.RANGE), iri(match.getIs().getIri()));
         } else {
-          if (match.getOr() != null) {
-            for (Match or : match.getOr()) {
+          if (match.getOr()
+            != null) {
+            for (Query or : match.getOr()) {
               op.addObject(iri(RDFS.RANGE), iri(or.getIs().getIri()));
             }
           } else

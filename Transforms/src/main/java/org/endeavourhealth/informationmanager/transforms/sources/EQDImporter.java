@@ -11,7 +11,6 @@ import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.eqd.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
 import org.endeavourhealth.informationmanager.transforms.online.ImportApp;
-import org.endeavourhealth.imapi.model.imq.Match;
 import org.endeavourhealth.imapi.model.imq.Node;
 import org.endeavourhealth.imapi.model.imq.Query;
 import org.endeavourhealth.imapi.model.tripletree.*;
@@ -109,7 +108,7 @@ public class EQDImporter {
 	private void exportBaseMatches(String folder) throws Exception {
 		try (FileWriter writer= new FileWriter(folder+"/EQD/unnamedClauses.txt")){
 			if (!EqdToIMQ.getBaseQueries().isEmpty()){
-				for (Map.Entry<String, Match> entry:EqdToIMQ.getBaseQueries().entrySet()){
+				for (Map.Entry<String, Query> entry:EqdToIMQ.getBaseQueries().entrySet()){
 					if (EqdToIMQ.getAutoNamedClauses().get(entry.getKey())==null) {
 						String summarised= new QuerySummariser().summariseQuery(entry.getValue()).replace("\n","\\n ");
 						writer.write(entry.getKey() + "\t" + new ObjectMapper().writeValueAsString(entry.getValue())

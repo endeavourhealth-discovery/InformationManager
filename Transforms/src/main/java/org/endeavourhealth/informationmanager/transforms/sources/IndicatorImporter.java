@@ -84,9 +84,9 @@ public class IndicatorImporter {
       TTEntity patientDetails = columnGroupNameToEntity.get("Patient details");
       Query patientColumnGroup = patientDetails.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
       datasetQuery.addColumnGroup(patientColumnGroup);
-      for (List<Match> matches : Arrays.asList(indicatorQuery.getAnd(), indicatorQuery.getOr(), indicatorQuery.getRule())) {
+      for (List<Query> matches : Arrays.asList(indicatorQuery.getAnd(), indicatorQuery.getOr(), indicatorQuery.getRule())) {
         if (matches != null) {
-          for (Match match : matches) {
+          for (Query match : matches) {
             addColumnGroup(datasetQuery, match);
           }
         }
@@ -96,7 +96,7 @@ public class IndicatorImporter {
     }
 
   }
-  private void addColumnGroup(Query datasetQuery,Match match) throws JsonProcessingException {
+  private void addColumnGroup(Query datasetQuery,Query match) throws JsonProcessingException {
     if (match.getTypeOf() != null) {
       String typeOf = match.getTypeOf().getIri();
       if (Set.of(NAMESPACE.IM + "ClinicalEntry", NAMESPACE.IM + "Observation").contains(typeOf)) {
@@ -106,9 +106,9 @@ public class IndicatorImporter {
         addEventGroups("Medication details",datasetQuery,match);
       }
     }
-    for (List<Match> matches : Arrays.asList(match.getAnd(),match.getOr())) {
+    for (List<Query> matches : Arrays.asList(match.getAnd(),match.getOr())) {
       if (matches!=null){
-        for (Match subMatch:matches){
+        for (Query subMatch:matches){
           addColumnGroup(datasetQuery,subMatch);
         }
       }
@@ -117,10 +117,10 @@ public class IndicatorImporter {
 
 
 
-  private void addEventGroups(String columnGroupName, Query datasetQuery, Match match) throws JsonProcessingException {
+  private void addEventGroups(String columnGroupName, Query datasetQuery, Query match) throws JsonProcessingException {
 
     TTEntity columnEntity= columnGroupNameToEntity.get(columnGroupName);
-    Match columnGroup= columnEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
+    Query columnGroup= columnEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
     Where where= match.getWhere();
     removeWhere(where);
     columnGroup.setWhere(where);
@@ -163,7 +163,7 @@ public class IndicatorImporter {
     return false;
   }
 
-  private Where needsValue(Match match) {
+  private Where needsValue(Query match) {
     if (match.getWhere()!=null) {
       for (List<Where> wheres : Arrays.asList(match.getWhere().getAnd(),match.getWhere().getOr())) {
         if (wheres!=null){
@@ -193,7 +193,7 @@ public class IndicatorImporter {
   }
 
 
-  private String addConceptSets(Match match,Set<Node> conceptSets) {
+  private String addConceptSets(Query match,Set<Node> conceptSets) {
     String valueLabel=null;
     if (match.getWhere()!=null) {
       if (match.getWhere().getIri() != null) {
@@ -215,9 +215,9 @@ public class IndicatorImporter {
       }
       return valueLabel;
     }
-    for (List<Match> matches : Arrays.asList(match.getAnd(),match.getOr())) {
+    for (List<Query> matches : Arrays.asList(match.getAnd(),match.getOr())) {
       if (matches!=null){
-        for (Match subMatch:matches){
+        for (Query subMatch:matches){
           String thisLabel=addConceptSets(subMatch,conceptSets);
           if (thisLabel!=null)
             valueLabel=thisLabel;
@@ -298,7 +298,7 @@ public class IndicatorImporter {
             indicator.addType(iri(IM.INDICATOR));
             TTEntity indicatorQueryEntity = entityService.getPartialEntities(Set.of(queryIri), Set.of(IM.DEFINITION.toString())).get(0);
             Query indicatorQuery = indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-            Match rule= indicatorQuery.getRule().getFirst();
+            Query rule= indicatorQuery.getRule().getFirst();
             if (rule.getIs() != null) {
               Node cohort = rule.getIs();
               indicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
@@ -341,8 +341,8 @@ public class IndicatorImporter {
     String queryIri= entities.get(0).getEntity().getIri();
     TTEntity queryEntity= entityService.getPartialEntities(Set.of(queryIri),Set.of(IM.DEFINITION.toString())).get(0);
     Query report= queryEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-    List<Match> columnGroups= report.getColumnGroup();
-    Match columnGroup= columnGroups.get(columnNumber);
+    List<Query> columnGroups= report.getColumnGroup();
+    Query columnGroup= columnGroups.get(columnNumber);
     List<Return> columns= columnGroup.getReturn();
     if (columns.getFirst().getAs()!=null)
       if (columns.getFirst().getAs().equals("Y-N"))
@@ -366,7 +366,7 @@ public class IndicatorImporter {
 
   }
 
-  private void setOptional(Match match) {
+  private void setOptional(Query match) {
     Set<String> nodeRefs = new HashSet<>();
     setNodeRefList(match.getWhere(), nodeRefs);
     setOptionalPaths(match.getPath(), nodeRefs);
@@ -415,20 +415,20 @@ public class IndicatorImporter {
     boolean indicator=false;
     if (query.getAnd() != null) {
       int clauseIndex=0;
-      for (Match subMatch : query.getAnd()) {
-        configureMatch(indicatorEntity, subMatch, queryEntity, Bool.and);
+      for (Query subQuery : query.getAnd()) {
+        configureMatch(indicatorEntity, subQuery, queryEntity, Bool.and);
       }
     }
     else if (query.getOr() != null) {
-      for (Match subMatch : query.getOr()) {
-        configureMatch(indicatorEntity,subMatch,queryEntity,Bool.or);
+      for (Query subQuery : query.getOr()) {
+        configureMatch(indicatorEntity,subQuery,queryEntity,Bool.or);
       }
     }
 
     indicatorMap.put(queryEntity.getIri(),indicator);
   }
 
-  private void configureMatch(TTEntity indicatorEntity, Match match,TTEntity queryEntity,Bool operator) throws Exception {
+  private void configureMatch(TTEntity indicatorEntity, Query match,TTEntity queryEntity,Bool operator) throws Exception {
     if (match.getIs() != null) {
       Node cohort= match.getIs();
         TTEntity cohortEntity = getEntityFromIri(cohort.getIri());
@@ -437,13 +437,13 @@ public class IndicatorImporter {
         return;
     }
     if (match.getAnd() != null) {
-      for (Match subMatch : match.getAnd()) {
-        configureMatch(indicatorEntity, subMatch, queryEntity, Bool.and);
+      for (Query subQuery : match.getAnd()) {
+        configureMatch(indicatorEntity, subQuery, queryEntity, Bool.and);
       }
     }
     else if (match.getOr() != null) {
-      for (Match subMatch : match.getOr()) {
-        configureMatch(indicatorEntity,subMatch,queryEntity,Bool.or);
+      for (Query subQuery : match.getOr()) {
+        configureMatch(indicatorEntity,subQuery,queryEntity,Bool.or);
       }
     }
     else {
@@ -457,7 +457,7 @@ public class IndicatorImporter {
 
 
 
-  private boolean actionNeeded(Match match) throws QueryException {
+  private boolean actionNeeded(Query match) throws QueryException {
     if (match.getWhere()!=null){
       return actionNeeded(match.getWhere());
     }
@@ -492,7 +492,7 @@ public class IndicatorImporter {
     return false;
   }
 
-  private void flattenMatches(Match match,List<Where> wheres) {
+  private void flattenMatches(Query match,List<Where> wheres) {
     if (match.getWhere() != null) {
       if (match.getWhere().getIri()!=null)
         wheres.add(match.getWhere());
@@ -505,7 +505,7 @@ public class IndicatorImporter {
 
 
 
-  private Map<Integer,List<Where>> getWhereClauses(Match match) throws QueryException {
+  private Map<Integer,List<Where>> getWhereClauses(Query match) throws QueryException {
     List<Where> wheres = new ArrayList<>();
     flattenMatches(match, wheres);
     int clauseIndex=0;
@@ -548,7 +548,7 @@ public class IndicatorImporter {
 
 
 
-  private void configureActivity(Match match) throws Exception {
+  private void configureActivity(Query match) throws Exception {
     Map<Integer,List<Where>> actionClauses = getWhereClauses(match);
     if (actionClauses.isEmpty()) return;
     for (Integer clauseIndex : actionClauses.keySet()) {

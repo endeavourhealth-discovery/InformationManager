@@ -96,18 +96,20 @@ public class SemanticMapImporter {
 					String name= fields[1];
 					if (prefix != null)
 						name= prefix+" - "+name;
+					String rank= fields[2];
 					TTEntity map = maps.get(mapIri);
 					map.setName(name);
-					String property = fields[2];
-					String function = fields[3];
-					String sourceSets = fields[4];
-					String from = fields[5];
-					String to = fields[6];
-					String valueProperty = fields[7];
-					String targetText = fields[8];
-					String defaultText = fields[9];
-					String targetValue = fields[10];
-					String defaultValue = fields[11];
+					String sourceType= fields[3];
+					String property = fields[4];
+					String function = fields[5];
+					String sourceSets = fields[6];
+					String from = fields[7];
+					String to = fields[8];
+					String valueProperty = fields[9];
+					String targetText = fields[10];
+					String defaultText = fields[11];
+					String targetValue = fields[12];
+					String defaultValue = fields[13];
 					if (!defaultText.isEmpty()) {
 						map.set(IM.DEFAULT_TEXT, TTLiteral.literal(defaultText));
 					}
@@ -118,23 +120,25 @@ public class SemanticMapImporter {
 					document.addEntity(mapEntry);
 					Integer order = mapOrder.getOrDefault(mapIri, 0) + 1;
 					mapEntry.setIri(mapIri+"_"+targetText+"_"+order);
+					map.set(IM.SOURCE_TYPE, iri(NAMESPACE.IM+sourceType));
 					mapOrder.put(mapIri, order);
 					mapEntry.addType(iri(IM.MAP_ENTRY));
 					mapEntry.setName(map.getName()+" - "+targetText+"_"+order);
 					mapEntry.setScheme(map.getScheme());
-					mapEntry.set(SHACL.ORDER, TTLiteral.literal(order));
-					map.addObject(IM.HAS_MAP_ENTRY.asIri(), iri(mapEntry.getIri()));
+					mapEntry.set(SHACL.ORDER, TTLiteral.literal(rank));
+					mapEntry.addObject(IM.IN_SEMANTIC_MAP.asIri(), iri(mapIri));
+					map.addObject(IM.HAS_ENTRY.asIri(), iri(mapEntry.getIri()));
 					for (String sourceSet : sourceSets.split(",")) {
 						mapEntry.addObject(iri(IM.SOURCE_ENTITY), iri(sourceSet));
 					}
 					if (!property.isEmpty()) {
-						mapEntry.set(IM.SOURCE_ENTITY_PROPERTY.asIri(), iri(NAMESPACE.IM + property));
+						map.set(IM.SOURCE_ENTITY_PROPERTY.asIri(), iri(NAMESPACE.IM + property));
 					}
 					if (!valueProperty.isEmpty()) {
-						mapEntry.set(IM.SOURCE_VALUE_PROPERTY.asIri(), iri(NAMESPACE.IM+ valueProperty));
+						map.set(IM.SOURCE_VALUE_PROPERTY.asIri(), iri(NAMESPACE.IM+ valueProperty));
 					}
 					if (!function.isEmpty()){
-						mapEntry.set(NAMESPACE.IM+"function", iri(NAMESPACE.IM+function));
+						map.set(NAMESPACE.IM+"function", iri(NAMESPACE.IM+function));
 					}
 					mapEntry.set(IM.TARGET_TEXT, TTLiteral.literal(targetText));
 					mapEntry.set(IM.TARGET_VALUE, TTLiteral.literal(Integer.parseInt(targetValue)));
@@ -152,9 +156,9 @@ public class SemanticMapImporter {
 
 
 	private void setCase(TTEntity mapEntry,String property,String from,String to,String defaultText) throws JsonProcessingException {
-		Match match= null;
+		Query match= null;
 		if (mapEntry.get(IM.DEFINITION)==null) {
-			match = new Match();
+			match = new Query();
 			Return ret = new Return();
 			match.addReturn(ret);
 			Case case_ = new Case();
@@ -162,7 +166,7 @@ public class SemanticMapImporter {
 			ret.setCase(case_);
 			mapEntry.set(IM.DEFINITION, TTLiteral.literal(match));;
 		}
-		else match = mapEntry.get(IM.DEFINITION).asLiteral().objectValue(Match.class);
+		else match = mapEntry.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
 		Case case_ = match.getReturn().getFirst().getCase();
 		When when = new When();
 		case_.addWhen(when);
