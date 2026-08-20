@@ -698,14 +698,18 @@ public class CoreQueryImporter implements TTImport {
           .setName("Registered for GMS services on reference date")))
       .and(q -> q
         .or(m -> m
+          .setName("aged 65-70")
           .setTypeOf(NAMESPACE.IM + "Patient")
           .setWhere(ageWhere))
         .or(m -> m
+          .setName("pre-diabetes")
           .setTypeOf(NAMESPACE.IM + "Condition")
           .where(w -> w
             .setIri(IM.DATA_MODEL_PROPERTY_CONCEPT)
             .addIs(new Node().setIri(NAMESPACE.SNOMED + "714628002").setDescendantsOrSelfOf(true)))))
       .and(q -> q
+        .setName("latest bp in last 6 months")
+        .setAs("LatestBPReading")
         .setTypeOf(NAMESPACE.IM + "Observation")
         .where(and -> and
           .and(ww -> ww
@@ -734,6 +738,8 @@ public class CoreQueryImporter implements TTImport {
             .setDirection(Order.descending))
           .setLimit(1))
         .then(then->then
+          .from(f->f.setAlias("LatestBPReading"))
+          .setName("Latest BP is high")
           .where(thenw->thenw
           .or(whereEither -> whereEither
             .and(w1 -> w1
@@ -756,14 +762,15 @@ public class CoreQueryImporter implements TTImport {
             .and(w1 -> w1
               .setIri(NAMESPACE.IM+"value")
               .setOperator(Operator.gt)
-              .setValue("130")))))
+              .setValue("130"))))
         .setAs("HighBPReading")
         .return_(r->r
           .as("date")
-          .setIri(NAMESPACE.IM + "effectiveDate")))
+          .setIri(NAMESPACE.IM + "effectiveDate"))))
       .and(q ->q
+        .setName("already invited for screening")
         .setNotExists(true)
-        .setFrom("HighBPReading")
+        .from(f->f.setAlias("HighBPReading"))
         .setTypeOf(NAMESPACE.IM + "Procedure")
         .where(and -> and
           .and(inv -> inv
@@ -776,12 +783,7 @@ public class CoreQueryImporter implements TTImport {
                 .setIri(NAMESPACE.IM + "effectiveDate"))
               .right (r->r
                 .setNodeRef("HighBPReading")
-                .setIri(NAMESPACE.IM + "effectiveDate").setPropertyRef("date"))))))
-      .and(not -> not
-        .setNotExists(true)
-        .setName("on hypertension register")
-        .is(is->is.setIri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387")
-          .setName("Hypertensives")));
+                .setIri(NAMESPACE.IM + "effectiveDate").setPropertyRef("date"))))));
 
     TTEntity qry = new TTEntity().addType(iri(IM.QUERY))
       .set(iri(IM.RETURN_TYPE), TTIriRef.iri(NAMESPACE.IM + "Patient"))
