@@ -58,20 +58,37 @@ public class CompassIMGenerator {
 		try (FileWriter tctWriter = new FileWriter(folder+"tct.txt")) {
 			try (IMDB conn = IMDB.getConnection()){
 				String spq = """
-					select ?parent ?child ?childDbId
+					select ?concept ?conceptDbId
 					where {
-					?child im:isA ?parent.
-					?child im:im1DbId ?childDbId.
+					?concept im:im1DbId ?conceptDbId.
 					}
 					""";
 				TupleQuery qry = conn.prepareTupleSparql(spq);
 				try (TupleQueryResult rs = qry.evaluate()) {
 					while (rs.hasNext()) {
 						BindingSet bs = rs.next();
+						String concept = bs.getValue("concept").stringValue();
+						String conceptDbId = bs.getValue("conceptDbId").stringValue();
+						tctWriter.write(concept + "\t" + conceptDbId + "\t" + "1" + "\n");
+					}
+				}
+				spq = """
+					select ?parent ?child ?childDbId
+					where {
+					?child im:isA ?parent.
+					?child im:im1DbId ?childDbId.
+					}
+					""";
+				qry = conn.prepareTupleSparql(spq);
+				try (TupleQueryResult rs = qry.evaluate()) {
+					while (rs.hasNext()) {
+						BindingSet bs = rs.next();
 						String childDbId = bs.getValue("childDbId").stringValue();
 						String parent = bs.getValue("parent").stringValue();
 						String child = bs.getValue("child").stringValue();
-						tctWriter.write(parent + "\t" + childDbId + "\t" + (parent.equals(child) ? 1 : 0) + "\n");
+						if (!parent.equals(child)) {
+							tctWriter.write(parent + "\t" + childDbId + "\t" + "0" + "\n");
+						}
 					}
 				}
 				spq = """
