@@ -19,7 +19,7 @@ rdf4jSail = "4.3.13"
 slf4j = "2.0.17"
 wsrs = "4.0.0"
 zip4j = "2.11.5"
-cucumber = "7.22.0"
+cucumber = "7.34.7"
 mockito = "5.14.2"
 
 [plugins]
