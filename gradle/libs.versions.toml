@@ -2,7 +2,7 @@
 [versions]
 activation = "2.1.2"
 apache = "4.5.14"
-apachePoi = "5.4.0"
+apachePoi = "5.5.1"
 antlr = "4.13.1"
 gradleApi = "8.4"
 jackson = "2.16.0"
