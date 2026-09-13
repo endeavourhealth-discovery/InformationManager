@@ -91,7 +91,7 @@ public class SmartLifeImporter implements TTImport {
 			}
 		try {
 			new IndicatorImporter().generate(config.getFolder()+"\\Smartlife\\Indicator-query.txt",
-				"http://smartlifehealth.info/smh#SmartLifeIndicators", NAMESPACE.SMARTLIFE);
+				"http://smartlifehealth.info/smh#SmartLifeIndicators", "Smartlife indicators",NAMESPACE.SMARTLIFE);
 				} catch (Exception e) {
 			throw new ImportException("Unable to generate indicators",e);
 			}

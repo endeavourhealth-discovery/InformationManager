@@ -2,13 +2,12 @@ package org.endeavourhealth.informationmanager.transforms.sources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.collections.map.HashedMap;
 import org.endeavourhealth.imapi.filer.TTDocumentFiler;
 import org.endeavourhealth.imapi.filer.TTFilerFactory;
-import org.endeavourhealth.imapi.logic.reasoner.LogicOptimizer;
-import org.endeavourhealth.imapi.logic.service.ConceptService;
 import org.endeavourhealth.imapi.logic.service.EntityService;
 import org.endeavourhealth.imapi.logic.service.SearchService;
+import org.endeavourhealth.imapi.logic.service.SetService;
+import org.endeavourhealth.imapi.model.Pageable;
 import org.endeavourhealth.imapi.queryengine.QueryDescriptor;
 import org.endeavourhealth.imapi.model.imq.*;
 import org.endeavourhealth.imapi.model.requests.QueryRequest;
@@ -24,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,42 +35,49 @@ public class IndicatorImporter {
   private final QueryDescriptor descriptor = new QueryDescriptor();
   private NAMESPACE namespace;
   private final SearchService searchService = new SearchService();
-  private final Map<String,Boolean> indicatorMap = new HashedMap();
-  private final Map<String, TTEntity> entities = new HashMap<>();
-  private final Map<String, TTEntity> labelToEntity= new HashMap<>();
   private final Set<String> unlabelledClauses= new HashSet<>();
-  private final Set<String> unlabelledIndicators= new HashSet<>();
-  private final Map<String,TTEntity> columnGroupNameToEntity= new HashMap<>();
-  private String mainFolder;
   private TTDocument document;
-  private final Map<String,String> matchLabel= new HashMap<>();
 
 
-  public void generate(String indicatorFile,String mainFolder,NAMESPACE namespace) throws Exception {
+  public void generate(String indicatorFile,String indicatorFolderIri,String indicatorFolderName,NAMESPACE namespace) throws Exception {
     this.namespace = namespace;
-    this.mainFolder = mainFolder;
+
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument();
-      importIndicators(indicatorFile);
-      for (int i=0; i <document.getEntities().size(); i++) {
-        TTEntity indicator = document.getEntities().get(i);
-        if (indicator.isType(iri(IM.INDICATOR))) {
-          TTEntity indicatorQuery= entityService.getPartialEntities(Set.of(indicator.get(iri(IM.NUMERATOR)).asIriRef().getIri()), Set.of(IM.DEFINITION.toString())).get(0);
-          addColumnGroups(indicator,indicatorQuery.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class));
+      try {
+        TTEntity folder = new TTEntity()
+          .setIri(indicatorFolderIri)
+          .setName(indicatorFolderName)
+          .addType(iri(IM.FOLDER))
+          .setScheme(iri(NAMESPACE.SMARTLIFE))
+          .set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "Indicators"))
+          .addObject(iri(IM.CONTENT_TYPE), iri(IM.INDICATOR));
+        document.addEntity(folder);
+        importIndicators(indicatorFile,folder.getIri());
+        for (int i = 0; i < document.getEntities().size(); i++) {
+          TTEntity indicator = document.getEntities().get(i);
+          if (indicator.isType(iri(IM.INDICATOR))) {
+            TTEntity indicatorQuery = entityService.getPartialEntities(Set.of(indicator.get(iri(IM.NUMERATOR)).asIriRef().getIri()), Set.of(IM.DEFINITION.toString())).getFirst();
+            addColumnGroups(indicator, indicatorQuery.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class));
+          }
         }
-      }
-      try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
-        filer.fileDocument(document);
+        try (TTDocumentFiler filer = TTFilerFactory.getDocumentFiler(GRAPH.IM)) {
+          filer.fileDocument(document);
+        }
+      } catch (Exception e) {
+        LOG.error("Error importing indicators: Indicators not imported", e);
+        ;
       }
     }
   }
 
 
   private void addColumnGroups(TTEntity indicator, Query indicatorQuery) throws Exception {
+    Map<String,Set<String>> valueSets= new HashMap<>();
     if (indicator.get(iri(IM.DENOMINATOR))!=null) {
       String cohortIri = indicator.get(IM.DENOMINATOR).asIriRef().getIri();
       TTEntity dataSetEntity = new TTEntity().setName("Data set for " + indicator.getName());
-      String dataSetIri = namespace + "DataSet-" + indicator.getName().hashCode();
+      String dataSetIri= (namespace + "I_" + (indicator.getName().replaceAll("[^a-zA-Z0-9._~\\[\\],%-]", ""))).toLowerCase();
       dataSetEntity.setIri(dataSetIri)
         .addType(iri(IM.QUERY));
       dataSetEntity.setScheme(iri(namespace));
@@ -81,55 +86,98 @@ public class IndicatorImporter {
       datasetQuery.setTypeOf(NAMESPACE.IM + "Patient");
       datasetQuery.setIs(Node.iri(cohortIri));
       dataSetEntity.addObject(iri(IM.DEPENDENT_ON), iri(cohortIri));
-      TTEntity patientDetails = columnGroupNameToEntity.get("Patient details");
+      TTEntity patientDetails = entityService.getPartialEntity(NAMESPACE.IM+"ColumnGroup_patient_details",Set.of(IM.DEFINITION.toString()));
       Query patientColumnGroup = patientDetails.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
       datasetQuery.addColumnGroup(patientColumnGroup);
-      for (List<Query> matches : Arrays.asList(indicatorQuery.getAnd(), indicatorQuery.getOr(), indicatorQuery.getRule())) {
-        if (matches != null) {
-          for (Query match : matches) {
-            addColumnGroup(datasetQuery, match);
-          }
+      addValueSets(indicatorQuery,valueSets);
+      if (!valueSets.isEmpty()) {
+        for (String setType : valueSets.keySet()) {
+          Set<String> sets = valueSets.get(setType);
+          String valueSet= createValueSet(indicator,setType,sets);
+          addEventGroup(datasetQuery, setType,valueSet);
         }
       }
       dataSetEntity.set(iri(IM.DEFINITION), TTLiteral.literal(datasetQuery));
       indicator.set(iri(IM.HAS_DATASET),iri(dataSetIri));
     }
-
   }
-  private void addColumnGroup(Query datasetQuery,Query match) throws JsonProcessingException {
-    if (match.getTypeOf() != null) {
-      String typeOf = match.getTypeOf().getIri();
-      if (Set.of(NAMESPACE.IM + "ClinicalEntry", NAMESPACE.IM + "Observation").contains(typeOf)) {
-        addEventGroups("Observation details",datasetQuery,match);
+
+  private String createValueSet(TTEntity indicator, String setType, Set<String> sets) {
+    Set<String> members= new HashSet<>();
+    SetService setService = new SetService();
+    for (String set : sets) {
+      Pageable<Node> nodeMembers= setService.getDirectOrEntailedMembersFromIri(set,false,1,10000);
+      if (nodeMembers.getResult()!=null) {
+        for (Node nodeMember : nodeMembers.getResult()) {
+          members.add(nodeMember.getIri());
+        }
       }
-      else if (typeOf.contains("Medication")){
-        addEventGroups("Medication details",datasetQuery,match);
-      }
+      else members.add(set);
     }
-    for (List<Query> matches : Arrays.asList(match.getAnd(),match.getOr())) {
-      if (matches!=null){
-        for (Query subMatch:matches){
-          addColumnGroup(datasetQuery,subMatch);
+    TTEntity setEntity = new TTEntity().setName("Concept set ("+setType+") for " + indicator.getName());
+    setEntity.setIri(namespace + "CSET_" +setType+"_" +(indicator.getName().replaceAll("[^a-zA-Z0-9._~\\[\\],%-]", "")).toLowerCase());
+    setEntity.addType(iri(IM.CONCEPT_SET));
+    setEntity.setScheme(iri(namespace));
+    for (String member : members) {
+      setEntity.addObject(iri(IM.HAS_MEMBER),iri(member));
+    }
+    document.addEntity(setEntity);
+    return setEntity.getIri();
+  }
+
+  private void addValueSets(Query query,Map<String,Set<String>> valueSets) throws JsonProcessingException {
+    for (List<Query> matches : Arrays.asList(query.getAnd(), query.getOr(), query.getRule())) {
+      if (matches != null) {
+        int clauseIndex = 0;
+        for (Query match : matches) {
+          clauseIndex++;
+          if (clauseIndex < 2 &&query.getRule() != null) continue;
+          if (match.getIs() != null) {
+            String iri = match.getIs().getIri();
+            TTEntity dependentEntity = entityService.getPartialEntities(Set.of(iri), Set.of(IM.DEFINITION.toString())).getFirst();
+            Query dependentQuery = dependentEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
+            if (dependentQuery != null) {
+              addValueSets(dependentQuery, valueSets);
+            }
+          }
+          if (match.getTypeOf() != null&&match.getWhere()!=null) {
+            String typeOf = match.getTypeOf().getIri();
+            if (Set.of(NAMESPACE.IM + "ClinicalEntry", NAMESPACE.IM + "Observation").contains(typeOf)) {
+              addConceptSets(match.getWhere(), "clinical", valueSets);
+            }
+            if (typeOf.contains("Medication")) {
+              addConceptSets(match.getWhere(), "medication", valueSets);
+
+            }
+          }
+          else addValueSets(match, valueSets);
         }
       }
     }
+
+
   }
 
 
+  private void addEventGroup(Query datasetQuery, String setType,String valueSet) throws JsonProcessingException {
+    String columnGroupIri= setType.equals("clinical") ?NAMESPACE.IM+"ColumnGroup_clinical_details"
+    :NAMESPACE.IM+"ColumnGroup_medication_details";
+    TTEntity columnEntity= entityService.getPartialEntity(columnGroupIri,Set.of(IM.DEFINITION.toString()));
+    Query columnReturns= columnEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
+    Query columnGroup = new Query();
+    columnGroup.setTypeOf(setType.equals("clinical")? NAMESPACE.IM+"ClinicalEntry" : NAMESPACE.IM+"MedicationRequest" );
+    columnGroup.setReturn(columnReturns.getReturn());
 
-  private void addEventGroups(String columnGroupName, Query datasetQuery, Query match) throws JsonProcessingException {
-
-    TTEntity columnEntity= columnGroupNameToEntity.get(columnGroupName);
-    Query columnGroup= columnEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-    Where where= match.getWhere();
-    removeWhere(where);
+    columnGroup.setName("Latest "+ setType+" details");
+    Where where= new Where();
+    where.setIri(NAMESPACE.IM+"concept");
+    where.addIs(Node.iri(valueSet).setMemberOf(true));
     columnGroup.setWhere(where);
-    Set<Node> conceptSets= new HashSet<>();
-    String valueLabel=addConceptSets(match,conceptSets);
-    columnGroup.setName(valueLabel);
     setOptional(columnGroup);
     if (columnGroup.getOrderBy()==null) {
       columnGroup.orderBy(o -> o
+        .addPartition(new IriLD().setIri(NAMESPACE.IM + "patient").setName("patient"))
+        .addPartition(new IriLD().setIri(NAMESPACE.IM + "concept").setName("concept"))
         .addProperty(new OrderDirection()
           .setDirection(Order.descending)
           .setIri(NAMESPACE.IM + "effectiveDate"))
@@ -138,118 +186,31 @@ public class IndicatorImporter {
     datasetQuery.addColumnGroup(columnGroup);
   }
 
-  private boolean removeWhere(Where where){
-    for (List<Where> wheres : Arrays.asList(where.getAnd(),where.getOr())) {
-      if (wheres!=null){
-        for (int i=0; i<wheres.size();i++){
-          if (removeWhere(wheres.get(i))){
-            wheres.remove(i);
-            i--;
+
+  private void addConceptSets(Where where,String setType, Map<String,Set<String>> conceptSets) {
+      if (where.getIri() != null) {
+        if (where.getIri().contains("concept")) {
+          if (where.getIs() != null) {
+            conceptSets.computeIfAbsent(setType, k -> new HashSet<>());
+            conceptSets.get(setType).addAll(where.getIs().stream().map(Node::getIri).collect(Collectors.toSet()));
           }
         }
       }
-    }
-    if (where.getIri()==null && where.getCompare()!=null) {
-      if (where.getCompare().getRight().getIri()!=null ||where.getCompare().getRight().getPropertyRef()!=null){
-        return true;
-      }
-    }
-    if (where.getRange()!=null){
-      return true;
-    }
-    if (where.getOperator()!=null && where.getValue()!=null &&!where.getValue().equals("0")){
-      return true;
-    }
-    return false;
-  }
-
-  private Where needsValue(Query match) {
-    if (match.getWhere()!=null) {
-      for (List<Where> wheres : Arrays.asList(match.getWhere().getAnd(),match.getWhere().getOr())) {
+      for (List<Where> wheres : Arrays.asList(where.getAnd(), where.getOr())) {
         if (wheres!=null){
           for (Where subWhere:wheres){
-            Where valueWhere= needsValue(subWhere);
-            if (valueWhere!=null)
-              return valueWhere;
+            addConceptSets(subWhere,setType,conceptSets);
           }
         }
       }
     }
-    return null;
-  }
-
-  private Where needsValue(Where where){
-    if (where.getIri()!=null)
-      if (where.getValue()!=null &&where.getValue().equals("0"))
-        return where;
-    if (where.getAnd()!=null){
-      for (Where subWhere:where.getAnd()) {
-        Where valueWhere=needsValue(subWhere);
-        if (valueWhere!=null)
-          return valueWhere;
-      }
-    }
-    return null;
-  }
 
 
-  private String addConceptSets(Query match,Set<Node> conceptSets) {
-    String valueLabel=null;
-    if (match.getWhere()!=null) {
-      if (match.getWhere().getIri() != null) {
-        if (match.getWhere().getIri().contains("concept")) {
-          if (match.getWhere().getIs() != null) {
-            conceptSets.addAll(match.getWhere().getIs());
-            valueLabel=match.getWhere().getValueLabel();
-          }
-        }
-      }
-      for (List<Where> wheres : Arrays.asList(match.getWhere().getAnd(),match.getWhere().getOr())) {
-        if (wheres!=null){
-          for (Where subWhere:wheres){
-            String thisLabel=addConceptSets(subWhere,conceptSets);
-            if (thisLabel!=null)
-              valueLabel=thisLabel;
-          }
-        }
-      }
-      return valueLabel;
-    }
-    for (List<Query> matches : Arrays.asList(match.getAnd(),match.getOr())) {
-      if (matches!=null){
-        for (Query subMatch:matches){
-          String thisLabel=addConceptSets(subMatch,conceptSets);
-          if (thisLabel!=null)
-            valueLabel=thisLabel;
-        }
-      }
-    }
-    return valueLabel;
-  }
-  private String addConceptSets(Where where,Set<Node> conceptSets) {
-    String valueLabel=null;
-    if (where.getIri()!=null) {
-      if (where.getIri().contains("concept")) {
-        if (where.getIs()!=null) {
-          conceptSets.addAll(where.getIs());
-          valueLabel=where.getValueLabel();
-        }
-      }
-    }
-    for (List<Where> wheres : Arrays.asList(where.getAnd(),where.getOr())) {
-      if (wheres!=null){
-        for (Where subWhere:wheres){
-          String thisLabel=addConceptSets(subWhere,conceptSets);
-          if (thisLabel!=null)
-            valueLabel=thisLabel;
-        }
-      }
-    }
-    return valueLabel;
-  }
 
-  public void importIndicators(String indicatorFile) throws Exception {
+  public void importIndicators(String indicatorFile,String indicatorFolderIri) throws Exception {
     TTFilerFactory.setBulk(false);
+    int order=0;
+    String parentIndicator=null;
     try (BufferedReader reader = new BufferedReader(new FileReader(indicatorFile))) {
       reader.readLine();
       String line = reader.readLine();
@@ -258,74 +219,47 @@ public class IndicatorImporter {
         String[] fields = line.split("\t");
         if (fields.length > 1) {
           String inputType = fields[0];
-          if (inputType.equals("F")) {
-            TTEntity indicatorFolder = new TTEntity();
-            String parentFolder = fields.length > 3 ? fields[5] : "";
-            String folderIri = namespace + "Folder-" + fields[2].hashCode();
-            indicatorFolder.setIri(folderIri)
-              .setName(fields[2])
-              .addType(iri(IM.FOLDER))
-              .setScheme(iri(namespace));
-            if (!parentFolder.isEmpty()) {
-              indicatorFolder.addObject(iri(IM.IS_CONTAINED_IN), (iri(namespace + "Folder-" + parentFolder.hashCode())));
+          if (inputType.equals("I") || inputType.equals("S") || inputType.equals("R")) {
+            String indicatorIri= (namespace + "I_" + (fields[1].replaceAll("[^a-zA-Z0-9._~:/?#\\[\\]@!$&'()*+,;=%-]", ""))).toLowerCase();
+            String indicatorName = fields[7];
+            String numeratorName= fields[8];
+            if (numeratorName.isEmpty()) {
+              line= reader.readLine();continue;
             }
-            else indicatorFolder
-              .addObject(iri(IM.IS_CONTAINED_IN), (iri(mainFolder)));
-            document.addEntity(indicatorFolder);
-            entities.put(folderIri, indicatorFolder);
-            labelToEntity.put(fields[2], indicatorFolder);
-          }
-          else if (inputType.equals("A")) {
-            matchLabel.put(fields[4], fields[1]);
-          }
-          else if (inputType.equals("I") || inputType.equals("S") || inputType.equals("R")) {
-
-            String indicatorLabel = fields[2];
-            String queryLabel = fields[3].replace("\"", "");
-            String parent = fields[5];
-            List<TTBundle> test = entityService.getEntityFromTerm(queryLabel, Set.of(namespace.toString(), NAMESPACE.QOF.toString()));
-            if (test.isEmpty()) {
-							LOG.error("Indicator not found: {}", queryLabel);
+            String denominatorName= fields[10];
+            List<TTBundle> numeratorEntity= entityService.getEntityFromTerm(numeratorName, Set.of(namespace.toString(), NAMESPACE.QOF.toString()));
+            if (numeratorEntity.isEmpty()){
+              System.out.println("Numerator entity not found for indicator: "+indicatorName + " with numerator name: "+numeratorName);
               line=reader.readLine();
               continue;
             }
-            String queryIri = test.get(0).getEntity().getIri();
-            String indicatorIri = namespace + "Indicator-" + indicatorLabel.hashCode();
+            String numeratorIri = numeratorEntity.getFirst().getEntity().getIri();
+            List<TTBundle> denominatorEntity= entityService.getEntityFromTerm(denominatorName, Set.of(namespace.toString(), NAMESPACE.QOF.toString()));
+            if (denominatorEntity.isEmpty()){
+              System.out.println("Denominator entity not found for indicator: "+indicatorName + " with denominator name: "+denominatorName);
+              line=reader.readLine();
+              continue;
+            }
+            String denominatorIri = denominatorEntity.getFirst().getEntity().getIri();
+            if (inputType.equals("I")) {
+              order=0;
+              parentIndicator=indicatorIri;
+            }
+            else order++;
             TTEntity indicator = new TTEntity();
             indicator.setIri(indicatorIri);
             indicator.setScheme(iri(namespace.toString()));
-            indicator.setName(indicatorLabel);
+            indicator.setName(indicatorName);
             indicator.addType(iri(IM.INDICATOR));
-            TTEntity indicatorQueryEntity = entityService.getPartialEntities(Set.of(queryIri), Set.of(IM.DEFINITION.toString())).get(0);
-            Query indicatorQuery = indicatorQueryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-            Query rule= indicatorQuery.getRule().getFirst();
-            if (rule.getIs() != null) {
-              Node cohort = rule.getIs();
-              indicator.addObject(iri(IM.DENOMINATOR), iri(cohort.getIri()));
-            }
-            indicator.set(iri(IM.NUMERATOR), iri(queryIri));
-            String orderText = fields[1];
-            if (!orderText.isEmpty()) {
-              Integer order = orderText.contains(".") ? Integer.parseInt(orderText.substring(orderText.lastIndexOf(".") + 1))
-                : Integer.parseInt(orderText);
+            indicator.addObject(iri(IM.DENOMINATOR), iri(denominatorIri));
+            indicator.set(iri(IM.NUMERATOR), iri(numeratorIri));
+            if (order>0)
               indicator.set(iri(SHACL.ORDER), TTLiteral.literal(order));
-            }
-
             document.addEntity(indicator);
-            entities.put(indicatorIri, indicator);
-            labelToEntity.put(indicatorLabel, indicator);
-            if (parent.equals("")) {
-              indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(mainFolder));
+            if (inputType.equals("I")) {
+              indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(indicatorFolderIri));
             }
-            else {
-              TTEntity parentIndicator = labelToEntity.get(parent);
-              if (parentIndicator.isType(iri(IM.FOLDER)))
-                indicator.addObject(iri(IM.IS_CONTAINED_IN), iri(parentIndicator.getIri()));
-              else indicator.addObject(iri(IM.IS_SUBINDICATOR_OF), iri(parentIndicator.getIri()));
-            }
-          }
-          else if (inputType.equals("C")) {
-            createColumnGroupEntity(fields[2], fields[3], Integer.parseInt(fields[4]));
+            else indicator.addObject(iri(IM.IS_SUBINDICATOR_OF), iri(parentIndicator));
           }
         }
         line = reader.readLine();
@@ -333,38 +267,11 @@ public class IndicatorImporter {
     }
   }
 
-  private void createColumnGroupEntity(String name, String queryName, Integer columnNumber) throws Exception {
-    List<TTBundle> entities= entityService.getEntityFromTerm(queryName,Set.of(namespace.toString(),NAMESPACE.QOF.toString()));
-    if (entities.isEmpty()){
-      throw new Exception("Column group query not found");
-    }
-    String queryIri= entities.get(0).getEntity().getIri();
-    TTEntity queryEntity= entityService.getPartialEntities(Set.of(queryIri),Set.of(IM.DEFINITION.toString())).get(0);
-    Query report= queryEntity.get(IM.DEFINITION).asLiteral().objectValue(Query.class);
-    List<Query> columnGroups= report.getColumnGroup();
-    Query columnGroup= columnGroups.get(columnNumber);
-    List<Return> columns= columnGroup.getReturn();
-    if (columns.getFirst().getAs()!=null)
-      if (columns.getFirst().getAs().equals("Y-N"))
-        columns.removeFirst();
-    Query newGroup= new Query();
-    newGroup.setTypeOf(columnGroup.getTypeOf());
-    newGroup.setName(name);
-    newGroup.setPath(columnGroup.getPath());
-    newGroup.setReturn(columnGroup.getReturn());
-    newGroup.setOrderBy(columnGroup.getOrderBy());
-    TTEntity columnGroupEntity= new TTEntity()
-      .setIri(namespace+"ColumnGroup-"+name.hashCode())
-      .setName(name+ " Column group")
-      .addType(iri(IM.QUERY))
-      .setScheme(iri(namespace))
-      .addObject(iri(IM.IS_CONTAINED_IN),iri(NAMESPACE.IM+"ColumnGroups"))
-      .set(iri(IM.DEFINITION),TTLiteral.literal(newGroup));
-    document.addEntity(columnGroupEntity);
-    columnGroupNameToEntity.put(name,columnGroupEntity);
-
+  private void createColumnGroupEntities(){
 
   }
+
+
 
   private void setOptional(Query match) {
     Set<String> nodeRefs = new HashSet<>();
@@ -393,100 +300,17 @@ public class IndicatorImporter {
   }
 
 
-  private void configureKPI(TTEntity indicator,String queryIri) throws Exception {
-    System.out.println(indicator.getName());
-    TTEntity queryEntity = getEntityFromIri(queryIri);
-    configureIndicator(indicator,queryEntity,Bool.and);
-
-  }
-
-  private void configureIndicator(TTEntity indicatorEntity, TTEntity queryEntity, Bool operator) throws Exception {
-    if (indicatorMap.containsKey(queryEntity.getIri())) {
-      indicatorMap.get(queryEntity.getIri());
-      return;
-    }
-    String queryName = queryEntity.getName();
-    String cohortName=queryEntity.getName();
-    System.out.println(cohortName);
-    Query query= queryEntity.get(iri(IM.DEFINITION)).asLiteral().objectValue(Query.class);
-    query= descriptor.describeQuery(query,DisplayMode.LOGICAL);
-    LogicOptimizer.optimizeQuery(query);
-    boolean or= false;
-    boolean indicator=false;
-    if (query.getAnd() != null) {
-      int clauseIndex=0;
-      for (Query subQuery : query.getAnd()) {
-        configureMatch(indicatorEntity, subQuery, queryEntity, Bool.and);
-      }
-    }
-    else if (query.getOr() != null) {
-      for (Query subQuery : query.getOr()) {
-        configureMatch(indicatorEntity,subQuery,queryEntity,Bool.or);
-      }
-    }
-
-    indicatorMap.put(queryEntity.getIri(),indicator);
-  }
-
-  private void configureMatch(TTEntity indicatorEntity, Query match,TTEntity queryEntity,Bool operator) throws Exception {
-    if (match.getIs() != null) {
-      Node cohort= match.getIs();
-        TTEntity cohortEntity = getEntityFromIri(cohort.getIri());
-        //TTEntity childEntity = createChildIndicator(cohort.getIri(), cohortEntity.getName(), indicatorEntity, operator);
-        //configureIndicator(childEntity, cohortEntity, operator == Bool.or ? Bool.or : Bool.and);
-        return;
-    }
-    if (match.getAnd() != null) {
-      for (Query subQuery : match.getAnd()) {
-        configureMatch(indicatorEntity, subQuery, queryEntity, Bool.and);
-      }
-    }
-    else if (match.getOr() != null) {
-      for (Query subQuery : match.getOr()) {
-        configureMatch(indicatorEntity,subQuery,queryEntity,Bool.or);
-      }
-    }
-    else {
-      configureActivity(match);
-    }
-  }
 
 
 
 
 
-
-
-  private boolean actionNeeded(Query match) throws QueryException {
-    if (match.getWhere()!=null){
-      return actionNeeded(match.getWhere());
-    }
-    else return false;
-  }
 
   private boolean actionWhere(Where where) throws QueryException {
     if (where.getIri()!=null &&where.getIs()!=null) {
       Node first= where.getIs().getFirst();
       if (searchService.askQueryIM(isChild(first.getIri(),Set.of("http://snomed.info/sct#363787002","http://snomed.info/sct#71388002")))){
         return true;
-      }
-    }
-    return false;
-  }
-
-  private boolean actionNeeded(Where where) throws QueryException {
-    if (where.getIri()!=null &&where.getIs()!=null) {
-      Node first= where.getIs().getFirst();
-      if(searchService.askQueryIM(isChild(first.getIri(),Set.of("http://snomed.info/sct#363787002","http://snomed.info/sct#71388002")))){
-        return true;
-      }
-    }
-    for (List<Where> wheres : Arrays.asList(where.getAnd(),where.getOr())) {
-      if (wheres != null) {
-        for (Where subWhere : wheres) {
-          boolean actionNeeded = actionNeeded(subWhere);
-          if (actionNeeded) return true;
-        }
       }
     }
     return false;
@@ -546,94 +370,6 @@ public class IndicatorImporter {
     return wheres.size();
   }
 
-
-
-  private void configureActivity(Query match) throws Exception {
-    Map<Integer,List<Where>> actionClauses = getWhereClauses(match);
-    if (actionClauses.isEmpty()) return;
-    for (Integer clauseIndex : actionClauses.keySet()) {
-      String targetName=null;
-      String dateRangeLabel=null;
-      String activityLabel=null;
-      Where procedureWhere = null;
-      Where dateWhere=null;
-      List<Where> wheres = actionClauses.get(clauseIndex);
-      for (Where where : wheres) {
-        if (where.getIri() != null && where.getIri().equals(NAMESPACE.IM + "concept") && where.getIs() != null) {
-          activityLabel= new ConceptService().getShortestTerm(where.getIs().getFirst().getIri());
-          if (activityLabel==null) activityLabel=where.getValueLabel();
-          procedureWhere = where;
-        }
-        else if (where.getIri() != null && where.getIri().contains("effectiveDate")) {
-          dateWhere= where;
-          String valueLabel=where.getValueLabel();
-          dateRangeLabel= where.getQualifier()+" "+valueLabel;
-        }
-        else if (where.getIri() != null && where.getIri().contains("value")) {
-          if (where.getRange()!=null ||(!where.getValue().equals("0"))) {
-            targetName = where.getQualifier() + " " + where.getValueLabel();
-          }
-        }
-      }
-      if (activityLabel!=null) {
-        String careActivityLabel = matchLabel.get(activityLabel);
-        if (careActivityLabel == null) {
-          unlabelledClauses.add(activityLabel);
-          careActivityLabel = activityLabel;
-        }
-        String careActivityIri = namespace + "CareActivity" + (om.writeValueAsString(careActivityLabel).hashCode());
-        TTEntity careActivityEntity = entities.get(careActivityIri);
-        if (careActivityEntity == null) {
-          careActivityEntity = new TTEntity();
-          entities.put(careActivityIri, careActivityEntity);
-          createSchedule(careActivityEntity, procedureWhere, dateWhere);
-          careActivityEntity.setIri(careActivityIri);
-          careActivityEntity.setName(careActivityLabel);
-          careActivityEntity.addType(iri(IM.CARE_ACTIVITY));
-
-        }
-        if (targetName != null) {
-          String targetLabel = matchLabel.get(targetName);
-          if (targetLabel == null) {
-            unlabelledClauses.add(targetName);
-            targetLabel = targetName;
-          }
-          String targetIri = namespace + "CareTarget" + (targetLabel.hashCode());
-          TTEntity targetEntity = entities.get(targetIri);
-          if (targetEntity == null) {
-            targetEntity = new TTEntity();
-            entities.put(targetIri, targetEntity);
-            targetEntity.setIri(targetIri);
-            targetEntity.setName(targetLabel);
-            targetEntity.addType(iri(IM.CARE_TARGET));
-          }
-          careActivityEntity.addObject(iri(NAMESPACE.IM + "careTarget"), iri(targetEntity.getIri()));
-        }
-      }
-
-
-    }
-
-  }
-
-  private void createSchedule(TTEntity careActivityEntity, Where procedureWhere,Where dateWhere) throws Exception {
-    if (procedureWhere == null) return;
-    String procedureIri = procedureWhere.getIs().getFirst().getIri();
-    careActivityEntity.set(NAMESPACE.IM + "procedure", iri(procedureIri));
-    if (dateWhere!=null) {
-      if (dateWhere.getRange() != null) {
-        if (dateWhere.getRange() != null) {
-          Value from = dateWhere.getRange().getFrom();
-          TTNode scheduleNode = createScheduleNode(from);
-          careActivityEntity.set(NAMESPACE.IM + "schedule", scheduleNode);
-        }
-      }
-      if (dateWhere.getValue() != null && dateWhere.getValue().startsWith("-")) {
-        String value = dateWhere.getValue().substring(1);
-        throw new Exception("Negative dates not supported");
-      }
-    }
-  }
 
   private TTNode createScheduleNode(Value from) {
     TTNode scheduleNode = new TTNode();

@@ -24,6 +24,11 @@ public class CoreQueryImporter implements TTImport {
 
   @Override
   public void importData(TTImportConfig config) throws ImportException {
+    try (ColumnGroupImporter columnGroupImport= new ColumnGroupImporter()){
+      columnGroupImport.importData(config);
+    } catch (Exception e) {
+      throw new ImportException(e.getMessage(), e);
+    }
     try (TTManager manager = new TTManager()) {
       document = manager.createDocument();
       addressProperty("homeAddress", "home");
@@ -132,7 +137,9 @@ public class CoreQueryImporter implements TTImport {
         .set(iri(SHACL.DATATYPE), iri(NAMESPACE.IM + "DateTime")));
     Query query = getGmsIsRegistered();
     query
-      .orderBy(o -> o.addProperty(new OrderDirection().setNodeRef("reg").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1));
+      .orderBy(o -> o
+        .addPartition(new IriLD().setIri(NAMESPACE.IM + "Patient"))
+        .addProperty(new OrderDirection().setNodeRef("reg").setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1));
     query.return_(p -> p
       .setNodeRef("reg")
       .setIri(NAMESPACE.IM + "provider"));
@@ -298,7 +305,9 @@ public class CoreQueryImporter implements TTImport {
           .where(ob->ob
             .setIri(NAMESPACE.IM + "concept")
             .is(is -> is.setIri(NAMESPACE.IM + "im:VSET_Ethnicity").setMemberOf(true)))
-          .orderBy(ob -> ob.addProperty(new OrderDirection().setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+          .orderBy(ob -> ob
+            .addPartition(new IriLD().setIri(NAMESPACE.IM + "Patient"))
+              .addProperty(new OrderDirection().setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
     document.addEntity(ethnicity);
 
   }
@@ -315,7 +324,9 @@ public class CoreQueryImporter implements TTImport {
           .where(ob->ob
             .setIri(NAMESPACE.IM + "concept")
             .is(is -> is.setIri(NAMESPACE.SNOMED+ "370157003").setDescendantsOrSelfOf(true)))
-          .orderBy(ob -> ob.addProperty(new OrderDirection().setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
+          .orderBy(ob -> ob
+            .addPartition(new IriLD().setIri(NAMESPACE.IM + "Patient"))
+            .addProperty(new OrderDirection().setIri(NAMESPACE.IM + "effectiveDate").setDirection(Order.descending)).setLimit(1))));
     document.addEntity(ethnicity);
 
   }
@@ -673,7 +684,8 @@ public class CoreQueryImporter implements TTImport {
     return function;
   }
 
-  private void testQuery() throws IOException, EQDException {
+  private void
+  testQuery() throws IOException, EQDException {
     Where ageWhere = new Where();
     Value fromAge = new Value();
     fromAge.setOperator(Operator.gte)
@@ -733,12 +745,12 @@ public class CoreQueryImporter implements TTImport {
             .setOperator(Operator.gte)
             .setValue("-12")))
         .setOrderBy(new OrderLimit()
+          .addPartition(new IriLD().setIri(NAMESPACE.IM + "Patient"))
           .addProperty(new OrderDirection()
             .setIri(NAMESPACE.IM + "effectiveDate")
             .setDirection(Order.descending))
           .setLimit(1))
         .then(then->then
-          .from(f->f.setAlias("LatestBPReading"))
           .setName("Latest BP is high")
           .where(thenw->thenw
           .or(whereEither -> whereEither
@@ -770,7 +782,6 @@ public class CoreQueryImporter implements TTImport {
       .and(q ->q
         .setName("already invited for screening")
         .setNotExists(true)
-        .from(f->f.setAlias("HighBPReading"))
         .setTypeOf(NAMESPACE.IM + "Procedure")
         .where(and -> and
           .and(inv -> inv

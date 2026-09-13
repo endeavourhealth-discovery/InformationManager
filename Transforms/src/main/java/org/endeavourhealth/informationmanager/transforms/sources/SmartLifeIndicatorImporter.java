@@ -45,7 +45,7 @@ public class SmartLifeIndicatorImporter implements TTImport {
 		ThreadContext.setUserGraphs(List.of(GRAPH.IM, GRAPH.IM.SMARTLIFE));
 			try {
 				new IndicatorImporter().generate(config.getFolder()+"\\Smartlife\\Indicator-query.txt",
-					"http://smartlifehealth.info/smh#SmartLifeIndicators", NAMESPACE.SMARTLIFE);
+					"http://smartlifehealth.info/smh#SmartLifeIndicators","Smart life indicators", NAMESPACE.SMARTLIFE);
 			} catch (Exception e) {
 				throw new ImportException("Unable to generate indicators",e);
 			}
@@ -73,13 +73,6 @@ public class SmartLifeIndicatorImporter implements TTImport {
 		folder.addObject(iri(IM.CONTENT_TYPE), iri(IM.CONCEPT_SET));
 		document.addEntity(folder);
 		setFolder= folder.getIri();
-		folder = new TTEntity()
-			.setIri(NAMESPACE.SMARTLIFE + "SmartLifeIndicators")
-			.setName("Smart Life indicators")
-			.addType(iri(IM.FOLDER))
-			.setScheme(iri(NAMESPACE.SMARTLIFE))
-			.set(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "Indicators"))
-			.addObject(iri(IM.CONTENT_TYPE), iri(IM.INDICATOR));
 		document.addEntity(folder);
 	}
 

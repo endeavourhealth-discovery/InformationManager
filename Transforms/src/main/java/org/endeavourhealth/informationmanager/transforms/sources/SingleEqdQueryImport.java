@@ -74,7 +74,7 @@ public class SingleEqdQueryImport {
 	}
 
 
-	private void convertEqd(Path path, Properties dataMap,TTDocument document){
+	private void convertEqd(Path path, Properties dataMap,TTDocument document) throws Exception{
 		File fileEntry = path.toFile();
 		if (fileEntry.getName().equals("GP Contract Apr 2026 - V50 Release 1.0 [SNOMED CT].xml"))
 			System.out.println(fileEntry.getAbsoluteFile().getName());
@@ -87,8 +87,8 @@ public class SingleEqdQueryImport {
 				document.getEntities().forEach(e->System.out.println(e.getName()));
 				System.out.println("Found "+document.getEntities().get(0).getName()+fileEntry.getName());
 			}
-		} catch (Exception ignored) {
-
+		} catch (Exception e) {
+			throw new Exception(e.getMessage(),e);
 		}
 
 
