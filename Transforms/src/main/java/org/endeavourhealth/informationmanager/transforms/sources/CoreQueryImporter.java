@@ -750,8 +750,8 @@ public class CoreQueryImporter implements TTImport {
             .setIri(NAMESPACE.IM + "effectiveDate")
             .setDirection(Order.descending))
           .setLimit(1))
-        .setAs("BPLast12Months")
-        .and(then->then
+        .setAs("BPLast12Months"))
+      .and(then->then
           .setFrom("BPLast12Months")
           .setName("Latest BP is high")
           .where(thenw->thenw
@@ -780,7 +780,7 @@ public class CoreQueryImporter implements TTImport {
         .setAs("HighBPReading")
         .return_(r->r
           .as("date")
-          .setIri(NAMESPACE.IM + "effectiveDate"))))
+          .setIri(NAMESPACE.IM + "effectiveDate")))
       .and(q ->q
         .setName("already invited for screening")
         .setNotExists(true)
