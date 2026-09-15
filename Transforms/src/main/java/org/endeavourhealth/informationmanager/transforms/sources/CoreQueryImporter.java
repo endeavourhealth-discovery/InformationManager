@@ -750,7 +750,9 @@ public class CoreQueryImporter implements TTImport {
             .setIri(NAMESPACE.IM + "effectiveDate")
             .setDirection(Order.descending))
           .setLimit(1))
-        .then(then->then
+        .setAs("BPLast12Months")
+        .and(then->then
+          .setFrom("BPLast12Months")
           .setName("Latest BP is high")
           .where(thenw->thenw
           .or(whereEither -> whereEither
