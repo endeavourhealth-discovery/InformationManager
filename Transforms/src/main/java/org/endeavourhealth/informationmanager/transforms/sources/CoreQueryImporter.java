@@ -44,10 +44,8 @@ public class CoreQueryImporter implements TTImport {
       age();
       ageAtEvent();
       placeOfResidenceAtEvent();
-      gmsRegistrationAtEvent();
       gmsRegistrationStatus();
       gmsRegisteredPractice();
-      gmsRegistration();
       getDescendants();
       getSubclasses();
       getConcepts();
@@ -180,57 +178,7 @@ public class CoreQueryImporter implements TTImport {
                   .setParameter("$searchDate")))))));
   }
 
-  private void gmsRegistration() throws JsonProcessingException {
-    TTEntity gms = new TTEntity()
-      .setIri(NAMESPACE.IM + "gmsRegistration")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-        .set(iri(IM.DEFINITION),TTLiteral.literal(new Query()
-      .setName("gms registration episode")
-      .setTypeOf(NAMESPACE.IM + "Patient")
-      .and(m -> m
-        .setTypeOf(NAMESPACE.IM + "EpisodeOfCare")
-        .where(w -> w
-          .and(pv -> pv
-            .setIri(NAMESPACE.IM + "gpPatientType")
-            .addIs(new Node().setIri("http://hl7.org/fhir/registration-type/r").setName("Regular GMS patient")))
-          .and(pv -> pv
-            .setIri(NAMESPACE.IM + "effectiveDate")
-            .setOperator(Operator.lte)
-            .setCompare(new Compare()
-              .setLeft(new ValueSource()
-                .setIri(NAMESPACE.IM+"effectiveDate"))
-              .setRight(new ValueSource()
-                .setParameter("$searchDate"))))
-          .and(pv -> pv
-            .or(pv1 -> pv1
-              .setIri(NAMESPACE.IM + "endDate")
-              .setIsNull(true))
-            .or(pv1 -> pv1
-              .setIri(NAMESPACE.IM + "endDate")
-              .setOperator(Operator.gt)
-              .setCompare(new Compare()
-                .setLeft(new ValueSource()
-                  .setIri(NAMESPACE.IM+"endDate"))
-                  .setRight(new ValueSource()
-                    .setParameter("$searchDate")))))))));
-     document.addEntity(gms);
-  }
 
-
-  private void gmsRegistrationAtEvent() throws JsonProcessingException {
-    TTEntity gms = new TTEntity()
-      .setIri(NAMESPACE.IM + "gmsRegistrationAtEvent")
-      .setCrud(iri(IM.UPDATE_PREDICATES))
-      .setScheme(NAMESPACE.IM.asIri())
-      .addObject(iri(SHACL.PARAMETER), new TTNode()
-        .set(iri(RDFS.LABEL), TTLiteral.literal("searchDate"))
-        .set(iri(SHACL.DATATYPE), iri(NAMESPACE.IM + "DateTime")))
-      .set(iri(IM.DEFINITION),
-        TTLiteral.literal(getGmsQuery()));
-
-    document.addEntity(gms);
-  }
 
   private Query getGmsQuery() {
     return new Query()
