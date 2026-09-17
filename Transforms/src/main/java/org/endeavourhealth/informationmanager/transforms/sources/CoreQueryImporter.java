@@ -740,8 +740,8 @@ public class CoreQueryImporter implements TTImport {
               .left(l->l
                 .setIri(NAMESPACE.IM + "effectiveDate"))
               .right(r->r
-                .setParameter("$searchDate"))
-              .setUnits(iri(IM.MONTHS)))
+                .setParameter("$searchDate")))
+              .setUnits(iri(IM.MONTHS))
             .setOperator(Operator.gte)
             .setValue("-12")))
         .setOrderBy(new OrderLimit()

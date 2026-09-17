@@ -6,7 +6,6 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import org.apache.commons.io.FilenameUtils;
 import org.endeavourhealth.imapi.filer.TTFilerException;
-import org.endeavourhealth.imapi.queryengine.QuerySummariser;
 import org.endeavourhealth.imapi.transforms.EqdToIMQ;
 import org.endeavourhealth.imapi.transforms.eqd.*;
 import org.endeavourhealth.informationmanager.transforms.models.TTImportConfig;
@@ -105,19 +104,7 @@ public class EQDImporter {
 
 	}
 
-	private void exportBaseMatches(String folder) throws Exception {
-		try (FileWriter writer= new FileWriter(folder+"/EQD/unnamedClauses.txt")){
-			if (!EqdToIMQ.getBaseQueries().isEmpty()){
-				for (Map.Entry<String, Query> entry:EqdToIMQ.getBaseQueries().entrySet()){
-					if (EqdToIMQ.getAutoNamedClauses().get(entry.getKey())==null) {
-						String summarised= new QuerySummariser().summariseQuery(entry.getValue()).replace("\n","\\n ");
-						writer.write(entry.getKey() + "\t" + new ObjectMapper().writeValueAsString(entry.getValue())
-							+ "\t" + summarised+ "\n");
-					}
-				}
-			}
-		}
-	}
+
 
 	private void loadAutoNamedSets(String folder, String autoNamedSets) throws IOException {
 		try (BufferedReader reader = new BufferedReader( new FileReader((ImportUtils.findFileForId(folder, autoNamedSets).toFile())))) {
