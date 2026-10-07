@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-  implementation("org.apache.poi:poi-ooxml:5.4.1")
+  implementation("org.apache.poi:poi-ooxml:5.5.1")
   implementation("com.fasterxml.jackson.core:jackson-databind:2.19.1")
 
   testImplementation(platform("org.junit:junit-bom:5.10.0"))
