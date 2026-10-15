@@ -339,7 +339,6 @@ public class QImporter implements TTImport {
           String concept = NAMESPACE.SNOMED + code.get("Code").asText();
           String term = code.get("Text").asText();
           qGroup.addObject(iri(IM.HAS_MEMBER), TTIriRef.iri(concept));
-          qGroup.addObject(iri(IM.USES), TTIriRef.iri(concept));
         }
       } else
         results = false;

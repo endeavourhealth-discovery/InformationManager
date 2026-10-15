@@ -19,8 +19,12 @@ import java.util.List;
 
 import static org.endeavourhealth.imapi.model.tripletree.TTIriRef.iri;
 
+
 public class CoreQueryImporter implements TTImport {
   public TTDocument document;
+  private static final String[] coreQueries = {
+    ".*\\\\DiscoveryCore\\\\Queries.json"
+  };
 
   @Override
   public void importData(TTImportConfig config) throws ImportException {
@@ -684,6 +688,7 @@ public class CoreQueryImporter implements TTImport {
               .setDescendantsOrSelfOf(true)
               .setName("Home systolic blood pressure")))
           .and(ww->ww
+            .setIri(NAMESPACE.IM+"effectiveDate")
             .compare(c->c
               .left(l->l
                 .setIri(NAMESPACE.IM + "effectiveDate"))
@@ -739,6 +744,7 @@ public class CoreQueryImporter implements TTImport {
             .addIs(new Node().setIri("http://snomed.info/sct#310422005").setName("invited for screening").setMemberOf(true)))
           .and(inv->inv
             .setOperator(Operator.gte)
+            .setIri(NAMESPACE.IM + "effectiveDate")
             .compare(c->c
               .left(l->l
                 .setIri(NAMESPACE.IM + "effectiveDate"))
