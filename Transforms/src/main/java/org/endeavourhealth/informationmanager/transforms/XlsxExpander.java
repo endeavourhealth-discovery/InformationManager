@@ -20,6 +20,7 @@ public class XlsxExpander {
 			if (!fileEntry.isDirectory()) {
 				String ext = FilenameUtils.getExtension(fileEntry.getName());
 				if (ext.equalsIgnoreCase("xlsx")) {
+					LOG.info("Converting {} to txt...", fileEntry.getName());
 
 					try (FileInputStream fis = new FileInputStream(fileEntry);
 							 Workbook workbook = new XSSFWorkbook(fis)) {
