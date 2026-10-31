@@ -257,7 +257,7 @@ public class QImporter implements TTImport {
   private boolean isMedicationSet(TTEntity entity) {
     if (entity.get(IM.HAS_MEMBER) != null) {
       SetBinder binder = new SetBinder();
-      binder.bindSet(entity.getIri(), GRAPH.IM);
+      binder.bindSet(entity.getIri());
       TTEntity boundSet = new EntityService().getBundle(entity.getIri(), asHashSet(IM.BINDING)).getEntity();
 
       if (!boundSet.has(IM.BINDING)) {
