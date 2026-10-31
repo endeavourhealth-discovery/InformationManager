@@ -314,7 +314,7 @@ public class OpenSearchSender {
           BindingSet rs = qr.next();
           String iri = rs.getValue("iri").stringValue();
           EntityDocument blob = batch.get(iri);
-          blob.getIsA().add(iri(rs.getValue("superType").stringValue()));
+          blob.isA().add(iri(rs.getValue("superType").stringValue()));
         }
       }
     }
