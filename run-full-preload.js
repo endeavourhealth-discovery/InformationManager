@@ -154,8 +154,10 @@ function killGraphDb() {
 }
 
 function zipRepository(zipName) {
-  // bsdtar (Windows, macOS) can write zip with -a; elsewhere fall back to zip
-  if (isWin || isMac) run('tar', ['-a', '-v', '-cf', zipName, GRAPH_REPO], { cwd: GRAPHDB_DATA });
+  // bsdtar (Windows, macOS) can write zip with -a; elsewhere fall back to zip.
+  // On Windows use the system bsdtar explicitly: Git Bash puts GNU tar first on PATH, which can't write zips.
+  const tar = isWin ? path.join(env.SystemRoot || process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe') : 'tar';
+  if (isWin || isMac) run(tar, ['-a', '-v', '-cf', zipName, GRAPH_REPO], { cwd: GRAPHDB_DATA });
   else run('zip', ['-r', zipName, GRAPH_REPO], { cwd: GRAPHDB_DATA });
 }
 
