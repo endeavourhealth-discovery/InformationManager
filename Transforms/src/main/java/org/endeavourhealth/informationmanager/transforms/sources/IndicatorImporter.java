@@ -171,7 +171,7 @@ public class IndicatorImporter {
     columnGroup.setName("Latest "+ setType+" details");
     Where where= new Where();
     where.setIri(NAMESPACE.IM+"concept");
-    where.addIs(Node.iri(valueSet).setMemberOf(true));
+    where.addIs(Node.iri(valueSet).setEntails(Entail.memberOf));
     columnGroup.setWhere(where);
     setOptional(columnGroup);
     if (columnGroup.getOrderBy()==null) {
