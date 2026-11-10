@@ -177,7 +177,7 @@ public class QImporter implements TTImport {
         qSetEntity.addObject(iri(IM.ENTAILED_MEMBER), new TTNode()
             .addObject(iri(IM.USES), TTIriRef.iri(bnfMember))
           .set(iri(IM.IS), TTIriRef.iri(bnfMember))
-          .set(iri(IM.ENTAILMENT), iri(IM.DESCENDANTS_OR_SELF_OF)));
+          .set(iri(IM.ENTAILMENT), TTLiteral.literal("<<")));
       }
     }
   }
@@ -239,7 +239,7 @@ public class QImporter implements TTImport {
             for (TTValue medication : entity.get(iri(IM.HAS_MEMBER)).getElements()) {
               entity.addObject(iri(IM.ENTAILED_MEMBER), new TTNode()
                 .set(iri(IM.IS), medication)
-                .set(iri(IM.ENTAILMENT), iri(IM.DESCENDANTS_OR_SELF_OF)));
+                .set(iri(IM.ENTAILMENT), TTLiteral.literal("<<")));
 
             }
             entity.getPredicateMap().remove(iri(IM.HAS_MEMBER));

@@ -171,7 +171,7 @@ public class IndicatorImporter {
     columnGroup.setName("Latest "+ setType+" details");
     Where where= new Where();
     where.setIri(NAMESPACE.IM+"concept");
-    where.addIs(Node.iri(valueSet).setMemberOf(true));
+    where.addIs(Node.iri(valueSet).setEntails(Entail.memberOf));
     columnGroup.setWhere(where);
     setOptional(columnGroup);
     if (columnGroup.getOrderBy()==null) {
@@ -282,7 +282,7 @@ public class IndicatorImporter {
   private void setOptionalPaths(List<Path> paths, Set<String> nodeRefs) {
     if (paths==null) return;
     for (Path path:paths) {
-      if (!nodeRefs.contains(path.getNode()))
+      if (!nodeRefs.contains(path.getAs()))
         path.setOptional(true);
       if (path.getPath()!=null) setOptionalPaths(path.getPath(),nodeRefs);
     }
@@ -423,7 +423,7 @@ public class IndicatorImporter {
       .or(m->m
         .path(p->p
           .setIri(IM.HAS_MEMBER.toString())
-          .setNode("member"))
+          .setAs("member"))
         .where(w->w
           .setIri(IM.IS_A.toString())
           .is(is->is
