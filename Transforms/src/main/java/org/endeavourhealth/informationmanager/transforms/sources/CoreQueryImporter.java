@@ -280,7 +280,7 @@ public class CoreQueryImporter implements TTImport {
         new Query()
           .setName(value + " address property definition")
           .path(p -> p.setIri(NAMESPACE.IM + "address").setTypeOf(NAMESPACE.IM + "AssignedAddress")
-            .setNode("Address")
+            .setAs("Address")
           )
           .where(and -> and
             .and(w -> w
@@ -322,7 +322,7 @@ public class CoreQueryImporter implements TTImport {
       .set(iri(IM.DEFINITION), TTLiteral.literal(new Query()
         .setName(value + " telephone property definition")
         .path(p -> p.setIri(NAMESPACE.IM + propertyName).setTypeOf(NAMESPACE.IM + "TelephoneNumber")
-          .setNode("Telephone")
+          .setAs("Telephone")
         )
         .where(and -> and
           .and(w -> w
@@ -361,7 +361,7 @@ public class CoreQueryImporter implements TTImport {
     ageQuery.setName("Age at event function")
     .path(p->p
       .setIri(NAMESPACE.IM + "patient")
-        .setNode("pat")
+        .setAs("pat")
           .setTypeOf(NAMESPACE.IM.toString() + "Patient"))
     .where(w->w
       .compare(c->c
@@ -384,7 +384,7 @@ public class CoreQueryImporter implements TTImport {
         new Query()
           .setName("place of residence at event")
           .path(p -> p.setIri(NAMESPACE.IM + "address").setTypeOf(NAMESPACE.IM + "AssignedAddress")
-            .setNode("Address")
+            .setAs("Address")
           )
           .where(and -> and
             .and(w -> w
@@ -433,13 +433,13 @@ public class CoreQueryImporter implements TTImport {
         .setWhere(new Where()
           .or(p -> p
             .setIri(SHACL.NODE)
-            .setNode("range"))
+            .setAs("range"))
           .or(p -> p
             .setIri(SHACL.DATATYPE)
-            .setNode("range"))
+            .setAs("range"))
           .or(p -> p
             .setIri(SHACL.CLASS)
-            .setNode("range"))))
+            .setAs("range"))))
       .and(m -> m
         .setName("Path is $this")
         .setDescription("have $this as their path")
@@ -465,7 +465,7 @@ public class CoreQueryImporter implements TTImport {
               .setIri(SHACL.PROPERTY.toString())
               .setName("Property $myProperty")
               .setDescription("Property $myProperty that exists on a data model (via a path)")
-              .setNode("shaclProperty"))
+              .setAs("shaclProperty"))
             .setWhere(new Where()
               .setNodeRef("shaclProperty")
               .setIri(SHACL.PATH)
@@ -531,7 +531,7 @@ public class CoreQueryImporter implements TTImport {
               .setIri("http://www.w3.org/ns/shacl#property")
               .setName("Property range")
               .setDescription("The range (node, class or datatype) of $myProperty")
-              .setNode("shaclProperty"))
+              .setAs("shaclProperty"))
             .where(and -> and
               .and(p2 -> p2
                 .setNodeRef("shaclProperty")
@@ -543,15 +543,15 @@ public class CoreQueryImporter implements TTImport {
                 .or(p3 -> p3
                   .setNodeRef("shaclProperty")
                   .setIri(SHACL.CLASS)
-                  .setNode("propType"))
+                  .setAs("propType"))
                 .or(p3 -> p3
                   .setNodeRef("shaclProperty")
                   .setIri(SHACL.NODE)
-                  .setNode("propType"))
+                  .setAs("propType"))
                 .or(p3 -> p3
                   .setNodeRef("shaclProperty")
                   .setIri(SHACL.DATATYPE)
-                  .setNode("propType")))))
+                  .setAs("propType")))))
           .return_(r -> r
             .setNodeRef("propType")
             .setIri(RDFS.LABEL))));
@@ -578,7 +578,7 @@ public class CoreQueryImporter implements TTImport {
         .setName("All supert types of an entity, active only")
         .setActiveOnly(true)
         .setDescription("All super types of an entity (where the entity 'is a' $this)")
-        .setNode("isa")
+        .setAs("isa")
         .setIs(new Node()
           .setParameter("this")
           .setEntails(Entail.ancestorsOf))
@@ -665,10 +665,9 @@ public class CoreQueryImporter implements TTImport {
       .setIri(NAMESPACE.IM + "Q_TestQuery")
       .setName("Patients 65-70, or pre-diabetes that need invitations for blood pressure measuring");
     query
-      .and(q -> q
         .is(is->is.setIri(NAMESPACE.IM + "Q_RegisteredGMS")
-          .setIsCohort(true)
-          .setName("Registered for GMS services on reference date")))
+          .setCohort(true)
+          .setName("Registered for GMS services on reference date"))
       .and(q -> q
         .or(m -> m
           .setName("aged 65-70")
@@ -763,6 +762,7 @@ public class CoreQueryImporter implements TTImport {
       .setScheme(NAMESPACE.IM.asIri())
       .set(iri(IM.DEFINITION), TTLiteral.literal(query))
       .addObject(iri(IM.DEPENDENT_ON), TTIriRef.iri(NAMESPACE.IM + "Q_RegisteredGMS"))
+      .addObject(iri(IM.DENOMINATOR), TTIriRef.iri(NAMESPACE.IM + "Q_RegisteredGMS"))
       .addObject(iri(IM.DEPENDENT_ON), TTIriRef.iri("http://endhealth.info/qof#37d6ee71-b642-407c-be92-cbc924013387"))
       .addObject(iri(IM.IS_CONTAINED_IN), TTIriRef.iri(NAMESPACE.IM + "Q_StandardCohorts"));
 
@@ -910,11 +910,11 @@ public class CoreQueryImporter implements TTImport {
           .is(i -> i.setParameter("concept").setEntails(Entail.descendantsOrSelfOf))
           .path(p->p
             .setIri(IM.ROLE_GROUP)
-            .setNode("roleGroup"))
+            .setAs("roleGroup"))
           .setWhere(new Where()
             .setNodeRef("roleGroup")
             .setParameter("entity")
-            .setNode("value")
+            .setAs("value")
           )));
   }
 
@@ -965,12 +965,12 @@ public class CoreQueryImporter implements TTImport {
             .and(w1->w1
               .setInverse(true)
               .setIri(RDFS.DOMAIN.toString())
-              .setNode("property"))
+              .setAs("property"))
             .and(w1->w1
               .setExists(true)
               .setSubjectVariable("roleGroup")
               .setPropertyVariable("property")
-              .setNode("value")))
+              .setAs("value")))
           .return_(p -> p.setNodeRef("property"))));
   }
 
@@ -985,7 +985,7 @@ public class CoreQueryImporter implements TTImport {
           .setActiveOnly(true)
           .setName("property that has $this (or supertype) as a domain")
           .setDescription("property that has $this (or supertype) as a domain")
-          .setNode("concept")
+          .setAs("concept")
           .setWhere(new Where()
             .setIri(RDFS.DOMAIN)
             .addIs(new Node().setParameter("this").setEntails(Entail.ancestorsOf))
@@ -1019,7 +1019,7 @@ public class CoreQueryImporter implements TTImport {
           .setActiveOnly(true)
           .setName("of type Folder")
           .setDescription("of type Folder")
-          .setNode("folder")
+          .setAs("folder")
           .setTypeOf(IM.FOLDER.toString())
           .return_(p -> p.setNodeRef("folder").setIri(RDFS.LABEL))
           .return_(p -> p.setNodeRef("folder").setIri(RDF.TYPE))));
@@ -1090,7 +1090,7 @@ public class CoreQueryImporter implements TTImport {
           .setDescription("Search for allowable contained in")
           .setActiveOnly(true)
           .setDescription("Folders with no content type, or content type $value")
-          .setNode("folder")
+          .setAs("folder")
           .setTypeOf(IM.FOLDER.toString())
           .setWhere(new Where()
             .or(p -> p
@@ -1117,7 +1117,7 @@ public class CoreQueryImporter implements TTImport {
           .setDescription("All subtypes of an entity, active only")
           .setActiveOnly(true)
           .setDescription("Is a descendant of, or $this")
-          .setNode("isa")
+          .setAs("isa")
           .setIs(new Node()
             .setParameter("this")
             .setEntails(Entail.descendantsOrSelfOf))
@@ -1134,7 +1134,7 @@ public class CoreQueryImporter implements TTImport {
           .setDescription("All subclasses of an entity, active only")
           .setActiveOnly(true)
           .setDescription("Is a subclass of")
-          .setNode("subclass")
+          .setAs("subclass")
           .where(w -> w
             .setIri(RDFS.SUBCLASS_OF)
             .is(i -> i

@@ -38,6 +38,7 @@ public class QOFQueryImport implements TTImport {
 		}
 
 
+
 		try (TTManager manager = new TTManager()){
 			manager.createDocument();
 			List<String> defaultTypes= List.of(IM.CONCEPT_SET.toString(),IM.QUERY.toString());
