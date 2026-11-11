@@ -132,8 +132,8 @@ const java = path.join(JAVA_HOME, 'bin', isWin ? 'java.exe' : 'java');
 const javaRun = (...args) => run(java, args);
 
 function gradle(dir, task) {
-  if (isWin) run(`"${path.join(dir, 'gradlew.bat')}"`, [task], { cwd: dir, shell: true });
-  else run(path.join(dir, 'gradlew'), [task], { cwd: dir });
+  if (isWin) run(`"${path.join(dir, 'gradlew.bat')}"`, [task], {cwd: dir, shell: true});
+  else run('/bin/sh', [path.join(dir, 'gradlew'), task], {cwd: dir});
 }
 
 function fetchRepo(label, dir, url, cloneBranch) {

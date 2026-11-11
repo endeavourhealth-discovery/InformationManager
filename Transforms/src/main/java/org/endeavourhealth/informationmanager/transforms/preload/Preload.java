@@ -82,10 +82,10 @@ public class Preload {
     } catch (NoSuchFileException e) {
       LOG.info("No files found in temp folder");
     }
-    String folderHome = tempUrl.substring(0,tempUrl.lastIndexOf("\\"));
-    if (folderHome.endsWith(":")) folderHome = folderHome+"\\";
-    String folderName = tempUrl.substring(tempUrl.lastIndexOf("\\") + 1);
-    File newDirectory = new File(folderHome,folderName);
+    String folderHome = tempUrl.substring(0, tempUrl.lastIndexOf(File.separator));
+    if (folderHome.endsWith(":")) folderHome = folderHome + File.separator;
+    String folderName = tempUrl.substring(tempUrl.lastIndexOf(File.separator) + 1);
+    File newDirectory = new File(folderHome, folderName);
     if (!newDirectory.exists()) {
       newDirectory.mkdir();
     }
@@ -163,7 +163,7 @@ public class Preload {
     LOG.info("Exporting tct/sets...");
     SetMemberExport.execute(Path.of(cfg.getFolder(), "tct"));
 
-    LOG.info("Finished - {}" ,new Date());
+    LOG.info("Finished - {}", new Date());
 
     System.exit(0);
   }
