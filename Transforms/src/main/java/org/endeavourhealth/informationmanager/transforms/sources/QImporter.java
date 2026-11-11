@@ -106,7 +106,7 @@ public class QImporter implements TTImport {
   private void importSupersets(TTImportConfig config) throws Exception {
     Set<String> superSets = new HashSet<>();
     addQFolders();
-    String file = config.getFolder()+"\\QCodes\\Supersets.txt";
+    String file = Path.of(config.getFolder(), "QCodes", "Supersets.txt").toString();
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
       reader.readLine();     // NOSONAR - Skip header
       String line = reader.readLine();
@@ -143,7 +143,7 @@ public class QImporter implements TTImport {
   }
 
   private void importMaps(TTImportConfig config) throws ImportException {
-    new SemanticMapImporter().importSemanticMaps(document,config.getFolder()+"\\QCodes",qSemanticMapFolder,"Q score map");
+    new SemanticMapImporter().importSemanticMaps(document,Path.of(config.getFolder(), "QCodes").toString(),qSemanticMapFolder,"Q score map");
   }
 
   private void addBNFMapEntries(TTManager manager, String folder) throws IOException {

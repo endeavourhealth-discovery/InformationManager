@@ -44,7 +44,7 @@ public class SmartLifeIndicatorImporter implements TTImport {
 	public void importData(TTImportConfig config) throws ImportException {
 		ThreadContext.setUserGraphs(List.of(GRAPH.IM, GRAPH.IM.SMARTLIFE));
 			try {
-				new IndicatorImporter().generate(config.getFolder()+"\\Smartlife\\Indicator-query.txt",
+				new IndicatorImporter().generate(Path.of(config.getFolder(), "Smartlife", "Indicator-query.txt").toString(),
 					"http://smartlifehealth.info/smh#SmartLifeIndicators","Smart life indicators", NAMESPACE.SMARTLIFE);
 			} catch (Exception e) {
 				throw new ImportException("Unable to generate indicators",e);
